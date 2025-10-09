@@ -6,13 +6,13 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Youtube, Download } from "lucide-react"; // Added Download icon
+import { Loader2, Youtube, Download } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown } from "lucide-react";
-import html2pdf from 'html2pdf.js'; // Import html2pdf.js
+import html2pdf from 'html2pdf.js';
 
 interface AiAnalysisResult {
   overall_sentiment: string;
@@ -35,11 +35,11 @@ const AnalyzeVideo = () => {
   const [videoLink, setVideoLink] = useState("");
   const [analysisResult, setAnalysisResult] = useState<AnalysisResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const analysisReportRef = useRef<HTMLDivElement>(null); // Ref for the content to be printed
+  const analysisReportRef = useRef<HTMLDivElement>(null);
 
   const analyzeVideoMutation = useMutation({
     mutationFn: async (link: string) => {
-      setError(null); // Clear previous errors
+      setError(null);
       const { data, error: invokeError } = await supabase.functions.invoke('youtube-analyzer', {
         body: { videoLink: link },
       });
@@ -72,9 +72,9 @@ const AnalyzeVideo = () => {
       const opt = {
         margin: 1,
         filename: `SentiVibe_Report_${analysisResult.videoTitle.replace(/[^a-z0-9]/gi, '_')}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
+        image: { type: 'jpeg' as 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2, logging: true, dpi: 192, letterRendering: true },
-        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' as 'portrait' } // Fixed: Explicitly cast type to 'portrait'
       };
       html2pdf().from(element).set(opt).save();
     }
@@ -133,7 +133,7 @@ const AnalyzeVideo = () => {
               <Download className="h-4 w-4" /> Download Report PDF
             </Button>
           </div>
-          <Card ref={analysisReportRef}> {/* Assign ref to the Card for PDF generation */}
+          <Card ref={analysisReportRef}>
             <CardHeader>
               {analysisResult.videoThumbnailUrl && (
                 <img
@@ -159,7 +159,7 @@ const AnalyzeVideo = () => {
                 </div>
               )}
 
-              {analysisResult.videoSubtitles && ( // This block will only render if videoSubtitles is not empty
+              {analysisResult.videoSubtitles && (
                 <div>
                   <Collapsible>
                     <CollapsibleTrigger className="flex items-center justify-between w-full text-lg font-semibold mb-2">
