@@ -1,12 +1,12 @@
 import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
 import { supabase } from '@/integrations/supabase/client';
-import { useSession } from '@/integrations/supabase/SessionContextProvider';
+import { useAuth } from '@/integrations/supabase/auth'; // Changed from useSession
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
-  const { session, isLoading } = useSession();
+  const { session, isLoading } = useAuth(); // Changed from useSession
   const navigate = useNavigate();
 
   useEffect(() => {
