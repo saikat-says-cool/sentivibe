@@ -52,7 +52,7 @@ serve(async (req) => {
     if (!videoId) {
       return new Response(JSON.stringify({ error: 'Invalid YouTube video link' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 400,
+        status: 400,
       });
     }
 
@@ -67,7 +67,7 @@ serve(async (req) => {
     }
 
     // Make the actual YouTube Data API call to get comment threads
-    const youtubeApiUrl = `https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId=${videoId}&key=${youtubeApiKey}&maxResults=100`; // maxResults can be adjusted
+    const youtubeApiUrl = `https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId=${videoId}&key=${youtubeApiKey}&maxResults=100`;
     const youtubeResponse = await fetch(youtubeApiUrl);
 
     if (!youtubeResponse.ok) {
@@ -84,9 +84,64 @@ serve(async (req) => {
       ? youtubeData.items.map((item: any) => item.snippet.topLevelComment.snippet.textOriginal)
       : [];
 
+    // Access the Longcat AI API Key from Supabase Secrets
+    // @ts-ignore
+    const longcatApiKey = Deno.env.get('LONGCAT_AI_API_KEY');
+    if (!longcatApiKey) {
+      return new Response(JSON.stringify({ error: 'Longcat AI API key not configured' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500,
+      });
+    }
+
+    // Prepare prompt for Longcat AI
+    const longcatPrompt = `Analyze the following YouTube comments and provide a concise summary of their overall sentiment (positive, negative, neutral, or mixed), emotional tones (e.g., joy, anger, sadness, surprise), key themes/keywords, and overall insights. Respond in a structured JSON format.
+
+    Example JSON format:
+    {
+      "overall_sentiment": "positive",
+      "emotional_tones": ["joy", "excitement"],
+      "key_themes": ["product review", "user experience"],
+      "summary_insights": "The comments are overwhelmingly positive, highlighting the product's ease of use and innovative features."
+    }
+
+    YouTube Comments:\n\n${comments.join('\n')}`;
+
+    const longcatApiUrl = "https://api.longcat.chat/openai/v1/chat/completions";
+    const longcatResponse = await fetch(longcatApiUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${longcatApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: "LongCat-Flash-Chat",
+        messages: [
+          { "role": "system", "content": "You are an expert sentiment analysis AI. Your task is to analyze a collection of YouTube comments and provide a concise summary of their sentiment, emotional tone, key themes, and overall insights. Respond in a structured JSON format." },
+          { "role": "user", "content": longcatPrompt }
+        ],
+        max_tokens: 1000,
+        temperature: 0.7,
+        response_format: { type: "json_object" } // Request JSON output
+      }),
+    });
+
+    if (!longcatResponse.ok) {
+      const errorData = await longcatResponse.json();
+      console.error('Longcat AI API error:', errorData);
+      return new Response(JSON.stringify({ error: 'Failed to get analysis from Longcat AI', details: errorData }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: longcatResponse.status,
+      });
+    }
+
+    const longcatData = await longcatResponse.json();
+    const aiAnalysis = JSON.parse(longcatData.choices[0].message.content);
+
     return new Response(JSON.stringify({
-      message: `Successfully fetched comments for video ID: ${videoId}`,
+      message: `Successfully fetched comments and performed AI analysis for video ID: ${videoId}`,
       comments: comments,
+      aiAnalysis: aiAnalysis,
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
