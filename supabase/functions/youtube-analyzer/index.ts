@@ -52,7 +52,7 @@ serve(async (req) => {
     if (!videoId) {
       return new Response(JSON.stringify({ error: 'Invalid YouTube video link' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400,
+      status: 400,
       });
     }
 
@@ -66,28 +66,27 @@ serve(async (req) => {
       });
     }
 
-    // --- Placeholder for YouTube Data API call ---
-    // In a real scenario, you would make a fetch request to the YouTube Data API
-    // using the videoId and youtubeApiKey to get comments.
-    // Example:
-    // const youtubeApiUrl = `https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId=${videoId}&key=${youtubeApiKey}&maxResults=100`;
-    // const youtubeResponse = await fetch(youtubeApiUrl);
-    // const youtubeData = await youtubeResponse.json();
-    // const comments = youtubeData.items.map((item: any) => item.snippet.topLevelComment.snippet.textOriginal);
-    // -----------------------------------------------
+    // Make the actual YouTube Data API call to get comment threads
+    const youtubeApiUrl = `https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId=${videoId}&key=${youtubeApiKey}&maxResults=100`; // maxResults can be adjusted
+    const youtubeResponse = await fetch(youtubeApiUrl);
 
-    // For now, we'll return a mock response
-    const mockComments = [
-      "This video is amazing! So helpful.",
-      "I didn't understand a thing, very confusing.",
-      "Great content, keep it up!",
-      "The audio quality is terrible.",
-      "Loved the explanation, very clear.",
-    ];
+    if (!youtubeResponse.ok) {
+      const errorData = await youtubeResponse.json();
+      console.error('YouTube API error:', errorData);
+      return new Response(JSON.stringify({ error: 'Failed to fetch comments from YouTube API', details: errorData }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: youtubeResponse.status,
+      });
+    }
+
+    const youtubeData = await youtubeResponse.json();
+    const comments = youtubeData.items
+      ? youtubeData.items.map((item: any) => item.snippet.topLevelComment.snippet.textOriginal)
+      : [];
 
     return new Response(JSON.stringify({
-      message: `Successfully processed video ID: ${videoId}`,
-      comments: mockComments, // Replace with actual comments from YouTube API
+      message: `Successfully fetched comments for video ID: ${videoId}`,
+      comments: comments,
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
