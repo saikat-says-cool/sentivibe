@@ -136,7 +136,14 @@ serve(async (req) => {
     }
 
     const longcatData = await longcatResponse.json();
-    const aiAnalysis = JSON.parse(longcatData.choices[0].message.content);
+    let aiContent = longcatData.choices[0].message.content;
+
+    // Remove markdown code block fences if present
+    if (aiContent.startsWith('```json') && aiContent.endsWith('```')) {
+      aiContent = aiContent.substring(7, aiContent.length - 3).trim();
+    }
+
+    const aiAnalysis = JSON.parse(aiContent);
 
     return new Response(JSON.stringify({
       message: `Successfully fetched comments and performed AI analysis for video ID: ${videoId}`,
