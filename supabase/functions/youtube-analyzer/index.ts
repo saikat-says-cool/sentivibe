@@ -67,6 +67,7 @@ serve(async (req) => {
     }
 
     // Make the actual YouTube Data API call to get comment threads
+    // We fetch up to 100 comments, then sort them by likes.
     const youtubeApiUrl = `https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId=${videoId}&key=${youtubeApiKey}&maxResults=100`;
     const youtubeResponse = await fetch(youtubeApiUrl);
 
@@ -80,9 +81,19 @@ serve(async (req) => {
     }
 
     const youtubeData = await youtubeResponse.json();
-    const comments = youtubeData.items
-      ? youtubeData.items.map((item: any) => item.snippet.topLevelComment.snippet.textOriginal)
+    let comments = youtubeData.items
+      ? youtubeData.items.map((item: any) => ({
+          text: item.snippet.topLevelComment.snippet.textOriginal,
+          likeCount: item.snippet.topLevelComment.snippet.likeCount,
+        }))
       : [];
+
+    // Sort comments by likeCount in descending order
+    comments.sort((a: any, b: any) => b.likeCount - a.likeCount);
+
+    // Take the top 50 most popular comments for AI analysis
+    const topCommentsForAI = comments.slice(0, 50).map((comment: any) => comment.text);
+    const allFetchedCommentsText = comments.map((comment: any) => comment.text); // Keep all fetched comments for display if needed
 
     // Access the Longcat AI API Key from Supabase Secrets
     // @ts-ignore
@@ -94,7 +105,7 @@ serve(async (req) => {
       });
     }
 
-    // Prepare prompt for Longcat AI
+    // Prepare prompt for Longcat AI using the top 50 comments
     const longcatPrompt = `Analyze the following YouTube comments and provide a concise summary of their overall sentiment (positive, negative, neutral, or mixed), emotional tones (e.g., joy, anger, sadness, surprise), key themes/keywords, and overall insights. Respond in a structured JSON format.
 
     Example JSON format:
@@ -105,7 +116,7 @@ serve(async (req) => {
       "summary_insights": "The comments are overwhelmingly positive, highlighting the product's ease of use and innovative features."
     }
 
-    YouTube Comments:\n\n${comments.join('\n')}`;
+    YouTube Comments:\n\n${topCommentsForAI.join('\n')}`; // Use topCommentsForAI here
 
     const longcatApiUrl = "https://api.longcat.chat/openai/v1/chat/completions";
     const longcatResponse = await fetch(longcatApiUrl, {
@@ -147,7 +158,7 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({
       message: `Successfully fetched comments and performed AI analysis for video ID: ${videoId}`,
-      comments: comments,
+      comments: allFetchedCommentsText, // Return all fetched comments for display
       aiAnalysis: aiAnalysis,
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
