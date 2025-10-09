@@ -18,6 +18,9 @@ export default {
       },
     },
     extend: {
+      fontFamily: { // Added font family definition
+        sans: ['Arimo', 'sans-serif'],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

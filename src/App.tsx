@@ -6,8 +6,9 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import AnalyzeVideo from "./pages/AnalyzeVideo";
-import Login from "./pages/Login"; // Import the Login component
-import { SessionContextProvider, useSession } from "./integrations/supabase/SessionContextProvider"; // Import SessionContextProvider and useSession
+import Login from "./pages/Login";
+import { SessionContextProvider, useSession } from "./integrations/supabase/SessionContextProvider";
+import Header from "./components/Header"; // Import the Header component
 
 const queryClient = new QueryClient();
 
@@ -28,20 +29,23 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 const AppRoutes = () => (
   <BrowserRouter>
-    <Routes>
-      <Route path="/login" element={<Login />} />
-      <Route path="/" element={<Index />} />
-      <Route
-        path="/analyze"
-        element={
-          <ProtectedRoute>
-            <AnalyzeVideo />
-          </ProtectedRoute>
-        }
-      />
-      {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-      <Route path="*" element={<NotFound />} />
-    </Routes>
+    <Header /> {/* Render the Header component here */}
+    <main className="flex-1"> {/* Ensure main content takes remaining space */}
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/" element={<Index />} />
+        <Route
+          path="/analyze"
+          element={
+            <ProtectedRoute>
+              <AnalyzeVideo />
+            </ProtectedRoute>
+          }
+        />
+        {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </main>
   </BrowserRouter>
 );
 
@@ -51,7 +55,9 @@ const App = () => (
       <Toaster />
       <Sonner />
       <SessionContextProvider>
-        <AppRoutes />
+        <div className="flex flex-col min-h-screen"> {/* Added flex-col to make header stick to top */}
+          <AppRoutes />
+        </div>
       </SessionContextProvider>
     </TooltipProvider>
   </QueryClientProvider>
