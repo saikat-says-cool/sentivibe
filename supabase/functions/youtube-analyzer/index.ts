@@ -81,19 +81,19 @@ serve(async (req) => {
     }
 
     const youtubeData = await youtubeResponse.json();
-    let comments = youtubeData.items
+    let commentsWithLikes = youtubeData.items
       ? youtubeData.items.map((item: any) => ({
           text: item.snippet.topLevelComment.snippet.textOriginal,
           likeCount: item.snippet.topLevelComment.snippet.likeCount,
         }))
       : [];
 
-    // Sort comments by likeCount in descending order
-    comments.sort((a: any, b: any) => b.likeCount - a.likeCount);
+    // Sort comments by likeCount in descending order for consistent processing and display
+    commentsWithLikes.sort((a: any, b: any) => b.likeCount - a.likeCount);
 
-    // Take the top 50 most popular comments for AI analysis
-    const topCommentsForAI = comments.slice(0, 50).map((comment: any) => comment.text);
-    const allFetchedCommentsText = comments.map((comment: any) => comment.text); // Keep all fetched comments for display if needed
+    // Prepare comments for AI, including their like counts
+    const formattedCommentsForAI = commentsWithLikes.map((comment: any) => `(Likes: ${comment.likeCount}) ${comment.text}`);
+    const allFetchedCommentsText = commentsWithLikes.map((comment: any) => comment.text); // Keep all fetched comments text for display
 
     // Access the Longcat AI API Key from Supabase Secrets
     // @ts-ignore
@@ -105,18 +105,18 @@ serve(async (req) => {
       });
     }
 
-    // Prepare prompt for Longcat AI using the top 50 comments
-    const longcatPrompt = `Analyze the following YouTube comments and provide a concise summary of their overall sentiment (positive, negative, neutral, or mixed), emotional tones (e.g., joy, anger, sadness, surprise), key themes/keywords, and overall insights. Respond in a structured JSON format.
+    // Prepare prompt for Longcat AI, instructing it to consider like counts as weights
+    const longcatPrompt = `Analyze the following YouTube comments. Each comment is prefixed with its 'Likes' count (e.g., '(Likes: 123) This is a comment.'). When determining the overall sentiment, emotional tones, key themes, and summary insights, please give significantly more weight and importance to comments that have a higher 'Likes' count. This should reflect a weighted average sentiment where more popular comments have a greater influence on the final analysis. Respond in a structured JSON format.
 
     Example JSON format:
     {
       "overall_sentiment": "positive",
       "emotional_tones": ["joy", "excitement"],
       "key_themes": ["product review", "user experience"],
-      "summary_insights": "The comments are overwhelmingly positive, highlighting the product's ease of use and innovative features."
+      "summary_insights": "The comments are overwhelmingly positive, highlighting the product's ease of use and innovative features, with popular comments strongly influencing this assessment."
     }
 
-    YouTube Comments:\n\n${topCommentsForAI.join('\n')}`; // Use topCommentsForAI here
+    YouTube Comments:\n\n${formattedCommentsForAI.join('\n')}`;
 
     const longcatApiUrl = "https://api.longcat.chat/openai/v1/chat/completions";
     const longcatResponse = await fetch(longcatApiUrl, {
@@ -128,7 +128,7 @@ serve(async (req) => {
       body: JSON.stringify({
         model: "LongCat-Flash-Chat",
         messages: [
-          { "role": "system", "content": "You are an expert sentiment analysis AI. Your task is to analyze a collection of YouTube comments and provide a concise summary of their sentiment, emotional tone, key themes, and overall insights. Respond in a structured JSON format." },
+          { "role": "system", "content": "You are an expert sentiment analysis AI. Your task is to analyze a collection of YouTube comments and provide a concise summary of their sentiment, emotional tone, key themes, and overall insights, giving more weight to popular comments." },
           { "role": "user", "content": longcatPrompt }
         ],
         max_tokens: 1000,
