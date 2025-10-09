@@ -6,14 +6,15 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Youtube, Download } from "lucide-react";
+import { Loader2, Youtube, Download, MessageSquare } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown } from "lucide-react";
 import html2pdf from 'html2pdf.js';
-import { Textarea } from "@/components/ui/textarea"; // Import Textarea
+import { Textarea } from "@/components/ui/textarea";
+import ChatInterface from '@/components/ChatInterface'; // Import the ChatInterface component
 
 interface AiAnalysisResult {
   overall_sentiment: string;
@@ -32,18 +33,29 @@ interface AnalysisResponse {
   aiAnalysis: AiAnalysisResult;
 }
 
+interface Message {
+  id: string;
+  sender: 'user' | 'ai';
+  text: string;
+  timestamp: string;
+}
+
 const AnalyzeVideo = () => {
   const [videoLink, setVideoLink] = useState("");
-  const [customInstructions, setCustomInstructions] = useState(""); // New state for custom instructions
+  const [customInstructions, setCustomInstructions] = useState("");
   const [analysisResult, setAnalysisResult] = useState<AnalysisResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [chatMessages, setChatMessages] = useState<Message[]>([]); // State for chat messages
   const analysisReportRef = useRef<HTMLDivElement>(null);
 
   const analyzeVideoMutation = useMutation({
     mutationFn: async (payload: { videoLink: string; customInstructions: string }) => {
       setError(null);
+      setAnalysisResult(null); // Clear previous analysis when starting a new one
+      setChatMessages([]); // Clear chat messages for new analysis
+
       const { data, error: invokeError } = await supabase.functions.invoke('youtube-analyzer', {
-        body: payload, // Pass the entire payload including customInstructions
+        body: payload,
       });
 
       if (invokeError) {
@@ -54,17 +66,78 @@ const AnalyzeVideo = () => {
     },
     onSuccess: (data) => {
       setAnalysisResult(data);
+      // Add an initial AI message to the chat after analysis is complete
+      setChatMessages([
+        {
+          id: 'ai-initial',
+          sender: 'ai',
+          text: `Analysis complete for "${data.videoTitle}". What would you like to know about it?`,
+          timestamp: new Date().toLocaleTimeString(),
+        },
+      ]);
     },
     onError: (err: Error) => {
       setError(err.message);
       setAnalysisResult(null);
+      setChatMessages([]);
     },
   });
+
+  const chatMutation = useMutation({
+    mutationFn: async (userMessageText: string) => {
+      const newMessage: Message = {
+        id: Date.now().toString(),
+        sender: 'user',
+        text: userMessageText,
+        timestamp: new Date().toLocaleTimeString(),
+      };
+      setChatMessages((prev) => [...prev, newMessage]);
+
+      const { data, error: invokeError } = await supabase.functions.invoke('chat-analyzer', {
+        body: {
+          userMessage: userMessageText,
+          chatMessages: [...chatMessages, newMessage], // Send current chat history including the new user message
+          analysisResult: analysisResult, // Send the full analysis context
+        },
+      });
+
+      if (invokeError) {
+        console.error("Supabase Chat Function Invoke Error:", invokeError);
+        throw new Error(invokeError.message || "Failed to get AI response.");
+      }
+      return data;
+    },
+    onSuccess: (data) => {
+      const aiResponse: Message = {
+        id: Date.now().toString(),
+        sender: 'ai',
+        text: data.aiResponse,
+        timestamp: new Date().toLocaleTimeString(),
+      };
+      setChatMessages((prev) => [...prev, aiResponse]);
+    },
+    onError: (err: Error) => {
+      console.error("Chat Error:", err);
+      const errorMessage: Message = {
+        id: Date.now().toString(),
+        sender: 'ai',
+        text: `Error: ${err.message}. Please try again.`,
+        timestamp: new Date().toLocaleTimeString(),
+      };
+      setChatMessages((prev) => [...prev, errorMessage]);
+    },
+  });
+
+  const handleSendMessage = (messageText: string) => {
+    if (messageText.trim() && analysisResult) {
+      chatMutation.mutate(messageText);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (videoLink.trim()) {
-      analyzeVideoMutation.mutate({ videoLink, customInstructions }); // Pass both to the mutation
+      analyzeVideoMutation.mutate({ videoLink, customInstructions });
     }
   };
 
@@ -145,7 +218,7 @@ const AnalyzeVideo = () => {
               <Download className="h-4 w-4" /> Download Report PDF
             </Button>
           </div>
-          <Card ref={analysisReportRef}>
+          <Card ref={analysisReportRef} className="mb-6">
             <CardHeader>
               {analysisResult.videoThumbnailUrl && (
                 <img
@@ -234,6 +307,21 @@ const AnalyzeVideo = () => {
                   <p className="text-gray-500">No comments found or fetched.</p>
                 )}
               </div>
+            </CardContent>
+          </Card>
+
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MessageSquare className="h-6 w-6 text-blue-500" /> Chat with AI about this video
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="h-[500px] p-0"> {/* Fixed height for chat */}
+              <ChatInterface
+                messages={chatMessages}
+                onSendMessage={handleSendMessage}
+                isLoading={chatMutation.isPending}
+              />
             </CardContent>
           </Card>
         </>
