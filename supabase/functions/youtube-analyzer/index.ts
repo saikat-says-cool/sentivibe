@@ -77,7 +77,7 @@ serve(async (req) => {
       });
     }
 
-    // --- Fetch Video Details (Title, Description, and Captions metadata) ---
+    // --- Fetch Video Details (Title, Description, Captions metadata, Thumbnails, Tags) ---
     const videoDetailsApiUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet,captions&id=${videoId}&key=${youtubeApiKey}`;
     const videoDetailsResponse = await fetch(videoDetailsApiUrl);
 
@@ -90,8 +90,13 @@ serve(async (req) => {
       });
     }
     const videoDetailsData = await videoDetailsResponse.json();
-    const videoTitle = videoDetailsData.items?.[0]?.snippet?.title || 'Unknown Title';
-    const videoDescription = videoDetailsData.items?.[0]?.snippet?.description || 'No description available.';
+    const videoSnippet = videoDetailsData.items?.[0]?.snippet;
+
+    const videoTitle = videoSnippet?.title || 'Unknown Title';
+    const videoDescription = videoSnippet?.description || 'No description available.';
+    const videoThumbnailUrl = videoSnippet?.thumbnails?.high?.url || videoSnippet?.thumbnails?.medium?.url || '';
+    const videoTags = videoSnippet?.tags || [];
+
     const captionTracks = videoDetailsData.items?.[0]?.caption?.track || [];
 
     let videoSubtitles = '';
@@ -161,7 +166,13 @@ serve(async (req) => {
     }
 
     // Prepare prompt for Longcat AI, instructing it to consider like counts as weights and subtitles as additional context
-    let longcatPrompt = `Analyze the following YouTube video content. When determining the overall sentiment, emotional tones, key themes, and summary insights, please give significantly more weight and importance to comments that have a higher 'Likes' count. This should reflect a weighted average sentiment where more popular comments have a greater influence on the final analysis. Use the provided video subtitles as additional context to refine your understanding of the video's content and how it relates to the comments. Respond in a structured JSON format.
+    let longcatPrompt = `Analyze the following YouTube video content. When determining the overall sentiment, emotional tones, key themes, and summary insights, please give significantly more weight and importance to comments that have a higher 'Likes' count. This should reflect a weighted average sentiment where more popular comments have a greater influence on the final analysis. Use the provided video subtitles as additional context to refine your understanding of the video's content and how it relates to the comments.
+    
+    Video Title: "${videoTitle}"
+    Video Description: "${videoDescription}"
+    Video Tags: ${videoTags.length > 0 ? videoTags.join(', ') : 'None'}
+
+    Respond in a structured JSON format.
 
     Example JSON format:
     {
@@ -189,7 +200,7 @@ serve(async (req) => {
       body: JSON.stringify({
         model: "LongCat-Flash-Chat",
         messages: [
-          { "role": "system", "content": "You are an expert sentiment analysis AI. Your task is to analyze a YouTube video's comments and subtitles, providing a concise summary of sentiment, emotional tone, key themes, and overall insights. Prioritize popular comments and use subtitles for context. Respond in a structured JSON format." },
+          { "role": "system", "content": "You are an expert sentiment analysis AI. Your task is to analyze a YouTube video's comments and subtitles, providing a concise summary of sentiment, emotional tone, key themes, and overall insights. Prioritize popular comments and use subtitles for context. Also consider the video title, description, and tags for broader context." },
           { "role": "user", "content": longcatPrompt }
         ],
         max_tokens: 1000,
@@ -221,8 +232,10 @@ serve(async (req) => {
       message: `Successfully fetched comments and performed AI analysis for video ID: ${videoId}`,
       videoTitle: videoTitle,
       videoDescription: videoDescription,
-      videoSubtitles: videoSubtitles, // Include subtitles in the response
-      comments: allFetchedCommentsText, // Return all fetched comments for display
+      videoThumbnailUrl: videoThumbnailUrl, // Include thumbnail URL
+      videoTags: videoTags,               // Include video tags
+      videoSubtitles: videoSubtitles,
+      comments: allFetchedCommentsText,
       aiAnalysis: aiAnalysis,
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

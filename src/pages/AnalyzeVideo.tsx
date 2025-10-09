@@ -23,7 +23,9 @@ interface AiAnalysisResult {
 interface AnalysisResponse {
   videoTitle: string;
   videoDescription: string;
-  videoSubtitles: string; // Added for subtitles
+  videoThumbnailUrl: string; // Added for thumbnail
+  videoTags: string[];       // Added for tags
+  videoSubtitles: string;
   comments: string[];
   aiAnalysis: AiAnalysisResult;
 }
@@ -111,10 +113,30 @@ const AnalyzeVideo = () => {
       {analysisResult && (
         <Card>
           <CardHeader>
-            <CardTitle>Analysis Results for "{analysisResult.videoTitle}"</CardTitle>
+            {analysisResult.videoThumbnailUrl && (
+              <img
+                src={analysisResult.videoThumbnailUrl}
+                alt={analysisResult.videoTitle}
+                className="w-full h-auto rounded-md mb-4"
+              />
+            )}
+            <CardTitle className="text-2xl">{analysisResult.videoTitle}</CardTitle>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">{analysisResult.videoDescription}</p>
           </CardHeader>
           <CardContent className="space-y-6">
+            {analysisResult.videoTags && analysisResult.videoTags.length > 0 && (
+              <div>
+                <h3 className="text-lg font-semibold mb-2">Video Tags</h3>
+                <div className="flex flex-wrap gap-2">
+                  {analysisResult.videoTags.map((tag, index) => (
+                    <Badge key={index} variant="secondary">
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {analysisResult.videoSubtitles && (
               <div>
                 <Collapsible>
