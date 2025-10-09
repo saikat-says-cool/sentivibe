@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,12 +6,13 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Youtube } from "lucide-react";
+import { Loader2, Youtube, Download } from "lucide-react"; // Added Download icon
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown } from "lucide-react";
+import html2pdf from 'html2pdf.js'; // Import html2pdf.js
 
 interface AiAnalysisResult {
   overall_sentiment: string;
@@ -25,7 +26,7 @@ interface AnalysisResponse {
   videoDescription: string;
   videoThumbnailUrl: string;
   videoTags: string[];
-  videoSubtitles: string; // This will now be an empty string from the Edge Function
+  videoSubtitles: string;
   comments: string[];
   aiAnalysis: AiAnalysisResult;
 }
@@ -34,6 +35,7 @@ const AnalyzeVideo = () => {
   const [videoLink, setVideoLink] = useState("");
   const [analysisResult, setAnalysisResult] = useState<AnalysisResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const analysisReportRef = useRef<HTMLDivElement>(null); // Ref for the content to be printed
 
   const analyzeVideoMutation = useMutation({
     mutationFn: async (link: string) => {
@@ -61,6 +63,20 @@ const AnalyzeVideo = () => {
     e.preventDefault();
     if (videoLink.trim()) {
       analyzeVideoMutation.mutate(videoLink);
+    }
+  };
+
+  const handleDownloadPdf = () => {
+    if (analysisReportRef.current && analysisResult) {
+      const element = analysisReportRef.current;
+      const opt = {
+        margin: 1,
+        filename: `SentiVibe_Report_${analysisResult.videoTitle.replace(/[^a-z0-9]/gi, '_')}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, logging: true, dpi: 192, letterRendering: true },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+      };
+      html2pdf().from(element).set(opt).save();
     }
   };
 
@@ -111,97 +127,104 @@ const AnalyzeVideo = () => {
       )}
 
       {analysisResult && (
-        <Card>
-          <CardHeader>
-            {analysisResult.videoThumbnailUrl && (
-              <img
-                src={analysisResult.videoThumbnailUrl}
-                alt={analysisResult.videoTitle}
-                className="w-full h-auto rounded-md mb-4"
-              />
-            )}
-            <CardTitle className="text-2xl">{analysisResult.videoTitle}</CardTitle>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">{analysisResult.videoDescription}</p>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {analysisResult.videoTags && analysisResult.videoTags.length > 0 && (
+        <>
+          <div className="flex justify-end mb-4">
+            <Button onClick={handleDownloadPdf} className="flex items-center gap-2">
+              <Download className="h-4 w-4" /> Download Report PDF
+            </Button>
+          </div>
+          <Card ref={analysisReportRef}> {/* Assign ref to the Card for PDF generation */}
+            <CardHeader>
+              {analysisResult.videoThumbnailUrl && (
+                <img
+                  src={analysisResult.videoThumbnailUrl}
+                  alt={analysisResult.videoTitle}
+                  className="w-full h-auto rounded-md mb-4"
+                />
+              )}
+              <CardTitle className="text-2xl">{analysisResult.videoTitle}</CardTitle>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">{analysisResult.videoDescription}</p>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {analysisResult.videoTags && analysisResult.videoTags.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Video Tags</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {analysisResult.videoTags.map((tag, index) => (
+                      <Badge key={index} variant="secondary">
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {analysisResult.videoSubtitles && ( // This block will only render if videoSubtitles is not empty
+                <div>
+                  <Collapsible>
+                    <CollapsibleTrigger className="flex items-center justify-between w-full text-lg font-semibold mb-2">
+                      Video Subtitles <ChevronDown className="h-4 w-4" />
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="text-gray-700 dark:text-gray-300 text-sm max-h-60 overflow-y-auto border p-3 rounded-md bg-gray-50 dark:bg-gray-700">
+                      <p>{analysisResult.videoSubtitles}</p>
+                    </CollapsibleContent>
+                  </Collapsible>
+                </div>
+              )}
+
               <div>
-                <h3 className="text-lg font-semibold mb-2">Video Tags</h3>
+                <h3 className="text-lg font-semibold mb-2">Overall Sentiment</h3>
+                <Badge variant="secondary" className="text-base px-3 py-1">
+                  {analysisResult.aiAnalysis.overall_sentiment}
+                </Badge>
+              </div>
+
+              <div>
+                <h3 className="text-lg font-semibold mb-2">Emotional Tones</h3>
                 <div className="flex flex-wrap gap-2">
-                  {analysisResult.videoTags.map((tag, index) => (
-                    <Badge key={index} variant="secondary">
-                      {tag}
+                  {analysisResult.aiAnalysis.emotional_tones.map((tone, index) => (
+                    <Badge key={index} variant="outline">
+                      {tone}
                     </Badge>
                   ))}
                 </div>
               </div>
-            )}
 
-            {analysisResult.videoSubtitles && ( // This block will only render if videoSubtitles is not empty
               <div>
-                <Collapsible>
-                  <CollapsibleTrigger className="flex items-center justify-between w-full text-lg font-semibold mb-2">
-                    Video Subtitles <ChevronDown className="h-4 w-4" />
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="text-gray-700 dark:text-gray-300 text-sm max-h-60 overflow-y-auto border p-3 rounded-md bg-gray-50 dark:bg-gray-700">
-                    <p>{analysisResult.videoSubtitles}</p>
-                  </CollapsibleContent>
-                </Collapsible>
-              </div>
-            )}
-
-            <div>
-              <h3 className="text-lg font-semibold mb-2">Overall Sentiment</h3>
-              <Badge variant="secondary" className="text-base px-3 py-1">
-                {analysisResult.aiAnalysis.overall_sentiment}
-              </Badge>
-            </div>
-
-            <div>
-              <h3 className="text-lg font-semibold mb-2">Emotional Tones</h3>
-              <div className="flex flex-wrap gap-2">
-                {analysisResult.aiAnalysis.emotional_tones.map((tone, index) => (
-                  <Badge key={index} variant="outline">
-                    {tone}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <h3 className="text-lg font-semibold mb-2">Key Themes</h3>
-              <div className="flex flex-wrap gap-2">
-                {analysisResult.aiAnalysis.key_themes.map((theme, index) => (
-                  <Badge key={index} variant="outline">
-                    {theme}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <h3 className="text-lg font-semibold mb-2">Summary Insights</h3>
-              <p className="text-gray-700 dark:text-gray-300">
-                {analysisResult.aiAnalysis.summary_insights}
-              </p>
-            </div>
-
-            <Separator />
-
-            <div>
-              <h3 className="text-lg font-semibold mb-2">Raw Comments (First 10, by popularity)</h3>
-              {analysisResult.comments.length > 0 ? (
-                <ul className="list-disc list-inside space-y-1 text-sm text-gray-600 dark:text-gray-400">
-                  {analysisResult.comments.slice(0, 10).map((comment, index) => (
-                    <li key={index}>{comment}</li>
+                <h3 className="text-lg font-semibold mb-2">Key Themes</h3>
+                <div className="flex flex-wrap gap-2">
+                  {analysisResult.aiAnalysis.key_themes.map((theme, index) => (
+                    <Badge key={index} variant="outline">
+                      {theme}
+                    </Badge>
                   ))}
-                </ul>
-              ) : (
-                <p className="text-gray-500">No comments found or fetched.</p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-lg font-semibold mb-2">Summary Insights</h3>
+                <p className="text-gray-700 dark:text-gray-300">
+                  {analysisResult.aiAnalysis.summary_insights}
+                </p>
+              </div>
+
+              <Separator />
+
+              <div>
+                <h3 className="text-lg font-semibold mb-2">Raw Comments (First 10, by popularity)</h3>
+                {analysisResult.comments.length > 0 ? (
+                  <ul className="list-disc list-inside space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                    {analysisResult.comments.slice(0, 10).map((comment, index) => (
+                      <li key={index}>{comment}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-gray-500">No comments found or fetched.</p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </>
       )}
     </div>
   );
