@@ -10,6 +10,8 @@ import { Loader2, Youtube } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ChevronDown } from "lucide-react";
 
 interface AiAnalysisResult {
   overall_sentiment: string;
@@ -18,9 +20,17 @@ interface AiAnalysisResult {
   summary_insights: string;
 }
 
+interface AnalysisResponse {
+  videoTitle: string;
+  videoDescription: string;
+  videoSubtitles: string; // Added for subtitles
+  comments: string[];
+  aiAnalysis: AiAnalysisResult;
+}
+
 const AnalyzeVideo = () => {
   const [videoLink, setVideoLink] = useState("");
-  const [analysisResult, setAnalysisResult] = useState<{ comments: string[]; aiAnalysis: AiAnalysisResult } | null>(null);
+  const [analysisResult, setAnalysisResult] = useState<AnalysisResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const analyzeVideoMutation = useMutation({
@@ -101,9 +111,23 @@ const AnalyzeVideo = () => {
       {analysisResult && (
         <Card>
           <CardHeader>
-            <CardTitle>Analysis Results</CardTitle>
+            <CardTitle>Analysis Results for "{analysisResult.videoTitle}"</CardTitle>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">{analysisResult.videoDescription}</p>
           </CardHeader>
           <CardContent className="space-y-6">
+            {analysisResult.videoSubtitles && (
+              <div>
+                <Collapsible>
+                  <CollapsibleTrigger className="flex items-center justify-between w-full text-lg font-semibold mb-2">
+                    Video Subtitles <ChevronDown className="h-4 w-4" />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="text-gray-700 dark:text-gray-300 text-sm max-h-60 overflow-y-auto border p-3 rounded-md bg-gray-50 dark:bg-gray-700">
+                    <p>{analysisResult.videoSubtitles}</p>
+                  </CollapsibleContent>
+                </Collapsible>
+              </div>
+            )}
+
             <div>
               <h3 className="text-lg font-semibold mb-2">Overall Sentiment</h3>
               <Badge variant="secondary" className="text-base px-3 py-1">
@@ -143,7 +167,7 @@ const AnalyzeVideo = () => {
             <Separator />
 
             <div>
-              <h3 className="text-lg font-semibold mb-2">Raw Comments (First 10)</h3>
+              <h3 className="text-lg font-semibold mb-2">Raw Comments (First 10, by popularity)</h3>
               {analysisResult.comments.length > 0 ? (
                 <ul className="list-disc list-inside space-y-1 text-sm text-gray-600 dark:text-gray-400">
                   {analysisResult.comments.slice(0, 10).map((comment, index) => (
