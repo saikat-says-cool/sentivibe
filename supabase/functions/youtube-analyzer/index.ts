@@ -8,8 +8,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Removed the parseXmlSubtitles helper function as it's no longer needed without direct subtitle fetching.
-
 serve(async (req) => {
   // Handle CORS preflight request
   if (req.method === 'OPTIONS') {
@@ -39,7 +37,7 @@ serve(async (req) => {
       });
     }
 
-    const { videoLink } = await req.json();
+    const { videoLink, customInstructions } = await req.json(); // Destructure customInstructions
     if (!videoLink) {
       return new Response(JSON.stringify({ error: 'Video link is required' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -69,7 +67,6 @@ serve(async (req) => {
     }
 
     // --- Fetch Video Details (Title, Description, Thumbnails, Tags) ---
-    // Removed 'captions' from the 'part' parameter to fix the 400 error.
     const videoDetailsApiUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=${youtubeApiKey}`;
     const videoDetailsResponse = await fetch(videoDetailsApiUrl);
 
@@ -89,7 +86,6 @@ serve(async (req) => {
     const videoThumbnailUrl = videoSnippet?.thumbnails?.high?.url || videoSnippet?.thumbnails?.medium?.url || '';
     const videoTags = videoSnippet?.tags || [];
 
-    // Removed subtitle fetching logic as it caused the API error.
     const videoSubtitles = ''; // No subtitles will be fetched for now.
 
 
@@ -158,7 +154,11 @@ serve(async (req) => {
 
     YouTube Comments:\n\n${formattedCommentsForAI.join('\n')}`;
 
-    // Removed conditional subtitle addition to prompt
+    // Add custom instructions if provided
+    if (customInstructions) {
+      longcatPrompt += `\n\nUser's Custom Instructions: ${customInstructions}\n`;
+    }
+
     longcatPrompt += `\n\nNote: Subtitles were not available for this video. Please base your analysis solely on the comments, video title, description, and tags.`;
 
 

@@ -13,6 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown } from "lucide-react";
 import html2pdf from 'html2pdf.js';
+import { Textarea } from "@/components/ui/textarea"; // Import Textarea
 
 interface AiAnalysisResult {
   overall_sentiment: string;
@@ -33,15 +34,16 @@ interface AnalysisResponse {
 
 const AnalyzeVideo = () => {
   const [videoLink, setVideoLink] = useState("");
+  const [customInstructions, setCustomInstructions] = useState(""); // New state for custom instructions
   const [analysisResult, setAnalysisResult] = useState<AnalysisResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const analysisReportRef = useRef<HTMLDivElement>(null);
 
   const analyzeVideoMutation = useMutation({
-    mutationFn: async (link: string) => {
+    mutationFn: async (payload: { videoLink: string; customInstructions: string }) => {
       setError(null);
       const { data, error: invokeError } = await supabase.functions.invoke('youtube-analyzer', {
-        body: { videoLink: link },
+        body: payload, // Pass the entire payload including customInstructions
       });
 
       if (invokeError) {
@@ -62,7 +64,7 @@ const AnalyzeVideo = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (videoLink.trim()) {
-      analyzeVideoMutation.mutate(videoLink);
+      analyzeVideoMutation.mutate({ videoLink, customInstructions }); // Pass both to the mutation
     }
   };
 
@@ -74,7 +76,7 @@ const AnalyzeVideo = () => {
         filename: `SentiVibe_Report_${analysisResult.videoTitle.replace(/[^a-z0-9]/gi, '_')}.pdf`,
         image: { type: 'jpeg' as 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2, logging: true, dpi: 192, letterRendering: true },
-        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' as 'portrait' } // Fixed: Explicitly cast type to 'portrait'
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' as 'portrait' }
       };
       html2pdf().from(element).set(opt).save();
     }
@@ -100,6 +102,16 @@ const AnalyzeVideo = () => {
                 onChange={(e) => setVideoLink(e.target.value)}
                 required
                 className="mt-1"
+              />
+            </div>
+            <div>
+              <Label htmlFor="customInstructions">Custom Instructions (Optional)</Label>
+              <Textarea
+                id="customInstructions"
+                placeholder="e.g., Focus on positive feedback, or summarize for a marketing report."
+                value={customInstructions}
+                onChange={(e) => setCustomInstructions(e.target.value)}
+                className="mt-1 min-h-[80px]"
               />
             </div>
             <Button type="submit" className="w-full" disabled={analyzeVideoMutation.isPending}>
