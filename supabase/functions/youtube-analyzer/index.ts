@@ -66,27 +66,51 @@ serve(async (req) => {
       });
     }
 
-    // Make the actual YouTube Data API call to get comment threads
-    // We fetch up to 100 comments, then sort them by likes.
-    const youtubeApiUrl = `https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId=${videoId}&key=${youtubeApiKey}&maxResults=100`;
-    const youtubeResponse = await fetch(youtubeApiUrl);
+    // --- Fetch Video Details (Title, Description) ---
+    const videoDetailsApiUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=${youtubeApiKey}`;
+    const videoDetailsResponse = await fetch(videoDetailsApiUrl);
 
-    if (!youtubeResponse.ok) {
-      const errorData = await youtubeResponse.json();
-      console.error('YouTube API error:', errorData);
+    if (!videoDetailsResponse.ok) {
+      const errorData = await videoDetailsResponse.json();
+      console.error('YouTube Video Details API error:', errorData);
+      return new Response(JSON.stringify({ error: 'Failed to fetch video details from YouTube API', details: errorData }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: videoDetailsResponse.status,
+      });
+    }
+    const videoDetailsData = await videoDetailsResponse.json();
+    const videoTitle = videoDetailsData.items?.[0]?.snippet?.title || 'Unknown Title';
+    const videoDescription = videoDetailsData.items?.[0]?.snippet?.description || 'No description available.';
+
+
+    // --- Fetch Comments ---
+    const youtubeCommentsApiUrl = `https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId=${videoId}&key=${youtubeApiKey}&maxResults=100`;
+    const youtubeCommentsResponse = await fetch(youtubeCommentsApiUrl);
+
+    if (!youtubeCommentsResponse.ok) {
+      const errorData = await youtubeCommentsResponse.json();
+      console.error('YouTube Comments API error:', errorData);
       return new Response(JSON.stringify({ error: 'Failed to fetch comments from YouTube API', details: errorData }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: youtubeResponse.status,
+        status: youtubeCommentsResponse.status,
       });
     }
 
-    const youtubeData = await youtubeResponse.json();
-    let commentsWithLikes = youtubeData.items
-      ? youtubeData.items.map((item: any) => ({
+    const youtubeCommentsData = await youtubeCommentsResponse.json();
+    let commentsWithLikes = youtubeCommentsData.items
+      ? youtubeCommentsData.items.map((item: any) => ({
           text: item.snippet.topLevelComment.snippet.textOriginal,
           likeCount: item.snippet.topLevelComment.snippet.likeCount,
         }))
       : [];
+
+    // Enforce 50-comment minimum
+    if (commentsWithLikes.length < 50) {
+      return new Response(JSON.stringify({ error: `Video must have at least 50 comments to proceed with analysis. This video has ${commentsWithLikes.length} comments.` }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      });
+    }
 
     // Sort comments by likeCount in descending order for consistent processing and display
     commentsWithLikes.sort((a: any, b: any) => b.likeCount - a.likeCount);
@@ -158,6 +182,8 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({
       message: `Successfully fetched comments and performed AI analysis for video ID: ${videoId}`,
+      videoTitle: videoTitle,
+      videoDescription: videoDescription,
       comments: allFetchedCommentsText, // Return all fetched comments for display
       aiAnalysis: aiAnalysis,
     }), {
