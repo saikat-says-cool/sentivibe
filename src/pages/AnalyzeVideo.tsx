@@ -23,9 +23,9 @@ interface AiAnalysisResult {
 interface AnalysisResponse {
   videoTitle: string;
   videoDescription: string;
-  videoThumbnailUrl: string; // Added for thumbnail
-  videoTags: string[];       // Added for tags
-  videoSubtitles: string;
+  videoThumbnailUrl: string;
+  videoTags: string[];
+  videoSubtitles: string; // This will now be an empty string from the Edge Function
   comments: string[];
   aiAnalysis: AiAnalysisResult;
 }
@@ -137,7 +137,7 @@ const AnalyzeVideo = () => {
               </div>
             )}
 
-            {analysisResult.videoSubtitles && (
+            {analysisResult.videoSubtitles && ( // This block will only render if videoSubtitles is not empty
               <div>
                 <Collapsible>
                   <CollapsibleTrigger className="flex items-center justify-between w-full text-lg font-semibold mb-2">

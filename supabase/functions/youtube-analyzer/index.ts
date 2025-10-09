@@ -8,16 +8,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Helper function to parse XML for subtitle text
-function parseXmlSubtitles(xmlString: string): string {
-  const textEntries = xmlString.match(/<text start="[^"]+" dur="[^"]+">([^<]+)<\/text>/g);
-  if (!textEntries) return '';
-
-  return textEntries.map(entry => {
-    const match = entry.match(/<text start="[^"]+" dur="[^"]+">([^<]+)<\/text>/);
-    return match ? match[1].replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>') : '';
-  }).join(' ').replace(/\s+/g, ' ').trim();
-}
+// Removed the parseXmlSubtitles helper function as it's no longer needed without direct subtitle fetching.
 
 serve(async (req) => {
   // Handle CORS preflight request
@@ -77,8 +68,9 @@ serve(async (req) => {
       });
     }
 
-    // --- Fetch Video Details (Title, Description, Captions metadata, Thumbnails, Tags) ---
-    const videoDetailsApiUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet,captions&id=${videoId}&key=${youtubeApiKey}`;
+    // --- Fetch Video Details (Title, Description, Thumbnails, Tags) ---
+    // Removed 'captions' from the 'part' parameter to fix the 400 error.
+    const videoDetailsApiUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=${youtubeApiKey}`;
     const videoDetailsResponse = await fetch(videoDetailsApiUrl);
 
     if (!videoDetailsResponse.ok) {
@@ -97,26 +89,8 @@ serve(async (req) => {
     const videoThumbnailUrl = videoSnippet?.thumbnails?.high?.url || videoSnippet?.thumbnails?.medium?.url || '';
     const videoTags = videoSnippet?.tags || [];
 
-    const captionTracks = videoDetailsData.items?.[0]?.caption?.track || [];
-
-    let videoSubtitles = '';
-    const englishCaptionTrack = captionTracks.find((track: any) => track.languageCode === 'en');
-
-    if (englishCaptionTrack && englishCaptionTrack.baseUrl) {
-      try {
-        const subtitleResponse = await fetch(englishCaptionTrack.baseUrl);
-        if (subtitleResponse.ok) {
-          const subtitleXml = await subtitleResponse.text();
-          videoSubtitles = parseXmlSubtitles(subtitleXml);
-        } else {
-          console.warn('Failed to fetch subtitles from:', englishCaptionTrack.baseUrl);
-        }
-      } catch (subtitleError) {
-        console.error('Error fetching or parsing subtitles:', subtitleError);
-      }
-    } else {
-      console.log('No English subtitles found for this video.');
-    }
+    // Removed subtitle fetching logic as it caused the API error.
+    const videoSubtitles = ''; // No subtitles will be fetched for now.
 
 
     // --- Fetch Comments ---
@@ -166,7 +140,7 @@ serve(async (req) => {
     }
 
     // Prepare prompt for Longcat AI, instructing it to consider like counts as weights and subtitles as additional context
-    let longcatPrompt = `Analyze the following YouTube video content. When determining the overall sentiment, emotional tones, key themes, and summary insights, please give significantly more weight and importance to comments that have a higher 'Likes' count. This should reflect a weighted average sentiment where more popular comments have a greater influence on the final analysis. Use the provided video subtitles as additional context to refine your understanding of the video's content and how it relates to the comments.
+    let longcatPrompt = `Analyze the following YouTube video content. When determining the overall sentiment, emotional tones, key themes, and summary insights, please give significantly more weight and importance to comments that have a higher 'Likes' count. This should reflect a weighted average sentiment where more popular comments have a greater influence on the final analysis.
     
     Video Title: "${videoTitle}"
     Video Description: "${videoDescription}"
@@ -179,16 +153,14 @@ serve(async (req) => {
       "overall_sentiment": "positive",
       "emotional_tones": ["joy", "excitement"],
       "key_themes": ["product review", "user experience"],
-      "summary_insights": "The comments are overwhelmingly positive, highlighting the product's ease of use and innovative features, with popular comments strongly influencing this assessment. The video's content, as described in the subtitles, aligns with these positive sentiments."
+      "summary_insights": "The comments are overwhelmingly positive, highlighting the product's ease of use and innovative features, with popular comments strongly influencing this assessment. The video's content, as described in the subtitles, aligns with these sentiments."
     }
 
     YouTube Comments:\n\n${formattedCommentsForAI.join('\n')}`;
 
-    if (videoSubtitles) {
-      longcatPrompt += `\n\nVideo Subtitles:\n\n${videoSubtitles}`;
-    } else {
-      longcatPrompt += `\n\nNote: No subtitles were available for this video. Please base your analysis solely on the comments.`;
-    }
+    // Removed conditional subtitle addition to prompt
+    longcatPrompt += `\n\nNote: Subtitles were not available for this video. Please base your analysis solely on the comments, video title, description, and tags.`;
+
 
     const longcatApiUrl = "https://api.longcat.chat/openai/v1/chat/completions";
     const longcatResponse = await fetch(longcatApiUrl, {
@@ -200,7 +172,7 @@ serve(async (req) => {
       body: JSON.stringify({
         model: "LongCat-Flash-Chat",
         messages: [
-          { "role": "system", "content": "You are an expert sentiment analysis AI. Your task is to analyze a YouTube video's comments and subtitles, providing a concise summary of sentiment, emotional tone, key themes, and overall insights. Prioritize popular comments and use subtitles for context. Also consider the video title, description, and tags for broader context." },
+          { "role": "system", "content": "You are an expert sentiment analysis AI. Your task is to analyze a YouTube video's comments, providing a concise summary of sentiment, emotional tone, key themes, and overall insights. Prioritize popular comments and use video title, description, and tags for broader context. Respond in a structured JSON format." },
           { "role": "user", "content": longcatPrompt }
         ],
         max_tokens: 1000,
@@ -234,7 +206,7 @@ serve(async (req) => {
       videoDescription: videoDescription,
       videoThumbnailUrl: videoThumbnailUrl, // Include thumbnail URL
       videoTags: videoTags,               // Include video tags
-      videoSubtitles: videoSubtitles,
+      videoSubtitles: videoSubtitles, // Will be an empty string for now
       comments: allFetchedCommentsText,
       aiAnalysis: aiAnalysis,
     }), {
