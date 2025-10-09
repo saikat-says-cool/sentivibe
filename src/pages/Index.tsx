@@ -1,23 +1,31 @@
-import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/integrations/supabase/auth";
 
-const Index = () => {
+function Index() {
+  const { session } = useAuth();
+
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-background text-foreground">
-      <div className="text-center p-6 bg-card rounded-lg shadow-lg">
-        {/* Replaced image logo with a grand word logo */}
-        <h1 className="text-5xl font-extrabold tracking-tight mb-6 text-foreground">SentiVibe</h1>
-        <p className="text-xl text-muted-foreground mb-6">
-          Unlock insights from YouTube comments with AI-powered sentiment analysis.
-        </p>
-        <Button asChild size="lg">
-          <Link to="/analyze">Start Analyzing a Video</Link>
-        </Button>
+    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] text-center px-4 py-8">
+      <h1 className="text-5xl font-extrabold tracking-tight mb-6 text-gray-900 dark:text-gray-50">
+        SentiVibe
+      </h1>
+      <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-2xl">
+        Unlock the true sentiment behind YouTube comments. Analyze, understand, and gain insights into audience reactions with AI-powered sentiment analysis.
+      </p>
+      <div className="space-x-4">
+        {session ? (
+          <Button asChild size="lg" className="bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200">
+            <Link to="/analyze-video">Analyze a Video</Link>
+          </Button>
+        ) : (
+          <Button asChild size="lg" className="bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200">
+            <Link to="/login">Get Started</Link>
+          </Button>
+        )}
       </div>
-      <MadeWithDyad />
     </div>
   );
-};
+}
 
 export default Index;
