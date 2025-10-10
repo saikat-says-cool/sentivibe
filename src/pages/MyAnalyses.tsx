@@ -8,6 +8,7 @@ import { Loader2, Search, Youtube } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/integrations/supabase/auth';
+import LibraryCopilot from '@/components/LibraryCopilot'; // Import the LibraryCopilot component
 
 interface AiAnalysisResult {
   overall_sentiment: string;
@@ -119,7 +120,7 @@ const MyAnalyses = () => {
   return (
     <div className="container mx-auto p-4 max-w-4xl">
       <h1 className="text-3xl font-bold mb-6">My Analysis History</h1>
-      <div className="flex items-center space-x-2 mb-6">
+      <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-2 mb-6">
         <Input
           type="text"
           placeholder="Search your analyses by title, creator, or keywords..."
@@ -127,9 +128,12 @@ const MyAnalyses = () => {
           onChange={(e) => setSearchTerm(e.target.value)}
           className="flex-1"
         />
-        <Button variant="outline" size="icon">
+        <Button variant="outline" size="icon" className="sm:hidden">
           <Search className="h-4 w-4" />
         </Button>
+        {blogPosts && blogPosts.length > 0 && (
+          <LibraryCopilot blogPosts={blogPosts} />
+        )}
       </div>
 
       {filteredPosts.length === 0 && (
