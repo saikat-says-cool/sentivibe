@@ -42,16 +42,16 @@ The project follows a standard React application structure with specific directo
     *   `src/pages/`: Application pages/views.
         *   `src/pages/Index.tsx`: Landing page.
         *   `src/pages/Login.tsx`: User authentication page.
-        *   `src/pages/AnalyzeVideo.tsx`: Main page for YouTube video analysis and AI chat.
+        *   `src/pages/AnalyzeVideo.tsx`: Main page for YouTube video analysis and AI chat. **Now also handles loading analysis context from navigation state for chat.**
         *   `src/pages/VideoAnalysisLibrary.tsx`: Page to list and search generated blog posts (video analyses).
-        *   `src/pages/BlogPostDetail.tsx`: Page to display the full content of a single generated blog post.
+        *   `src/pages/BlogPostDetail.tsx`: Page to display the full content of a single generated blog post. **Now includes a button to initiate AI chat with the post's context.**
         *   `src/pages/NotFound.tsx`: 404 error page.
     *   `src/integrations/supabase/`: Supabase-specific integration files.
         *   `src/integrations/supabase/client.ts`: Supabase client initialization.
         *   `src/integrations/supabase/auth.tsx`: React Context Provider and hook for managing Supabase user sessions.
 *   `supabase/`: Supabase-related backend files.
     *   `supabase/functions/`: Supabase Edge Functions.
-        *   `supabase/functions/youtube-analyzer/index.ts`: Edge Function for video analysis, **implementing caching to reuse existing analyses**, and blog post generation/insertion.
+        *   `supabase/functions/youtube-analyzer/index.ts`: Edge Function for video analysis, **implementing caching to reuse existing analyses, storing top comments for chat context**, and blog post generation/insertion.
         *   `supabase/functions/fetch-external-context/index.ts`: Edge Function for performing a one-time Google Custom Search.
         *   `supabase/functions/chat-analyzer/index.ts`: Edge Function for handling AI chat conversations.
     *   `supabase/migrations/`: Database migration files.

@@ -14,7 +14,7 @@
 
 ### 2.2. AI-Powered YouTube Video Analysis
 *   **Effortless Input:** Simply paste any public YouTube video link into the application.
-*   **Intelligent Analysis Caching:** To optimize resource usage and prevent duplicate content, SentiVibe automatically saves each video analysis. If a video has been analyzed before, the system will instantly retrieve and display the existing report and blog post, saving AI credits and API calls.
+*   **Intelligent Analysis Caching:** To optimize resource usage and prevent duplicate content, SentiVibe automatically saves each video analysis. If a video has been analyzed before, the system will instantly retrieve and display the existing report and blog post, saving AI credits and API calls. The cached analysis includes the top 10 raw comments for future AI chat context.
 *   **Comprehensive Data Extraction:** SentiVibe automatically retrieves:
     *   **Video Title & Description:** For context.
     *   **Video Thumbnail:** Visual identification of the video.
@@ -47,9 +47,10 @@
     *   **Browse & Discover:** Users can easily browse through past video analyses.
     *   **Search & Filter:** The library provides robust search functionality, allowing users to find specific analyses by video title, creator name, or keywords.
     *   **Visual Context:** Each entry in the library displays the YouTube video's thumbnail, title, and creator name for quick identification.
+    *   **Direct Chat Initiation:** From any blog post detail page, users can directly initiate a conversation with the AI, pre-loading the chat with the context of that specific video analysis.
 
 ### 2.4. Context-Aware Conversational AI
-*   **Interactive Q&A:** After a video analysis, users can engage in a chat with SentiVibe AI to ask follow-up questions about the video, its comments, or related topics.
+*   **Interactive Q&A:** After a video analysis, or when loading a saved analysis from the library, users can engage in a chat with SentiVibe AI to ask follow-up questions about the video, its comments, or related topics.
 *   **Customizable AI Persona:** Users can select from various AI personas (e.g., Friendly Assistant, Therapist, Storyteller, Motivational Coach, Argumentative) to tailor the AI's tone and conversational style to their preference.
 *   **Adjustable Response Length:** Users have explicit control over the AI's response verbosity, choosing between concise, standard, or detailed answers.
 *   **Multi-Source Intelligence:** The AI intelligently synthesizes information from:
@@ -89,11 +90,13 @@
 7.  **Customize AI Chat (Optional):** Before chatting, use the dropdowns above the chat interface to select your preferred **AI Persona** and **Response Length**.
 8.  **Chat with AI:** Below the analysis report, a chat interface will appear. You can now ask questions about the video, its comments, or related topics. The AI will use all available context and your chosen persona/length preferences to provide informed answers.
 9.  **Download PDF Report:** To save or share the report, click the "Download Report PDF" button. A PDF file will be generated and downloaded to your device.
-10. **Explore the Analysis Library:** Navigate to the "Analysis Library" from the header. Here, you can browse all past video analyses, search by video title, creator, or keywords, and click on any entry to view its full blog post. From a blog post, you can also easily navigate back to the library or start a new video analysis.
+10. **Explore the Analysis Library:** Navigate to the "Analysis Library" from the header. Here, you can browse all past video analyses, search by video title, creator, or keywords, and click on any entry to view its full blog post.
+11. **Chat from Library (New!):** From a blog post detail page, click the "Chat with AI" button to seamlessly transition to the analysis page with the blog post's context pre-loaded, ready for conversation.
 
 ## 4. Value Proposition
 SentiVibe provides immense value by:
 *   **Saving Time:** Automates the tedious process of manually sifting through thousands of comments and researching related topics, and now automates content creation. **Significantly reduces redundant AI and API costs by reusing past analyses.**
+*   **Enhanced Reliability:** The API key rotation mechanism ensures continuous operation even if individual free API keys hit their rate limits, providing a more robust and uninterrupted service.
 *   **Gaining Deeper Understanding:** Offers AI-driven insights and interactive conversations that go beyond surface-level reading, incorporating direct audience feedback and broader context.
 *   **Personalized Interaction:** Users can tailor the AI's conversational style and response detail to match their specific needs and preferences.
 *   **Informing Strategy:** Helps content creators understand what resonates with their audience, marketers to gauge campaign reception, and researchers to analyze public opinion with a more complete picture.
@@ -101,5 +104,6 @@ SentiVibe provides immense value by:
 *   **Professional Reporting:** Enables easy sharing of findings with high-quality PDF reports.
 *   **Cost-Effective Intelligence:** Streamlined external search ensures you get the necessary up-to-date information without incurring excessive API costs.
 *   **Boosting SEO & Content Strategy:** Automatically generates valuable, SEO-optimized content, expanding your digital footprint and making your insights discoverable to a wider audience through search engines. The searchable library further enhances content discoverability within the app, **ensuring no duplicate blog posts for the same video.** Comprehensive SEO features like dynamic meta tags, structured data, Open Graph tags, and proper alt text ensure maximum visibility and crawlability.
+*   **Seamless Workflow:** The ability to initiate AI chat directly from a saved blog post creates a more integrated and efficient user workflow, allowing for immediate follow-up questions on past analyses.
 
 SentiVibe is continuously evolving, with a strong foundation laid for future enhancements to further enrich your video analysis, conversational AI, and content generation experience.
