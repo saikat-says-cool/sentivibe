@@ -37,7 +37,7 @@ serve(async (req) => {
       });
     }
 
-    const { userMessage, chatMessages, analysisResult, externalContext, outputLengthPreference, selectedPersona } = await req.json(); // Receive selectedPersona
+    const { userMessage, chatMessages, analysisResult, externalContext, outputLengthPreference, selectedPersona } = await req.json();
 
     if (!userMessage || !analysisResult) {
       return new Response(JSON.stringify({ error: 'User message and analysis result are required.' }), {
@@ -60,28 +60,30 @@ serve(async (req) => {
     let maxTokens = 500; // Default to a reasonable standard length
     switch (outputLengthPreference) {
       case 'concise':
-        maxTokens = 150;
+        maxTokens = 200; // Slightly increased to ensure completeness
         break;
       case 'standard':
-        maxTokens = 500;
+        maxTokens = 600; // Slightly increased to ensure completeness
         break;
       case 'detailed':
         maxTokens = 1000;
         break;
       default:
-        maxTokens = 500; // Fallback
+        maxTokens = 600; // Fallback, slightly increased
     }
 
-    // Dynamically construct the system prompt based on selectedPersona
-    let systemPrompt = "";
+    // Base instructions for all personas, emphasizing completeness
     const baseInstructions = `
     When you answer a question:
+    - Always provide a complete, coherent, and well-formed response. Do not cut off sentences or thoughts.
     - Prioritize: Information from the video analysis context (including comments) for video-specific questions.
     - Augment: Use the provided external context for up-to-date or broader context, relating it back to the video's topic when relevant.
     - Leverage: For general, time-independent questions that cannot be answered from the video analysis or the provided external context, use your own pre-existing knowledge.
-    Adhere to the user's requested response length preference.
+    Adhere to the user's requested response length preference, but ensure completeness above all.
     `;
 
+    // Dynamically construct the system prompt based on selectedPersona
+    let systemPrompt = "";
     switch (selectedPersona) {
       case 'therapist':
         systemPrompt = `You are SentiVibe AI, acting as a compassionate and empathetic therapist. Your goal is to listen, understand, and provide supportive, reflective, and insightful responses. Focus on emotional well-being, understanding underlying feelings, and offering guidance in a gentle, non-judgmental manner. You can discuss the video's emotional impact or broader life topics.
@@ -130,7 +132,7 @@ serve(async (req) => {
 
     let userPromptContent = `Based on the video analysis and our conversation so far, please answer my question.`;
 
-    if (externalContext) { // Use the received externalContext
+    if (externalContext) {
       userPromptContent += `\n\n--- Recent External Information ---\n${externalContext}\n--- End External Information ---`;
       userPromptContent += `\n\nMy question: ${userMessage}`;
     } else {
@@ -139,7 +141,7 @@ serve(async (req) => {
 
     const messages = [
       { role: "system", content: systemPrompt },
-      { role: "user", content: analysisContext + userPromptContent }, // Combine analysis context with the user's prompt
+      { role: "user", content: analysisContext + userPromptContent },
     ];
 
     // If there's existing chat history, append it after the initial context
@@ -166,7 +168,7 @@ serve(async (req) => {
       body: JSON.stringify({
         model: "LongCat-Flash-Chat",
         messages: messages,
-        max_tokens: maxTokens, // Use dynamic maxTokens
+        max_tokens: maxTokens,
         temperature: 0.7,
       }),
     });
