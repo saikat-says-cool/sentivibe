@@ -1,15 +1,14 @@
 import React, { useRef, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Send, Bot, User2, Loader2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import ReactMarkdown from 'react-markdown'; // Import ReactMarkdown
+import { Send, Loader2 } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm'; // For GitHub Flavored Markdown
 
 interface Message {
   id: string;
   sender: 'user' | 'ai';
   text: string;
-  timestamp: string;
 }
 
 interface ChatInterfaceProps {
@@ -23,24 +22,18 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ messages, onSendMessage, 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages]); // Scroll to bottom whenever messages change
 
-  const handleSend = () => {
-    if (inputMessage.trim() && !isLoading) {
+  const handleSend = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (inputMessage.trim()) {
       onSendMessage(inputMessage);
       setInputMessage('');
-    }
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
     }
   };
 
@@ -50,73 +43,44 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ messages, onSendMessage, 
         {messages.map((message) => (
           <div
             key={message.id}
-            className={cn(
-              "flex items-start gap-3",
-              message.sender === 'user' ? "justify-end" : "justify-start"
-            )}
+            className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
           >
-            {message.sender === 'ai' && (
-              <div className="flex-shrink-0 h-8 w-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground">
-                <Bot className="h-5 w-5" />
-              </div>
-            )}
             <div
-              className={cn(
-                "max-w-[70%] p-3 rounded-lg",
+              className={`max-w-[70%] p-3 rounded-lg ${
                 message.sender === 'user'
-                  ? "bg-blue-500 text-white rounded-br-none"
-                  : "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-bl-none"
-              )}
+                  ? 'bg-blue-500 text-white rounded-br-none'
+                  : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200 rounded-bl-none'
+              }`}
             >
-              {/* Use ReactMarkdown to render the message text */}
-              <div className="text-sm prose dark:prose-invert">
-                <ReactMarkdown>
-                  {message.text}
-                </ReactMarkdown>
-              </div>
-              <span className="text-xs opacity-75 mt-1 block">
-                {message.timestamp}
-              </span>
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {message.text}
+              </ReactMarkdown>
             </div>
-            {message.sender === 'user' && (
-              <div className="flex-shrink-0 h-8 w-8 rounded-full bg-secondary flex items-center justify-center text-secondary-foreground">
-                <User2 className="h-5 w-5" />
-              </div>
-            )}
           </div>
         ))}
-        {isLoading && (
-          <div className="flex items-start gap-3 justify-start">
-            <div className="flex-shrink-0 h-8 w-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground">
-              <Bot className="h-5 w-5" />
-            </div>
-            <div className="max-w-[70%] p-3 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-bl-none">
-              <div className="flex items-center space-x-2">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                <span className="text-sm">Thinking...</span>
-              </div>
+        {isLoading && messages[messages.length - 1]?.sender === 'user' && (
+          <div className="flex justify-start">
+            <div className="max-w-[70%] p-3 rounded-lg bg-gray-100 dark:bg-gray-700 rounded-bl-none flex items-center">
+              <Loader2 className="mr-2 h-4 w-4 animate-spin text-gray-500 dark:text-gray-400" />
+              <span className="text-gray-500 dark:text-gray-400">Thinking...</span>
             </div>
           </div>
         )}
         <div ref={messagesEndRef} />
       </div>
-      <div className="border-t p-4 bg-background">
-        <div className="flex items-center space-x-2">
-          <Input
-            type="text"
-            placeholder="Ask about the video..."
-            value={inputMessage}
-            onChange={(e) => setInputMessage(e.target.value)}
-            onKeyPress={handleKeyPress}
-            disabled={isLoading}
-            className="flex-1"
-          />
-          <Button onClick={handleSend} disabled={isLoading}>
-            <Send className="h-4 w-4" />
-            <span className="sr-only">Send message</span>
-          </Button>
-        </div>
-      </div>
+      <form onSubmit={handleSend} className="flex p-4 border-t bg-gray-50 dark:bg-gray-800">
+        <Input
+          type="text"
+          placeholder="Type your message..."
+          value={inputMessage}
+          onChange={(e) => setInputMessage(e.target.value)}
+          className="flex-1 mr-2"
+          disabled={isLoading}
+        />
+        <Button type="submit" disabled={isLoading}>
+          {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+        </Button>
+      </form>
     </div>
   );
 };

@@ -44,7 +44,6 @@ interface Message {
   id: string;
   sender: 'user' | 'ai';
   text: string;
-  timestamp: string;
 }
 
 const AnalyzeVideo = () => {
@@ -105,7 +104,6 @@ const AnalyzeVideo = () => {
           id: 'ai-initial',
           sender: 'ai',
           text: `Analysis complete for "${data.videoTitle}". What would you like to know about it?`,
-          timestamp: new Date().toLocaleTimeString(),
         },
       ]);
     },
@@ -123,7 +121,6 @@ const AnalyzeVideo = () => {
         id: Date.now().toString(),
         sender: 'user',
         text: userMessageText,
-        timestamp: new Date().toLocaleTimeString(),
       };
       
       // Add user message immediately
@@ -135,27 +132,8 @@ const AnalyzeVideo = () => {
         id: aiMessageId,
         sender: 'ai',
         text: '', // Start with empty text
-        timestamp: new Date().toLocaleTimeString(),
       };
       setChatMessages((prev) => [...prev, aiPlaceholderMessage]);
-
-      const response = await supabase.functions.invoke('chat-analyzer', {
-        body: {
-          userMessage: userMessageText,
-          chatMessages: [...chatMessages, newUserMessage], // Send full history including new user message
-          analysisResult: analysisResult,
-          externalContext: externalContext,
-          outputLengthPreference: outputLengthPreference,
-          selectedPersona: selectedPersona,
-        },
-        // Important: For streaming, we need to handle the raw response
-        // The invoke method doesn't directly expose the stream, so we'll use fetch directly
-        // This is a common pattern when `invoke` doesn't support streaming directly
-      });
-
-      if (response.error) {
-        throw new Error(response.error.message || "Failed to get AI response.");
-      }
 
       // Manually fetch the stream from the Edge Function URL
       const edgeFunctionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat-analyzer`;
@@ -167,7 +145,7 @@ const AnalyzeVideo = () => {
         },
         body: JSON.stringify({
           userMessage: userMessageText,
-          chatMessages: [...chatMessages, newUserMessage],
+          chatMessages: [...chatMessages, newUserMessage], // Send full history including new user message
           analysisResult: analysisResult,
           externalContext: externalContext,
           outputLengthPreference: outputLengthPreference,
@@ -215,7 +193,7 @@ const AnalyzeVideo = () => {
       setChatMessages((prev) =>
         prev.map((msg, index) =>
           index === prev.length - 1 && msg.sender === 'ai' && msg.text === ''
-            ? { ...msg, text: `Error: ${err.message}. Please try again.`, timestamp: new Date().toLocaleTimeString() }
+            ? { ...msg, text: `Error: ${err.message}. Please try again.` }
             : msg
         )
       );
