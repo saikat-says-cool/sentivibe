@@ -89,7 +89,9 @@ serve(async (req) => {
     Your response should:
     1. Acknowledge the user's query.
     2. Identify the 1 to 3 most relevant blog posts from the provided list that best match the user's query.
-    3. For each recommended blog post, provide its Title and a **Markdown link to its detail page using its slug**. The link format should be: \`[Title](/blog/slug)\`.
+    3. For each recommended blog post, provide its Title and a **Markdown link to its detail page using its slug**.
+       **IMPORTANT: The link format MUST be \`[Title of Blog Post](/blog/slug-of-blog-post)\`.**
+       For example: \`[Understanding Audience Sentiment for 'Product Launch'](/blog/understanding-audience-sentiment-product-launch)\`
     4. If no relevant posts are found, politely inform the user.
     5. Keep your response concise and helpful.
     `;
