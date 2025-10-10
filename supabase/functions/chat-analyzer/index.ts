@@ -160,7 +160,7 @@ serve(async (req) => {
 
     const longcatApiUrl = "https://api.longcat.chat/openai/v1/chat/completions";
     
-    // Make the request to Longcat AI with streaming enabled
+    // Make the request to Longcat AI without streaming
     const longcatResponse = await fetch(longcatApiUrl, {
       method: 'POST',
       headers: {
@@ -172,7 +172,7 @@ serve(async (req) => {
         messages: messages,
         max_tokens: maxTokens,
         temperature: 0.7,
-        stream: true, // Enable streaming
+        stream: false, // Disable streaming
       }),
     });
 
@@ -185,73 +185,11 @@ serve(async (req) => {
       });
     }
 
-    // Create a ReadableStream to send chunks back to the client
-    const customReadable = new ReadableStream({
-      async start(controller) {
-        const reader = longcatResponse.body?.getReader();
-        const decoder = new TextDecoder();
+    const longcatData = await longcatResponse.json();
+    let aiContent = longcatData.choices[0].message.content;
 
-        if (!reader) {
-          controller.error('No readable stream from Longcat AI');
-          return;
-        }
-
-        try {
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) {
-              console.log('Longcat AI stream finished.');
-              break;
-            }
-            const chunk = decoder.decode(value, { stream: true });
-            console.log('Raw chunk from Longcat AI:', chunk); // Log raw chunk
-            const lines = chunk.split('\n').filter(line => line.trim() !== '');
-
-            for (const line of lines) {
-              let jsonString = line;
-              if (jsonString.startsWith('data: ')) {
-                jsonString = jsonString.substring(6);
-              }
-
-              if (jsonString === '[DONE]') {
-                console.log('Longcat AI sent [DONE].');
-                controller.close();
-                return;
-              }
-              
-              // Only attempt to parse if the string is not empty after removing 'data:'
-              if (jsonString.length > 0) {
-                try {
-                  const json = JSON.parse(jsonString);
-                  console.log('Parsed JSON from Longcat AI:', json); // Log parsed JSON
-                  const content = json.choices[0]?.delta?.content;
-                  console.log('Extracted content:', content); // Log extracted content
-                  if (content) {
-                    controller.enqueue(new TextEncoder().encode(content));
-                  }
-                } catch (parseError) {
-                  console.error('Error parsing SSE data:', parseError, 'Line:', line);
-                  // Optionally enqueue an error message or just skip malformed data
-                }
-              }
-            }
-          }
-        } catch (readError) {
-          console.error('Error reading stream from Longcat AI:', readError);
-          controller.error(readError);
-        } finally {
-          controller.close();
-        }
-      },
-    });
-
-    return new Response(customReadable, {
-      headers: {
-        ...corsHeaders,
-        'Content-Type': 'text/event-stream', // Set content type for streaming
-        'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive',
-      },
+    return new Response(JSON.stringify({ aiResponse: aiContent }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     });
 
