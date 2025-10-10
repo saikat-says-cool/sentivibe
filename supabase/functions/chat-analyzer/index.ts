@@ -208,15 +208,21 @@ serve(async (req) => {
             const lines = chunk.split('\n').filter(line => line.trim() !== '');
 
             for (const line of lines) {
-              if (line.startsWith('data: ')) {
-                const data = line.substring(6);
-                if (data === '[DONE]') {
-                  console.log('Longcat AI sent [DONE].');
-                  controller.close();
-                  return;
-                }
+              let jsonString = line;
+              if (jsonString.startsWith('data: ')) {
+                jsonString = jsonString.substring(6);
+              }
+
+              if (jsonString === '[DONE]') {
+                console.log('Longcat AI sent [DONE].');
+                controller.close();
+                return;
+              }
+              
+              // Only attempt to parse if the string is not empty after removing 'data:'
+              if (jsonString.length > 0) {
                 try {
-                  const json = JSON.parse(data);
+                  const json = JSON.parse(jsonString);
                   console.log('Parsed JSON from Longcat AI:', json); // Log parsed JSON
                   const content = json.choices[0]?.delta?.content;
                   console.log('Extracted content:', content); // Log extracted content
