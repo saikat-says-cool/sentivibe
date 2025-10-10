@@ -37,7 +37,7 @@ serve(async (req) => {
       });
     }
 
-    const { userMessage, chatMessages, analysisResult, externalContext, outputLengthPreference } = await req.json(); // Receive outputLengthPreference
+    const { userMessage, chatMessages, analysisResult, externalContext, outputLengthPreference, selectedPersona } = await req.json(); // Receive selectedPersona
 
     if (!userMessage || !analysisResult) {
       return new Response(JSON.stringify({ error: 'User message and analysis result are required.' }), {
@@ -72,12 +72,40 @@ serve(async (req) => {
         maxTokens = 500; // Fallback
     }
 
-    // Construct the AI prompt with full context
-    let systemPrompt = `Hey there! I'm SentiVibe AI, your friendly chat companion. I'm here to help you explore insights from YouTube videos and chat about anything else that comes to mind, just like a friend would.
-    When you ask a question:
-    - I'll always start by checking the video analysis (including those top comments!) and any recent external info I have to give you the most relevant answers about the video.
-    - But don't feel limited! If your question goes beyond the video or the external context, I'm happy to share my general knowledge and chat about broader topics.
-    I'll try to keep my answers clear and to the point, but I can also dive into more detail if you ask, or if the topic is complex. I'll also keep your preferred response length in mind. Let's chat!`;
+    // Dynamically construct the system prompt based on selectedPersona
+    let systemPrompt = "";
+    const baseInstructions = `
+    When you answer a question:
+    - Prioritize: Information from the video analysis context (including comments) for video-specific questions.
+    - Augment: Use the provided external context for up-to-date or broader context, relating it back to the video's topic when relevant.
+    - Leverage: For general, time-independent questions that cannot be answered from the video analysis or the provided external context, use your own pre-existing knowledge.
+    Adhere to the user's requested response length preference.
+    `;
+
+    switch (selectedPersona) {
+      case 'therapist':
+        systemPrompt = `You are SentiVibe AI, acting as a compassionate and empathetic therapist. Your goal is to listen, understand, and provide supportive, reflective, and insightful responses. Focus on emotional well-being, understanding underlying feelings, and offering guidance in a gentle, non-judgmental manner. You can discuss the video's emotional impact or broader life topics.
+        ${baseInstructions}`;
+        break;
+      case 'storyteller':
+        systemPrompt = `You are SentiVibe AI, a captivating storyteller. Your responses should be imaginative, descriptive, and engaging, weaving information into narratives or using vivid language. You can tell stories related to the video's themes or create new ones.
+        ${baseInstructions}`;
+        break;
+      case 'motivation':
+        systemPrompt = `You are SentiVibe AI, an inspiring motivational coach. Your responses should be encouraging, uplifting, and action-oriented. Focus on empowering the user, highlighting potential, and fostering a positive mindset, whether discussing the video's message or personal growth.
+        ${baseInstructions}`;
+        break;
+      case 'argumentative':
+        systemPrompt = `You are SentiVibe AI, an argumentative debater. Your role is to challenge assumptions, present counter-arguments, and provoke thought. Engage in a spirited, yet respectful, debate, pushing the user to consider different perspectives on the video's content or any other topic.
+        ${baseInstructions}`;
+        break;
+      case 'friendly': // Default persona
+      default:
+        systemPrompt = `Hey there! I'm SentiVibe AI, your friendly chat companion. I'm here to help you explore insights from YouTube videos and chat about anything else that comes to mind, just like a friend would.
+        ${baseInstructions}
+        I'll try to keep my answers clear and to the point, but I can also dive into more detail if you ask, or if the topic is complex. Let's chat!`;
+        break;
+    }
 
     let conversationHistory = chatMessages.map((msg: any) => ({
       role: msg.sender === 'user' ? 'user' : 'assistant',

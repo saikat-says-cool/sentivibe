@@ -54,7 +54,8 @@ const AnalyzeVideo = () => {
   const [error, setError] = useState<string | null>(null);
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
   const [externalContext, setExternalContext] = useState<string | null>(null);
-  const [outputLengthPreference, setOutputLengthPreference] = useState<string>("standard"); // New state for output length
+  const [outputLengthPreference, setOutputLengthPreference] = useState<string>("standard"); // State for output length
+  const [selectedPersona, setSelectedPersona] = useState<string>("friendly"); // New state for persona
   const analysisReportRef = useRef<HTMLDivElement>(null);
 
   const fetchExternalContextMutation = useMutation({
@@ -134,6 +135,7 @@ const AnalyzeVideo = () => {
           analysisResult: analysisResult,
           externalContext: externalContext,
           outputLengthPreference: outputLengthPreference, // Pass the output length preference
+          selectedPersona: selectedPersona, // Pass the selected persona
         },
       });
 
@@ -359,22 +361,43 @@ const AnalyzeVideo = () => {
               <CardTitle className="flex items-center gap-2">
                 <MessageSquare className="h-6 w-6 text-blue-500" /> Chat with AI about this video
               </CardTitle>
-              <div className="flex items-center space-x-2">
-                <Label htmlFor="output-length" className="text-sm">Response Length:</Label>
-                <Select
-                  value={outputLengthPreference}
-                  onValueChange={setOutputLengthPreference}
-                  disabled={isChatDisabled}
-                >
-                  <SelectTrigger id="output-length" className="w-[140px]">
-                    <SelectValue placeholder="Select length" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="concise">Concise</SelectItem>
-                    <SelectItem value="standard">Standard</SelectItem>
-                    <SelectItem value="detailed">Detailed</SelectItem>
-                  </SelectContent>
-                </Select>
+              <div className="flex items-center space-x-4"> {/* Adjusted spacing */}
+                <div className="flex items-center space-x-2">
+                  <Label htmlFor="persona-select" className="text-sm">Persona:</Label>
+                  <Select
+                    value={selectedPersona}
+                    onValueChange={setSelectedPersona}
+                    disabled={isChatDisabled}
+                  >
+                    <SelectTrigger id="persona-select" className="w-[140px]">
+                      <SelectValue placeholder="Select persona" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="friendly">Friendly Assistant</SelectItem>
+                      <SelectItem value="therapist">Therapist</SelectItem>
+                      <SelectItem value="storyteller">Storyteller</SelectItem>
+                      <SelectItem value="motivation">Motivational Coach</SelectItem>
+                      <SelectItem value="argumentative">Argumentative</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Label htmlFor="output-length" className="text-sm">Response Length:</Label>
+                  <Select
+                    value={outputLengthPreference}
+                    onValueChange={setOutputLengthPreference}
+                    disabled={isChatDisabled}
+                  >
+                    <SelectTrigger id="output-length" className="w-[140px]">
+                      <SelectValue placeholder="Select length" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="concise">Concise</SelectItem>
+                      <SelectItem value="standard">Standard</SelectItem>
+                      <SelectItem value="detailed">Detailed</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </CardHeader>
             <CardContent className="h-[500px] p-0">
