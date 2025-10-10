@@ -62,7 +62,7 @@ serve(async (req) => {
     - Prioritize: Information from the video analysis context (including comments) for video-specific questions.
     - Augment: Use the provided external context for up-to-date or broader context, relating it back to the video's topic when relevant.
     - Leverage: For general, time-independent questions that cannot be answered from the video analysis or the provided external context, use your own pre-existing knowledge.
-    Maintain a helpful, informative, and concise tone.`;
+    Be concise and direct in your answers, especially for simple questions. Provide more detail only when explicitly asked or when the complexity of the question requires it. Maintain a helpful, informative, and concise tone.`;
 
     let conversationHistory = chatMessages.map((msg: any) => ({
       role: msg.sender === 'user' ? 'user' : 'assistant',
