@@ -37,6 +37,8 @@ The project follows a standard React application structure with specific directo
         *   `src/components/ProtectedRoute.tsx`: Component for protecting routes.
         *   `src/components/Footer.tsx`: Application footer, now including the **brand ethics disclosure**.
         *   `src/components/theme-provider.tsx`: Theme context provider.
+        *   `src/components/VideoChatDialog.tsx`: **New component for the centralized AI chat pop-up.**
+        *   `src/components/LibraryCopilot.tsx`: AI assistant for searching the analysis library.
         *   `src/components/ui/`: Shadcn/ui components (e.g., Button, Card, Input, Badge, Alert, Skeleton, Collapsible).
     *   `src/hooks/`: Custom React hooks.
         *   `src/hooks/use-mobile.tsx`: Hook for detecting mobile viewport.
@@ -44,18 +46,20 @@ The project follows a standard React application structure with specific directo
     *   `src/pages/`: Application pages/views.
         *   `src/pages/Index.tsx`: Landing page, updated with new tagline and wordmark styling.
         *   `src/pages/Login.tsx`: User authentication page, styled to integrate with the new color palette.
-        *   `src/pages/AnalyzeVideo.tsx`: Main page for YouTube video analysis and AI chat. **Now also handles loading analysis context from navigation state for chat, includes branded PDF export, and AI persona/length controls.**
+        *   `src/pages/AnalyzeVideo.tsx`: Main page for YouTube video analysis. **Now uses `VideoChatDialog` for AI chat.**
         *   `src/pages/VideoAnalysisLibrary.tsx`: Page to list and search generated blog posts (video analyses).
-        *   `src/pages/BlogPostDetail.tsx`: Page to display the full content of a single generated blog post. **Now includes a button to initiate AI chat with the post's context, and dynamic SEO meta tags/JSON-LD.**
+        *   `src/pages/MyAnalyses.tsx`: **New page to list a user's own analyses, now integrating `LibraryCopilot`.**
+        *   `src/pages/BlogPostDetail.tsx`: Page to display the full content of a single generated blog post. **Now includes a button to initiate AI chat via `VideoChatDialog` with the post's context, and dynamic SEO meta tags/JSON-LD.**
         *   `src/pages/NotFound.tsx`: 404 error page.
     *   `src/integrations/supabase/`: Supabase-specific integration files.
         *   `src/integrations/supabase/client.ts`: Supabase client initialization.
         *   `src/integrations/supabase/auth.tsx`: React Context Provider and hook for managing Supabase user sessions.
 *   `supabase/`: Supabase-related backend files.
     *   `supabase/functions/`: Supabase Edge Functions.
-        *   `supabase/functions/youtube-analyzer/index.ts`: Edge Function for video analysis, **implementing caching to reuse existing analyses, storing top comments for chat context, generating SEO-optimized blog posts with new title/meta formats**, and blog post generation/insertion.
+        *   `supabase/functions/youtube-analyzer/index.ts`: Edge Function for video analysis, implementing caching to reuse existing analyses, storing top comments for chat context, generating SEO-optimized blog posts with new title/meta formats, and blog post generation/insertion.
         *   `supabase/functions/fetch-external-context/index.ts`: Edge Function for performing a one-time Google Custom Search.
-        *   `supabase/functions/chat-analyzer/index.ts`: Edge Function for handling AI chat conversations, now incorporating persona and response length preferences.
+        *   `supabase/functions/chat-analyzer/index.ts`: Edge Function for handling AI chat conversations, now incorporating persona and response length preferences, and **instructed to generate Markdown hyperlinks.**
+        *   `supabase/functions/library-copilot-analyzer/index.ts`: **New Edge Function for handling AI chat for the Library Copilot, instructed to generate Markdown hyperlinks to blog posts.**
     *   `supabase/migrations/`: Database migration files.
 *   `tailwind.config.ts`: Tailwind CSS configuration, including custom fonts (`Arimo`, `Plus Jakarta Sans`) and the new brand color palette.
 *   `.env`: Environment variables (e.g., Supabase URLs, API keys).
@@ -70,13 +74,13 @@ The project follows a standard React application structure with specific directo
     *   `Toaster` (from `sonner`): For displaying toast notifications, configured to use brand colors for success/error/neutral.
 *   **`AppRoutes` Component:** Encapsulates `BrowserRouter` and `Routes`.
     *   Renders the `Header` component globally.
-    *   Defines application routes: `/`, `/login`, `/analyze-video`, `/library`, `/blog/:slug`, and a catch-all `*` for `NotFound`.
-*   **`ProtectedRoute` Component:** A higher-order component that ensures only authenticated users can access specific routes (e.g., `/analyze-video`, `/library`). It redirects unauthenticated users to `/login`.
+    *   Defines application routes: `/`, `/login`, `/analyze-video`, `/library`, `/my-analyses`, `/blog/:slug`, and a catch-all `*` for `NotFound`.
+*   **`ProtectedRoute` Component:** A higher-order component that ensures only authenticated users can access specific routes (e.g., `/analyze-video`, `/library`, `/my-analyses`). It redirects unauthenticated users to `/login`.
 
 ### 4.2. `Header.tsx`
 *   A React component that renders a consistent header across all pages.
 *   Displays the **SentiVibe wordmark** (`<span className="text-foreground">Senti</span><span className="text-accent">Vibe</span>`) using the `font-heading` (Plus Jakarta Sans) typeface.
-*   Includes a navigation link to the `/library` route, accessible to authenticated users.
+*   Includes navigation links to the `/library` and `/my-analyses` routes, accessible to authenticated users.
 *   Integrates the `ModeToggle` component for theme switching.
 *   Styled with Tailwind CSS for a clean, **Crowd Black** and **Pure White** appearance.
 
@@ -94,25 +98,23 @@ The project follows a standard React application structure with specific directo
 *   Displays a "Welcome to SentiVibe" message.
 
 ### 4.5. `AnalyzeVideo.tsx` (Video Analysis Page)
-*   **State Management:** Manages `videoLink` input, `customInstructions`, `analysisResult`, `error`, `chatMessages`, `externalContext`, `outputLengthPreference`, and `selectedPersona` states using `useState`.
-*   **Initial Load from Blog Post:** Uses `useLocation` to check for `blogPost` data passed via navigation state. If present, it reconstructs the `analysisResult` from the `blogPost` (including `ai_analysis_json` and its `raw_comments_for_chat`), initializes the chat, and triggers `fetchExternalContextMutation`. The video input form is disabled when an analysis is already loaded.
+*   **State Management:** Manages `videoLink` input, `customInstructions`, `analysisResult`, `error`, and `isChatDialogOpen` states using `useState`.
+*   **Initial Load from Blog Post:** Uses `useLocation` to check for `blogPost` data passed via navigation state. If present, it reconstructs the `analysisResult` from the `blogPost` (including `ai_analysis_json` and its `raw_comments_for_chat`), sets `analysisResult`, and opens the `VideoChatDialog` immediately.
 *   **Supabase Edge Function Invocation:**
-    *   **`analyzeVideoMutation`:** Uses `useMutation` to call the `youtube-analyzer` Supabase Edge Function. `onSuccess` updates `analysisResult` (which now includes `blogPostSlug` and `originalVideoLink`) and then triggers `fetchExternalContextMutation`.
-    *   **`fetchExternalContextMutation`:** Calls the `fetch-external-context` Edge Function *once* after a successful video analysis (or when loading from a blog post). It uses the video title and tags as a search query and stores the results in `externalContext` state.
-    *   **`chatMutation`:** Handles asynchronous calls to the `chat-analyzer` Supabase Edge Function, sending conversation history, analysis results, external context, and AI preferences (`outputLengthPreference`, `selectedPersona`).
+    *   **`analyzeVideoMutation`:** Uses `useMutation` to call the `youtube-analyzer` Supabase Edge Function. `onSuccess` updates `analysisResult`. The `VideoChatDialog` is *not* automatically opened after a new analysis; the user must click the "Chat with AI" button.
 *   **UI Elements:**
     *   `Input` for video link submission, `Textarea` for custom instructions.
     *   `Button` to trigger analysis, showing a `Loader2` icon (styled with `text-accent`) when pending.
-    *   `Card` components to structure the input form, display results, and house the chat interface.
-    *   `Skeleton` components provide a loading state visual for both analysis and external context fetching.
+    *   `Card` components to structure the input form and display results.
+    *   `Skeleton` components provide a loading state visual for analysis.
     *   `Alert` component displays any errors from the analysis process.
     *   `Badge` components are used to display sentiment (using `sentiment-positive`, `sentiment-negative`, `sentiment-neutral` classes), emotional tones, and key themes.
     *   `Collapsible` component is prepared for subtitles (though currently empty).
-    *   `ChatInterface` component is rendered after a successful analysis, displaying conversation history and allowing user input. The chat input is disabled while analysis or external context fetching is pending.
-    *   **AI Controls:** Includes `Select` components for `outputLengthPreference` and `selectedPersona`.
     *   Displays a "View Blog Post" `Button` with a `Link` to `/blog/${analysisResult.blogPostSlug}` after a successful analysis.
     *   Displays an "Original Video" `Button` with an `<a>` tag linking to `analysisResult.originalVideoLink`.
+    *   **"Chat with AI" Button:** Triggers the `VideoChatDialog` pop-up.
 *   **PDF Download:** Integrates `html2pdf.js` to convert the analysis results `Card` into a downloadable PDF. The PDF generation now includes a custom header with the SentiVibe logo and tagline.
+*   **`VideoChatDialog` Integration:** Renders the `VideoChatDialog` component, passing `isChatDialogOpen`, `setIsChatDialogOpen`, and `analysisResult` as props.
 
 ### 4.6. `VideoAnalysisLibrary.tsx`
 *   **Purpose:** Displays a list of all generated blog posts (video analyses) from the Supabase database.
@@ -125,11 +127,12 @@ The project follows a standard React application structure with specific directo
     *   `Skeleton` components provide loading state visuals.
     *   Handles cases where no posts are found or an error occurs during fetching.
     *   **SEO:** `img` tags for thumbnails include descriptive `alt` attributes.
+    *   **`LibraryCopilot` Integration:** Renders the `LibraryCopilot` component, passing the fetched `blogPosts` for AI-powered search.
 
 ### 4.7. `BlogPostDetail.tsx`
 *   **Purpose:** Displays the full content of a single, SEO-optimized blog post.
 *   **Data Fetching:** Uses `useParams` to extract the `slug` from the URL and `useQuery` from `@tanstack/react-query` to fetch the specific blog post from `public.blog_posts` via its `slug`.
-*   **New Feature: Chat with AI:** Includes a "Chat with AI" button that navigates to the `/analyze-video` page, passing the current `blogPost` object as state. This allows the `AnalyzeVideo` page to initialize the chat with the context of the loaded blog post.
+*   **"Chat with AI" Button:** Now opens the `VideoChatDialog` directly, passing the current `blogPost` object as the `initialBlogPost` prop. This allows the `VideoChatDialog` to initialize the chat with the context of the loaded blog post.
 *   **SEO Enhancements:**
     *   **Dynamic Meta Tags:** `useEffect` hook dynamically updates `document.title` and `meta name="description"` based on the blog post's title and meta description.
     *   **Open Graph (OG) Tags:** Dynamically adds `og:title`, `og:description`, `og:image`, `og:url`, `og:type`, and `og:site_name` meta tags for rich social media previews.
@@ -145,6 +148,7 @@ The project follows a standard React application structure with specific directo
     *   Includes an "Original Video" `<a>` tag linking to `blogPost.original_video_link`.
     *   `Skeleton` components provide loading state visuals.
     *   Handles cases where the blog post is not found or an error occurs.
+*   **`VideoChatDialog` Integration:** Renders the `VideoChatDialog` component, passing `isChatDialogOpen`, `setIsChatDialogOpen`, and `blogPost` as props.
 
 ### 4.8. `ChatInterface.tsx` (Generic Chat UI)
 *   A reusable component designed to display a list of messages and provide an input field for sending new messages.
@@ -152,7 +156,31 @@ The project follows a standard React application structure with specific directo
 *   Includes a loading indicator (`Loader2` styled with `text-muted-foreground`) when `isLoading` is true.
 *   Automatically scrolls to the bottom of the chat on new messages.
 *   Handles message input and sending via `onSendMessage` prop.
-*   **Markdown Rendering:** Integrates `react-markdown` with `remarkGfm` to correctly render Markdown formatting in AI responses, improving readability.
+*   **Markdown Rendering:** Integrates `react-markdown` with `remarkGfm` to correctly render Markdown formatting in AI responses, including **underlined hyperlinks**, improving readability. The `prose dark:prose-invert` Tailwind classes are applied to ensure consistent typography.
+
+### 4.9. `VideoChatDialog.tsx` (New Component)
+*   **Purpose:** Centralizes the AI conversational chat experience for video analyses into a reusable pop-up dialog.
+*   **Props:** Accepts `isOpen` (boolean to control visibility), `onOpenChange` (callback to update `isOpen`), `initialAnalysisResult` (optional, for new analyses from `AnalyzeVideo`), and `initialBlogPost` (optional, for analyses loaded from `BlogPostDetail`).
+*   **Internal State:** Manages `chatMessages`, `outputLengthPreference`, `selectedPersona`, `currentExternalContext`, and `currentAnalysisResult`.
+*   **Context Initialization:** On dialog open, it checks `initialAnalysisResult` or `initialBlogPost` to set `currentAnalysisResult`. If `initialBlogPost` is provided, it reconstructs the `AnalysisResponse` object from the blog post data, including `ai_analysis_json` and `raw_comments_for_chat`.
+*   **External Context Fetching:** Uses an internal `fetchExternalContextMutation` (calling `fetch-external-context` Edge Function) to get up-to-date external information based on the video's title and tags, *once per dialog open*.
+*   **Chat Mutation:** Uses an internal `chatMutation` (calling `chat-analyzer` Edge Function) to send user messages and receive AI responses.
+*   **AI Controls:** Provides `Select` components for users to choose `selectedPersona` and `outputLengthPreference`, which are passed to the `chat-analyzer` Edge Function.
+*   **UI:** Renders the `ChatInterface` component within the dialog.
+
+### 4.10. `LibraryCopilot.tsx` (Existing Component, now more widely used)
+*   **Purpose:** Provides an AI assistant within the analysis library pages to help users find specific video analyses.
+*   **Props:** Accepts `blogPosts` (an array of `BlogPost` objects) from the parent page.
+*   **Internal State:** Manages `isOpen` (for the dialog) and `chatMessages`.
+*   **Chat Mutation:** Uses `copilotChatMutation` to invoke the `library-copilot-analyzer` Edge Function, passing the user's query and a simplified list of `blogPostsData`.
+*   **Markdown Links:** The AI is instructed to respond with clickable Markdown links (`[Title](/blog/slug)`) to relevant blog posts.
+
+### 4.11. `MyAnalyses.tsx` (New Page)
+*   **Purpose:** Displays a list of blog posts (video analyses) created by the currently authenticated user.
+*   **Data Fetching:** Uses `useQuery` to fetch `blog_posts` where `author_id` matches the current user's ID, ordered by `created_at`.
+*   **Search Functionality:** Similar client-side search as `VideoAnalysisLibrary.tsx`.
+*   **UI Elements:** Displays user-specific analyses in `Card` components, linked to `BlogPostDetail.tsx`.
+*   **`LibraryCopilot` Integration:** Renders the `LibraryCopilot` component, passing the user's `blogPosts` for AI-powered search within their personal history.
 
 ## 5. Supabase Integration Details
 
@@ -254,7 +282,7 @@ This Deno-based serverless function is responsible for fetching external, up-to-
 *   **Cost Optimization:** This function is called only once per video analysis session from the frontend, reducing repeated Google Search API calls.
 
 ### 5.7. Supabase Edge Function (`supabase/functions/chat-analyzer/index.ts`)
-This Deno-based serverless function handles the conversational AI aspect. **It now includes API key rotation.**
+This Deno-based serverless function handles the conversational AI aspect. **It now includes API key rotation and explicit instructions for Markdown hyperlinks.**
 *   **CORS Handling:** Includes `corsHeaders` and handles `OPTIONS` preflight requests.
 *   **Supabase Client Initialization & User Authentication:** Verifies the user.
 *   **Input:** Receives `userMessage`, `chatMessages` (conversation history), `analysisResult` (full video analysis including top comments, creator name, thumbnail URL, **and the `aiAnalysis` object, whether from a new analysis or cache**), `externalContext` (pre-fetched Google search results), `outputLengthPreference`, and `selectedPersona` from the frontend.
@@ -262,9 +290,9 @@ This Deno-based serverless function handles the conversational AI aspect. **It n
     *   Retrieves a list of `LONGCAT_AI_API_KEY`s using the `getApiKeys` helper function.
     *   Iterates through the available keys, retrying the Longcat AI API call with the next key if a rate limit error (HTTP 429) is encountered.
 *   **Dynamic `max_tokens`:** Adjusts the `max_tokens` parameter for the Longcat AI API call based on the `outputLengthPreference`.
-*   **Dynamic `systemPrompt`:** Constructs the AI's `systemPrompt` based on the `selectedPersona`, guiding the AI's tone, style, and conversational boundaries, and now includes explicit word count targets.
+*   **Dynamic `systemPrompt`:** Constructs the AI's `systemPrompt` based on the `selectedPersona`, guiding the AI's tone, style, and conversational boundaries, and now includes explicit word count targets. **Crucially, it now explicitly instructs the AI to format any URLs or resources as Markdown hyperlinks (`[Link Text](URL)`).**
 *   **Prompt Construction:**
-    *   **System Prompt:** Dynamically generated based on persona, including instructions for information prioritization, adherence to response length, and explicit word count targets.
+    *   **System Prompt:** Dynamically generated based on persona, including instructions for information prioritization, adherence to response length, explicit word count targets, and **Markdown link formatting**.
     *   **Analysis Context:** Formats `analysisResult` (video details, sentiment, themes, summary, top 10 raw comments, creator name, thumbnail URL) into a dedicated string.
     *   **External Context:** Integrates the received `externalContext` into the user's prompt, clearly labeled.
     *   **Conversation History:** Appends formatted `chatMessages` to maintain conversational flow.
@@ -273,12 +301,23 @@ This Deno-based serverless function handles the conversational AI aspect. **It n
 *   **Response:** Returns a `200 OK` response with the AI's `aiResponse`.
 *   **Cost Efficiency:** This function no longer makes direct Google Search API calls, relying on the frontend to provide the `externalContext`. **Note:** While the core video analysis is cached, the `fetch-external-context` function is still invoked on each new analysis request from the frontend to ensure the chat AI has the most up-to-date external information.
 
+### 5.8. Supabase Edge Function (`supabase/functions/library-copilot-analyzer/index.ts`) (New/Updated)
+This Deno-based serverless function handles the AI-powered search within the analysis library. **It now includes explicit instructions for Markdown hyperlinks.**
+*   **CORS Handling:** Includes `corsHeaders` and handles `OPTIONS` preflight requests.
+*   **Supabase Client Initialization & User Authentication:** Verifies the user.
+*   **Input:** Receives `userQuery` and `blogPostsData` (a simplified list of blog posts) from the frontend.
+*   **API Key Retrieval & Rotation:** Retrieves a list of `LONGCAT_AI_API_KEY`s and iterates through them for API calls.
+*   **`systemPrompt`:** Explicitly instructs the AI to identify relevant blog posts and provide their titles with **Markdown links in the format `[Title of Blog Post](/blog/slug-of-blog-post)`**.
+*   **Longcat AI API Call:** Sends the formatted blog post data and user query to the Longcat AI API.
+*   **Response:** Returns a `200 OK` response with the AI's `aiResponse` containing the recommendations with clickable Markdown links.
+
 ## 6. Styling and Branding
 *   **Tailwind CSS:** Used extensively for all styling, providing a utility-first approach.
 *   **`src/globals.css`:**
     *   Defines custom CSS variables for the **Crowd Black** and **Pure White** color palette for both light and dark modes. This ensures consistent theming across the application.
     *   Includes specific variables for **Positive Green**, **Neutral Gray**, **Negative Red**, and **Accent Blue** to be used for sentiment and interactive elements.
     *   Applies the `Arimo` font globally to the `body` element.
+    *   **New CSS Rule:** Includes `.prose a { text-decoration: underline; }` to ensure all links within Markdown-rendered content are clearly underlined.
 *   **`tailwind.config.ts`:** Configures Tailwind to use `Arimo` as the default `font-sans` family and `Plus Jakarta Sans` for `font-heading`. It also extends the color palette with the new brand colors and sentiment-specific colors.
 *   **Branding:** The application features a distinct "SentiVibe" word logo with `text-3xl font-extrabold tracking-tight` styling in the header and `text-5xl font-extrabold tracking-tight` on the landing page, using the `font-heading` (Plus Jakarta Sans) typeface. The "Vibe" part of the logo is highlighted with the `text-accent` color.
 

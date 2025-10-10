@@ -52,9 +52,10 @@
     *   **Search & Filter:** The library provides robust search functionality, allowing users to find specific analyses by video title, creator name, or keywords.
     *   **Visual Context:** Each entry in the library displays the YouTube video's thumbnail, title, and creator name for quick identification.
     *   **Direct Chat Initiation:** From any blog post detail page, users can directly initiate a conversation with the AI, pre-loading the chat with the context of that specific video analysis.
+    *   **Library Copilot:** An AI assistant is available in both the main "Analysis Library" and "My Analyses" pages to help users find specific video analyses based on their queries, providing clickable Markdown links to relevant blog posts.
 
 ### 2.4. Context-Aware Conversational AI
-*   **Interactive Q&A:** After a video analysis, or when loading a saved analysis from the library, users can engage in a chat with SentiVibe AI to ask follow-up questions about the video, its comments, or related topics.
+*   **Interactive Q&A (Dialog-based):** After a video analysis, or when loading a saved analysis from the library, users can engage in a chat with SentiVibe AI to ask follow-up questions about the video, its comments, or related topics. This chat now occurs within a **pop-up dialog interface**, providing a consistent experience across the application.
 *   **Customizable AI Persona:** Users can select from various AI personas (e.g., Friendly Assistant, Therapist, Storyteller, Motivational Coach, Argumentative) to tailor the AI's tone and conversational style to their preference.
 *   **Adjustable Response Length:** Users have explicit control over the AI's response verbosity, choosing between concise, standard, or detailed answers.
 *   **Multi-Source Intelligence:** The AI intelligently synthesizes information from:
@@ -70,7 +71,7 @@
 *   **Raw Comment Snippets:** Displays the top 10 most popular comments (by like count) to give users a direct glimpse into the source data.
 *   **Loading Indicators:** Provides clear visual feedback during the analysis process, including fetching external context, with skeleton loaders and spinning icons in **Accent Blue**.
 *   **Error Handling:** Displays user-friendly alerts for any issues encountered during analysis (e.g., invalid link, insufficient comments, API errors).
-*   **Formatted Chat Responses:** AI responses in the chat interface are now rendered with proper Markdown formatting, improving readability and presentation.
+*   **Formatted Chat Responses:** AI responses in *all* chat interfaces (including the main video analysis chat and the Library Copilot) are now rendered with proper Markdown formatting, including **underlined hyperlinks**, improving readability and presentation.
 *   **Enhanced Navigation:** Each analysis report includes a direct link to its corresponding SEO-optimized blog post in the library, and a link to the original YouTube video.
 
 ### 2.6. Professional PDF Report Export
@@ -93,12 +94,14 @@
 4.  **Paste YouTube Link:** In the input field, paste the full URL of the YouTube video you wish to analyze.
 5.  **Initiate Analysis:** Click the "Analyze Comments" button. If the video has been analyzed before, the report will load almost instantly. Otherwise, the application will display a loading state while the AI processes the data and fetches initial external context.
 6.  **Review Report & Blog Post:** Once the analysis is complete, a detailed report will appear. You will see a "View Blog Post" button to navigate to the full, SEO-optimized blog post, and an "Original Video" button to view the YouTube video.
-7.  **Customize AI Chat (Optional):** Before chatting, use the dropdowns above the chat interface to select your preferred **AI Persona** and **Response Length**.
-8.  **Chat with AI:** Below the analysis report, a chat interface will appear. You can now ask questions about the video, its comments, or related topics. The AI will use all available context and your chosen persona/length preferences to provide informed answers.
-9.  **Download PDF Report:** To save or share the report, click the "Download Report PDF" button. A PDF file will be generated and downloaded to your device, featuring a branded header.
-10. **Explore the Analysis Library:** Navigate to the "Analysis Library" from the header. Here, you can browse all past video analyses, search by video title, creator, or keywords, and click on any entry to view its full blog post.
-11. **Chat from Library (New!):** From a blog post detail page, click the "Chat with AI" button to seamlessly transition to the analysis page with the blog post's context pre-loaded, ready for conversation.
-12. **Toggle Theme:** Use the moon/sun icon in the header to switch between light and dark modes.
+7.  **Chat with AI:** Click the "Chat with AI" button to open the **pop-up chat dialog**.
+8.  **Customize AI Chat (Optional):** Within the chat dialog, use the dropdowns to select your preferred **AI Persona** and **Response Length**.
+9.  **Engage with AI:** You can now ask questions about the video, its comments, or related topics. The AI will use all available context and your chosen persona/length preferences to provide informed answers, including clickable Markdown links.
+10. **Download PDF Report:** To save or share the report, click the "Download Report PDF" button. A PDF file will be generated and downloaded to your device, featuring a branded header.
+11. **Explore the Analysis Library:** Navigate to the "Analysis Library" from the header. Here, you can browse all past video analyses, search by video title, creator, or keywords.
+12. **Use Library Copilot:** On both the "Analysis Library" and "My Analyses" pages, click the "Library Copilot" button to open an AI chat that helps you find specific analyses from your collection, providing direct links to the blog posts.
+13. **Chat from Library (New!):** From a blog post detail page, click the "Chat with AI" button to seamlessly open the **pop-up chat dialog** with the blog post's context pre-loaded, ready for conversation.
+14. **Toggle Theme:** Use the moon/sun icon in the header to switch between light and dark modes.
 
 ## 4. Value Proposition
 SentiVibe provides immense value by:
@@ -111,7 +114,7 @@ SentiVibe provides immense value by:
 *   **Professional Reporting:** Enables easy sharing of findings with high-quality PDF reports, now with a professional branded header.
 *   **Cost-Effective Intelligence:** Streamlined external search ensures you get the necessary up-to-date information without incurring excessive API costs.
 *   **Boosting SEO & Content Strategy:** Automatically generates valuable, SEO-optimized content, expanding your digital footprint and making your insights discoverable to a wider audience through search engines. The searchable library further enhances content discoverability within the app, **ensuring no duplicate blog posts for the same video.** Comprehensive SEO features like dynamic meta tags, structured data, Open Graph tags, and proper alt text ensure maximum visibility and crawlability.
-*   **Seamless Workflow:** The ability to initiate AI chat directly from a saved blog post creates a more integrated and efficient user workflow, allowing for immediate follow-up questions on past analyses.
+*   **Seamless Workflow:** The ability to initiate AI chat directly from a saved blog post, now within a consistent pop-up dialog, creates a more integrated and efficient user workflow, allowing for immediate follow-up questions on past analyses. The `LibraryCopilot` further enhances discoverability within a user's own analyses.
 *   **Modern & Intuitive Experience:** A sleek, responsive, and themeable user interface that aligns with modern design principles and your distinct brand identity.
 
 SentiVibe is continuously evolving, with a strong foundation laid for future enhancements to further enrich your video analysis, conversational AI, and content generation experience.
