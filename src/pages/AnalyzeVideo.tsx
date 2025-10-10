@@ -14,7 +14,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { ChevronDown } from "lucide-react";
 import html2pdf from 'html2pdf.js';
 import { Textarea } from "@/components/ui/textarea";
-import ChatInterface from '@/components/ChatInterface'; // Import the ChatInterface component
+import ChatInterface from '@/components/ChatInterface';
 
 interface AiAnalysisResult {
   overall_sentiment: string;
@@ -45,14 +45,36 @@ const AnalyzeVideo = () => {
   const [customInstructions, setCustomInstructions] = useState("");
   const [analysisResult, setAnalysisResult] = useState<AnalysisResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [chatMessages, setChatMessages] = useState<Message[]>([]); // State for chat messages
+  const [chatMessages, setChatMessages] = useState<Message[]>([]);
+  const [externalContext, setExternalContext] = useState<string | null>(null); // New state for external context
   const analysisReportRef = useRef<HTMLDivElement>(null);
+
+  const fetchExternalContextMutation = useMutation({
+    mutationFn: async (query: string) => {
+      const { data, error: invokeError } = await supabase.functions.invoke('fetch-external-context', {
+        body: { query },
+      });
+      if (invokeError) {
+        console.error("Supabase Fetch External Context Function Invoke Error:", invokeError);
+        throw new Error(invokeError.message || "Failed to fetch external context.");
+      }
+      return data.externalSearchResults;
+    },
+    onSuccess: (data) => {
+      setExternalContext(data);
+    },
+    onError: (err: Error) => {
+      console.error("Error fetching external context:", err);
+      // Optionally display an error, but don't block chat if external context fails
+    },
+  });
 
   const analyzeVideoMutation = useMutation({
     mutationFn: async (payload: { videoLink: string; customInstructions: string }) => {
       setError(null);
-      setAnalysisResult(null); // Clear previous analysis when starting a new one
-      setChatMessages([]); // Clear chat messages for new analysis
+      setAnalysisResult(null);
+      setChatMessages([]);
+      setExternalContext(null); // Clear external context for new analysis
 
       const { data, error: invokeError } = await supabase.functions.invoke('youtube-analyzer', {
         body: payload,
@@ -66,7 +88,10 @@ const AnalyzeVideo = () => {
     },
     onSuccess: (data) => {
       setAnalysisResult(data);
-      // Add an initial AI message to the chat after analysis is complete
+      // After successful video analysis, fetch external context
+      const searchQuery = `${data.videoTitle} ${data.videoTags.join(' ')}`;
+      fetchExternalContextMutation.mutate(searchQuery);
+
       setChatMessages([
         {
           id: 'ai-initial',
@@ -80,6 +105,7 @@ const AnalyzeVideo = () => {
       setError(err.message);
       setAnalysisResult(null);
       setChatMessages([]);
+      setExternalContext(null);
     },
   });
 
@@ -96,8 +122,9 @@ const AnalyzeVideo = () => {
       const { data, error: invokeError } = await supabase.functions.invoke('chat-analyzer', {
         body: {
           userMessage: userMessageText,
-          chatMessages: [...chatMessages, newMessage], // Send current chat history including the new user message
-          analysisResult: analysisResult, // Send the full analysis context
+          chatMessages: [...chatMessages, newMessage],
+          analysisResult: analysisResult,
+          externalContext: externalContext, // Pass the fetched external context
         },
       });
 
@@ -155,6 +182,8 @@ const AnalyzeVideo = () => {
     }
   };
 
+  const isChatDisabled = !analysisResult || fetchExternalContextMutation.isPending;
+
   return (
     <div className="container mx-auto p-4 max-w-3xl">
       <Card className="mb-6">
@@ -195,12 +224,18 @@ const AnalyzeVideo = () => {
         </CardContent>
       </Card>
 
-      {analyzeVideoMutation.isPending && (
+      {(analyzeVideoMutation.isPending || fetchExternalContextMutation.isPending) && (
         <Card className="p-6 space-y-4">
           <Skeleton className="h-8 w-3/4" />
           <Skeleton className="h-4 w-full" />
           <Skeleton className="h-4 w-full" />
           <Skeleton className="h-4 w-1/2" />
+          {fetchExternalContextMutation.isPending && (
+            <div className="flex items-center space-x-2 mt-4">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span className="text-sm text-gray-500">Fetching external context...</span>
+            </div>
+          )}
         </Card>
       )}
 
@@ -316,11 +351,11 @@ const AnalyzeVideo = () => {
                 <MessageSquare className="h-6 w-6 text-blue-500" /> Chat with AI about this video
               </CardTitle>
             </CardHeader>
-            <CardContent className="h-[500px] p-0"> {/* Fixed height for chat */}
+            <CardContent className="h-[500px] p-0">
               <ChatInterface
                 messages={chatMessages}
                 onSendMessage={handleSendMessage}
-                isLoading={chatMutation.isPending}
+                isLoading={chatMutation.isPending || fetchExternalContextMutation.isPending} // Disable chat while fetching external context
               />
             </CardContent>
           </Card>

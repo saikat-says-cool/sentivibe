@@ -37,37 +37,13 @@ serve(async (req) => {
       });
     }
 
-    const { userMessage, chatMessages, analysisResult } = await req.json();
+    const { userMessage, chatMessages, analysisResult, externalContext } = await req.json(); // Receive externalContext
 
     if (!userMessage || !analysisResult) {
       return new Response(JSON.stringify({ error: 'User message and analysis result are required.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,
       });
-    }
-
-    // --- Google Custom Search Integration ---
-    // @ts-ignore
-    const googleSearchApiKey = Deno.env.get('GOOGLE_SEARCH_API_KEY');
-    // @ts-ignore
-    const googleSearchEngineId = Deno.env.get('GOOGLE_SEARCH_ENGINE_ID');
-
-    let externalSearchResults = '';
-    if (googleSearchApiKey && googleSearchEngineId) {
-      const googleSearchApiUrl = `https://www.googleapis.com/customsearch/v1?key=${googleSearchApiKey}&cx=${googleSearchEngineId}&q=${encodeURIComponent(userMessage)}`;
-      const searchResponse = await fetch(googleSearchApiUrl);
-
-      if (searchResponse.ok) {
-        const searchData = await searchResponse.json();
-        if (searchData.items && searchData.items.length > 0) {
-          // Take top 3 search results and concatenate their snippets
-          externalSearchResults = searchData.items.slice(0, 3).map((item: any) => `Title: ${item.title}\nSnippet: ${item.snippet}\nURL: ${item.link}`).join('\n\n');
-        }
-      } else {
-        console.warn('Google Custom Search API error:', await searchResponse.text());
-      }
-    } else {
-      console.warn('Google Search API keys not configured. Skipping external search.');
     }
 
     // --- Longcat AI API Call ---
@@ -84,8 +60,8 @@ serve(async (req) => {
     // Refined system prompt to include instructions for leveraging pre-existing knowledge
     let systemPrompt = `You are a helpful assistant named SentiVibe AI. Your primary role is to answer questions about the provided YouTube video analysis and the ongoing conversation.
     - Prioritize: Information from the video analysis context (including comments) for video-specific questions.
-    - Augment: Use external search results for up-to-date or broader context, relating it back to the video's topic when relevant.
-    - Leverage: For general, time-independent questions that cannot be answered from the video analysis or external search, use your own pre-existing knowledge.
+    - Augment: Use the provided external context for up-to-date or broader context, relating it back to the video's topic when relevant.
+    - Leverage: For general, time-independent questions that cannot be answered from the video analysis or the provided external context, use your own pre-existing knowledge.
     Maintain a helpful, informative, and concise tone.`;
 
     let conversationHistory = chatMessages.map((msg: any) => ({
@@ -111,8 +87,8 @@ serve(async (req) => {
 
     let userPromptContent = `Based on the video analysis and our conversation so far, please answer my question.`;
 
-    if (externalSearchResults) {
-      userPromptContent += `\n\n--- Recent External Information ---\n${externalSearchResults}\n--- End External Information ---`;
+    if (externalContext) { // Use the received externalContext
+      userPromptContent += `\n\n--- Recent External Information ---\n${externalContext}\n--- End External Information ---`;
       userPromptContent += `\n\nMy question: ${userMessage}`;
     } else {
       userPromptContent += `\n\nMy question: ${userMessage}`;
