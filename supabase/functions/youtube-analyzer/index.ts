@@ -56,6 +56,43 @@ serve(async (req) => {
       });
     }
 
+    // --- Caching Logic: Check for existing analysis ---
+    const { data: existingBlogPost, error: fetchError } = await supabaseClient
+      .from('blog_posts')
+      .select('*')
+      .eq('video_id', videoId)
+      .single();
+
+    if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 means no rows found
+      console.error('Supabase fetch existing blog post error:', fetchError);
+      return new Response(JSON.stringify({ error: 'Failed to check for existing analysis', details: fetchError }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500,
+      });
+    }
+
+    if (existingBlogPost) {
+      console.log(`Reusing existing analysis for video ID: ${videoId}`);
+      // Return existing data, including the stored AI analysis
+      return new Response(JSON.stringify({
+        message: `Reusing existing analysis for video ID: ${videoId}`,
+        videoTitle: existingBlogPost.title,
+        videoDescription: existingBlogPost.meta_description, // Using meta_description as a fallback for video description
+        videoThumbnailUrl: existingBlogPost.thumbnail_url,
+        videoTags: existingBlogPost.keywords, // Using keywords as a fallback for video tags
+        creatorName: existingBlogPost.creator_name,
+        videoSubtitles: '', // Subtitles are not stored, so keep empty
+        comments: [], // Raw comments are not stored for reuse, so keep empty
+        aiAnalysis: existingBlogPost.ai_analysis_json, // Use the stored AI analysis
+        blogPostSlug: existingBlogPost.slug,
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
+      });
+    }
+
+    // --- If no existing analysis, proceed with new analysis ---
+
     // Access the YouTube API Key from Supabase Secrets
     // @ts-ignore
     const youtubeApiKey = Deno.env.get('YOUTUBE_API_KEY');
@@ -275,7 +312,7 @@ serve(async (req) => {
     // Log the generated slug for debugging
     console.log("Generated Blog Post Slug:", generatedBlogPost.slug);
 
-    // Insert the generated blog post into the database
+    // Insert the generated blog post into the database, including ai_analysis_json
     const { error: insertError } = await supabaseClient
       .from('blog_posts')
       .insert({
@@ -289,6 +326,7 @@ serve(async (req) => {
         author_id: user.id, // Link to the user who initiated the analysis
         creator_name: creatorName, // New column
         thumbnail_url: videoThumbnailUrl, // New column
+        ai_analysis_json: aiAnalysis, // Store the full AI analysis JSON
       });
 
     if (insertError) {
