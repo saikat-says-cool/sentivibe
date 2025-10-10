@@ -4,11 +4,11 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, ExternalLink } from 'lucide-react'; // Added ExternalLink icon
+import { ArrowLeft, ExternalLink } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Helmet } from 'react-helmet-async'; // New import for SEO
+import { Helmet } from 'react-helmet-async';
 
 interface BlogPost {
   id: string;
@@ -22,7 +22,7 @@ interface BlogPost {
   author_id: string;
   creator_name: string;
   thumbnail_url: string;
-  original_video_link: string; // New field
+  original_video_link: string;
   created_at: string;
   updated_at: string;
 }
@@ -115,12 +115,7 @@ const BlogPostDetail = () => {
             "@type": "ImageObject",
             "url": `${window.location.origin}/favicon.ico` // Assuming favicon is a good logo representation
           }
-        },
-        "mainEntityOfPage": {
-          "@type": "WebPage",
-          "@id": canonicalUrl
-        },
-        "keywords": blogPost.keywords.join(', ')
+        }
       }
     ]
   };
@@ -144,7 +139,7 @@ const BlogPostDetail = () => {
           {blogPost.thumbnail_url && (
             <img
               src={blogPost.thumbnail_url}
-              alt={`Thumbnail for ${blogPost.title}`} {/* Alt text for image */}
+              alt={`Thumbnail for ${blogPost.title}`}
               className="w-full h-auto rounded-md mb-4"
             />
           )}
