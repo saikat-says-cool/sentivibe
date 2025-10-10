@@ -1,9 +1,9 @@
 # SentiVibe Product Documentation
 
 ## 1. Product Overview
-**SentiVibe** is an innovative web application designed to empower users with deep insights into public sentiment surrounding YouTube videos. By leveraging advanced AI, SentiVibe analyzes video comments to extract overall sentiment, emotional tones, key themes, and actionable summary insights. Beyond static reports, it now offers a **context-aware conversational AI** that can answer follow-up questions, drawing from the video analysis, top comments, external up-to-date information, and its own general knowledge. It's an essential tool for content creators, marketers, researchers, and anyone interested in understanding audience reactions to online video content.
+**SentiVibe** is an innovative web application designed to empower users with deep insights into public sentiment surrounding YouTube videos. By leveraging advanced AI, SentiVibe analyzes video comments to extract overall sentiment, emotional tones, key themes, and actionable summary insights. Beyond static reports, it now offers a **context-aware conversational AI** that can answer follow-up questions, drawing from the video analysis, top comments, external up-to-date information, and its own general knowledge. It also features **programmatic SEO**, automatically generating and publishing SEO-optimized blog posts for each video analysis, and organizing them in a searchable **Video Analysis Library**. It's an essential tool for content creators, marketers, researchers, and anyone interested in understanding audience reactions to online video content.
 
-**Mission:** To unlock the true sentiment and key discussions within YouTube comments, providing clear, AI-driven analysis and intelligent conversational insights that help users understand their audience better.
+**Mission:** To unlock the true sentiment and key discussions within YouTube comments, providing clear, AI-driven analysis, intelligent conversational insights, and automatically generated, discoverable content that helps users understand their audience better and expand their reach.
 
 ## 2. Key Features
 
@@ -19,6 +19,7 @@
     *   **Video Thumbnail:** Visual identification of the video.
     *   **Video Tags:** To understand the video's categorization and keywords.
     *   **Comments:** Fetches up to 100 comments for analysis.
+    *   **Creator Name:** Identifies the YouTube channel/creator.
 *   **Intelligent Comment Filtering:** Requires a minimum of 50 comments to ensure a robust and meaningful AI analysis, preventing skewed results from low engagement videos.
 *   **Weighted Sentiment Analysis:** The AI model is specifically instructed to give **significantly more weight to comments with higher "Likes" counts**. This ensures that the analysis reflects the sentiment of the most popular and influential opinions within the comment section.
 *   **Detailed AI Insights:** The analysis provides:
@@ -27,7 +28,21 @@
     *   **Key Themes:** Highlights the main topics and recurring subjects discussed in the comments.
     *   **Summary Insights:** A concise, human-readable summary of the AI's findings, explaining the overall sentiment and key takeaways, with an emphasis on how popular comments influenced the assessment.
 
-### 2.3. Context-Aware Conversational AI
+### 2.3. Programmatic SEO & Video Analysis Library (NEW)
+*   **Automated Blog Post Generation:** Immediately after a video analysis is complete, the AI automatically generates a comprehensive, SEO-optimized blog post. This post summarizes the public sentiment, emotional tones, and key themes of the video, incorporating insights from the analysis and top comments.
+*   **SEO Optimization:** Each generated blog post includes:
+    *   A compelling, SEO-optimized title.
+    *   A URL-friendly slug.
+    *   A concise meta description.
+    *   A list of relevant keywords.
+    *   Structured content with appropriate headings (H1, H2, H3) in Markdown format.
+*   **Instant Publishing:** Blog posts are automatically published to the SentiVibe platform and become accessible via unique, SEO-friendly URLs.
+*   **Video Analysis Library:** All generated blog posts are organized into a dedicated "Analysis Library."
+    *   **Browse & Discover:** Users can easily browse through past video analyses.
+    *   **Search & Filter:** The library provides robust search functionality, allowing users to find specific analyses by video title, creator name, or keywords.
+    *   **Visual Context:** Each entry in the library displays the YouTube video's thumbnail, title, and creator name for quick identification.
+
+### 2.4. Context-Aware Conversational AI
 *   **Interactive Q&A:** After a video analysis, users can engage in a chat with SentiVibe AI to ask follow-up questions about the video, its comments, or related topics.
 *   **Customizable AI Persona:** Users can select from various AI personas (e.g., Friendly Assistant, Therapist, Storyteller, Motivational Coach, Argumentative) to tailor the AI's tone and conversational style to their preference.
 *   **Adjustable Response Length:** Users have explicit control over the AI's response verbosity, choosing between concise, standard, or detailed answers.
@@ -38,7 +53,7 @@
     *   **Pre-existing Knowledge:** The AI leverages its vast general knowledge for time-independent questions that aren't covered by the video or external search.
 *   **Cost-Optimized External Context:** To ensure efficiency, external search for broader context is performed only once per video analysis session, significantly reducing API costs while still providing valuable, up-to-date information.
 
-### 2.4. Interactive & Clear Analysis Reports
+### 2.5. Interactive & Clear Analysis Reports
 *   **Structured Display:** Analysis results are presented in a clean, easy-to-read card format.
 *   **Visual Cues:** Uses badges to highlight sentiment, emotional tones, and key themes for quick comprehension.
 *   **Raw Comment Snippets:** Displays the top 10 most popular comments (by like count) to give users a direct glimpse into the source data.
@@ -46,12 +61,12 @@
 *   **Error Handling:** Displays user-friendly alerts for any issues encountered during analysis (e.g., invalid link, insufficient comments, API errors).
 *   **Formatted Chat Responses:** AI responses in the chat interface are now rendered with proper Markdown formatting, improving readability and presentation.
 
-### 2.5. Professional PDF Report Export
+### 2.6. Professional PDF Report Export
 *   **One-Click Download:** Users can easily download the complete analysis report as a beautifully formatted PDF document.
 *   **Shareable & Archivable:** Ideal for sharing insights with teams, clients, or for archiving research findings.
 *   **Customizable Filename:** The PDF filename is automatically generated based on the video title for easy organization.
 
-### 2.6. Responsive & Modern User Interface
+### 2.7. Responsive & Modern User Interface
 *   **Intuitive Design:** A clean, minimalist interface built with Shadcn/ui components and Tailwind CSS.
 *   **Mobile-Friendly:** The application is designed to be fully responsive, providing an optimal experience across desktops, tablets, and mobile devices.
 *   **Consistent Branding:** Features a sleek black and white theme with the elegant "Arimo" font and a prominent "SentiVibe" word logo, ensuring a professional and unified brand presence.
@@ -63,25 +78,21 @@
 3.  **Navigate to Analyze Video:** From the homepage, click the "Analyze a Video" button or navigate to the `/analyze-video` route.
 4.  **Paste YouTube Link:** In the input field, paste the full URL of the YouTube video you wish to analyze.
 5.  **Initiate Analysis:** Click the "Analyze Comments" button. The application will display a loading state while the AI processes the data and fetches initial external context.
-6.  **Review Report:** Once the analysis is complete, a detailed report will appear, showing:
-    *   Video details (title, description, thumbnail, tags).
-    *   Overall sentiment.
-    *   Emotional tones.
-    *   Key themes.
-    *   A summary of insights.
-    *   The top 10 most popular raw comments.
+6.  **Review Report & Blog Post:** Once the analysis is complete, a detailed report will appear. You will also see a "View Blog Post" button. Click this to see the full, SEO-optimized blog post generated for this analysis.
 7.  **Customize AI Chat (Optional):** Before chatting, use the dropdowns above the chat interface to select your preferred **AI Persona** and **Response Length**.
 8.  **Chat with AI:** Below the analysis report, a chat interface will appear. You can now ask questions about the video, its comments, or related topics. The AI will use all available context and your chosen persona/length preferences to provide informed answers.
 9.  **Download PDF Report:** To save or share the report, click the "Download Report PDF" button. A PDF file will be generated and downloaded to your device.
+10. **Explore the Analysis Library:** Navigate to the "Analysis Library" from the header. Here, you can browse all past video analyses, search by video title, creator, or keywords, and click on any entry to view its full blog post.
 
 ## 4. Value Proposition
 SentiVibe provides immense value by:
-*   **Saving Time:** Automates the tedious process of manually sifting through thousands of comments and researching related topics.
+*   **Saving Time:** Automates the tedious process of manually sifting through thousands of comments and researching related topics, and now automates content creation.
 *   **Gaining Deeper Understanding:** Offers AI-driven insights and interactive conversations that go beyond surface-level reading, incorporating direct audience feedback and broader context.
 *   **Personalized Interaction:** Users can tailor the AI's conversational style and response detail to match their specific needs and preferences.
 *   **Informing Strategy:** Helps content creators understand what resonates with their audience, marketers to gauge campaign reception, and researchers to analyze public opinion with a more complete picture.
 *   **Providing Actionable Data:** The weighted analysis ensures that the most impactful opinions are prioritized, and the AI can elaborate on these.
 *   **Professional Reporting:** Enables easy sharing of findings with high-quality PDF reports.
 *   **Cost-Effective Intelligence:** Streamlined external search ensures you get the necessary up-to-date information without incurring excessive API costs.
+*   **Boosting SEO & Content Strategy (NEW):** Automatically generates valuable, SEO-optimized content, expanding your digital footprint and making your insights discoverable to a wider audience through search engines. The searchable library further enhances content discoverability within the app.
 
-SentiVibe is continuously evolving, with a strong foundation laid for future enhancements to further enrich your video analysis and conversational AI experience.
+SentiVibe is continuously evolving, with a strong foundation laid for future enhancements to further enrich your video analysis, conversational AI, and content generation experience.

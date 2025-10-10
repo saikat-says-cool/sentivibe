@@ -1,7 +1,7 @@
 # SentiVibe Technical Documentation
 
 ## 1. Introduction
-This document provides a comprehensive technical overview of the SentiVibe application, detailing its architecture, core components, data flow, Supabase integration, and external API interactions. SentiVibe is a React-based web application designed to perform AI-powered sentiment analysis on YouTube video comments and engage in context-aware conversations about the analysis.
+This document provides a comprehensive technical overview of the SentiVibe application, detailing its architecture, core components, data flow, Supabase integration, and external API interactions. SentiVibe is a React-based web application designed to perform AI-powered sentiment analysis on YouTube video comments, engage in context-aware conversations about the analysis, and automatically generate SEO-optimized blog posts for each analysis, which are then stored and made discoverable in a dedicated library.
 
 ## 2. Tech Stack
 The application is built using the following technologies:
@@ -16,7 +16,7 @@ The application is built using the following technologies:
 *   **PDF Generation:** `html2pdf.js`
 *   **Icons:** `lucide-react`
 *   **Utilities:** `clsx`, `tailwind-merge` (`cn` utility)
-*   **Markdown Rendering:** `react-markdown`
+*   **Markdown Rendering:** `react-markdown`, `remark-gfm`
 *   **Font:** Google Fonts (Arimo)
 
 ## 3. Project Structure
@@ -30,9 +30,11 @@ The project follows a standard React application structure with specific directo
     *   `src/lib/utils.ts`: Utility functions (e.g., `cn` for Tailwind class merging).
     *   `src/utils/toast.ts`: Utility functions for `sonner` toast notifications.
     *   `src/components/`: Reusable UI components.
-        *   `src/components/Header.tsx`: Global application header with branding.
+        *   `src/components/Header.tsx`: Global application header with branding and navigation.
         *   `src/components/ChatInterface.tsx`: Generic chat UI component.
-        *   `src/components/made-with-dyad.tsx`: Footer component.
+        *   `src/components/ProtectedRoute.tsx`: Component for protecting routes.
+        *   `src/components/Footer.tsx`: Application footer.
+        *   `src/components/theme-provider.tsx`: Theme context provider.
         *   `src/components/ui/`: Shadcn/ui components (e.g., Button, Card, Input, Badge, Alert, Skeleton, Collapsible).
     *   `src/hooks/`: Custom React hooks.
         *   `src/hooks/use-mobile.tsx`: Hook for detecting mobile viewport.
@@ -41,13 +43,15 @@ The project follows a standard React application structure with specific directo
         *   `src/pages/Index.tsx`: Landing page.
         *   `src/pages/Login.tsx`: User authentication page.
         *   `src/pages/AnalyzeVideo.tsx`: Main page for YouTube video analysis and AI chat.
+        *   `src/pages/VideoAnalysisLibrary.tsx`: **NEW** Page to list and search generated blog posts (video analyses).
+        *   `src/pages/BlogPostDetail.tsx`: **NEW** Page to display the full content of a single generated blog post.
         *   `src/pages/NotFound.tsx`: 404 error page.
     *   `src/integrations/supabase/`: Supabase-specific integration files.
         *   `src/integrations/supabase/client.ts`: Supabase client initialization.
         *   `src/integrations/supabase/auth.tsx`: React Context Provider and hook for managing Supabase user sessions.
 *   `supabase/`: Supabase-related backend files.
     *   `supabase/functions/`: Supabase Edge Functions.
-        *   `supabase/functions/youtube-analyzer/index.ts`: Edge Function for video analysis.
+        *   `supabase/functions/youtube-analyzer/index.ts`: Edge Function for video analysis and **blog post generation/insertion**.
         *   `supabase/functions/fetch-external-context/index.ts`: Edge Function for performing a one-time Google Custom Search.
         *   `supabase/functions/chat-analyzer/index.ts`: Edge Function for handling AI chat conversations.
     *   `supabase/migrations/`: Database migration files.
@@ -59,17 +63,18 @@ The project follows a standard React application structure with specific directo
 ### 4.1. `App.tsx` (Root Component & Routing)
 *   **Context Providers:** Wraps the entire application with necessary contexts:
     *   `QueryClientProvider`: Manages global state for data fetching with TanStack Query.
-    *   `TooltipProvider`: Provides context for Shadcn/ui tooltips.
-    *   `Toaster` (Shadcn/ui) and `Sonner` (external library): For displaying notifications.
+    *   `ThemeProvider`: Manages light/dark theme.
     *   `AuthProvider`: Custom provider for Supabase authentication session management.
+    *   `Toaster` (Shadcn/ui) and `Sonner` (external library): For displaying notifications.
 *   **`AppRoutes` Component:** Encapsulates `BrowserRouter` and `Routes`.
     *   Renders the `Header` component globally.
-    *   Defines application routes: `/`, `/login`, `/analyze-video`, and a catch-all `*` for `NotFound`.
-*   **`ProtectedRoute` Component:** A higher-order component that ensures only authenticated users can access specific routes (e.g., `/analyze-video`). It redirects unauthenticated users to `/login`.
+    *   Defines application routes: `/`, `/login`, `/analyze-video`, `/library`, `/blog/:slug`, and a catch-all `*` for `NotFound`.
+*   **`ProtectedRoute` Component:** A higher-order component that ensures only authenticated users can access specific routes (e.g., `/analyze-video`, `/library`). It redirects unauthenticated users to `/login`.
 
 ### 4.2. `Header.tsx`
-*   A simple React component that renders a consistent header across all pages.
+*   A React component that renders a consistent header across all pages.
 *   Displays the "SentiVibe" word logo, which acts as a link back to the homepage (`/`).
+*   **NEW:** Includes a navigation link to the `/library` route, accessible to authenticated users.
 *   Styled with Tailwind CSS for a clean, black-and-white appearance.
 
 ### 4.3. `Index.tsx` (Landing Page)
@@ -88,12 +93,11 @@ The project follows a standard React application structure with specific directo
 ### 4.5. `AnalyzeVideo.tsx` (Video Analysis Page)
 *   **State Management:** Manages `videoLink` input, `customInstructions`, `analysisResult`, `error`, `chatMessages`, `externalContext`, `outputLengthPreference`, and `selectedPersona` states using `useState`.
 *   **Supabase Edge Function Invocation:**
-    *   **`analyzeVideoMutation`:** Uses `useMutation` to call the `youtube-analyzer` Supabase Edge Function. `onSuccess` updates `analysisResult` and then triggers `fetchExternalContextMutation`.
-    *   **`fetchExternalContextMutation`:** A new `useMutation` hook that calls the `fetch-external-context` Edge Function *once* after a successful video analysis. It uses the video title and tags as a search query and stores the results in `externalContext` state.
-    *   **`chatMutation`:** Uses `useMutation` to handle asynchronous calls to the `chat-analyzer` Supabase Edge Function. It sends the `userMessage`, `chatMessages` history, `analysisResult`, the pre-fetched `externalContext`, and the user's `outputLengthPreference` and `selectedPersona`.
+    *   **`analyzeVideoMutation`:** Uses `useMutation` to call the `youtube-analyzer` Supabase Edge Function. `onSuccess` updates `analysisResult` (which now includes `blogPostSlug`) and then triggers `fetchExternalContextMutation`.
+    *   **`fetchExternalContextMutation`:** Calls the `fetch-external-context` Edge Function *once* after a successful video analysis. It uses the video title and tags as a search query and stores the results in `externalContext` state.
+    *   **`chatMutation`:** Handles asynchronous calls to the `chat-analyzer` Supabase Edge Function, sending conversation history, analysis results, external context, and AI preferences.
 *   **UI Elements:**
-    *   `Input` for video link submission.
-    *   `Textarea` for custom instructions.
+    *   `Input` for video link submission, `Textarea` for custom instructions.
     *   `Button` to trigger analysis, showing a `Loader2` icon when pending.
     *   `Card` components to structure the input form, display results, and house the chat interface.
     *   `Skeleton` components provide a loading state visual for both analysis and external context fetching.
@@ -101,19 +105,39 @@ The project follows a standard React application structure with specific directo
     *   `Badge` components are used to display sentiment, emotional tones, and key themes.
     *   `Collapsible` component is prepared for subtitles (though currently empty).
     *   `ChatInterface` component is rendered after a successful analysis, displaying conversation history and allowing user input. The chat input is disabled while analysis or external context fetching is pending.
-    *   **AI Controls:** Includes `Select` components for `outputLengthPreference` (Concise, Standard, Detailed) and `selectedPersona` (Friendly Assistant, Therapist, Storyteller, Motivational Coach, Argumentative), allowing users to customize the AI's behavior.
-*   **PDF Download:**
-    *   Integrates `html2pdf.js` to convert the analysis results `Card` into a downloadable PDF.
-    *   A `useRef` (`analysisReportRef`) is used to target the specific DOM element for conversion.
-    *   `handleDownloadPdf` function configures `html2pdf.js` options and triggers the download.
+    *   **AI Controls:** Includes `Select` components for `outputLengthPreference` and `selectedPersona`.
+    *   **NEW:** Displays a "View Blog Post" `Button` with a `Link` to `/blog/${analysisResult.blogPostSlug}` after a successful analysis.
+*   **PDF Download:** Integrates `html2pdf.js` to convert the analysis results `Card` into a downloadable PDF.
 
-### 4.6. `ChatInterface.tsx` (Generic Chat UI)
+### 4.6. `VideoAnalysisLibrary.tsx` (NEW)
+*   **Purpose:** Displays a list of all generated blog posts (video analyses) from the Supabase database.
+*   **Data Fetching:** Uses `useQuery` from `@tanstack/react-query` to fetch all entries from the `public.blog_posts` table, ordered by `published_at` date.
+*   **Search Functionality:** Implements a client-side search filter based on `searchTerm` state, allowing users to search by `title`, `creator_name`, `meta_description`, or `keywords`.
+*   **UI Elements:**
+    *   `Input` for the search bar.
+    *   `Card` components for each blog post, displaying the `thumbnail_url`, `title`, and `creator_name`.
+    *   Each `Card` is wrapped in a `Link` to navigate to the `BlogPostDetail.tsx` page using the post's `slug`.
+    *   `Skeleton` components provide loading state visuals.
+    *   Handles cases where no posts are found or an error occurs during fetching.
+
+### 4.7. `BlogPostDetail.tsx` (NEW)
+*   **Purpose:** Displays the full content of a single, SEO-optimized blog post.
+*   **Data Fetching:** Uses `useParams` to extract the `slug` from the URL and `useQuery` from `@tanstack/react-query` to fetch the specific blog post from `public.blog_posts` via its `slug`.
+*   **UI Elements:**
+    *   Displays the `thumbnail_url`, `title`, `creator_name`, `published_at` date, and `meta_description`.
+    *   Renders the `content` field (which is in Markdown) using `react-markdown` and `remarkGfm` for proper formatting.
+    *   Displays `keywords` using `Badge` components.
+    *   Includes a "Back to Analysis Library" `Link` for easy navigation.
+    *   `Skeleton` components provide loading state visuals.
+    *   Handles cases where the blog post is not found or an error occurs.
+
+### 4.8. `ChatInterface.tsx` (Generic Chat UI)
 *   A reusable component designed to display a list of messages and provide an input field for sending new messages.
 *   Supports both 'user' and 'ai' sender types, with distinct styling and icons (`User2`, `Bot`).
 *   Includes a loading indicator (`Loader2`) when `isLoading` is true.
 *   Automatically scrolls to the bottom of the chat on new messages.
 *   Handles message input and sending via `onSendMessage` prop.
-*   **Markdown Rendering:** Integrates `react-markdown` to correctly render Markdown formatting in AI responses, improving readability.
+*   **Markdown Rendering:** Integrates `react-markdown` with `remarkGfm` to correctly render Markdown formatting in AI responses, improving readability.
 
 ## 5. Supabase Integration Details
 
@@ -127,43 +151,68 @@ The project follows a standard React application structure with specific directo
 *   Subscribes to `onAuthStateChange` events to keep the session state updated in real-time.
 *   Provides `session` (the current Supabase session), `user`, and `isLoading` (whether the session is being fetched) to child components via the `useAuth` hook.
 
-### 5.3. Database Schema (`public.profiles`)
-*   **Table:** `public.profiles`
+### 5.3. Database Schema (`public.profiles`, `public.blog_posts`)
+*   **Table:** `public.profiles` (Existing)
     *   `id`: UUID, Primary Key, references `auth.users(id)` (CASCADE on delete).
     *   `first_name`: TEXT
     *   `last_name`: TEXT
     *   `avatar_url`: TEXT
     *   `updated_at`: TIMESTAMP WITH TIME ZONE, defaults to `NOW()`.
-*   **Row Level Security (RLS):** Enabled on `public.profiles`.
+*   **Row Level Security (RLS) for `public.profiles`:** Enabled.
     *   `profiles_select_policy`: `FOR SELECT TO authenticated USING (auth.uid() = id)`
     *   `profiles_insert_policy`: `FOR INSERT TO authenticated WITH CHECK (auth.uid() = id)`
     *   `profiles_update_policy`: `FOR UPDATE TO authenticated USING (auth.uid() = id)`
     *   `profiles_delete_policy`: `FOR DELETE TO authenticated USING (auth.uid() = id)`
     *   These policies ensure that authenticated users can only view, insert, update, or delete their own profile data.
+*   **Table:** `public.blog_posts` (Updated)
+    *   `id`: UUID, Primary Key, defaults to `gen_random_uuid()`.
+    *   `video_id`: TEXT, NOT NULL (YouTube video ID).
+    *   `title`: TEXT, NOT NULL.
+    *   `slug`: TEXT, NOT NULL, UNIQUE.
+    *   `meta_description`: TEXT.
+    *   `keywords`: TEXT[] (Array of keywords).
+    *   `content`: TEXT, NOT NULL (Blog post content in Markdown).
+    *   `published_at`: TIMESTAMP WITH TIME ZONE.
+    *   `author_id`: UUID, references `auth.users(id)` (ON DELETE SET NULL).
+    *   `created_at`: TIMESTAMP WITH TIME ZONE, defaults to `NOW()`.
+    *   `updated_at`: TIMESTAMP WITH TIME ZONE, defaults to `NOW()`.
+    *   `creator_name`: **NEW** TEXT (YouTube channel/creator name).
+    *   `thumbnail_url`: **NEW** TEXT (YouTube video thumbnail URL).
+*   **Row Level Security (RLS) for `public.blog_posts`:** Enabled.
+    *   `Authenticated users can create blog posts`: `FOR INSERT TO authenticated WITH CHECK (auth.uid() = author_id)`
+    *   `Authenticated users can update their own blog posts`: `FOR UPDATE TO authenticated USING (auth.uid() = author_id)`
+    *   `Authenticated users can delete their own blog posts`: `FOR DELETE TO authenticated USING (auth.uid() = author_id)`
+    *   `Public read access for published blog posts`: `FOR SELECT USING (published_at IS NOT NULL)`
+    *   These policies ensure authenticated users manage their own posts, and only published posts are publicly viewable.
 
 ### 5.4. Database Functions & Triggers
-*   **Function:** `public.handle_new_user()`
+*   **Function:** `public.handle_new_user()` (Existing)
     *   `LANGUAGE PLPGSQL SECURITY DEFINER`: Ensures the function runs with elevated privileges to insert into `public.profiles`.
     *   Inserts a new row into `public.profiles` with the `id`, `first_name`, and `last_name` from the newly created `auth.users` entry's `raw_user_meta_data`.
-*   **Trigger:** `on_auth_user_created`
+*   **Trigger:** `on_auth_user_created` (Existing)
     *   `AFTER INSERT ON auth.users FOR EACH ROW EXECUTE FUNCTION public.handle_new_user()`
     *   Automatically calls `handle_new_user` whenever a new user is inserted into `auth.users`, ensuring a profile is created for every new signup.
 
 ### 5.5. Supabase Edge Function (`supabase/functions/youtube-analyzer/index.ts`)
-This Deno-based serverless function is the core backend logic for video analysis.
+This Deno-based serverless function is the core backend logic for video analysis and blog post generation.
 *   **CORS Handling:** Includes `corsHeaders` and handles `OPTIONS` preflight requests.
 *   **Supabase Client Initialization:** Creates a Supabase client within the function, passing the user's `Authorization` header.
 *   **User Authentication:** Verifies the user's session.
 *   **Input Validation:** Checks for `videoLink` and extracts `videoId`.
 *   **API Key Retrieval:** Accesses `YOUTUBE_API_KEY` and `LONGCAT_AI_API_KEY` from Supabase environment secrets.
-*   **YouTube Data API Calls:** Fetches video `snippet` (title, description, thumbnail, tags) and top-level comments (`maxResults=100`).
+*   **YouTube Data API Calls:** Fetches video `snippet` (title, description, thumbnail, tags, **channelTitle**) and top-level comments (`maxResults=100`).
 *   **Comment Processing:** Maps comments to include `text` and `likeCount`, enforces a minimum of 50 comments, and sorts them by `likeCount`.
-*   **Longcat AI API Call:** Constructs a `longcatPrompt` including video details, tags, and weighted comments. Instructs the AI to prioritize comments with higher like counts. Sends a `POST` request to Longcat AI, requesting a `json_object` response.
-*   **Response:** Returns a `200 OK` response with video details, comments, and the AI analysis result.
-*   **Error Handling:** Includes a general `try-catch` block.
+*   **Longcat AI API Call (Analysis):** Constructs a `longcatPrompt` including video details, tags, and weighted comments. Instructs the AI to prioritize comments with higher like counts. Sends a `POST` request to Longcat AI, requesting a `json_object` response for sentiment analysis.
+*   **Longcat AI API Call (Blog Post Generation - NEW):** After successful sentiment analysis, a *second* `POST` request is made to Longcat AI.
+    *   A `blogPostPrompt` is crafted, providing all video details, analysis results, and top comments.
+    *   The AI is instructed to generate an SEO-optimized blog post (title, slug, meta description, keywords, Markdown content) in a structured JSON format.
+    *   `max_tokens` is increased to `2000` to allow for longer blog posts.
+*   **Database Insertion (NEW):** The parsed `generatedBlogPost` data (including `video_id`, `title`, `slug`, `meta_description`, `keywords`, `content`, `published_at`, `author_id`, `creator_name`, `thumbnail_url`) is inserted into the `public.blog_posts` table using the Supabase client.
+*   **Response:** Returns a `200 OK` response with video details, comments, the AI analysis result, and the `blogPostSlug` for frontend linking.
+*   **Error Handling:** Includes comprehensive `try-catch` blocks for API calls and database operations.
 
 ### 5.6. Supabase Edge Function (`supabase/functions/fetch-external-context/index.ts`)
-This new Deno-based serverless function is responsible for fetching external, up-to-date information using Google Custom Search.
+This Deno-based serverless function is responsible for fetching external, up-to-date information using Google Custom Search.
 *   **CORS Handling:** Includes `corsHeaders` and handles `OPTIONS` preflight requests.
 *   **Input Validation:** Checks for a `query` string.
 *   **API Key Retrieval:** Accesses `GOOGLE_SEARCH_API_KEY` and `GOOGLE_SEARCH_ENGINE_ID` from Supabase environment secrets.
@@ -176,13 +225,13 @@ This new Deno-based serverless function is responsible for fetching external, up
 This Deno-based serverless function handles the conversational AI aspect.
 *   **CORS Handling:** Includes `corsHeaders` and handles `OPTIONS` preflight requests.
 *   **Supabase Client Initialization & User Authentication:** Verifies the user.
-*   **Input:** Receives `userMessage`, `chatMessages` (conversation history), `analysisResult` (full video analysis including top comments), `externalContext` (pre-fetched Google search results), `outputLengthPreference`, and `selectedPersona` from the frontend.
+*   **Input:** Receives `userMessage`, `chatMessages` (conversation history), `analysisResult` (full video analysis including top comments, creator name, thumbnail URL), `externalContext` (pre-fetched Google search results), `outputLengthPreference`, and `selectedPersona` from the frontend.
 *   **API Key Retrieval:** Accesses `LONGCAT_AI_API_KEY` from Supabase environment secrets.
-*   **Dynamic `max_tokens`:** Adjusts the `max_tokens` parameter for the Longcat AI API call based on the `outputLengthPreference` (concise, standard, detailed) received from the frontend.
-*   **Dynamic `systemPrompt`:** Constructs the AI's `systemPrompt` based on the `selectedPersona` (Friendly Assistant, Therapist, Storyteller, Motivational Coach, Argumentative), guiding the AI's tone, style, and conversational boundaries.
+*   **Dynamic `max_tokens`:** Adjusts the `max_tokens` parameter for the Longcat AI API call based on the `outputLengthPreference`.
+*   **Dynamic `systemPrompt`:** Constructs the AI's `systemPrompt` based on the `selectedPersona`, guiding the AI's tone, style, and conversational boundaries.
 *   **Prompt Construction:**
     *   **System Prompt:** Dynamically generated based on persona, including instructions for information prioritization and adherence to response length.
-    *   **Analysis Context:** Formats `analysisResult` (video details, sentiment, themes, summary, and **top 10 raw comments**) into a dedicated string.
+    *   **Analysis Context:** Formats `analysisResult` (video details, sentiment, themes, summary, top 10 raw comments, creator name, thumbnail URL) into a dedicated string.
     *   **External Context:** Integrates the received `externalContext` into the user's prompt, clearly labeled.
     *   **Conversation History:** Appends formatted `chatMessages` to maintain conversational flow.
     *   **User Message:** Includes the current `userMessage`.
@@ -207,7 +256,7 @@ Key dependencies include:
 *   `html2pdf.js`: Client-side PDF generation.
 *   `tailwind-merge`, `clsx`: Utilities for merging Tailwind CSS classes.
 *   `sonner`: For toast notifications.
-*   `react-markdown`: For rendering Markdown in chat messages.
+*   `react-markdown`, `remark-gfm`: For rendering Markdown in chat messages and blog posts.
 *   Shadcn/ui components and their Radix UI foundations.
 *   Google Custom Search API (external service).
 
