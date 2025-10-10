@@ -21,7 +21,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"; // Import Select components
+} from "@/components/ui/select";
 
 interface AiAnalysisResult {
   overall_sentiment: string;
@@ -54,8 +54,8 @@ const AnalyzeVideo = () => {
   const [error, setError] = useState<string | null>(null);
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
   const [externalContext, setExternalContext] = useState<string | null>(null);
-  const [outputLengthPreference, setOutputLengthPreference] = useState<string>("standard"); // State for output length
-  const [selectedPersona, setSelectedPersona] = useState<string>("friendly"); // New state for persona
+  const [outputLengthPreference, setOutputLengthPreference] = useState<string>("standard");
+  const [selectedPersona, setSelectedPersona] = useState<string>("friendly");
   const analysisReportRef = useRef<HTMLDivElement>(null);
 
   const fetchExternalContextMutation = useMutation({
@@ -83,7 +83,7 @@ const AnalyzeVideo = () => {
       setError(null);
       setAnalysisResult(null);
       setChatMessages([]);
-      setExternalContext(null); // Clear external context for new analysis
+      setExternalContext(null);
 
       const { data, error: invokeError } = await supabase.functions.invoke('youtube-analyzer', {
         body: payload,
@@ -97,7 +97,6 @@ const AnalyzeVideo = () => {
     },
     onSuccess: (data) => {
       setAnalysisResult(data);
-      // After successful video analysis, fetch external context
       const searchQuery = `${data.videoTitle} ${data.videoTags.join(' ')}`;
       fetchExternalContextMutation.mutate(searchQuery);
 
@@ -120,49 +119,106 @@ const AnalyzeVideo = () => {
 
   const chatMutation = useMutation({
     mutationFn: async (userMessageText: string) => {
-      const newMessage: Message = {
+      const newUserMessage: Message = {
         id: Date.now().toString(),
         sender: 'user',
         text: userMessageText,
         timestamp: new Date().toLocaleTimeString(),
       };
-      setChatMessages((prev) => [...prev, newMessage]);
+      
+      // Add user message immediately
+      setChatMessages((prev) => [...prev, newUserMessage]);
 
-      const { data, error: invokeError } = await supabase.functions.invoke('chat-analyzer', {
-        body: {
-          userMessage: userMessageText,
-          chatMessages: [...chatMessages, newMessage],
-          analysisResult: analysisResult,
-          externalContext: externalContext,
-          outputLengthPreference: outputLengthPreference, // Pass the output length preference
-          selectedPersona: selectedPersona, // Pass the selected persona
-        },
-      });
-
-      if (invokeError) {
-        console.error("Supabase Chat Function Invoke Error:", invokeError);
-        throw new Error(invokeError.message || "Failed to get AI response.");
-      }
-      return data;
-    },
-    onSuccess: (data) => {
-      const aiResponse: Message = {
-        id: Date.now().toString(),
+      // Prepare a placeholder for the AI's streaming response
+      const aiMessageId = Date.now().toString() + '-ai';
+      const aiPlaceholderMessage: Message = {
+        id: aiMessageId,
         sender: 'ai',
-        text: data.aiResponse,
+        text: '', // Start with empty text
         timestamp: new Date().toLocaleTimeString(),
       };
-      setChatMessages((prev) => [...prev, aiResponse]);
+      setChatMessages((prev) => [...prev, aiPlaceholderMessage]);
+
+      const response = await supabase.functions.invoke('chat-analyzer', {
+        body: {
+          userMessage: userMessageText,
+          chatMessages: [...chatMessages, newUserMessage], // Send full history including new user message
+          analysisResult: analysisResult,
+          externalContext: externalContext,
+          outputLengthPreference: outputLengthPreference,
+          selectedPersona: selectedPersona,
+        },
+        // Important: For streaming, we need to handle the raw response
+        // The invoke method doesn't directly expose the stream, so we'll use fetch directly
+        // This is a common pattern when `invoke` doesn't support streaming directly
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message || "Failed to get AI response.");
+      }
+
+      // Manually fetch the stream from the Edge Function URL
+      const edgeFunctionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat-analyzer`;
+      const streamResponse = await fetch(edgeFunctionUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userMessage: userMessageText,
+          chatMessages: [...chatMessages, newUserMessage],
+          analysisResult: analysisResult,
+          externalContext: externalContext,
+          outputLengthPreference: outputLengthPreference,
+          selectedPersona: selectedPersona,
+        }),
+      });
+
+      if (!streamResponse.ok) {
+        const errorData = await streamResponse.json();
+        throw new Error(errorData.error?.message || "Failed to get AI response stream.");
+      }
+
+      const reader = streamResponse.body?.getReader();
+      const decoder = new TextDecoder();
+      let accumulatedText = '';
+
+      if (!reader) {
+        throw new Error('Failed to get readable stream from AI response.');
+      }
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) {
+          break;
+        }
+        const chunk = decoder.decode(value, { stream: true });
+        accumulatedText += chunk;
+
+        // Update the specific AI message with the new chunk
+        setChatMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === aiMessageId ? { ...msg, text: accumulatedText } : msg
+          )
+        );
+      }
+      return { aiResponse: accumulatedText }; // Return the full response for onSuccess
+    },
+    onSuccess: (data) => {
+      // The UI is already updated incrementally, so onSuccess just confirms completion
+      console.log("AI streaming complete:", data.aiResponse);
     },
     onError: (err: Error) => {
       console.error("Chat Error:", err);
-      const errorMessage: Message = {
-        id: Date.now().toString(),
-        sender: 'ai',
-        text: `Error: ${err.message}. Please try again.`,
-        timestamp: new Date().toLocaleTimeString(),
-      };
-      setChatMessages((prev) => [...prev, errorMessage]);
+      // Find the last AI placeholder message and update it with an error
+      setChatMessages((prev) =>
+        prev.map((msg, index) =>
+          index === prev.length - 1 && msg.sender === 'ai' && msg.text === ''
+            ? { ...msg, text: `Error: ${err.message}. Please try again.`, timestamp: new Date().toLocaleTimeString() }
+            : msg
+        )
+      );
     },
   });
 
@@ -361,7 +417,7 @@ const AnalyzeVideo = () => {
               <CardTitle className="flex items-center gap-2">
                 <MessageSquare className="h-6 w-6 text-blue-500" /> Chat with AI about this video
               </CardTitle>
-              <div className="flex items-center space-x-4"> {/* Adjusted spacing */}
+              <div className="flex items-center space-x-4">
                 <div className="flex items-center space-x-2">
                   <Label htmlFor="persona-select" className="text-sm">Persona:</Label>
                   <Select
