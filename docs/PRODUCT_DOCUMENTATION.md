@@ -59,7 +59,7 @@
 ### 2.4. Context-Aware Conversational AI
 *   **Interactive Q&A (Dialog-based):** After a video analysis, or when loading a saved analysis from the library, users can engage in a chat with SentiVibe AI to ask follow-up questions about the video, its comments, or related topics. This chat now occurs within a **pop-up dialog interface**, providing a consistent experience across the application.
 *   **Customizable AI Persona:** Users can select from various AI personas (e.g., Friendly Assistant, Therapist, Storyteller, Motivational Coach, Argumentative) to tailor the AI's tone and conversational style to their preference.
-*   **Adjustable Response Length:** Users have explicit control over the AI's response verbosity, choosing between concise, standard, or detailed answers.
+*   **Precise Response Length Control:** Users have explicit control over the AI's response length by specifying a **desired word count** for each answer, ensuring the AI provides information at the exact level of detail required.
 *   **Multi-Source Intelligence:** The AI intelligently synthesizes information from:
     *   **Video Analysis Report:** All details from the initial analysis (sentiment, themes, summary).
     *   **Exact Top Comments:** The raw text of the top 10 most popular comments, allowing for deep dives into audience feedback.
@@ -99,7 +99,7 @@
 6.  **Initiate Analysis:** Click the "Analyze Comments & Get Answers" button. If the video has been analyzed before, the report will load almost instantly, and any new custom questions you've added will be processed and merged with existing community questions. Otherwise, the application will display a loading state while the AI processes the data, fetches initial external context, and generates answers to your custom questions.
 7.  **Review Report & Blog Post:** Once the analysis is complete, a detailed report will appear, including the primary sentiment analysis and the answers to all community questions. You will see a "View Blog Post" button to navigate to the full, SEO-optimized blog post, and an "Original Video" button to view the YouTube video.
 8.  **Chat with AI:** Click the "Chat with AI" button to open the **pop-up chat dialog**.
-9.  **Customize AI Chat (Optional):** Within the chat dialog, use the dropdowns to select your preferred **AI Persona** and **Response Length**.
+9.  **Customize AI Chat (Optional):** Within the chat dialog, use the dropdown to select your preferred **AI Persona** and enter your **Desired Word Count** for the AI's response.
 10. **Engage with AI:** You can now ask questions about the video, its comments, the pre-generated community answers, or related topics. The AI will use all available context and your chosen persona/length preferences to provide informed answers, including clickable Markdown links.
 11. **Download PDF Report:** To save or share the report, click the "Download Report PDF" button. A PDF file will be generated and downloaded to your device, featuring a branded header and including the community Q&A section.
 12. **Explore the Analysis Library:** Navigate to the "Analysis Library" from the header. Here, you can browse all past video analyses, search by video title, creator, or keywords.

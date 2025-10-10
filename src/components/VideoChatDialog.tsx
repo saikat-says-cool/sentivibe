@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input"; // Import Input component
 
 interface AiAnalysisResult {
   overall_sentiment: string;
@@ -90,7 +91,7 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
   initialBlogPost,
 }) => {
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
-  const [outputLengthPreference, setOutputLengthPreference] = useState<string>("standard");
+  const [desiredWordCount, setDesiredWordCount] = useState<number>(300); // Default word count
   const [selectedPersona, setSelectedPersona] = useState<string>("friendly");
   const [currentExternalContext, setCurrentExternalContext] = useState<string | null>(null);
   const [currentAnalysisResult, setCurrentAnalysisResult] = useState<AnalysisResponse | null>(null);
@@ -197,9 +198,9 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
           chatMessages: [...chatMessages, newUserMessage],
           analysisResult: currentAnalysisResult,
           externalContext: currentExternalContext,
-          outputLengthPreference: outputLengthPreference,
+          desiredWordCount: desiredWordCount, // Pass desired word count
           selectedPersona: selectedPersona,
-          customQaResults: currentAnalysisResult.customQaResults, // Pass custom QA results
+          customQaResults: currentAnalysisResult.customQaResults,
         },
       });
 
@@ -271,21 +272,18 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
             </Select>
           </div>
           <div className="flex items-center space-x-2">
-            <Label htmlFor="output-length" className="text-sm">Response Length:</Label>
-            <Select
-              value={outputLengthPreference}
-              onValueChange={setOutputLengthPreference}
+            <Label htmlFor="desired-word-count" className="text-sm">Response Word Count:</Label>
+            <Input
+              id="desired-word-count"
+              type="number"
+              min="50"
+              max="1500" // Set a reasonable max for chat responses
+              step="50"
+              value={desiredWordCount}
+              onChange={(e) => setDesiredWordCount(Number(e.target.value))}
+              className="w-[100px]"
               disabled={isChatDisabled}
-            >
-              <SelectTrigger id="output-length" className="w-[140px]">
-                <SelectValue placeholder="Select length" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="concise">Concise</SelectItem>
-                <SelectItem value="standard">Standard</SelectItem>
-                <SelectItem value="detailed">Detailed</SelectItem>
-              </SelectContent>
-            </Select>
+            />
           </div>
         </div>
         <div className="flex-1 overflow-hidden">

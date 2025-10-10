@@ -62,7 +62,7 @@ serve(async (req) => {
       });
     }
 
-    const { userMessage, chatMessages, analysisResult, externalContext, outputLengthPreference, selectedPersona, customQaResults } = await req.json();
+    const { userMessage, chatMessages, analysisResult, externalContext, desiredWordCount, selectedPersona, customQaResults } = await req.json();
 
     if (!userMessage || !analysisResult) {
       return new Response(JSON.stringify({ error: 'User message and analysis result are required.' }), {
@@ -80,27 +80,11 @@ serve(async (req) => {
       });
     }
 
-    // Determine max_tokens and target word count based on outputLengthPreference
-    let maxTokens = 800; // Default to a reasonable standard length
-    let wordCountInstruction = "";
-
-    switch (outputLengthPreference) {
-      case 'concise':
-        maxTokens = 400; 
-        wordCountInstruction = "Keep your response concise, aiming for approximately 250-350 words.";
-        break;
-      case 'standard':
-        maxTokens = 800; 
-        wordCountInstruction = "Provide a standard-length response, aiming for approximately 500-700 words.";
-        break;
-      case 'detailed':
-        maxTokens = 1200;
-        wordCountInstruction = "Provide a detailed response, aiming for approximately 800-1000 words.";
-        break;
-      default:
-        maxTokens = 800; 
-        wordCountInstruction = "Provide a standard-length response, aiming for approximately 500-700 words.";
-    }
+    // Determine max_tokens based on desiredWordCount
+    // A common heuristic is 1 token per 0.75 words, so 1.33 tokens per word.
+    // We'll add a buffer to ensure the AI has enough space.
+    const maxTokens = Math.ceil(desiredWordCount * 1.5); 
+    const wordCountInstruction = `Keep your response to approximately ${desiredWordCount} words.`;
 
     // Base instructions for all personas, emphasizing completeness
     const baseInstructions = `

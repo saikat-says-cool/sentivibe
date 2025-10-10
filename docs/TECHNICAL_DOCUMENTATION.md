@@ -37,7 +37,7 @@ The project follows a standard React application structure with specific directo
         *   `src/components/ProtectedRoute.tsx`: Component for protecting routes.
         *   `src/components/Footer.tsx`: Application footer, now including the **brand ethics disclosure**.
         *   `src/components/theme-provider.tsx`: Theme context provider.
-        *   `src/components/VideoChatDialog.tsx`: **Updated component for the centralized AI chat pop-up, now passing custom Q&A results as context.**
+        *   `src/components/VideoChatDialog.tsx`: **Updated component for the centralized AI chat pop-up, now passing custom Q&A results as context and allowing precise word count control.**
         *   `src/components/LibraryCopilot.tsx`: AI assistant for searching the analysis library.
         *   `src/components/ui/`: Shadcn/ui components (e.g., Button, Card, Input, Badge, Alert, Skeleton, Collapsible).
     *   `src/hooks/`: Custom React hooks.
@@ -58,7 +58,7 @@ The project follows a standard React application structure with specific directo
     *   `supabase/functions/`: Supabase Edge Functions.
         *   `supabase/functions/youtube-analyzer/index.ts`: **Significantly updated Edge Function for video analysis, now processing custom questions, making additional AI calls for answers, and storing these Q&A results in the database, even for cached videos.**
         *   `supabase/functions/fetch-external-context/index.ts`: Edge Function for performing a one-time Google Custom Search.
-        *   `supabase/functions/chat-analyzer/index.ts`: **Updated Edge Function for handling AI chat conversations, now incorporating custom Q&A results into the AI's context.**
+        *   `supabase/functions/chat-analyzer/index.ts`: **Updated Edge Function for handling AI chat conversations, now incorporating custom Q&A results into the AI's context and using a desired word count for response length.**
         *   `supabase/functions/library-copilot-analyzer/index.ts`: Edge Function for handling AI chat for the Library Copilot.
     *   `supabase/migrations/`: Database migration files.
 *   `tailwind.config.ts`: Tailwind CSS configuration, including custom fonts (`Arimo`, `Plus Jakarta Sans`) and the new brand color palette.
@@ -164,11 +164,11 @@ The project follows a standard React application structure with specific directo
 ### 4.9. `VideoChatDialog.tsx` (Updated Component)
 *   **Purpose:** Centralizes the AI conversational chat experience for video analyses into a reusable pop-up dialog.
 *   **Props:** Accepts `isOpen` (boolean to control visibility), `onOpenChange` (callback to update `isOpen`), `initialAnalysisResult` (optional, for new analyses from `AnalyzeVideo`), and `initialBlogPost` (optional, for analyses loaded from `BlogPostDetail`).
-*   **Internal State:** Manages `chatMessages`, `outputLengthPreference`, `selectedPersona`, `currentExternalContext`, and `currentAnalysisResult`.
+*   **Internal State:** Manages `chatMessages`, `desiredWordCount`, `selectedPersona`, `currentExternalContext`, and `currentAnalysisResult`.
 *   **Context Initialization:** On dialog open, it checks `initialAnalysisResult` or `initialBlogPost` to set `currentAnalysisResult`. If `initialBlogPost` is provided, it reconstructs the `AnalysisResponse` object from the blog post data, including `ai_analysis_json`, `raw_comments_for_chat`, and **`custom_qa_results`**.
 *   **External Context Fetching:** Uses an internal `fetchExternalContextMutation` (calling `fetch-external-context` Edge Function) to get up-to-date external information based on the video's title and tags, *once per dialog open*.
 *   **Chat Mutation:** Uses an internal `chatMutation` (calling `chat-analyzer` Edge Function) to send user messages and receive AI responses. The `customQaResults` are now passed as part of the `analysisResult` to the `chat-analyzer` Edge Function.
-*   **AI Controls:** Provides `Select` components for users to choose `selectedPersona` and `outputLengthPreference`, which are passed to the `chat-analyzer` Edge Function.
+*   **AI Controls:** Provides a `Select` component for users to choose `selectedPersona` and an `Input` for `desiredWordCount`, which are passed to the `chat-analyzer` Edge Function.
 *   **UI:** Renders the `ChatInterface` component within the dialog.
 
 ### 4.10. `LibraryCopilot.tsx` (Existing Component, now more widely used)
@@ -281,11 +281,11 @@ This Deno-based serverless function is responsible for fetching external, up-to-
 This Deno-based serverless function handles the conversational AI aspect. **It now includes API key rotation and explicit instructions for Markdown hyperlinks, and incorporates custom Q&A results into its context.**
 *   **CORS Handling:** Includes `corsHeaders` and handles `OPTIONS` preflight requests.
 *   **Supabase Client Initialization & User Authentication:** Verifies the user.
-*   **Input:** Receives `userMessage`, `chatMessages` (conversation history), `analysisResult` (full video analysis including top comments, creator name, thumbnail URL, `aiAnalysis` object, and **`customQaResults`**), `externalContext` (pre-fetched Google search results), `outputLengthPreference`, and `selectedPersona` from the frontend.
+*   **Input:** Receives `userMessage`, `chatMessages` (conversation history), `analysisResult` (full video analysis including top comments, creator name, thumbnail URL, `aiAnalysis` object, and **`customQaResults`**), `externalContext` (pre-fetched Google search results), `desiredWordCount`, and `selectedPersona` from the frontend.
 *   **API Key Retrieval & Rotation:**
     *   Retrieves a list of `LONGCAT_AI_API_KEY`s using the `getApiKeys` helper function.
     *   Iterates through the available keys, retrying the Longcat AI API call with the next key if a rate limit error (HTTP 429) is encountered.
-*   **Dynamic `max_tokens`:** Adjusts the `max_tokens` parameter for the Longcat AI API call based on the `outputLengthPreference`.
+*   **Dynamic `max_tokens`:** Adjusts the `max_tokens` parameter for the Longcat AI API call based on the `desiredWordCount`.
 *   **Dynamic `systemPrompt`:** Constructs the AI's `systemPrompt` based on the `selectedPersona`, guiding the AI's tone, style, and conversational boundaries, and now includes explicit word count targets. **Crucially, it now explicitly instructs the AI to format any URLs or resources as Markdown hyperlinks (`[Link Text](URL)`).**
 *   **Prompt Construction:**
     *   **System Prompt:** Dynamically generated based on persona, including instructions for information prioritization, adherence to response length, explicit word count targets, and **Markdown link formatting**.
