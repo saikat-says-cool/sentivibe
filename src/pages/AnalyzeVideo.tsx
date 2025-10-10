@@ -114,7 +114,7 @@ const AnalyzeVideo = () => {
     },
     onSuccess: (data) => {
       setAnalysisResult(data);
-      setIsChatDialogOpen(true); // Open chat dialog after successful analysis
+      // Removed setIsChatDialogOpen(true) here to prevent automatic pop-up
     },
     onError: (err: Error) => {
       setError(err.message);
