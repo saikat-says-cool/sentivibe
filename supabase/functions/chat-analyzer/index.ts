@@ -200,21 +200,26 @@ serve(async (req) => {
           while (true) {
             const { done, value } = await reader.read();
             if (done) {
+              console.log('Longcat AI stream finished.');
               break;
             }
             const chunk = decoder.decode(value, { stream: true });
+            console.log('Raw chunk from Longcat AI:', chunk); // Log raw chunk
             const lines = chunk.split('\n').filter(line => line.trim() !== '');
 
             for (const line of lines) {
               if (line.startsWith('data: ')) {
                 const data = line.substring(6);
                 if (data === '[DONE]') {
+                  console.log('Longcat AI sent [DONE].');
                   controller.close();
                   return;
                 }
                 try {
                   const json = JSON.parse(data);
+                  console.log('Parsed JSON from Longcat AI:', json); // Log parsed JSON
                   const content = json.choices[0]?.delta?.content;
+                  console.log('Extracted content:', content); // Log extracted content
                   if (content) {
                     controller.enqueue(new TextEncoder().encode(content));
                   }
