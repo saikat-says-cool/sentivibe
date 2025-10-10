@@ -18,8 +18,9 @@ export default {
       },
     },
     extend: {
-      fontFamily: { // Added font family definition
+      fontFamily: {
         sans: ['Arimo', 'sans-serif'],
+        heading: ['"Plus Jakarta Sans"', 'sans-serif'], // Added Plus Jakarta Sans for headings
       },
       colors: {
         border: "hsl(var(--border))",
@@ -54,6 +55,11 @@ export default {
         card: {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
+        },
+        sentiment: { // New sentiment colors
+          positive: "hsl(var(--sentiment-positive))",
+          neutral: "hsl(var(--sentiment-neutral))",
+          negative: "hsl(var(--sentiment-negative))",
         },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
