@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/integrations/supabase/auth';
-import { ModeToggle } from './ModeToggle'; // Import the new ModeToggle component
+import { ModeToggle } from './ModeToggle';
 
 const Header = () => {
   const { session } = useAuth();
@@ -18,14 +18,21 @@ const Header = () => {
       <nav className="flex items-center space-x-4">
         <ul className="flex space-x-4">
           {session && (
-            <li>
-              <Button asChild variant="ghost">
-                <Link to="/library">Analysis Library</Link>
-              </Button>
-            </li>
+            <>
+              <li>
+                <Button asChild variant="ghost">
+                  <Link to="/library">Analysis Library</Link>
+                </Button>
+              </li>
+              <li>
+                <Button asChild variant="ghost">
+                  <Link to="/my-analyses">My Analyses</Link> {/* New link */}
+                </Button>
+              </li>
+            </>
           )}
         </ul>
-        <ModeToggle /> {/* Add the theme toggle */}
+        <ModeToggle />
       </nav>
     </header>
   );

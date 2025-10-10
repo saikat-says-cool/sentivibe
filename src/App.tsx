@@ -2,8 +2,9 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Index from './pages/Index';
 import Login from './pages/Login';
 import AnalyzeVideo from './pages/AnalyzeVideo';
-import VideoAnalysisLibrary from './pages/VideoAnalysisLibrary'; // New import
-import BlogPostDetail from './pages/BlogPostDetail'; // New import
+import VideoAnalysisLibrary from './pages/VideoAnalysisLibrary';
+import MyAnalyses from './pages/MyAnalyses'; // New import
+import BlogPostDetail from './pages/BlogPostDetail';
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from './integrations/supabase/auth';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -42,7 +43,15 @@ function App() {
                       </ProtectedRoute>
                     }
                   />
-                  <Route path="/blog/:slug" element={<BlogPostDetail />} /> {/* Public route for blog posts */}
+                  <Route
+                    path="/my-analyses" // New protected route
+                    element={
+                      <ProtectedRoute>
+                        <MyAnalyses />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route path="/blog/:slug" element={<BlogPostDetail />} />
                 </Routes>
               </main>
               <Footer />
