@@ -206,7 +206,7 @@ The project follows a standard React application structure with specific directo
     *   Automatically calls `handle_new_user` whenever a new user is inserted into `auth.users`, ensuring a profile is created for every new signup.
 
 ### 5.5. Supabase Edge Function (`supabase/functions/youtube-analyzer/index.ts`)
-This Deno-based serverless function is the core backend logic for video analysis and blog post generation, **now enhanced with an intelligent caching mechanism and SEO-focused AI prompting.**
+This Deno-based serverless function is the core backend logic for video analysis and blog post generation, **now enhanced with an intelligent caching mechanism, SEO-focused AI prompting, and API key rotation.**
 *   **CORS Handling:** Includes `corsHeaders` and handles `OPTIONS` preflight requests.
 *   **Supabase Client Initialization:** Creates a Supabase client within the function, passing the user's `Authorization` header.
 *   **User Authentication:** Verifies the user's session.
@@ -216,7 +216,9 @@ This Deno-based serverless function is the core backend logic for video analysis
     *   It then queries the `public.blog_posts` table to check if an entry with this `videoId` already exists.
     *   **If an `existingBlogPost` is found:** The function immediately returns the stored `videoTitle`, `videoDescription` (from `meta_description`), `videoThumbnailUrl`, `videoTags` (from `keywords`), `creatorName`, the `ai_analysis_json` (the full AI sentiment analysis result), the `blogPostSlug`, and the `originalVideoLink`. This bypasses all subsequent YouTube API and Longcat AI calls, saving resources and preventing duplicate blog posts.
     *   **If no existing analysis is found:** The function proceeds with the full analysis workflow: fetching video details and comments from YouTube, performing AI sentiment analysis, generating a new SEO-optimized blog post, and then inserting all this data (including the `aiAnalysis` into the `ai_analysis_json` column) into the `public.blog_posts` table.
-*   **API Key Retrieval:** Accesses `YOUTUBE_API_KEY` and `LONGCAT_AI_API_KEY` from Supabase environment secrets.
+*   **API Key Retrieval & Rotation:**
+    *   Retrieves a list of `YOUTUBE_API_KEY`s and `LONGCAT_AI_API_KEY`s using the `getApiKeys` helper function.
+    *   For each API call (YouTube video details, YouTube comments, Longcat AI analysis, Longcat AI blog post generation), it iterates through the available keys. If a request fails with a rate limit error (HTTP 429 or YouTube's `quotaExceeded` 403), it attempts the request again with the next key in the list.
 *   **YouTube Data API Calls (if new analysis):** Fetches video `snippet` (title, description, thumbnail, tags, `channelTitle`) and top-level comments (`maxResults=100`).
 *   **Comment Processing (if new analysis):** Maps comments to include `text` and `likeCount`, enforces a minimum of 50 comments, and sorts them by `likeCount`.
 *   **Longcat AI API Call (Analysis - if new analysis):** Constructs a `longcatPrompt` including video details, tags, and weighted comments. Instructs the AI to prioritize comments with higher like counts. Sends a `POST` request to Longcat AI, requesting a `json_object` response for sentiment analysis.
@@ -235,21 +237,25 @@ This Deno-based serverless function is the core backend logic for video analysis
 *   **Error Handling:** Includes comprehensive `try-catch` blocks for API calls and database operations.
 
 ### 5.6. Supabase Edge Function (`supabase/functions/fetch-external-context/index.ts`)
-This Deno-based serverless function is responsible for fetching external, up-to-date information using Google Custom Search.
+This Deno-based serverless function is responsible for fetching external, up-to-date information using Google Custom Search. **It now includes API key rotation.**
 *   **CORS Handling:** Includes `corsHeaders` and handles `OPTIONS` preflight requests.
 *   **Input Validation:** Checks for a `query` string.
-*   **API Key Retrieval:** Accesses `GOOGLE_SEARCH_API_KEY` and `GOOGLE_SEARCH_ENGINE_ID` from Supabase environment secrets.
+*   **API Key Retrieval & Rotation:**
+    *   Retrieves a list of `GOOGLE_SEARCH_API_KEY`s using the `getApiKeys` helper function.
+    *   Iterates through the available keys, retrying the Google Custom Search API call with the next key if a rate limit error (HTTP 403 `quotaExceeded` or 429) is encountered.
 *   **Google Custom Search API Call:** Performs a search using the provided query.
 *   **Result Processing:** Extracts snippets from the top 3 search results.
 *   **Response:** Returns a `200 OK` response with `externalSearchResults`.
 *   **Cost Optimization:** This function is called only once per video analysis session from the frontend, reducing repeated Google Search API calls.
 
 ### 5.7. Supabase Edge Function (`supabase/functions/chat-analyzer/index.ts`)
-This Deno-based serverless function handles the conversational AI aspect.
+This Deno-based serverless function handles the conversational AI aspect. **It now includes API key rotation.**
 *   **CORS Handling:** Includes `corsHeaders` and handles `OPTIONS` preflight requests.
 *   **Supabase Client Initialization & User Authentication:** Verifies the user.
 *   **Input:** Receives `userMessage`, `chatMessages` (conversation history), `analysisResult` (full video analysis including top comments, creator name, thumbnail URL, **and the `aiAnalysis` object, whether from a new analysis or cache**), `externalContext` (pre-fetched Google search results), `outputLengthPreference`, and `selectedPersona` from the frontend.
-*   **API Key Retrieval:** Accesses `LONGCAT_AI_API_KEY` from Supabase environment secrets.
+*   **API Key Retrieval & Rotation:**
+    *   Retrieves a list of `LONGCAT_AI_API_KEY`s using the `getApiKeys` helper function.
+    *   Iterates through the available keys, retrying the Longcat AI API call with the next key if a rate limit error (HTTP 429) is encountered.
 *   **Dynamic `max_tokens`:** Adjusts the `max_tokens` parameter for the Longcat AI API call based on the `outputLengthPreference`.
 *   **Dynamic `systemPrompt`:** Constructs the AI's `systemPrompt` based on the `selectedPersona`, guiding the AI's tone, style, and conversational boundaries, and now includes explicit word count targets.
 *   **Prompt Construction:**

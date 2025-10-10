@@ -8,6 +8,31 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Helper to get multiple API keys from environment variables
+function getApiKeys(baseName: string): string[] {
+  const keys: string[] = [];
+  let i = 1;
+  while (true) {
+    // @ts-ignore
+    const key = Deno.env.get(`${baseName}_${i}`);
+    if (key) {
+      keys.push(key);
+      i++;
+    } else {
+      break;
+    }
+  }
+  // Fallback to single key if numbered keys are not found
+  if (keys.length === 0) {
+    // @ts-ignore
+    const singleKey = Deno.env.get(baseName);
+    if (singleKey) {
+      keys.push(singleKey);
+    }
+  }
+  return keys;
+}
+
 serve(async (req) => {
   // Handle CORS preflight request
   if (req.method === 'OPTIONS') {
@@ -94,26 +119,38 @@ serve(async (req) => {
 
     // --- If no existing analysis, proceed with new analysis ---
 
-    // Access the YouTube API Key from Supabase Secrets
-    // @ts-ignore
-    const youtubeApiKey = Deno.env.get('YOUTUBE_API_KEY');
-    if (!youtubeApiKey) {
-      return new Response(JSON.stringify({ error: 'YouTube API key not configured' }), {
+    // Access the YouTube API Keys from Supabase Secrets
+    const youtubeApiKeys = getApiKeys('YOUTUBE_API_KEY');
+    if (youtubeApiKeys.length === 0) {
+      return new Response(JSON.stringify({ error: 'YouTube API key(s) not configured' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500,
       });
     }
 
     // --- Fetch Video Details (Title, Description, Thumbnails, Tags, Channel Title) ---
-    const videoDetailsApiUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=${youtubeApiKey}`;
-    const videoDetailsResponse = await fetch(videoDetailsApiUrl);
+    let videoDetailsResponse;
+    for (const currentYoutubeApiKey of youtubeApiKeys) {
+      const videoDetailsApiUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=${currentYoutubeApiKey}`;
+      videoDetailsResponse = await fetch(videoDetailsApiUrl);
+      if (videoDetailsResponse.ok) {
+        break; // Key worked, proceed
+      } else if (videoDetailsResponse.status === 403 || videoDetailsResponse.status === 429) {
+        const errorData = await videoDetailsResponse.json();
+        if (errorData.error?.errors?.[0]?.reason === 'quotaExceeded') {
+          console.warn(`YouTube API key ${currentYoutubeApiKey} hit quota limit for video details. Trying next key.`);
+          continue; // Try next key
+        }
+      }
+      break; // For other errors, or if not quota exceeded, break and report the error
+    }
 
-    if (!videoDetailsResponse.ok) {
-      const errorData = await videoDetailsResponse.json();
+    if (!videoDetailsResponse || !videoDetailsResponse.ok) {
+      const errorData = videoDetailsResponse ? await videoDetailsResponse.json() : { message: "No response from YouTube API" };
       console.error('YouTube Video Details API error:', errorData);
       return new Response(JSON.stringify({ error: 'Failed to fetch video details from YouTube API', details: errorData }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: videoDetailsResponse.status,
+        status: videoDetailsResponse?.status || 500,
       });
     }
     const videoDetailsData = await videoDetailsResponse.json();
@@ -129,15 +166,28 @@ serve(async (req) => {
 
 
     // --- Fetch Comments ---
-    const youtubeCommentsApiUrl = `https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId=${videoId}&key=${youtubeApiKey}&maxResults=100`;
-    const youtubeCommentsResponse = await fetch(youtubeCommentsApiUrl);
+    let youtubeCommentsResponse;
+    for (const currentYoutubeApiKey of youtubeApiKeys) { // Reuse youtubeApiKeys for comments
+      const youtubeCommentsApiUrl = `https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId=${videoId}&key=${currentYoutubeApiKey}&maxResults=100`;
+      youtubeCommentsResponse = await fetch(youtubeCommentsApiUrl);
+      if (youtubeCommentsResponse.ok) {
+        break; // Key worked, proceed
+      } else if (youtubeCommentsResponse.status === 403 || youtubeCommentsResponse.status === 429) {
+        const errorData = await youtubeCommentsResponse.json();
+        if (errorData.error?.errors?.[0]?.reason === 'quotaExceeded') {
+          console.warn(`YouTube API key ${currentYoutubeApiKey} hit quota limit for comments. Trying next key.`);
+          continue; // Try next key
+        }
+      }
+      break;
+    }
 
-    if (!youtubeCommentsResponse.ok) {
-      const errorData = await youtubeCommentsResponse.json();
+    if (!youtubeCommentsResponse || !youtubeCommentsResponse.ok) {
+      const errorData = youtubeCommentsResponse ? await youtubeCommentsResponse.json() : { message: "No response from YouTube Comments API" };
       console.error('YouTube Comments API error:', errorData);
       return new Response(JSON.stringify({ error: 'Failed to fetch comments from YouTube API', details: errorData }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: youtubeCommentsResponse.status,
+        status: youtubeCommentsResponse?.status || 500,
       });
     }
 
@@ -164,11 +214,10 @@ serve(async (req) => {
     const formattedCommentsForAI = commentsWithLikes.map((comment: any) => `(Likes: ${comment.likeCount}) ${comment.text}`);
     const allFetchedCommentsText = commentsWithLikes.map((comment: any) => comment.text); // Keep all fetched comments text for display
 
-    // Access the Longcat AI API Key from Supabase Secrets
-    // @ts-ignore
-    const longcatApiKey = Deno.env.get('LONGCAT_AI_API_KEY');
-    if (!longcatApiKey) {
-      return new Response(JSON.stringify({ error: 'Longcat AI API key not configured' }), {
+    // Access the Longcat AI API Keys from Supabase Secrets
+    const longcatApiKeys = getApiKeys('LONGCAT_AI_API_KEY');
+    if (longcatApiKeys.length === 0) {
+      return new Response(JSON.stringify({ error: 'Longcat AI API key(s) not configured' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500,
       });
@@ -203,30 +252,41 @@ serve(async (req) => {
 
 
     const longcatApiUrl = "https://api.longcat.chat/openai/v1/chat/completions";
-    const longcatResponse = await fetch(longcatApiUrl, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${longcatApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: "LongCat-Flash-Chat",
-        messages: [
-          { "role": "system", "content": "You are an expert sentiment analysis AI. Your task is to analyze a YouTube video's comments, providing a concise summary of sentiment, emotional tone, key themes, and overall insights. Prioritize popular comments and use video title, description, tags, and creator name for broader context. Respond in a structured JSON format." },
-          { "role": "user", "content": longcatPrompt }
-        ],
-        max_tokens: 1000,
-        temperature: 0.7,
-        response_format: { type: "json_object" } // Request JSON output
-      }),
-    });
+    let longcatResponse;
+    for (const currentLongcatApiKey of longcatApiKeys) {
+      longcatResponse = await fetch(longcatApiUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${currentLongcatApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: "LongCat-Flash-Chat",
+          messages: [
+            { "role": "system", "content": "You are an expert sentiment analysis AI. Your task is to analyze a YouTube video's comments, providing a concise summary of sentiment, emotional tone, key themes, and overall insights. Prioritize popular comments and use video title, description, tags, and creator name for broader context. Respond in a structured JSON format." },
+            { "role": "user", "content": longcatPrompt }
+          ],
+          max_tokens: 1000,
+          temperature: 0.7,
+          response_format: { type: "json_object" } // Request JSON output
+        }),
+      });
 
-    if (!longcatResponse.ok) {
-      const errorData = await longcatResponse.json();
+      if (longcatResponse.ok) {
+        break;
+      } else if (longcatResponse.status === 429) {
+        console.warn(`Longcat AI API key hit rate limit for analysis. Trying next key.`);
+        continue;
+      }
+      break;
+    }
+
+    if (!longcatResponse || !longcatResponse.ok) {
+      const errorData = longcatResponse ? await longcatResponse.json() : { message: "No response from Longcat AI" };
       console.error('Longcat AI API error:', errorData);
       return new Response(JSON.stringify({ error: 'Failed to get analysis from Longcat AI', details: errorData }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: longcatResponse.status,
+        status: longcatResponse?.status || 500,
       });
     }
 
@@ -275,30 +335,41 @@ serve(async (req) => {
     }
     `;
 
-    const blogPostResponse = await fetch(longcatApiUrl, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${longcatApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: "LongCat-Flash-Chat", // Or a more capable model if available
-        messages: [
-          { "role": "system", "content": "You are an expert SEO content writer. Your task is to generate a detailed, SEO-optimized blog post in Markdown format based on provided video analysis data. Ensure the output is a valid JSON object." },
-          { "role": "user", "content": blogPostPrompt }
-        ],
-        max_tokens: 2000, // Increased tokens for a longer blog post
-        temperature: 0.7,
-        response_format: { type: "json_object" }
-      }),
-    });
+    let blogPostResponse;
+    for (const currentLongcatApiKey of longcatApiKeys) { // Reuse longcatApiKeys for blog post generation
+      blogPostResponse = await fetch(longcatApiUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${currentLongcatApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: "LongCat-Flash-Chat", // Or a more capable model if available
+          messages: [
+            { "role": "system", "content": "You are an expert SEO content writer. Your task is to generate a detailed, SEO-optimized blog post in Markdown format based on provided video analysis data. Ensure the output is a valid JSON object." },
+            { "role": "user", "content": blogPostPrompt }
+          ],
+          max_tokens: 2000, // Increased tokens for a longer blog post
+          temperature: 0.7,
+          response_format: { type: "json_object" }
+        }),
+      });
 
-    if (!blogPostResponse.ok) {
-      const errorData = await blogPostResponse.json();
+      if (blogPostResponse.ok) {
+        break;
+      } else if (blogPostResponse.status === 429) {
+        console.warn(`Longcat AI API key hit rate limit for blog post generation. Trying next key.`);
+        continue;
+      }
+      break;
+    }
+
+    if (!blogPostResponse || !blogPostResponse.ok) {
+      const errorData = blogPostResponse ? await blogPostResponse.json() : { message: "No response from Longcat AI for blog post" };
       console.error('Longcat AI Blog Post API error:', errorData);
       return new Response(JSON.stringify({ error: 'Failed to generate blog post from Longcat AI', details: errorData }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: blogPostResponse.status,
+        status: blogPostResponse?.status || 500,
       });
     }
 

@@ -8,6 +8,31 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Helper to get multiple API keys from environment variables
+function getApiKeys(baseName: string): string[] {
+  const keys: string[] = [];
+  let i = 1;
+  while (true) {
+    // @ts-ignore
+    const key = Deno.env.get(`${baseName}_${i}`);
+    if (key) {
+      keys.push(key);
+      i++;
+    } else {
+      break;
+    }
+  }
+  // Fallback to single key if numbered keys are not found
+  if (keys.length === 0) {
+    // @ts-ignore
+    const singleKey = Deno.env.get(baseName);
+    if (singleKey) {
+      keys.push(singleKey);
+    }
+  }
+  return keys;
+}
+
 serve(async (req) => {
   // Handle CORS preflight request
   if (req.method === 'OPTIONS') {
@@ -47,10 +72,9 @@ serve(async (req) => {
     }
 
     // --- Longcat AI API Call ---
-    // @ts-ignore
-    const longcatApiKey = Deno.env.get('LONGCAT_AI_API_KEY');
-    if (!longcatApiKey) {
-      return new Response(JSON.stringify({ error: 'Longcat AI API key not configured' }), {
+    const longcatApiKeys = getApiKeys('LONGCAT_AI_API_KEY');
+    if (longcatApiKeys.length === 0) {
+      return new Response(JSON.stringify({ error: 'Longcat AI API key(s) not configured' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500,
       });
@@ -146,28 +170,38 @@ serve(async (req) => {
 
     const longcatApiUrl = "https://api.longcat.chat/openai/v1/chat/completions";
     
-    // Make the request to Longcat AI without streaming
-    const longcatResponse = await fetch(longcatApiUrl, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${longcatApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: "LongCat-Flash-Chat",
-        messages: messages,
-        max_tokens: maxTokens,
-        temperature: 0.7,
-        stream: false, // Disable streaming
-      }),
-    });
+    let longcatResponse;
+    for (const currentLongcatApiKey of longcatApiKeys) {
+      longcatResponse = await fetch(longcatApiUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${currentLongcatApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: "LongCat-Flash-Chat",
+          messages: messages,
+          max_tokens: maxTokens,
+          temperature: 0.7,
+          stream: false, // Disable streaming
+        }),
+      });
 
-    if (!longcatResponse.ok) {
-      const errorData = await longcatResponse.json();
+      if (longcatResponse.ok) {
+        break;
+      } else if (longcatResponse.status === 429) {
+        console.warn(`Longcat AI API key hit rate limit for chat. Trying next key.`);
+        continue;
+      }
+      break;
+    }
+
+    if (!longcatResponse || !longcatResponse.ok) {
+      const errorData = longcatResponse ? await longcatResponse.json() : { message: "No response from Longcat AI" };
       console.error('Longcat AI API error:', errorData);
       return new Response(JSON.stringify({ error: 'Failed to get AI response from Longcat AI', details: errorData }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: longcatResponse.status,
+        status: longcatResponse?.status || 500,
       });
     }
 
