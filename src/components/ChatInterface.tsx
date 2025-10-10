@@ -69,9 +69,11 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ messages, onSendMessage, 
               )}
             >
               {/* Use ReactMarkdown to render the message text */}
-              <ReactMarkdown className="text-sm prose dark:prose-invert">
-                {message.text}
-              </ReactMarkdown>
+              <div className="text-sm prose dark:prose-invert">
+                <ReactMarkdown>
+                  {message.text}
+                </ReactMarkdown>
+              </div>
               <span className="text-xs opacity-75 mt-1 block">
                 {message.timestamp}
               </span>
