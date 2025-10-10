@@ -60,16 +60,16 @@ serve(async (req) => {
     let maxTokens = 500; // Default to a reasonable standard length
     switch (outputLengthPreference) {
       case 'concise':
-        maxTokens = 200; // Slightly increased to ensure completeness
+        maxTokens = 200; 
         break;
       case 'standard':
-        maxTokens = 600; // Slightly increased to ensure completeness
+        maxTokens = 600; 
         break;
       case 'detailed':
         maxTokens = 1000;
         break;
       default:
-        maxTokens = 600; // Fallback, slightly increased
+        maxTokens = 600; 
     }
 
     // Base instructions for all personas, emphasizing completeness
@@ -159,6 +159,8 @@ serve(async (req) => {
 
 
     const longcatApiUrl = "https://api.longcat.chat/openai/v1/chat/completions";
+    
+    // Make the request to Longcat AI with streaming enabled
     const longcatResponse = await fetch(longcatApiUrl, {
       method: 'POST',
       headers: {
@@ -170,6 +172,7 @@ serve(async (req) => {
         messages: messages,
         max_tokens: maxTokens,
         temperature: 0.7,
+        stream: true, // Enable streaming
       }),
     });
 
@@ -182,13 +185,62 @@ serve(async (req) => {
       });
     }
 
-    const longcatData = await longcatResponse.json();
-    const aiResponseContent = longcatData.choices[0].message.content;
+    // Create a ReadableStream to send chunks back to the client
+    const customReadable = new ReadableStream({
+      async start(controller) {
+        const reader = longcatResponse.body?.getReader();
+        const decoder = new TextDecoder();
 
-    return new Response(JSON.stringify({
-      aiResponse: aiResponseContent,
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        if (!reader) {
+          controller.error('No readable stream from Longcat AI');
+          return;
+        }
+
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) {
+              break;
+            }
+            const chunk = decoder.decode(value, { stream: true });
+            const lines = chunk.split('\n').filter(line => line.trim() !== '');
+
+            for (const line of lines) {
+              if (line.startsWith('data: ')) {
+                const data = line.substring(6);
+                if (data === '[DONE]') {
+                  controller.close();
+                  return;
+                }
+                try {
+                  const json = JSON.parse(data);
+                  const content = json.choices[0]?.delta?.content;
+                  if (content) {
+                    controller.enqueue(new TextEncoder().encode(content));
+                  }
+                } catch (parseError) {
+                  console.error('Error parsing SSE data:', parseError, 'Line:', line);
+                  // Optionally enqueue an error message or just skip malformed data
+                }
+              }
+            }
+          }
+        } catch (readError) {
+          console.error('Error reading stream from Longcat AI:', readError);
+          controller.error(readError);
+        } finally {
+          controller.close();
+        }
+      },
+    });
+
+    return new Response(customReadable, {
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'text/event-stream', // Set content type for streaming
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+      },
       status: 200,
     });
 
