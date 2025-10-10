@@ -81,7 +81,12 @@ serve(async (req) => {
     }
 
     // Construct the AI prompt with full context
-    let systemPrompt = `You are a helpful assistant named SentiVibe AI. Your primary role is to answer questions about the provided YouTube video analysis. You should always prioritize information from the video analysis. If external search results are provided, use them to answer questions about up-to-date or broader context, but always relate back to the video's topic where relevant. Maintain a helpful and informative tone.`;
+    // Refined system prompt to include instructions for leveraging pre-existing knowledge
+    let systemPrompt = `You are a helpful assistant named SentiVibe AI. Your primary role is to answer questions about the provided YouTube video analysis and the ongoing conversation.
+    - Prioritize: Information from the video analysis context (including comments) for video-specific questions.
+    - Augment: Use external search results for up-to-date or broader context, relating it back to the video's topic when relevant.
+    - Leverage: For general, time-independent questions that cannot be answered from the video analysis or external search, use your own pre-existing knowledge.
+    Maintain a helpful, informative, and concise tone.`;
 
     let conversationHistory = chatMessages.map((msg: any) => ({
       role: msg.sender === 'user' ? 'user' : 'assistant',
@@ -89,6 +94,7 @@ serve(async (req) => {
     }));
 
     // Ensure the initial analysis context is always at the beginning of the conversation for the AI
+    // Now includes the top comments explicitly
     const analysisContext = `
     --- Video Analysis Context ---
     Video Title: "${analysisResult.videoTitle}"
@@ -98,7 +104,8 @@ serve(async (req) => {
     Emotional Tones: ${analysisResult.aiAnalysis.emotional_tones.join(', ')}
     Key Themes: ${analysisResult.aiAnalysis.key_themes.join(', ')}
     Summary Insights: ${analysisResult.aiAnalysis.summary_insights}
-    Top Comments: ${analysisResult.comments.slice(0, 10).join('\n')}
+    Top Comments (by popularity):
+    ${analysisResult.comments.slice(0, 10).map((comment: string, index: number) => `${index + 1}. ${comment}`).join('\n')}
     --- End Video Analysis Context ---
     `;
 
