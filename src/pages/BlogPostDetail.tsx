@@ -8,7 +8,7 @@ import { Loader2, ArrowLeft, Youtube } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Button } from '@/components/ui/button'; // Import Button
+import { Button } from '@/components/ui/button';
 
 interface BlogPost {
   id: string;
@@ -56,61 +56,106 @@ const BlogPostDetail = () => {
   console.log("useQuery state - isLoading:", isLoading, "error:", error, "blogPost:", blogPost);
 
   useEffect(() => {
+    const head = document.head;
+
+    // Function to create or update a meta tag
+    const updateMetaTag = (name: string, content: string, property?: string) => {
+      let tag = document.querySelector(`meta[${property ? `property="${property}"` : `name="${name}"`}]`);
+      if (!tag) {
+        tag = document.createElement('meta');
+        if (property) tag.setAttribute('property', property);
+        else tag.setAttribute('name', name);
+        head.appendChild(tag);
+      }
+      tag.setAttribute('content', content);
+    };
+
+    // Function to remove a meta tag
+    const removeMetaTag = (name: string, property?: string) => {
+      const tag = document.querySelector(`meta[${property ? `property="${property}"` : `name="${name}"`}]`);
+      if (tag) tag.remove();
+    };
+
     if (blogPost) {
       // Update document title
       document.title = blogPost.title;
 
       // Update meta description
-      let metaDescriptionTag = document.querySelector('meta[name="description"]');
-      if (!metaDescriptionTag) {
-        metaDescriptionTag = document.createElement('meta');
-        metaDescriptionTag.setAttribute('name', 'description');
-        document.head.appendChild(metaDescriptionTag);
-      }
-      metaDescriptionTag.setAttribute('content', blogPost.meta_description);
+      updateMetaTag('description', blogPost.meta_description);
+
+      // Add Open Graph (OG) tags for social media
+      updateMetaTag('og:title', blogPost.title, 'og:title');
+      updateMetaTag('og:description', blogPost.meta_description, 'og:description');
+      updateMetaTag('og:image', blogPost.thumbnail_url, 'og:image');
+      updateMetaTag('og:url', `${window.location.origin}/blog/${blogPost.slug}`, 'og:url');
+      updateMetaTag('og:type', 'article', 'og:type');
+      updateMetaTag('og:site_name', 'SentiVibe', 'og:site_name');
 
       // Add JSON-LD Structured Data for BlogPosting
       const schemaData = {
         "@context": "https://schema.org",
-        "@type": "BlogPosting",
-        "headline": blogPost.title,
-        "description": blogPost.meta_description,
-        "image": blogPost.thumbnail_url,
-        "datePublished": blogPost.published_at,
-        "dateModified": blogPost.updated_at,
-        "author": {
-          "@type": "Person",
-          "name": blogPost.creator_name || "SentiVibe AI"
-        },
-        "publisher": {
-          "@type": "Organization",
-          "name": "SentiVibe",
-          "logo": {
-            "@type": "ImageObject",
-            "url": `${window.location.origin}/logo.png` // Assuming a logo.png in public folder
+        "@graph": [
+          {
+            "@type": "BlogPosting",
+            "headline": blogPost.title,
+            "description": blogPost.meta_description,
+            "image": blogPost.thumbnail_url,
+            "datePublished": blogPost.published_at,
+            "dateModified": blogPost.updated_at,
+            "author": {
+              "@type": "Person",
+              "name": blogPost.creator_name || "SentiVibe AI"
+            },
+            "publisher": {
+              "@type": "Organization",
+              "name": "SentiVibe",
+              "logo": {
+                "@type": "ImageObject",
+                "url": `${window.location.origin}/logo.png`
+              }
+            },
+            "mainEntityOfPage": {
+              "@type": "WebPage",
+              "@id": `${window.location.origin}/blog/${blogPost.slug}`
+            }
+          },
+          {
+            "@type": "SoftwareApplication",
+            "name": "SentiVibe - YouTube Comment Sentiment Analyzer",
+            "applicationCategory": "AI Tool",
+            "operatingSystem": "Web",
+            "url": `${window.location.origin}`, // Link to the main application
+            "description": "AI tool to analyze YouTube comments for sentiment and insights.",
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD"
+            }
           }
-        },
-        "mainEntityOfPage": {
-          "@type": "WebPage",
-          "@id": `${window.location.origin}/blog/${blogPost.slug}`
-        }
+        ]
       };
 
       let scriptTag = document.querySelector('script[type="application/ld+json"]');
       if (!scriptTag) {
         scriptTag = document.createElement('script');
         scriptTag.setAttribute('type', 'application/ld+json');
-        document.head.appendChild(scriptTag);
+        head.appendChild(scriptTag);
       }
       scriptTag.textContent = JSON.stringify(schemaData);
 
     } else {
       // Reset to default if no blog post is loaded
       document.title = "SentiVibe - Video Analysis Library";
-      const metaDescriptionTag = document.querySelector('meta[name="description"]');
-      if (metaDescriptionTag) {
-        metaDescriptionTag.setAttribute('content', 'Unlock the true sentiment behind YouTube comments. Analyze, understand, and gain insights into audience reactions with AI-powered sentiment analysis.');
-      }
+      updateMetaTag('description', 'Unlock the true sentiment behind YouTube comments. Analyze, understand, and gain insights into audience reactions with AI-powered sentiment analysis.');
+
+      // Remove OG tags
+      removeMetaTag('og:title', 'og:title');
+      removeMetaTag('og:description', 'og:description');
+      removeMetaTag('og:image', 'og:image');
+      removeMetaTag('og:url', 'og:url');
+      removeMetaTag('og:type', 'og:type');
+      removeMetaTag('og:site_name', 'og:site_name');
+
       const scriptTag = document.querySelector('script[type="application/ld+json"]');
       if (scriptTag) {
         scriptTag.remove();
