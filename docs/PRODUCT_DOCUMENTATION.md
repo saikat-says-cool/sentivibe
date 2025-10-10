@@ -18,8 +18,8 @@
 
 ### 2.2. AI-Powered YouTube Video Analysis
 *   **Effortless Input:** Simply paste any public YouTube video link into the application.
-*   **Custom AI Questions:** Users can now add multiple custom questions with desired word count limits to be answered by the AI as part of the initial analysis report.
-*   **Intelligent Analysis Caching:** To optimize resource usage and prevent duplicate content, SentiVibe automatically saves each video analysis. If a video has been analyzed before, the system will instantly retrieve and display the existing report, blog post, and **all previously generated custom Q&A results**, saving AI credits and API calls. The cached analysis includes the top 10 raw comments for future AI chat context.
+*   **Dynamic Custom AI Questions:** Users can now add multiple custom questions with desired word count limits to be answered by the AI as part of the initial analysis report.
+*   **Intelligent Analysis Caching with Dynamic Q&A:** To optimize resource usage and prevent duplicate content, SentiVibe automatically saves each video analysis. If a video has been analyzed before, the system will instantly retrieve and display the existing report and blog post. **Crucially, if a user submits new custom questions for an already analyzed video, these new questions will be processed by the AI, answered, and then merged with any existing custom Q&A results for that video. The combined "community questions" and their answers will be stored and displayed in the report and blog post, ensuring all user-submitted questions are addressed and become part of the collective insight.** The cached analysis includes the top 10 raw comments for future AI chat context.
 *   **Comprehensive Data Extraction:** SentiVibe automatically retrieves:
     *   **Video Title & Description:** For context.
     *   **Video Thumbnail:** Visual identification of the video.
@@ -33,7 +33,7 @@
     *   **Emotional Tones:** Identifies prevalent emotions (e.g., joy, anger, surprise, sadness).
     *   **Key Themes:** Highlights the main topics and recurring subjects discussed in the comments.
     *   **Summary Insights:** A concise, human-readable summary of the AI's findings, explaining the overall sentiment and key takeaways, with an emphasis on how popular comments influenced the assessment.
-    *   **Custom Q&A Section:** Displays the AI-generated answers to the user's specific custom questions, respecting the specified word limits.
+    *   **Community Q&A Section:** Displays all AI-generated answers to custom questions asked by any user about this video, respecting the specified word limits.
 
 ### 2.3. Programmatic SEO & Video Analysis Library
 *   **Automated Blog Post Generation:** Immediately after a *new* video analysis is complete, the AI automatically generates a comprehensive, SEO-optimized blog post. For videos previously analyzed, the existing blog post is retrieved and linked, ensuring **only one unique blog post exists per video**.
@@ -63,7 +63,7 @@
 *   **Multi-Source Intelligence:** The AI intelligently synthesizes information from:
     *   **Video Analysis Report:** All details from the initial analysis (sentiment, themes, summary).
     *   **Exact Top Comments:** The raw text of the top 10 most popular comments, allowing for deep dives into audience feedback.
-    *   **Pre-generated Custom Q&A:** The AI has access to the answers generated for the custom questions, allowing it to reference or elaborate on them during the chat.
+    *   **Community Q&A:** The AI has access to all pre-generated answers for custom questions, allowing it to reference or elaborate on them during the chat.
     *   **External Search Results:** Up-to-date information about the video's broader topic, fetched *once at the start of each new analysis session* to provide relevant, current context for the chat. **Note:** While video analysis results are cached, each chat session starts fresh, ensuring a focused conversation with the latest external context.
     *   **Pre-existing Knowledge:** The AI leverages its vast general knowledge for time-independent questions that aren't covered by the video or external search.
 *   **Cost-Optimized External Context:** To ensure efficiency, external search for broader context is performed only once per video analysis session, significantly reducing API costs while still providing valuable, up-to-date information.
@@ -78,7 +78,7 @@
 *   **Enhanced Navigation:** Each analysis report includes a direct link to its corresponding SEO-optimized blog post in the library, and a link to the original YouTube video.
 
 ### 2.6. Professional PDF Report Export
-*   **One-Click Download:** Users can easily download the complete analysis report as a beautifully formatted PDF document. This now includes the custom questions and their AI-generated answers.
+*   **One-Click Download:** Users can easily download the complete analysis report as a beautifully formatted PDF document. This now includes the community questions and their AI-generated answers.
 *   **Branded Header:** The PDF report includes a header featuring the SentiVibe logo and the tagline "YouTube Audience Insight Report — Powered by SentiVibe."
 *   **Shareable & Archivable:** Ideal for sharing insights with teams, clients, or for archiving research findings.
 *   **Customizable Filename:** The PDF filename is automatically generated based on the video title for easy organization.
@@ -96,12 +96,12 @@
 3.  **Navigate to Analyze Video:** From the homepage, click the "Analyze a Video" button or navigate to the `/analyze-video` route.
 4.  **Paste YouTube Link:** In the input field, paste the full URL of the YouTube video you wish to analyze.
 5.  **Add Custom Questions (Optional):** Use the "Add Another Question" button to add one or more custom questions. For each question, type your query and specify the desired word count for the AI's answer.
-6.  **Initiate Analysis:** Click the "Analyze Comments & Get Answers" button. If the video has been analyzed before, the report will load almost instantly. Otherwise, the application will display a loading state while the AI processes the data, fetches initial external context, and generates answers to your custom questions.
-7.  **Review Report & Blog Post:** Once the analysis is complete, a detailed report will appear, including the primary sentiment analysis and the answers to your custom questions. You will see a "View Blog Post" button to navigate to the full, SEO-optimized blog post, and an "Original Video" button to view the YouTube video.
+6.  **Initiate Analysis:** Click the "Analyze Comments & Get Answers" button. If the video has been analyzed before, the report will load almost instantly, and any new custom questions you've added will be processed and merged with existing community questions. Otherwise, the application will display a loading state while the AI processes the data, fetches initial external context, and generates answers to your custom questions.
+7.  **Review Report & Blog Post:** Once the analysis is complete, a detailed report will appear, including the primary sentiment analysis and the answers to all community questions. You will see a "View Blog Post" button to navigate to the full, SEO-optimized blog post, and an "Original Video" button to view the YouTube video.
 8.  **Chat with AI:** Click the "Chat with AI" button to open the **pop-up chat dialog**.
 9.  **Customize AI Chat (Optional):** Within the chat dialog, use the dropdowns to select your preferred **AI Persona** and **Response Length**.
-10. **Engage with AI:** You can now ask questions about the video, its comments, the pre-generated custom answers, or related topics. The AI will use all available context and your chosen persona/length preferences to provide informed answers, including clickable Markdown links.
-11. **Download PDF Report:** To save or share the report, click the "Download Report PDF" button. A PDF file will be generated and downloaded to your device, featuring a branded header and including the custom Q&A section.
+10. **Engage with AI:** You can now ask questions about the video, its comments, the pre-generated community answers, or related topics. The AI will use all available context and your chosen persona/length preferences to provide informed answers, including clickable Markdown links.
+11. **Download PDF Report:** To save or share the report, click the "Download Report PDF" button. A PDF file will be generated and downloaded to your device, featuring a branded header and including the community Q&A section.
 12. **Explore the Analysis Library:** Navigate to the "Analysis Library" from the header. Here, you can browse all past video analyses, search by video title, creator, or keywords.
 13. **Use Library Copilot:** On both the "Analysis Library" and "My Analyses" pages, click the "Library Copilot" button to open an AI chat that helps you find specific analyses from your collection, providing direct links to the blog posts.
 14. **Chat from Library (New!):** From a blog post detail page, click the "Chat with AI" button to seamlessly open the **pop-up chat dialog** with the blog post's context pre-loaded, ready for conversation.
@@ -109,13 +109,13 @@
 
 ## 4. Value Proposition
 SentiVibe provides immense value by:
-*   **Saving Time:** Automates the tedious process of manually sifting through thousands of comments and researching related topics, and now automates content creation and specific question answering. **Significantly reduces redundant AI and API costs by reusing past analyses.**
+*   **Saving Time:** Automates the tedious process of manually sifting through thousands of comments and researching related topics, and now automates content creation and specific question answering. **Significantly reduces redundant AI and API costs by reusing past analyses and dynamically adding new custom Q&A to existing reports.**
 *   **Enhanced Reliability:** The API key rotation mechanism ensures continuous operation even if individual free API keys hit their rate limits, providing a more robust and uninterrupted service.
 *   **Gaining Deeper Understanding:** Offers AI-driven insights and interactive conversations that go beyond surface-level reading, incorporating direct audience feedback, broader context, and now, direct answers to user-defined questions.
 *   **Personalized Interaction:** Users can tailor the AI's conversational style and response detail to match their specific needs and preferences, and get targeted answers to their most pressing questions.
 *   **Informing Strategy:** Helps content creators understand what resonates with their audience, marketers to gauge campaign reception, and researchers to analyze public opinion with a more complete picture.
 *   **Providing Actionable Data:** The weighted analysis ensures that the most impactful opinions are prioritized, and the AI can elaborate on these, including providing direct answers to custom questions.
-*   **Professional Reporting:** Enables easy sharing of findings with high-quality PDF reports, now with a professional branded header and a dedicated section for custom Q&A.
+*   **Professional Reporting:** Enables easy sharing of findings with high-quality PDF reports, now with a professional branded header and a dedicated section for community Q&A.
 *   **Cost-Effective Intelligence:** Streamlined external search ensures you get the necessary up-to-date information without incurring excessive API costs.
 *   **Boosting SEO & Content Strategy:** Automatically generates valuable, SEO-optimized content, expanding your digital footprint and making your insights discoverable to a wider audience through search engines. The searchable library further enhances content discoverability within the app, **ensuring no duplicate blog posts for the same video.** Comprehensive SEO features like dynamic meta tags, structured data, Open Graph tags, and proper alt text ensure maximum visibility and crawlability.
 *   **Seamless Workflow:** The ability to initiate AI chat directly from a saved blog post, now within a consistent pop-up dialog, creates a more integrated and efficient user workflow, allowing for immediate follow-up questions on past analyses. The `LibraryCopilot` further enhances discoverability within a user's own analyses.

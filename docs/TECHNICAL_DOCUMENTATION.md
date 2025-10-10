@@ -56,7 +56,7 @@ The project follows a standard React application structure with specific directo
         *   `src/integrations/supabase/auth.tsx`: React Context Provider and hook for managing Supabase user sessions.
 *   `supabase/`: Supabase-related backend files.
     *   `supabase/functions/`: Supabase Edge Functions.
-        *   `supabase/functions/youtube-analyzer/index.ts`: **Significantly updated Edge Function for video analysis, now processing custom questions, making additional AI calls for answers, and storing these Q&A results in the database.**
+        *   `supabase/functions/youtube-analyzer/index.ts`: **Significantly updated Edge Function for video analysis, now processing custom questions, making additional AI calls for answers, and storing these Q&A results in the database, even for cached videos.**
         *   `supabase/functions/fetch-external-context/index.ts`: Edge Function for performing a one-time Google Custom Search.
         *   `supabase/functions/chat-analyzer/index.ts`: **Updated Edge Function for handling AI chat conversations, now incorporating custom Q&A results into the AI's context.**
         *   `supabase/functions/library-copilot-analyzer/index.ts`: Edge Function for handling AI chat for the Library Copilot.
@@ -114,8 +114,8 @@ The project follows a standard React application structure with specific directo
     *   Displays a "View Blog Post" `Button` with a `Link` to `/blog/${analysisResult.blogPostSlug}` after a successful analysis.
     *   Displays an "Original Video" `Button` with an `<a>` tag linking to `analysisResult.originalVideoLink`.
     *   **"Chat with AI" Button:** Triggers the `VideoChatDialog` pop-up.
-    *   **Custom Q&A Display:** A new section displays the AI-generated answers for each custom question.
-*   **PDF Download:** Integrates `html2pdf.js` to convert the analysis results `Card` into a downloadable PDF. The PDF generation now includes a custom header with the SentiVibe logo and tagline, and the custom Q&A section.
+    *   **Community Q&A Display:** A new section displays the AI-generated answers for all community questions.
+*   **PDF Download:** Integrates `html2pdf.js` to convert the analysis results `Card` into a downloadable PDF. The PDF generation now includes a custom header with the SentiVibe logo and tagline, and the community Q&A section.
 *   **`VideoChatDialog` Integration:** Renders the `VideoChatDialog` component, passing `isChatDialogOpen`, `setIsChatDialogOpen`, and `analysisResult` (which now includes `customQaResults`) as props.
 
 ### 4.6. `VideoAnalysisLibrary.tsx`
@@ -145,7 +145,7 @@ The project follows a standard React application structure with specific directo
     *   Displays the `thumbnail_url`, `title`, `creator_name`, `published_at` date, and `meta_description`.
     *   Renders the `content` field (which is in Markdown) using `react-markdown` and `remarkGfm` for proper formatting.
     *   Displays `keywords` using `Badge` components.
-    *   **Custom Q&A Section:** A new section displays the AI-generated answers for each custom question if `blogPost.custom_qa_results` are present.
+    *   **Community Q&A Section:** A new section displays the AI-generated answers for all community questions if `blogPost.custom_qa_results` are present.
     *   Includes a "Back to Analysis Library" `Link` for easy navigation.
     *   Includes an "Analyze a New Video" `Button` linking to `/analyze-video`.
     *   Includes an "Original Video" `<a>` tag linking to `blogPost.original_video_link`.

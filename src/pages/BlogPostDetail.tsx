@@ -290,7 +290,7 @@ const BlogPostDetail = () => {
         )}
         {blogPost.custom_qa_results && blogPost.custom_qa_results.length > 0 && (
           <CardContent className="border-t pt-4 mt-4">
-            <h3 className="text-lg font-semibold mb-2">Custom AI Answers</h3>
+            <h3 className="text-lg font-semibold mb-2">Questions about this video asked by the community</h3>
             <div className="space-y-4">
               {blogPost.custom_qa_results.map((qa, index) => (
                 <div key={index} className="border p-3 rounded-md bg-gray-50 dark:bg-gray-700">

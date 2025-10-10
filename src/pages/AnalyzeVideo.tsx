@@ -195,7 +195,7 @@ const AnalyzeVideo = () => {
 
             <Separator />
 
-            <h3 className="text-lg font-semibold mb-2">Custom Questions for AI</h3>
+            <h3 className="text-lg font-semibold mb-2">Questions about this video asked by the community</h3>
             {customQuestions.map((qa, index) => (
               <div key={index} className="flex flex-col sm:flex-row gap-2 items-end">
                 <div className="flex-1">
@@ -381,7 +381,7 @@ const AnalyzeVideo = () => {
 
               {analysisResult.customQaResults && analysisResult.customQaResults.length > 0 && (
                 <div>
-                  <h3 className="text-lg font-semibold mb-2">Custom AI Answers</h3>
+                  <h3 className="text-lg font-semibold mb-2">Questions about this video asked by the community</h3>
                   <div className="space-y-4">
                     {analysisResult.customQaResults.map((qa, index) => (
                       <div key={index} className="border p-3 rounded-md bg-gray-50 dark:bg-gray-700">
