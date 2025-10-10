@@ -109,6 +109,7 @@ serve(async (req) => {
     - Prioritize: Information from the video analysis context (including comments) for video-specific questions.
     - Augment: Use the provided external context for up-to-date or broader context, relating it back to the video's topic when relevant.
     - Leverage: For general, time-independent questions that cannot be answered from the video analysis or the provided external context, use your own pre-existing knowledge.
+    - **Whenever you mention a URL or a resource that can be linked, format it as a Markdown hyperlink: \`[Link Text](URL)\`.**
     Adhere to the user's requested response length preference, but ensure completeness above all.
     ${wordCountInstruction}
     `;
