@@ -26,6 +26,7 @@ interface BlogPost {
 }
 
 const fetchBlogPostBySlug = async (slug: string): Promise<BlogPost | null> => {
+  console.log("Fetching blog post for slug:", slug);
   const { data, error } = await supabase
     .from('blog_posts')
     .select('*')
@@ -33,19 +34,24 @@ const fetchBlogPostBySlug = async (slug: string): Promise<BlogPost | null> => {
     .single();
 
   if (error && error.code !== 'PGRST116') { // PGRST116 means no rows found
+    console.error("Supabase fetch error:", error);
     throw new Error(error.message);
   }
+  console.log("Supabase fetch result:", data);
   return data;
 };
 
 const BlogPostDetail = () => {
   const { slug } = useParams<{ slug: string }>();
+  console.log("Current URL slug from useParams:", slug);
 
   const { data: blogPost, isLoading, error } = useQuery<BlogPost | null, Error>({
     queryKey: ['blogPost', slug],
     queryFn: () => fetchBlogPostBySlug(slug!),
     enabled: !!slug, // Only run query if slug is available
   });
+
+  console.log("useQuery state - isLoading:", isLoading, "error:", error, "blogPost:", blogPost);
 
   if (isLoading) {
     return (
