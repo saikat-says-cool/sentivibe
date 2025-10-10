@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, ArrowLeft } from 'lucide-react';
+import { Loader2, ArrowLeft, Youtube } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -21,6 +21,7 @@ interface BlogPost {
   author_id: string;
   creator_name: string;
   thumbnail_url: string;
+  original_video_link: string; // Added original_video_link
   created_at: string;
   updated_at: string;
 }
@@ -108,6 +109,16 @@ const BlogPostDetail = () => {
           <p className="text-sm text-gray-500 dark:text-gray-400">
             Published on: {new Date(blogPost.published_at).toLocaleDateString()}
           </p>
+          {blogPost.original_video_link && (
+            <a 
+              href={blogPost.original_video_link} 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="text-blue-500 hover:underline flex items-center mt-2 w-fit"
+            >
+              <Youtube className="h-4 w-4 mr-2" /> View Original Video
+            </a>
+          )}
           {blogPost.meta_description && (
             <p className="text-md text-gray-700 dark:text-gray-300 mt-4 italic">
               {blogPost.meta_description}

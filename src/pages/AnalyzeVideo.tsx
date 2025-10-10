@@ -36,11 +36,12 @@ interface AnalysisResponse {
   videoDescription: string;
   videoThumbnailUrl: string;
   videoTags: string[];
-  creatorName: string; // Added creatorName
+  creatorName: string;
   videoSubtitles: string;
   comments: string[];
   aiAnalysis: AiAnalysisResult;
-  blogPostSlug?: string; // Added blogPostSlug
+  blogPostSlug?: string;
+  originalVideoLink?: string; // Added originalVideoLink
 }
 
 interface Message {
@@ -274,6 +275,13 @@ const AnalyzeVideo = () => {
       {analysisResult && (
         <>
           <div className="flex justify-end mb-4 space-x-2">
+            {analysisResult.originalVideoLink && (
+              <Button asChild variant="outline" className="flex items-center gap-2">
+                <a href={analysisResult.originalVideoLink} target="_blank" rel="noopener noreferrer">
+                  <Youtube className="h-4 w-4" /> Original Video
+                </a>
+              </Button>
+            )}
             {analysisResult.blogPostSlug && (
               <Button asChild variant="outline" className="flex items-center gap-2">
                 <Link to={`/blog/${analysisResult.blogPostSlug}`}>

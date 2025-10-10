@@ -73,7 +73,7 @@ serve(async (req) => {
 
     if (existingBlogPost) {
       console.log(`Reusing existing analysis for video ID: ${videoId}`);
-      // Return existing data, including the stored AI analysis
+      // Return existing data, including the stored AI analysis and original video link
       return new Response(JSON.stringify({
         message: `Reusing existing analysis for video ID: ${videoId}`,
         videoTitle: existingBlogPost.title,
@@ -85,6 +85,7 @@ serve(async (req) => {
         comments: [], // Raw comments are not stored for reuse, so keep empty
         aiAnalysis: existingBlogPost.ai_analysis_json, // Use the stored AI analysis
         blogPostSlug: existingBlogPost.slug,
+        originalVideoLink: existingBlogPost.original_video_link, // Include original video link
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
@@ -326,6 +327,7 @@ serve(async (req) => {
         author_id: user.id, // Link to the user who initiated the analysis
         creator_name: creatorName, // New column
         thumbnail_url: videoThumbnailUrl, // New column
+        original_video_link: videoLink, // Store the original video link
         ai_analysis_json: aiAnalysis, // Store the full AI analysis JSON
       });
 
@@ -349,6 +351,7 @@ serve(async (req) => {
       comments: allFetchedCommentsText,
       aiAnalysis: aiAnalysis,
       blogPostSlug: generatedBlogPost.slug, // Return the slug for linking
+      originalVideoLink: videoLink, // Return the original video link
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
