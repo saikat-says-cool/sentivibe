@@ -15,6 +15,13 @@ import { ChevronDown } from "lucide-react";
 import html2pdf from 'html2pdf.js';
 import { Textarea } from "@/components/ui/textarea";
 import ChatInterface from '@/components/ChatInterface';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"; // Import Select components
 
 interface AiAnalysisResult {
   overall_sentiment: string;
@@ -46,7 +53,8 @@ const AnalyzeVideo = () => {
   const [analysisResult, setAnalysisResult] = useState<AnalysisResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
-  const [externalContext, setExternalContext] = useState<string | null>(null); // New state for external context
+  const [externalContext, setExternalContext] = useState<string | null>(null);
+  const [outputLengthPreference, setOutputLengthPreference] = useState<string>("standard"); // New state for output length
   const analysisReportRef = useRef<HTMLDivElement>(null);
 
   const fetchExternalContextMutation = useMutation({
@@ -124,7 +132,8 @@ const AnalyzeVideo = () => {
           userMessage: userMessageText,
           chatMessages: [...chatMessages, newMessage],
           analysisResult: analysisResult,
-          externalContext: externalContext, // Pass the fetched external context
+          externalContext: externalContext,
+          outputLengthPreference: outputLengthPreference, // Pass the output length preference
         },
       });
 
@@ -346,16 +355,33 @@ const AnalyzeVideo = () => {
           </Card>
 
           <Card className="mt-6">
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="flex items-center gap-2">
                 <MessageSquare className="h-6 w-6 text-blue-500" /> Chat with AI about this video
               </CardTitle>
+              <div className="flex items-center space-x-2">
+                <Label htmlFor="output-length" className="text-sm">Response Length:</Label>
+                <Select
+                  value={outputLengthPreference}
+                  onValueChange={setOutputLengthPreference}
+                  disabled={isChatDisabled}
+                >
+                  <SelectTrigger id="output-length" className="w-[140px]">
+                    <SelectValue placeholder="Select length" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="concise">Concise</SelectItem>
+                    <SelectItem value="standard">Standard</SelectItem>
+                    <SelectItem value="detailed">Detailed</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </CardHeader>
             <CardContent className="h-[500px] p-0">
               <ChatInterface
                 messages={chatMessages}
                 onSendMessage={handleSendMessage}
-                isLoading={chatMutation.isPending || fetchExternalContextMutation.isPending} // Disable chat while fetching external context
+                isLoading={chatMutation.isPending || fetchExternalContextMutation.isPending}
               />
             </CardContent>
           </Card>

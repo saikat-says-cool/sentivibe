@@ -37,7 +37,7 @@ serve(async (req) => {
       });
     }
 
-    const { userMessage, chatMessages, analysisResult, externalContext } = await req.json(); // Receive externalContext
+    const { userMessage, chatMessages, analysisResult, externalContext, outputLengthPreference } = await req.json(); // Receive outputLengthPreference
 
     if (!userMessage || !analysisResult) {
       return new Response(JSON.stringify({ error: 'User message and analysis result are required.' }), {
@@ -56,13 +56,28 @@ serve(async (req) => {
       });
     }
 
+    // Determine max_tokens based on outputLengthPreference
+    let maxTokens = 500; // Default to a reasonable standard length
+    switch (outputLengthPreference) {
+      case 'concise':
+        maxTokens = 150;
+        break;
+      case 'standard':
+        maxTokens = 500;
+        break;
+      case 'detailed':
+        maxTokens = 1000;
+        break;
+      default:
+        maxTokens = 500; // Fallback
+    }
+
     // Construct the AI prompt with full context
-    // Refined system prompt to include instructions for leveraging pre-existing knowledge
     let systemPrompt = `You are a helpful assistant named SentiVibe AI. Your primary role is to answer questions about the provided YouTube video analysis and the ongoing conversation.
     - Prioritize: Information from the video analysis context (including comments) for video-specific questions.
     - Augment: Use the provided external context for up-to-date or broader context, relating it back to the video's topic when relevant.
     - Leverage: For general, time-independent questions that cannot be answered from the video analysis or the provided external context, use your own pre-existing knowledge.
-    Be concise and direct in your answers, especially for simple questions. Provide more detail only when explicitly asked or when the complexity of the question requires it. Maintain a helpful, informative, and concise tone.`;
+    Be concise and direct in your answers, especially for simple questions. Provide more detail only when explicitly asked or when the complexity of the question requires it. Adhere to the user's requested response length preference. Maintain a helpful, informative, and concise tone.`;
 
     let conversationHistory = chatMessages.map((msg: any) => ({
       role: msg.sender === 'user' ? 'user' : 'assistant',
@@ -123,7 +138,7 @@ serve(async (req) => {
       body: JSON.stringify({
         model: "LongCat-Flash-Chat",
         messages: messages,
-        max_tokens: 1000,
+        max_tokens: maxTokens, // Use dynamic maxTokens
         temperature: 0.7,
       }),
     });
