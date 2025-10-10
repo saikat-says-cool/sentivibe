@@ -56,20 +56,26 @@ serve(async (req) => {
       });
     }
 
-    // Determine max_tokens based on outputLengthPreference
+    // Determine max_tokens and target word count based on outputLengthPreference
     let maxTokens = 800; // Default to a reasonable standard length
+    let wordCountInstruction = "";
+
     switch (outputLengthPreference) {
       case 'concise':
         maxTokens = 400; 
+        wordCountInstruction = "Keep your response concise, aiming for approximately 250-350 words.";
         break;
       case 'standard':
         maxTokens = 800; 
+        wordCountInstruction = "Provide a standard-length response, aiming for approximately 500-700 words.";
         break;
       case 'detailed':
         maxTokens = 1200;
+        wordCountInstruction = "Provide a detailed response, aiming for approximately 800-1000 words.";
         break;
       default:
         maxTokens = 800; 
+        wordCountInstruction = "Provide a standard-length response, aiming for approximately 500-700 words.";
     }
 
     // Base instructions for all personas, emphasizing completeness
@@ -80,6 +86,7 @@ serve(async (req) => {
     - Augment: Use the provided external context for up-to-date or broader context, relating it back to the video's topic when relevant.
     - Leverage: For general, time-independent questions that cannot be answered from the video analysis or the provided external context, use your own pre-existing knowledge.
     Adhere to the user's requested response length preference, but ensure completeness above all.
+    ${wordCountInstruction}
     `;
 
     // Dynamically construct the system prompt based on selectedPersona
