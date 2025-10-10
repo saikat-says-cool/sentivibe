@@ -14,15 +14,8 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { ChevronDown } from "lucide-react";
 import html2pdf from 'html2pdf.js';
 import { Textarea } from "@/components/ui/textarea";
-import ChatInterface from '@/components/ChatInterface';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Link, useLocation } from "react-router-dom";
+import VideoChatDialog from "@/components/VideoChatDialog"; // Import the new dialog component
 
 interface AiAnalysisResult {
   overall_sentiment: string;
@@ -66,12 +59,6 @@ interface AnalysisResponse {
   originalVideoLink?: string;
 }
 
-interface Message {
-  id: string;
-  sender: 'user' | 'ai';
-  text: string;
-}
-
 const AnalyzeVideo = () => {
   const location = useLocation();
   const initialBlogPost = location.state?.blogPost as BlogPost | undefined;
@@ -80,12 +67,10 @@ const AnalyzeVideo = () => {
   const [customInstructions, setCustomInstructions] = useState("");
   const [analysisResult, setAnalysisResult] = useState<AnalysisResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [chatMessages, setChatMessages] = useState<Message[]>([]);
-  const [externalContext, setExternalContext] = useState<string | null>(null);
-  const [outputLengthPreference, setOutputLengthPreference] = useState<string>("standard");
-  const [selectedPersona, setSelectedPersona] = useState<string>("friendly");
+  const [isChatDialogOpen, setIsChatDialogOpen] = useState(false); // State for the chat dialog
   const analysisReportRef = useRef<HTMLDivElement>(null);
 
+  // Effect to handle initial blog post load from navigation state
   useEffect(() => {
     if (initialBlogPost) {
       // Reconstruct AnalysisResponse from initialBlogPost
@@ -107,49 +92,15 @@ const AnalyzeVideo = () => {
         originalVideoLink: initialBlogPost.original_video_link,
       };
       setAnalysisResult(loadedAnalysis);
-
-      // Trigger external context fetch for the loaded video
-      const searchQuery = `${loadedAnalysis.videoTitle} ${loadedAnalysis.videoTags.join(' ')}`;
-      fetchExternalContextMutation.mutate(searchQuery);
-
-      setChatMessages([
-        {
-          id: 'ai-initial-loaded',
-          sender: 'ai',
-          text: `Analysis for "${loadedAnalysis.videoTitle}" loaded. What would you like to know about it?`,
-        },
-      ]);
-      // Clear the state so that refreshing the page doesn't re-load the same blog post
-      // navigate(location.pathname, { replace: true }); // This might be tricky with direct URL access
+      setIsChatDialogOpen(true); // Open chat dialog immediately for loaded analysis
     }
-  }, [initialBlogPost]); // Depend on initialBlogPost
-
-  const fetchExternalContextMutation = useMutation({
-    mutationFn: async (query: string) => {
-      const { data, error: invokeError } = await supabase.functions.invoke('fetch-external-context', {
-        body: { query },
-      });
-      if (invokeError) {
-        console.error("Supabase Fetch External Context Function Invoke Error:", invokeError);
-        throw new Error(invokeError.message || "Failed to fetch external context.");
-      }
-      return data.externalSearchResults;
-    },
-    onSuccess: (data) => {
-      setExternalContext(data);
-    },
-    onError: (err: Error) => {
-      console.error("Error fetching external context:", err);
-      // Optionally display an error, but don't block chat if external context fails
-    },
-  });
+  }, [initialBlogPost]);
 
   const analyzeVideoMutation = useMutation({
     mutationFn: async (payload: { videoLink: string; customInstructions: string }) => {
       setError(null);
       setAnalysisResult(null);
-      setChatMessages([]);
-      setExternalContext(null);
+      setIsChatDialogOpen(false); // Close chat dialog if a new analysis starts
 
       const { data, error: invokeError } = await supabase.functions.invoke('youtube-analyzer', {
         body: payload,
@@ -163,92 +114,13 @@ const AnalyzeVideo = () => {
     },
     onSuccess: (data) => {
       setAnalysisResult(data);
-      const searchQuery = `${data.videoTitle} ${data.videoTags.join(' ')}`;
-      fetchExternalContextMutation.mutate(searchQuery);
-
-      setChatMessages([
-        {
-          id: 'ai-initial',
-          sender: 'ai',
-          text: `Analysis complete for "${data.videoTitle}". What would you like to know about it?`,
-        },
-      ]);
+      setIsChatDialogOpen(true); // Open chat dialog after successful analysis
     },
     onError: (err: Error) => {
       setError(err.message);
       setAnalysisResult(null);
-      setChatMessages([]);
-      setExternalContext(null);
     },
   });
-
-  const chatMutation = useMutation({
-    mutationFn: async (userMessageText: string) => {
-      const newUserMessage: Message = {
-        id: Date.now().toString(),
-        sender: 'user',
-        text: userMessageText,
-      };
-      
-      // Add user message immediately
-      setChatMessages((prev) => [...prev, newUserMessage]);
-
-      // Prepare a placeholder for the AI's response
-      const aiMessageId = Date.now().toString() + '-ai';
-      const aiPlaceholderMessage: Message = {
-        id: aiMessageId,
-        sender: 'ai',
-        text: 'Thinking...', // Placeholder text
-      };
-      setChatMessages((prev) => [...prev, aiPlaceholderMessage]);
-
-      const { data, error: invokeError } = await supabase.functions.invoke('chat-analyzer', {
-        body: {
-          userMessage: userMessageText,
-          chatMessages: [...chatMessages, newUserMessage], // Send full history including new user message
-          analysisResult: analysisResult,
-          externalContext: externalContext,
-          outputLengthPreference: outputLengthPreference,
-          selectedPersona: selectedPersona,
-        },
-      });
-
-      if (invokeError) {
-        console.error("Supabase Function Invoke Error:", invokeError);
-        throw new Error(invokeError.message || "Failed to invoke chat function.");
-      }
-      
-      // Assuming data is { aiResponse: "..." }
-      return data.aiResponse;
-    },
-    onSuccess: (aiResponseContent: string) => {
-      // Update the last AI message with the actual content
-      setChatMessages((prev) =>
-        prev.map((msg, index) =>
-          index === prev.length - 1 && msg.sender === 'ai' && msg.text === 'Thinking...'
-            ? { ...msg, text: aiResponseContent }
-            : msg
-        )
-      );
-    },
-    onError: (err: Error) => {
-      console.error("Chat Error:", err);
-      // Find the last AI placeholder message and update it with an error
-      setChatMessages((prev) =>
-        prev.map((msg, index) =>
-          index === prev.length - 1 && msg.sender === 'ai' && msg.text === 'Thinking...'
-            ? { ...msg, text: `Error: ${err.message}. Please try again.` }
-            : msg
-        )
-      );
-    },
-  });
-
-  const handleSendMessage = (messageText: string) => {
-    if (messageText.trim() && analysisResult) {
-      chatMutation.mutate(messageText);
-    }
-  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -271,8 +143,6 @@ const AnalyzeVideo = () => {
     }
   };
 
-  const isChatDisabled = !analysisResult || fetchExternalContextMutation.isPending;
-
   return (
     <div className="container mx-auto p-4 max-w-3xl">
       <Card className="mb-6">
@@ -293,7 +163,7 @@ const AnalyzeVideo = () => {
                 onChange={(e) => setVideoLink(e.target.value)}
                 required
                 className="mt-1"
-                disabled={!!analysisResult || analyzeVideoMutation.isPending}
+                disabled={analyzeVideoMutation.isPending}
               />
             </div>
             <div>
@@ -304,10 +174,10 @@ const AnalyzeVideo = () => {
                 value={customInstructions}
                 onChange={(e) => setCustomInstructions(e.target.value)}
                 className="mt-1 min-h-[80px]"
-                disabled={!!analysisResult || analyzeVideoMutation.isPending}
+                disabled={analyzeVideoMutation.isPending}
               />
             </div>
-            <Button type="submit" className="w-full" disabled={!!analysisResult || analyzeVideoMutation.isPending}>
+            <Button type="submit" className="w-full" disabled={analyzeVideoMutation.isPending}>
               {analyzeVideoMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Analyze Comments
             </Button>
@@ -315,18 +185,16 @@ const AnalyzeVideo = () => {
         </CardContent>
       </Card>
 
-      {(analyzeVideoMutation.isPending || fetchExternalContextMutation.isPending) && (
+      {analyzeVideoMutation.isPending && (
         <Card className="p-6 space-y-4">
           <Skeleton className="h-8 w-3/4" />
           <Skeleton className="h-4 w-full" />
           <Skeleton className="h-4 w-full" />
           <Skeleton className="h-4 w-1/2" />
-          {fetchExternalContextMutation.isPending && (
-            <div className="flex items-center space-x-2 mt-4">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              <span className="text-sm text-gray-500">Fetching external context...</span>
-            </div>
-          )}
+          <div className="flex items-center space-x-2 mt-4">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span className="text-sm text-gray-500">Fetching external context...</span>
+          </div>
         </Card>
       )}
 
@@ -354,6 +222,9 @@ const AnalyzeVideo = () => {
                 </Link>
               </Button>
             )}
+            <Button onClick={() => setIsChatDialogOpen(true)} className="flex items-center gap-2">
+              <MessageSquare className="h-4 w-4" /> Chat with AI
+            </Button>
             <Button onClick={handleDownloadPdf} className="flex items-center gap-2">
               <Download className="h-4 w-4" /> Download Report PDF
             </Button>
@@ -453,58 +324,12 @@ const AnalyzeVideo = () => {
             </CardContent>
           </Card>
 
-          <Card className="mt-6">
-            <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0 pb-2">
-              <CardTitle className="flex items-center gap-2">
-                <MessageSquare className="h-6 w-6 text-blue-500" /> Chat with AI about this video
-              </CardTitle>
-              <div className="flex flex-col sm:flex-row sm:space-x-4 space-y-2 sm:space-y-0 mt-2 sm:mt-0">
-                <div className="flex items-center space-x-2">
-                  <Label htmlFor="persona-select" className="text-sm">Persona:</Label>
-                  <Select
-                    value={selectedPersona}
-                    onValueChange={setSelectedPersona}
-                    disabled={chatMutation.isPending || fetchExternalContextMutation.isPending}
-                  >
-                    <SelectTrigger id="persona-select" className="w-[140px]">
-                      <SelectValue placeholder="Select persona" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="friendly">Friendly Assistant</SelectItem>
-                      <SelectItem value="therapist">Therapist</SelectItem>
-                      <SelectItem value="storyteller">Storyteller</SelectItem>
-                      <SelectItem value="motivation">Motivational Coach</SelectItem>
-                      <SelectItem value="argumentative">Argumentative</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Label htmlFor="output-length" className="text-sm">Response Length:</Label>
-                  <Select
-                    value={outputLengthPreference}
-                    onValueChange={setOutputLengthPreference}
-                    disabled={chatMutation.isPending || fetchExternalContextMutation.isPending}
-                  >
-                    <SelectTrigger id="output-length" className="w-[140px]">
-                      <SelectValue placeholder="Select length" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="concise">Concise</SelectItem>
-                      <SelectItem value="standard">Standard</SelectItem>
-                      <SelectItem value="detailed">Detailed</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="h-[500px] p-0">
-              <ChatInterface
-                messages={chatMessages}
-                onSendMessage={handleSendMessage}
-                isLoading={chatMutation.isPending || fetchExternalContextMutation.isPending}
-              />
-            </CardContent>
-          </Card>
+          {/* VideoChatDialog for this analysis */}
+          <VideoChatDialog
+            isOpen={isChatDialogOpen}
+            onOpenChange={setIsChatDialogOpen}
+            initialAnalysisResult={analysisResult}
+          />
         </>
       )}
     </div>
