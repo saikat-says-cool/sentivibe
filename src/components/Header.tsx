@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/integrations/supabase/auth';
+import { ModeToggle } from './ModeToggle'; // Import the new ModeToggle component
 
 const Header = () => {
   const { session } = useAuth();
@@ -9,9 +10,12 @@ const Header = () => {
   return (
     <header className="bg-background border-b border-border p-4 flex items-center justify-between">
       <Link to="/" className="flex items-center space-x-2">
-        <h1 className="text-3xl font-extrabold tracking-tight text-foreground">SentiVibe</h1>
+        <h1 className="text-3xl font-extrabold tracking-tight text-foreground font-heading">
+          <span className="text-foreground">Senti</span>
+          <span className="text-accent">Vibe</span>
+        </h1>
       </Link>
-      <nav>
+      <nav className="flex items-center space-x-4">
         <ul className="flex space-x-4">
           {session && (
             <li>
@@ -20,8 +24,8 @@ const Header = () => {
               </Button>
             </li>
           )}
-          {/* You can add other navigation links or user info here later */}
         </ul>
+        <ModeToggle /> {/* Add the theme toggle */}
       </nav>
     </header>
   );
