@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Loader2, Search, Youtube } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Helmet } from 'react-helmet-async'; // New import for SEO
 
 interface BlogPost {
   id: string;
@@ -88,10 +87,6 @@ const VideoAnalysisLibrary = () => {
 
   return (
     <div className="container mx-auto p-4 max-w-4xl">
-      <Helmet>
-        <title>Video Analysis Library | SentiVibe</title>
-        <meta name="description" content="Browse and search AI-powered sentiment analysis reports for YouTube videos." />
-      </Helmet>
       <h1 className="text-3xl font-bold mb-6">Analysis Library</h1>
       <div className="flex items-center space-x-2 mb-6">
         <Input
@@ -112,7 +107,7 @@ const VideoAnalysisLibrary = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredPosts.map((post) => (
-          <Link to={post.slug} key={post.id}> {/* FIX IS HERE: Link directly to post.slug */}
+          <Link to={`/blog/${post.slug}`} key={post.id}>
             <Card className="h-full flex flex-col hover:shadow-lg transition-shadow duration-200">
               <CardHeader className="p-0">
                 {post.thumbnail_url ? (

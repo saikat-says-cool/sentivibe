@@ -4,11 +4,10 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, ExternalLink } from 'lucide-react';
+import { Loader2, ArrowLeft } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Helmet } from 'react-helmet-async';
 
 interface BlogPost {
   id: string;
@@ -22,7 +21,6 @@ interface BlogPost {
   author_id: string;
   creator_name: string;
   thumbnail_url: string;
-  original_video_link: string;
   created_at: string;
   updated_at: string;
 }
@@ -41,15 +39,12 @@ const fetchBlogPostBySlug = async (slug: string): Promise<BlogPost | null> => {
 };
 
 const BlogPostDetail = () => {
-  const { slug: urlParamSlug } = useParams<{ slug: string }>(); // Renamed to avoid confusion
-  
-  // Reconstruct the full slug that matches the database entry
-  const fullDbSlug = urlParamSlug ? `/analyze/youtube-comments/${urlParamSlug}` : null;
+  const { slug } = useParams<{ slug: string }>();
 
   const { data: blogPost, isLoading, error } = useQuery<BlogPost | null, Error>({
-    queryKey: ['blogPost', fullDbSlug],
-    queryFn: () => fetchBlogPostBySlug(fullDbSlug!), // Pass the fully reconstructed slug
-    enabled: !!fullDbSlug, // Only run query if fullDbSlug is available
+    queryKey: ['blogPost', slug],
+    queryFn: () => fetchBlogPostBySlug(slug!),
+    enabled: !!slug, // Only run query if slug is available
   });
 
   if (isLoading) {
@@ -86,59 +81,8 @@ const BlogPostDetail = () => {
     );
   }
 
-  // Construct full URL for schema markup
-  const canonicalUrl = `${window.location.origin}${blogPost.slug}`;
-
-  // JSON-LD Schema Markup
-  const schemaMarkup = {
-    "@context": "https://schema.org",
-    "@graph": [
-      {
-        "@type": "SoftwareApplication",
-        "name": "SentiVibe - YouTube Comment Sentiment Analyzer",
-        "applicationCategory": "AI Tool",
-        "operatingSystem": "Web",
-        "url": canonicalUrl,
-        "description": `AI tool to analyze YouTube comments for ${blogPost.title} and show audience sentiment breakdown.`
-      },
-      {
-        "@type": "Article",
-        "headline": blogPost.title,
-        "description": blogPost.meta_description,
-        "image": blogPost.thumbnail_url,
-        "datePublished": blogPost.published_at,
-        "author": {
-          "@type": "Person",
-          "name": blogPost.creator_name || "SentiVibe AI"
-        },
-        "publisher": {
-          "@type": "Organization",
-          "name": "SentiVibe",
-          "logo": {
-            "@type": "ImageObject",
-            "url": `${window.location.origin}/favicon.ico` // Assuming favicon is a good logo representation
-          }
-        },
-        "mainEntityOfPage": {
-          "@type": "WebPage",
-          "@id": canonicalUrl
-        },
-        "keywords": blogPost.keywords.join(', ')
-      }
-    ]
-  };
-
   return (
     <div className="container mx-auto p-4 max-w-3xl">
-      <Helmet>
-        <title>{blogPost.title}</title>
-        <meta name="description" content={blogPost.meta_description} />
-        <link rel="canonical" href={canonicalUrl} />
-        <script type="application/ld+json">
-          {JSON.stringify(schemaMarkup)}
-        </script>
-      </Helmet>
-
       <Link to="/library" className="text-blue-500 hover:underline mb-4 flex items-center w-fit">
         <ArrowLeft className="h-4 w-4 mr-2" /> Back to Analysis Library
       </Link>
@@ -147,7 +91,7 @@ const BlogPostDetail = () => {
           {blogPost.thumbnail_url && (
             <img
               src={blogPost.thumbnail_url}
-              alt={`Thumbnail for ${blogPost.title}`}
+              alt={blogPost.title}
               className="w-full h-auto rounded-md mb-4"
             />
           )}
@@ -162,16 +106,6 @@ const BlogPostDetail = () => {
             <p className="text-md text-gray-700 dark:text-gray-300 mt-4 italic">
               {blogPost.meta_description}
             </p>
-          )}
-          {blogPost.original_video_link && (
-            <a
-              href={blogPost.original_video_link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-500 hover:underline flex items-center gap-1 mt-2 w-fit"
-            >
-              View Original YouTube Video <ExternalLink className="h-4 w-4" />
-            </a>
           )}
         </CardHeader>
         <CardContent className="prose dark:prose-invert max-w-none">

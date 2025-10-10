@@ -203,8 +203,6 @@ serve(async (req) => {
     const aiAnalysis = JSON.parse(aiContent);
 
     // --- Generate SEO-optimized blog post ---
-    const currentYear = new Date().getFullYear();
-    const slugifiedVideoTitle = videoTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-*|-*$/g, '');
     const blogPostPrompt = `Based on the following YouTube video analysis, generate a comprehensive, SEO-optimized blog post.
     
     Video Title: "${videoTitle}"
@@ -218,31 +216,16 @@ serve(async (req) => {
     Top Comments (for reference, do not list all):
     ${allFetchedCommentsText.slice(0, 5).map((comment: string, index: number) => `- ${comment}`).join('\n')}
 
-    The blog post should adhere to the following SEO guidelines:
-    1.  **Title Tag (max 60 chars):** "{{VideoTitle}}" YouTube Comment Sentiment Analysis (${currentYear}) | SentiVibe
-        *   Example: "MrBeast Latest Video" YouTube Comment Sentiment Analysis (2024) | SentiVibe
-    2.  **Meta Description (max 155 chars):** Analyze YouTube comments on "{{VideoTitle}}" to discover audience sentiment, insights, and reactions instantly with AI.
-        *   Example: Analyze YouTube comments on MrBeast's latest video to discover audience sentiment, insights, and reactions instantly with AI.
-    3.  **URL Slug:** /analyze/youtube-comments/${slugifiedVideoTitle} (already handled by the system, just for context)
-    4.  **Header Tag Hierarchy:** Use exactly one H1, several H2s, and optionally H3s under each H2.
-        *   H1: Sentiment Analysis of "{{VideoTitle}}" Comments
-        *   H2: Overall Sentiment Score
-        *   H3: Positive vs Negative Breakdown
-        *   H2: Top Insights from Viewers
-        *   H3: Common Keywords & Topics
-        *   H2: About "{{creatorName}}"
-    5.  **Keyword Strategy:** Sprinkle variations of "YouTube comment analysis", "YouTube sentiment analyzer", "YouTube AI comment analyzer", "Analyze {{VideoTitle}} comments", "Sentiment breakdown for {{creatorName}}" naturally in the text body and headings. Avoid stuffing.
-    6.  **Internal Linking Logic:** Include links to the "Analysis Library" and "Analyze Your Own Video" pages.
-    7.  **Content Block Layout:**
-        *   Intro Paragraph (50–100 words): Describe the video & purpose of analysis.
-        *   Sentiment Summary Section (H2 "Overall Sentiment Score", H3 "Positive vs Negative Breakdown"): Discuss overall sentiment, positive/negative balance.
-        *   Top Keywords & Topics Section (H2 "Top Insights from Viewers", H3 "Common Keywords & Topics"): Summarize key themes and recurring topics.
-        *   About Creator Section (H2 "About {{creatorName}}"): Briefly introduce the creator and their channel.
-        *   Conclusion / CTA: Invite users to analyze their own video.
-    8.  **Content Freshness:** Include a small timestamp like "Last updated: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}" at the end of the content.
-    9.  **CTR Optimization:** Ensure the generated title and meta description are compelling and trigger curiosity.
-
-    The blog post content should be at least 500 words long and written entirely in Markdown format.
+    The blog post should:
+    1. Have a compelling, SEO-optimized title (max 70 characters).
+    2. Generate a URL-friendly slug from the title (lowercase, hyphen-separated).
+    3. Include a concise meta description (max 160 characters).
+    4. List 5-10 relevant keywords as an array.
+    5. Be structured with an H1 (the title), H2s for sections, and H3s for sub-sections.
+    6. Be at least 500 words long.
+    7. Discuss the public sentiment, emotional tones, and key themes of the video.
+    8. Incorporate insights from the summary and reference the top comments naturally.
+    9. Be written in Markdown format.
 
     Respond in a structured JSON format:
     {
@@ -250,7 +233,7 @@ serve(async (req) => {
       "slug": "seo-optimized-blog-post-title",
       "meta_description": "A concise meta description for search engines.",
       "keywords": ["keyword1", "keyword2", "keyword3"],
-      "content": "# H1 Title\\n\\nIntroduction...\\n\\n## H2 Section\\n\\nContent...\\n\\n### H3 Sub-section\\n\\nMore content...\\n\\nLast updated: [Date]"
+      "content": "# H1 Title\\n\\nIntroduction...\\n\\n## H2 Section\\n\\nContent...\\n\\n### H3 Sub-section\\n\\nMore content..."
     }
     `;
 
@@ -263,7 +246,7 @@ serve(async (req) => {
       body: JSON.stringify({
         model: "LongCat-Flash-Chat", // Or a more capable model if available
         messages: [
-          { "role": "system", "content": "You are an expert SEO content writer. Your task is to generate a detailed, SEO-optimized blog post in Markdown format based on provided video analysis data and strict SEO guidelines. Ensure the output is a valid JSON object." },
+          { "role": "system", "content": "You are an expert SEO content writer. Your task is to generate a detailed, SEO-optimized blog post in Markdown format based on provided video analysis data. Ensure the output is a valid JSON object." },
           { "role": "user", "content": blogPostPrompt }
         ],
         max_tokens: 2000, // Increased tokens for a longer blog post
@@ -289,17 +272,13 @@ serve(async (req) => {
     }
     const generatedBlogPost = JSON.parse(blogPostContent);
 
-    // Ensure the slug is correctly formatted with the prefix
-    const finalSlug = `/analyze/youtube-comments/${generatedBlogPost.slug}`;
-
     // Insert the generated blog post into the database
     const { error: insertError } = await supabaseClient
       .from('blog_posts')
       .insert({
         video_id: videoId,
-        original_video_link: videoLink, // Store the original video link
         title: generatedBlogPost.title,
-        slug: finalSlug, // Use the prefixed slug
+        slug: generatedBlogPost.slug,
         meta_description: generatedBlogPost.meta_description,
         keywords: generatedBlogPost.keywords,
         content: generatedBlogPost.content,
@@ -328,7 +307,7 @@ serve(async (req) => {
       videoSubtitles: videoSubtitles, // Will be an empty string for now
       comments: allFetchedCommentsText,
       aiAnalysis: aiAnalysis,
-      blogPostSlug: finalSlug, // Return the prefixed slug for linking
+      blogPostSlug: generatedBlogPost.slug, // Return the slug for linking
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
