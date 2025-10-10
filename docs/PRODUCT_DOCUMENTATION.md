@@ -14,6 +14,7 @@
 
 ### 2.2. AI-Powered YouTube Video Analysis
 *   **Effortless Input:** Simply paste any public YouTube video link into the application.
+*   **Intelligent Analysis Caching:** To optimize resource usage and prevent duplicate content, SentiVibe automatically saves each video analysis. If a video has been analyzed before, the system will instantly retrieve and display the existing report and blog post, saving AI credits and API calls.
 *   **Comprehensive Data Extraction:** SentiVibe automatically retrieves:
     *   **Video Title & Description:** For context.
     *   **Video Thumbnail:** Visual identification of the video.
@@ -29,7 +30,7 @@
     *   **Summary Insights:** A concise, human-readable summary of the AI's findings, explaining the overall sentiment and key takeaways, with an emphasis on how popular comments influenced the assessment.
 
 ### 2.3. Programmatic SEO & Video Analysis Library (NEW)
-*   **Automated Blog Post Generation:** Immediately after a video analysis is complete, the AI automatically generates a comprehensive, SEO-optimized blog post. This post summarizes the public sentiment, emotional tones, and key themes of the video, incorporating insights from the analysis and top comments.
+*   **Automated Blog Post Generation:** Immediately after a *new* video analysis is complete, the AI automatically generates a comprehensive, SEO-optimized blog post. For videos previously analyzed, the existing blog post is retrieved and linked, ensuring **only one unique blog post exists per video**.
 *   **SEO Optimization:** Each generated blog post includes:
     *   A compelling, SEO-optimized title.
     *   A URL-friendly slug.
@@ -49,7 +50,7 @@
 *   **Multi-Source Intelligence:** The AI intelligently synthesizes information from:
     *   **Video Analysis Report:** All details from the initial analysis (sentiment, themes, summary).
     *   **Exact Top Comments:** The raw text of the top 10 most popular comments, allowing for deep dives into audience feedback.
-    *   **External Search Results:** Up-to-date information about the video's broader topic, fetched once at the start of the chat session to provide relevant, current context.
+    *   **External Search Results:** Up-to-date information about the video's broader topic, fetched *once at the start of each new analysis session* to provide relevant, current context for the chat. **Note:** While video analysis results are cached, each chat session starts fresh, ensuring a focused conversation with the latest external context.
     *   **Pre-existing Knowledge:** The AI leverages its vast general knowledge for time-independent questions that aren't covered by the video or external search.
 *   **Cost-Optimized External Context:** To ensure efficiency, external search for broader context is performed only once per video analysis session, significantly reducing API costs while still providing valuable, up-to-date information.
 
@@ -77,7 +78,7 @@
 2.  **Sign Up / Log In:** If you're a new user, sign up for an account. Otherwise, log in with your existing credentials.
 3.  **Navigate to Analyze Video:** From the homepage, click the "Analyze a Video" button or navigate to the `/analyze-video` route.
 4.  **Paste YouTube Link:** In the input field, paste the full URL of the YouTube video you wish to analyze.
-5.  **Initiate Analysis:** Click the "Analyze Comments" button. The application will display a loading state while the AI processes the data and fetches initial external context.
+5.  **Initiate Analysis:** Click the "Analyze Comments" button. If the video has been analyzed before, the report will load almost instantly. Otherwise, the application will display a loading state while the AI processes the data and fetches initial external context.
 6.  **Review Report & Blog Post:** Once the analysis is complete, a detailed report will appear. You will also see a "View Blog Post" button. Click this to see the full, SEO-optimized blog post generated for this analysis.
 7.  **Customize AI Chat (Optional):** Before chatting, use the dropdowns above the chat interface to select your preferred **AI Persona** and **Response Length**.
 8.  **Chat with AI:** Below the analysis report, a chat interface will appear. You can now ask questions about the video, its comments, or related topics. The AI will use all available context and your chosen persona/length preferences to provide informed answers.
@@ -86,13 +87,13 @@
 
 ## 4. Value Proposition
 SentiVibe provides immense value by:
-*   **Saving Time:** Automates the tedious process of manually sifting through thousands of comments and researching related topics, and now automates content creation.
+*   **Saving Time:** Automates the tedious process of manually sifting through thousands of comments and researching related topics, and now automates content creation. **Significantly reduces redundant AI and API costs by reusing past analyses.**
 *   **Gaining Deeper Understanding:** Offers AI-driven insights and interactive conversations that go beyond surface-level reading, incorporating direct audience feedback and broader context.
 *   **Personalized Interaction:** Users can tailor the AI's conversational style and response detail to match their specific needs and preferences.
 *   **Informing Strategy:** Helps content creators understand what resonates with their audience, marketers to gauge campaign reception, and researchers to analyze public opinion with a more complete picture.
 *   **Providing Actionable Data:** The weighted analysis ensures that the most impactful opinions are prioritized, and the AI can elaborate on these.
 *   **Professional Reporting:** Enables easy sharing of findings with high-quality PDF reports.
 *   **Cost-Effective Intelligence:** Streamlined external search ensures you get the necessary up-to-date information without incurring excessive API costs.
-*   **Boosting SEO & Content Strategy (NEW):** Automatically generates valuable, SEO-optimized content, expanding your digital footprint and making your insights discoverable to a wider audience through search engines. The searchable library further enhances content discoverability within the app.
+*   **Boosting SEO & Content Strategy (NEW):** Automatically generates valuable, SEO-optimized content, expanding your digital footprint and making your insights discoverable to a wider audience through search engines. The searchable library further enhances content discoverability within the app, **ensuring no duplicate blog posts for the same video.**
 
 SentiVibe is continuously evolving, with a strong foundation laid for future enhancements to further enrich your video analysis, conversational AI, and content generation experience.

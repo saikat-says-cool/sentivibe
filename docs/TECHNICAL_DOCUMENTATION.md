@@ -43,15 +43,15 @@ The project follows a standard React application structure with specific directo
         *   `src/pages/Index.tsx`: Landing page.
         *   `src/pages/Login.tsx`: User authentication page.
         *   `src/pages/AnalyzeVideo.tsx`: Main page for YouTube video analysis and AI chat.
-        *   `src/pages/VideoAnalysisLibrary.tsx`: **NEW** Page to list and search generated blog posts (video analyses).
-        *   `src/pages/BlogPostDetail.tsx`: **NEW** Page to display the full content of a single generated blog post.
+        *   `src/pages/VideoAnalysisLibrary.tsx`: Page to list and search generated blog posts (video analyses).
+        *   `src/pages/BlogPostDetail.tsx`: Page to display the full content of a single generated blog post.
         *   `src/pages/NotFound.tsx`: 404 error page.
     *   `src/integrations/supabase/`: Supabase-specific integration files.
         *   `src/integrations/supabase/client.ts`: Supabase client initialization.
         *   `src/integrations/supabase/auth.tsx`: React Context Provider and hook for managing Supabase user sessions.
 *   `supabase/`: Supabase-related backend files.
     *   `supabase/functions/`: Supabase Edge Functions.
-        *   `supabase/functions/youtube-analyzer/index.ts`: Edge Function for video analysis and **blog post generation/insertion**.
+        *   `supabase/functions/youtube-analyzer/index.ts`: Edge Function for video analysis, **implementing caching to reuse existing analyses**, and blog post generation/insertion.
         *   `supabase/functions/fetch-external-context/index.ts`: Edge Function for performing a one-time Google Custom Search.
         *   `supabase/functions/chat-analyzer/index.ts`: Edge Function for handling AI chat conversations.
     *   `supabase/migrations/`: Database migration files.
@@ -74,7 +74,7 @@ The project follows a standard React application structure with specific directo
 ### 4.2. `Header.tsx`
 *   A React component that renders a consistent header across all pages.
 *   Displays the "SentiVibe" word logo, which acts as a link back to the homepage (`/`).
-*   **NEW:** Includes a navigation link to the `/library` route, accessible to authenticated users.
+*   Includes a navigation link to the `/library` route, accessible to authenticated users.
 *   Styled with Tailwind CSS for a clean, black-and-white appearance.
 
 ### 4.3. `Index.tsx` (Landing Page)
@@ -106,10 +106,10 @@ The project follows a standard React application structure with specific directo
     *   `Collapsible` component is prepared for subtitles (though currently empty).
     *   `ChatInterface` component is rendered after a successful analysis, displaying conversation history and allowing user input. The chat input is disabled while analysis or external context fetching is pending.
     *   **AI Controls:** Includes `Select` components for `outputLengthPreference` and `selectedPersona`.
-    *   **NEW:** Displays a "View Blog Post" `Button` with a `Link` to `/blog/${analysisResult.blogPostSlug}` after a successful analysis.
+    *   Displays a "View Blog Post" `Button` with a `Link` to `/blog/${analysisResult.blogPostSlug}` after a successful analysis.
 *   **PDF Download:** Integrates `html2pdf.js` to convert the analysis results `Card` into a downloadable PDF.
 
-### 4.6. `VideoAnalysisLibrary.tsx` (NEW)
+### 4.6. `VideoAnalysisLibrary.tsx`
 *   **Purpose:** Displays a list of all generated blog posts (video analyses) from the Supabase database.
 *   **Data Fetching:** Uses `useQuery` from `@tanstack/react-query` to fetch all entries from the `public.blog_posts` table, ordered by `published_at` date.
 *   **Search Functionality:** Implements a client-side search filter based on `searchTerm` state, allowing users to search by `title`, `creator_name`, `meta_description`, or `keywords`.
@@ -120,7 +120,7 @@ The project follows a standard React application structure with specific directo
     *   `Skeleton` components provide loading state visuals.
     *   Handles cases where no posts are found or an error occurs during fetching.
 
-### 4.7. `BlogPostDetail.tsx` (NEW)
+### 4.7. `BlogPostDetail.tsx`
 *   **Purpose:** Displays the full content of a single, SEO-optimized blog post.
 *   **Data Fetching:** Uses `useParams` to extract the `slug` from the URL and `useQuery` from `@tanstack/react-query` to fetch the specific blog post from `public.blog_posts` via its `slug`.
 *   **UI Elements:**
@@ -176,8 +176,9 @@ The project follows a standard React application structure with specific directo
     *   `author_id`: UUID, references `auth.users(id)` (ON DELETE SET NULL).
     *   `created_at`: TIMESTAMP WITH TIME ZONE, defaults to `NOW()`.
     *   `updated_at`: TIMESTAMP WITH TIME ZONE, defaults to `NOW()`.
-    *   `creator_name`: **NEW** TEXT (YouTube channel/creator name).
-    *   `thumbnail_url`: **NEW** TEXT (YouTube video thumbnail URL).
+    *   `creator_name`: TEXT (YouTube channel/creator name).
+    *   `thumbnail_url`: TEXT (YouTube video thumbnail URL).
+    *   `ai_analysis_json`: **NEW** JSONB (Stores the full JSON output of the AI sentiment analysis for reuse).
 *   **Row Level Security (RLS) for `public.blog_posts`:** Enabled.
     *   `Authenticated users can create blog posts`: `FOR INSERT TO authenticated WITH CHECK (auth.uid() = author_id)`
     *   `Authenticated users can update their own blog posts`: `FOR UPDATE TO authenticated USING (auth.uid() = author_id)`
@@ -194,20 +195,25 @@ The project follows a standard React application structure with specific directo
     *   Automatically calls `handle_new_user` whenever a new user is inserted into `auth.users`, ensuring a profile is created for every new signup.
 
 ### 5.5. Supabase Edge Function (`supabase/functions/youtube-analyzer/index.ts`)
-This Deno-based serverless function is the core backend logic for video analysis and blog post generation.
+This Deno-based serverless function is the core backend logic for video analysis and blog post generation, **now enhanced with an intelligent caching mechanism.**
 *   **CORS Handling:** Includes `corsHeaders` and handles `OPTIONS` preflight requests.
 *   **Supabase Client Initialization:** Creates a Supabase client within the function, passing the user's `Authorization` header.
 *   **User Authentication:** Verifies the user's session.
 *   **Input Validation:** Checks for `videoLink` and extracts `videoId`.
+*   **Analysis Caching Logic:**
+    *   Upon receiving a `videoLink`, the function first extracts the `videoId`.
+    *   It then queries the `public.blog_posts` table to check if an entry with this `videoId` already exists.
+    *   **If an `existingBlogPost` is found:** The function immediately returns the stored `videoTitle`, `videoDescription` (from `meta_description`), `videoThumbnailUrl`, `videoTags` (from `keywords`), `creatorName`, the `ai_analysis_json` (the full AI sentiment analysis result), and the `blogPostSlug`. This bypasses all subsequent YouTube API and Longcat AI calls, saving resources and preventing duplicate blog posts.
+    *   **If no existing analysis is found:** The function proceeds with the full analysis workflow: fetching video details and comments from YouTube, performing AI sentiment analysis, generating a new SEO-optimized blog post, and then inserting all this data (including the `aiAnalysis` into the `ai_analysis_json` column) into the `public.blog_posts` table.
 *   **API Key Retrieval:** Accesses `YOUTUBE_API_KEY` and `LONGCAT_AI_API_KEY` from Supabase environment secrets.
-*   **YouTube Data API Calls:** Fetches video `snippet` (title, description, thumbnail, tags, **channelTitle**) and top-level comments (`maxResults=100`).
-*   **Comment Processing:** Maps comments to include `text` and `likeCount`, enforces a minimum of 50 comments, and sorts them by `likeCount`.
-*   **Longcat AI API Call (Analysis):** Constructs a `longcatPrompt` including video details, tags, and weighted comments. Instructs the AI to prioritize comments with higher like counts. Sends a `POST` request to Longcat AI, requesting a `json_object` response for sentiment analysis.
-*   **Longcat AI API Call (Blog Post Generation - NEW):** After successful sentiment analysis, a *second* `POST` request is made to Longcat AI.
+*   **YouTube Data API Calls (if new analysis):** Fetches video `snippet` (title, description, thumbnail, tags, `channelTitle`) and top-level comments (`maxResults=100`).
+*   **Comment Processing (if new analysis):** Maps comments to include `text` and `likeCount`, enforces a minimum of 50 comments, and sorts them by `likeCount`.
+*   **Longcat AI API Call (Analysis - if new analysis):** Constructs a `longcatPrompt` including video details, tags, and weighted comments. Instructs the AI to prioritize comments with higher like counts. Sends a `POST` request to Longcat AI, requesting a `json_object` response for sentiment analysis.
+*   **Longcat AI API Call (Blog Post Generation - if new analysis):** After successful sentiment analysis, a *second* `POST` request is made to Longcat AI.
     *   A `blogPostPrompt` is crafted, providing all video details, analysis results, and top comments.
     *   The AI is instructed to generate an SEO-optimized blog post (title, slug, meta description, keywords, Markdown content) in a structured JSON format.
     *   `max_tokens` is increased to `2000` to allow for longer blog posts.
-*   **Database Insertion (NEW):** The parsed `generatedBlogPost` data (including `video_id`, `title`, `slug`, `meta_description`, `keywords`, `content`, `published_at`, `author_id`, `creator_name`, `thumbnail_url`) is inserted into the `public.blog_posts` table using the Supabase client.
+*   **Database Insertion (if new analysis):** The parsed `generatedBlogPost` data (including `video_id`, `title`, `slug`, `meta_description`, `keywords`, `content`, `published_at`, `author_id`, `creator_name`, `thumbnail_url`) and the `aiAnalysis` (stored in the `ai_analysis_json` column) are inserted into the `public.blog_posts` table using the Supabase client.
 *   **Response:** Returns a `200 OK` response with video details, comments, the AI analysis result, and the `blogPostSlug` for frontend linking.
 *   **Error Handling:** Includes comprehensive `try-catch` blocks for API calls and database operations.
 
@@ -225,19 +231,19 @@ This Deno-based serverless function is responsible for fetching external, up-to-
 This Deno-based serverless function handles the conversational AI aspect.
 *   **CORS Handling:** Includes `corsHeaders` and handles `OPTIONS` preflight requests.
 *   **Supabase Client Initialization & User Authentication:** Verifies the user.
-*   **Input:** Receives `userMessage`, `chatMessages` (conversation history), `analysisResult` (full video analysis including top comments, creator name, thumbnail URL), `externalContext` (pre-fetched Google search results), `outputLengthPreference`, and `selectedPersona` from the frontend.
+*   **Input:** Receives `userMessage`, `chatMessages` (conversation history), `analysisResult` (full video analysis including top comments, creator name, thumbnail URL, **and the `aiAnalysis` object, whether from a new analysis or cache**), `externalContext` (pre-fetched Google search results), `outputLengthPreference`, and `selectedPersona` from the frontend.
 *   **API Key Retrieval:** Accesses `LONGCAT_AI_API_KEY` from Supabase environment secrets.
 *   **Dynamic `max_tokens`:** Adjusts the `max_tokens` parameter for the Longcat AI API call based on the `outputLengthPreference`.
-*   **Dynamic `systemPrompt`:** Constructs the AI's `systemPrompt` based on the `selectedPersona`, guiding the AI's tone, style, and conversational boundaries.
+*   **Dynamic `systemPrompt`:** Constructs the AI's `systemPrompt` based on the `selectedPersona`, guiding the AI's tone, style, and conversational boundaries, and now includes explicit word count targets.
 *   **Prompt Construction:**
-    *   **System Prompt:** Dynamically generated based on persona, including instructions for information prioritization and adherence to response length.
+    *   **System Prompt:** Dynamically generated based on persona, including instructions for information prioritization, adherence to response length, and explicit word count targets.
     *   **Analysis Context:** Formats `analysisResult` (video details, sentiment, themes, summary, top 10 raw comments, creator name, thumbnail URL) into a dedicated string.
     *   **External Context:** Integrates the received `externalContext` into the user's prompt, clearly labeled.
     *   **Conversation History:** Appends formatted `chatMessages` to maintain conversational flow.
     *   **User Message:** Includes the current `userMessage`.
 *   **Longcat AI API Call:** Sends the constructed `messages` array to the Longcat AI API.
 *   **Response:** Returns a `200 OK` response with the AI's `aiResponse`.
-*   **Cost Efficiency:** This function no longer makes direct Google Search API calls, relying on the frontend to provide the `externalContext`.
+*   **Cost Efficiency:** This function no longer makes direct Google Search API calls, relying on the frontend to provide the `externalContext`. **Note:** While the core video analysis is cached, the `fetch-external-context` function is still invoked on each new analysis request from the frontend to ensure the chat AI has the most up-to-date external information.
 
 ## 6. Styling and Branding
 *   **Tailwind CSS:** Used extensively for all styling, providing a utility-first approach.
