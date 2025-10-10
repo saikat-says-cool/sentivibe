@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Youtube, Download, MessageSquare, Link as LinkIcon } from "lucide-react";
+import { Loader2, Youtube, Download, MessageSquare, Link as LinkIcon, PlusCircle, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -15,13 +15,19 @@ import { ChevronDown } from "lucide-react";
 import html2pdf from 'html2pdf.js';
 import { Textarea } from "@/components/ui/textarea";
 import { Link, useLocation } from "react-router-dom";
-import VideoChatDialog from "@/components/VideoChatDialog"; // Import the new dialog component
+import VideoChatDialog from "@/components/VideoChatDialog";
 
 interface AiAnalysisResult {
   overall_sentiment: string;
   emotional_tones: string[];
   key_themes: string[];
   summary_insights: string;
+}
+
+interface CustomQuestion {
+  question: string;
+  wordCount: number;
+  answer?: string; // AI-generated answer
 }
 
 interface StoredAiAnalysisContent extends AiAnalysisResult {
@@ -44,6 +50,7 @@ interface BlogPost {
   created_at: string;
   updated_at: string;
   ai_analysis_json: StoredAiAnalysisContent | null;
+  custom_qa_results?: CustomQuestion[]; // New field
 }
 
 interface AnalysisResponse {
@@ -57,6 +64,7 @@ interface AnalysisResponse {
   aiAnalysis: AiAnalysisResult;
   blogPostSlug?: string;
   originalVideoLink?: string;
+  customQaResults?: CustomQuestion[]; // New field
 }
 
 const AnalyzeVideo = () => {
@@ -64,24 +72,22 @@ const AnalyzeVideo = () => {
   const initialBlogPost = location.state?.blogPost as BlogPost | undefined;
 
   const [videoLink, setVideoLink] = useState("");
-  const [customInstructions, setCustomInstructions] = useState("");
+  const [customQuestions, setCustomQuestions] = useState<CustomQuestion[]>([{ question: "", wordCount: 200 }]);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [isChatDialogOpen, setIsChatDialogOpen] = useState(false); // State for the chat dialog
+  const [isChatDialogOpen, setIsChatDialogOpen] = useState(false);
   const analysisReportRef = useRef<HTMLDivElement>(null);
 
-  // Effect to handle initial blog post load from navigation state
   useEffect(() => {
     if (initialBlogPost) {
-      // Reconstruct AnalysisResponse from initialBlogPost
       const loadedAnalysis: AnalysisResponse = {
         videoTitle: initialBlogPost.title,
         videoDescription: initialBlogPost.meta_description,
         videoThumbnailUrl: initialBlogPost.thumbnail_url,
         videoTags: initialBlogPost.keywords || [],
         creatorName: initialBlogPost.creator_name || 'Unknown Creator',
-        videoSubtitles: '', // Subtitles are not stored in blog_posts
-        comments: initialBlogPost.ai_analysis_json?.raw_comments_for_chat || [], // Get comments from stored AI analysis
+        videoSubtitles: '',
+        comments: initialBlogPost.ai_analysis_json?.raw_comments_for_chat || [],
         aiAnalysis: {
           overall_sentiment: initialBlogPost.ai_analysis_json?.overall_sentiment || 'N/A',
           emotional_tones: initialBlogPost.ai_analysis_json?.emotional_tones || [],
@@ -90,17 +96,18 @@ const AnalyzeVideo = () => {
         },
         blogPostSlug: initialBlogPost.slug,
         originalVideoLink: initialBlogPost.original_video_link,
+        customQaResults: initialBlogPost.custom_qa_results, // Load custom QA results
       };
       setAnalysisResult(loadedAnalysis);
-      setIsChatDialogOpen(true); // Open chat dialog immediately for loaded analysis
+      setIsChatDialogOpen(true);
     }
   }, [initialBlogPost]);
 
   const analyzeVideoMutation = useMutation({
-    mutationFn: async (payload: { videoLink: string; customInstructions: string }) => {
+    mutationFn: async (payload: { videoLink: string; customQuestions: CustomQuestion[] }) => {
       setError(null);
       setAnalysisResult(null);
-      setIsChatDialogOpen(false); // Close chat dialog if a new analysis starts
+      setIsChatDialogOpen(false);
 
       const { data, error: invokeError } = await supabase.functions.invoke('youtube-analyzer', {
         body: payload,
@@ -114,7 +121,6 @@ const AnalyzeVideo = () => {
     },
     onSuccess: (data) => {
       setAnalysisResult(data);
-      // Removed setIsChatDialogOpen(true) here to prevent automatic pop-up
     },
     onError: (err: Error) => {
       setError(err.message);
@@ -125,8 +131,28 @@ const AnalyzeVideo = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (videoLink.trim()) {
-      analyzeVideoMutation.mutate({ videoLink, customInstructions });
+      const validQuestions = customQuestions.filter(q => q.question.trim() !== "");
+      analyzeVideoMutation.mutate({ videoLink, customQuestions: validQuestions });
     }
+  };
+
+  const handleAddQuestion = () => {
+    setCustomQuestions([...customQuestions, { question: "", wordCount: 200 }]);
+  };
+
+  const handleRemoveQuestion = (index: number) => {
+    setCustomQuestions(customQuestions.filter((_, i) => i !== index));
+  };
+
+  const handleQuestionChange = (index: number, field: keyof CustomQuestion, value: string | number) => {
+    const newQuestions = [...customQuestions];
+    // Ensure wordCount is a number
+    if (field === 'wordCount') {
+      newQuestions[index][field] = Number(value);
+    } else {
+      newQuestions[index][field] = value as string;
+    }
+    setCustomQuestions(newQuestions);
   };
 
   const handleDownloadPdf = () => {
@@ -166,20 +192,64 @@ const AnalyzeVideo = () => {
                 disabled={analyzeVideoMutation.isPending}
               />
             </div>
-            <div>
-              <Label htmlFor="customInstructions">Custom Instructions (Optional)</Label>
-              <Textarea
-                id="customInstructions"
-                placeholder="e.g., Focus on positive feedback, or summarize for a marketing report."
-                value={customInstructions}
-                onChange={(e) => setCustomInstructions(e.target.value)}
-                className="mt-1 min-h-[80px]"
-                disabled={analyzeVideoMutation.isPending}
-              />
-            </div>
+
+            <Separator />
+
+            <h3 className="text-lg font-semibold mb-2">Custom Questions for AI</h3>
+            {customQuestions.map((qa, index) => (
+              <div key={index} className="flex flex-col sm:flex-row gap-2 items-end">
+                <div className="flex-1">
+                  <Label htmlFor={`question-${index}`}>Question {index + 1}</Label>
+                  <Textarea
+                    id={`question-${index}`}
+                    placeholder="e.g., What are the main criticisms of this video?"
+                    value={qa.question}
+                    onChange={(e) => handleQuestionChange(index, 'question', e.target.value)}
+                    className="mt-1 min-h-[60px]"
+                    disabled={analyzeVideoMutation.isPending}
+                  />
+                </div>
+                <div className="w-24">
+                  <Label htmlFor={`wordCount-${index}`}>Word Count</Label>
+                  <Input
+                    id={`wordCount-${index}`}
+                    type="number"
+                    min="50"
+                    max="1000"
+                    step="50"
+                    value={qa.wordCount}
+                    onChange={(e) => handleQuestionChange(index, 'wordCount', e.target.value)}
+                    className="mt-1"
+                    disabled={analyzeVideoMutation.isPending}
+                  />
+                </div>
+                {customQuestions.length > 1 && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleRemoveQuestion(index)}
+                    disabled={analyzeVideoMutation.isPending}
+                    className="self-end sm:self-auto"
+                  >
+                    <XCircle className="h-5 w-5 text-red-500" />
+                  </Button>
+                )}
+              </div>
+            ))}
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleAddQuestion}
+              disabled={analyzeVideoMutation.isPending}
+              className="w-full flex items-center gap-2"
+            >
+              <PlusCircle className="h-4 w-4" /> Add Another Question
+            </Button>
+
             <Button type="submit" className="w-full" disabled={analyzeVideoMutation.isPending}>
               {analyzeVideoMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Analyze Comments
+              Analyze Comments & Get Answers
             </Button>
           </form>
         </CardContent>
@@ -193,7 +263,7 @@ const AnalyzeVideo = () => {
           <Skeleton className="h-4 w-1/2" />
           <div className="flex items-center space-x-2 mt-4">
             <Loader2 className="h-4 w-4 animate-spin" />
-            <span className="text-sm text-gray-500">Fetching external context...</span>
+            <span className="text-sm text-gray-500">Fetching external context and generating analysis...</span>
           </div>
         </Card>
       )}
@@ -309,6 +379,21 @@ const AnalyzeVideo = () => {
 
               <Separator />
 
+              {analysisResult.customQaResults && analysisResult.customQaResults.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Custom AI Answers</h3>
+                  <div className="space-y-4">
+                    {analysisResult.customQaResults.map((qa, index) => (
+                      <div key={index} className="border p-3 rounded-md bg-gray-50 dark:bg-gray-700">
+                        <p className="font-medium text-gray-800 dark:text-gray-200 mb-1">Q{index + 1}: {qa.question}</p>
+                        <p className="text-gray-700 dark:text-gray-300">A{index + 1}: {qa.answer || "No answer generated."}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <Separator className="mt-6" />
+                </div>
+              )}
+
               <div>
                 <h3 className="text-lg font-semibold mb-2">Raw Comments (First 10, by popularity)</h3>
                 {analysisResult.comments.length > 0 ? (
@@ -324,7 +409,6 @@ const AnalyzeVideo = () => {
             </CardContent>
           </Card>
 
-          {/* VideoChatDialog for this analysis */}
           <VideoChatDialog
             isOpen={isChatDialogOpen}
             onOpenChange={setIsChatDialogOpen}

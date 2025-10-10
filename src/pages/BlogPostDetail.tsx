@@ -9,12 +9,19 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
 
 interface AiAnalysisResult {
   overall_sentiment: string;
   emotional_tones: string[];
   key_themes: string[];
   summary_insights: string;
+}
+
+interface CustomQuestion {
+  question: string;
+  wordCount: number;
+  answer?: string; // AI-generated answer
 }
 
 interface StoredAiAnalysisContent extends AiAnalysisResult {
@@ -37,6 +44,7 @@ interface BlogPost {
   created_at: string;
   updated_at: string;
   ai_analysis_json: StoredAiAnalysisContent | null;
+  custom_qa_results?: CustomQuestion[]; // New field
 }
 
 const fetchBlogPostBySlug = async (slug: string): Promise<BlogPost | null> => {
@@ -276,6 +284,19 @@ const BlogPostDetail = () => {
                 <Badge key={index} variant="secondary">
                   {keyword}
                 </Badge>
+              ))}
+            </div>
+          </CardContent>
+        )}
+        {blogPost.custom_qa_results && blogPost.custom_qa_results.length > 0 && (
+          <CardContent className="border-t pt-4 mt-4">
+            <h3 className="text-lg font-semibold mb-2">Custom AI Answers</h3>
+            <div className="space-y-4">
+              {blogPost.custom_qa_results.map((qa, index) => (
+                <div key={index} className="border p-3 rounded-md bg-gray-50 dark:bg-gray-700">
+                  <p className="font-medium text-gray-800 dark:text-gray-200 mb-1">Q{index + 1}: {qa.question}</p>
+                  <p className="text-gray-700 dark:text-gray-300">A{index + 1}: {qa.answer || "No answer generated."}</p>
+                </div>
               ))}
             </div>
           </CardContent>

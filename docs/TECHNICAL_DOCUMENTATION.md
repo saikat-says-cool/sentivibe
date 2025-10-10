@@ -1,7 +1,7 @@
 # SentiVibe Technical Documentation
 
 ## 1. Introduction
-This document provides a comprehensive technical overview of the SentiVibe application, detailing its architecture, core components, data flow, Supabase integration, and external API interactions. SentiVibe is a React-based web application designed to perform AI-powered sentiment analysis on YouTube video comments, engage in context-aware conversations about the analysis, and automatically generate SEO-optimized blog posts for each analysis, which are then stored and made discoverable in a dedicated library.
+This document provides a comprehensive technical overview of the SentiVibe application, detailing its architecture, core components, data flow, Supabase integration, and external API interactions. SentiVibe is a React-based web application designed to perform AI-powered sentiment analysis on YouTube video comments, engage in context-aware conversations about the analysis, and automatically generate SEO-optimized blog posts for each analysis, which are then stored and made discoverable in a dedicated library. It now also supports **user-defined custom questions** that are answered by AI and included in the analysis report.
 
 ## 2. Tech Stack
 The application is built using the following technologies:
@@ -37,7 +37,7 @@ The project follows a standard React application structure with specific directo
         *   `src/components/ProtectedRoute.tsx`: Component for protecting routes.
         *   `src/components/Footer.tsx`: Application footer, now including the **brand ethics disclosure**.
         *   `src/components/theme-provider.tsx`: Theme context provider.
-        *   `src/components/VideoChatDialog.tsx`: **New component for the centralized AI chat pop-up.**
+        *   `src/components/VideoChatDialog.tsx`: **Updated component for the centralized AI chat pop-up, now passing custom Q&A results as context.**
         *   `src/components/LibraryCopilot.tsx`: AI assistant for searching the analysis library.
         *   `src/components/ui/`: Shadcn/ui components (e.g., Button, Card, Input, Badge, Alert, Skeleton, Collapsible).
     *   `src/hooks/`: Custom React hooks.
@@ -46,20 +46,20 @@ The project follows a standard React application structure with specific directo
     *   `src/pages/`: Application pages/views.
         *   `src/pages/Index.tsx`: Landing page, updated with new tagline and wordmark styling.
         *   `src/pages/Login.tsx`: User authentication page, styled to integrate with the new color palette.
-        *   `src/pages/AnalyzeVideo.tsx`: Main page for YouTube video analysis. **Now uses `VideoChatDialog` for AI chat.**
-        *   `src/pages/VideoAnalysisLibrary.tsx`: Page to list and search generated blog posts (video analyses).
-        *   `src/pages/MyAnalyses.tsx`: **New page to list a user's own analyses, now integrating `LibraryCopilot`.**
-        *   `src/pages/BlogPostDetail.tsx`: Page to display the full content of a single generated blog post. **Now includes a button to initiate AI chat via `VideoChatDialog` with the post's context, and dynamic SEO meta tags/JSON-LD.**
+        *   `src/pages/AnalyzeVideo.tsx`: **Significantly updated main page for YouTube video analysis, now featuring dynamic custom question input fields with word limits, and displaying the AI-generated answers.**
+        *   `src/pages/VideoAnalysisLibrary.tsx`: **Updated page to list and search generated blog posts (video analyses), with updated BlogPost interface.**
+        *   `src/pages/MyAnalyses.tsx`: **Updated page to list a user's own analyses, now integrating `LibraryCopilot` and with updated BlogPost interface.**
+        *   `src/pages/BlogPostDetail.tsx`: **Updated page to display the full content of a single generated blog post, including the new custom Q&A section.**
         *   `src/pages/NotFound.tsx`: 404 error page.
     *   `src/integrations/supabase/`: Supabase-specific integration files.
         *   `src/integrations/supabase/client.ts`: Supabase client initialization.
         *   `src/integrations/supabase/auth.tsx`: React Context Provider and hook for managing Supabase user sessions.
 *   `supabase/`: Supabase-related backend files.
     *   `supabase/functions/`: Supabase Edge Functions.
-        *   `supabase/functions/youtube-analyzer/index.ts`: Edge Function for video analysis, implementing caching to reuse existing analyses, storing top comments for chat context, generating SEO-optimized blog posts with new title/meta formats, and blog post generation/insertion.
+        *   `supabase/functions/youtube-analyzer/index.ts`: **Significantly updated Edge Function for video analysis, now processing custom questions, making additional AI calls for answers, and storing these Q&A results in the database.**
         *   `supabase/functions/fetch-external-context/index.ts`: Edge Function for performing a one-time Google Custom Search.
-        *   `supabase/functions/chat-analyzer/index.ts`: Edge Function for handling AI chat conversations, now incorporating persona and response length preferences, and **instructed to generate Markdown hyperlinks.**
-        *   `supabase/functions/library-copilot-analyzer/index.ts`: **New Edge Function for handling AI chat for the Library Copilot, instructed to generate Markdown hyperlinks to blog posts.**
+        *   `supabase/functions/chat-analyzer/index.ts`: **Updated Edge Function for handling AI chat conversations, now incorporating custom Q&A results into the AI's context.**
+        *   `supabase/functions/library-copilot-analyzer/index.ts`: Edge Function for handling AI chat for the Library Copilot.
     *   `supabase/migrations/`: Database migration files.
 *   `tailwind.config.ts`: Tailwind CSS configuration, including custom fonts (`Arimo`, `Plus Jakarta Sans`) and the new brand color palette.
 *   `.env`: Environment variables (e.g., Supabase URLs, API keys).
@@ -98,12 +98,13 @@ The project follows a standard React application structure with specific directo
 *   Displays a "Welcome to SentiVibe" message.
 
 ### 4.5. `AnalyzeVideo.tsx` (Video Analysis Page)
-*   **State Management:** Manages `videoLink` input, `customInstructions`, `analysisResult`, `error`, and `isChatDialogOpen` states using `useState`.
-*   **Initial Load from Blog Post:** Uses `useLocation` to check for `blogPost` data passed via navigation state. If present, it reconstructs the `analysisResult` from the `blogPost` (including `ai_analysis_json` and its `raw_comments_for_chat`), sets `analysisResult`, and opens the `VideoChatDialog` immediately.
+*   **State Management:** Manages `videoLink` input, `customQuestions` (an array of objects, each with `question` and `wordCount`), `analysisResult`, `error`, and `isChatDialogOpen` states using `useState`.
+*   **Dynamic Custom Questions:** Provides UI to add/remove multiple custom question input fields, each with a corresponding word count input.
+*   **Initial Load from Blog Post:** Uses `useLocation` to check for `blogPost` data passed via navigation state. If present, it reconstructs the `analysisResult` from the `blogPost` (including `ai_analysis_json`, `raw_comments_for_chat`, and `custom_qa_results`), sets `analysisResult`, and opens the `VideoChatDialog` immediately.
 *   **Supabase Edge Function Invocation:**
-    *   **`analyzeVideoMutation`:** Uses `useMutation` to call the `youtube-analyzer` Supabase Edge Function. `onSuccess` updates `analysisResult`. The `VideoChatDialog` is *not* automatically opened after a new analysis; the user must click the "Chat with AI" button.
+    *   **`analyzeVideoMutation`:** Uses `useMutation` to call the `youtube-analyzer` Supabase Edge Function. The payload now includes the `customQuestions` array. `onSuccess` updates `analysisResult`.
 *   **UI Elements:**
-    *   `Input` for video link submission, `Textarea` for custom instructions.
+    *   `Input` for video link submission, `Textarea` for custom questions, `Input` for word count.
     *   `Button` to trigger analysis, showing a `Loader2` icon (styled with `text-accent`) when pending.
     *   `Card` components to structure the input form and display results.
     *   `Skeleton` components provide a loading state visual for analysis.
@@ -113,12 +114,13 @@ The project follows a standard React application structure with specific directo
     *   Displays a "View Blog Post" `Button` with a `Link` to `/blog/${analysisResult.blogPostSlug}` after a successful analysis.
     *   Displays an "Original Video" `Button` with an `<a>` tag linking to `analysisResult.originalVideoLink`.
     *   **"Chat with AI" Button:** Triggers the `VideoChatDialog` pop-up.
-*   **PDF Download:** Integrates `html2pdf.js` to convert the analysis results `Card` into a downloadable PDF. The PDF generation now includes a custom header with the SentiVibe logo and tagline.
-*   **`VideoChatDialog` Integration:** Renders the `VideoChatDialog` component, passing `isChatDialogOpen`, `setIsChatDialogOpen`, and `analysisResult` as props.
+    *   **Custom Q&A Display:** A new section displays the AI-generated answers for each custom question.
+*   **PDF Download:** Integrates `html2pdf.js` to convert the analysis results `Card` into a downloadable PDF. The PDF generation now includes a custom header with the SentiVibe logo and tagline, and the custom Q&A section.
+*   **`VideoChatDialog` Integration:** Renders the `VideoChatDialog` component, passing `isChatDialogOpen`, `setIsChatDialogOpen`, and `analysisResult` (which now includes `customQaResults`) as props.
 
 ### 4.6. `VideoAnalysisLibrary.tsx`
 *   **Purpose:** Displays a list of all generated blog posts (video analyses) from the Supabase database.
-*   **Data Fetching:** Uses `useQuery` from `@tanstack/react-query` to fetch all entries from the `public.blog_posts` table, ordered by `published_at` date.
+*   **Data Fetching:** Uses `useQuery` from `@tanstack/react-query` to fetch all entries from the `public.blog_posts` table, ordered by `published_at` date. The `BlogPost` interface has been updated to include `custom_qa_results`.
 *   **Search Functionality:** Implements a client-side search filter based on `searchTerm` state, allowing users to search by `title`, `creator_name`, `meta_description`, or `keywords`.
 *   **UI Elements:**
     *   `Input` for the search bar.
@@ -131,8 +133,8 @@ The project follows a standard React application structure with specific directo
 
 ### 4.7. `BlogPostDetail.tsx`
 *   **Purpose:** Displays the full content of a single, SEO-optimized blog post.
-*   **Data Fetching:** Uses `useParams` to extract the `slug` from the URL and `useQuery` from `@tanstack/react-query` to fetch the specific blog post from `public.blog_posts` via its `slug`.
-*   **"Chat with AI" Button:** Now opens the `VideoChatDialog` directly, passing the current `blogPost` object as the `initialBlogPost` prop. This allows the `VideoChatDialog` to initialize the chat with the context of the loaded blog post.
+*   **Data Fetching:** Uses `useParams` to extract the `slug` from the URL and `useQuery` from `@tanstack/react-query` to fetch the specific blog post from `public.blog_posts` via its `slug`. The `BlogPost` interface has been updated to include `custom_qa_results`.
+*   **"Chat with AI" Button:** Now opens the `VideoChatDialog` directly, passing the current `blogPost` object (which includes `custom_qa_results`) as the `initialBlogPost` prop. This allows the `VideoChatDialog` to initialize the chat with the context of the loaded blog post.
 *   **SEO Enhancements:**
     *   **Dynamic Meta Tags:** `useEffect` hook dynamically updates `document.title` and `meta name="description"` based on the blog post's title and meta description.
     *   **Open Graph (OG) Tags:** Dynamically adds `og:title`, `og:description`, `og:image`, `og:url`, `og:type`, and `og:site_name` meta tags for rich social media previews.
@@ -143,6 +145,7 @@ The project follows a standard React application structure with specific directo
     *   Displays the `thumbnail_url`, `title`, `creator_name`, `published_at` date, and `meta_description`.
     *   Renders the `content` field (which is in Markdown) using `react-markdown` and `remarkGfm` for proper formatting.
     *   Displays `keywords` using `Badge` components.
+    *   **Custom Q&A Section:** A new section displays the AI-generated answers for each custom question if `blogPost.custom_qa_results` are present.
     *   Includes a "Back to Analysis Library" `Link` for easy navigation.
     *   Includes an "Analyze a New Video" `Button` linking to `/analyze-video`.
     *   Includes an "Original Video" `<a>` tag linking to `blogPost.original_video_link`.
@@ -158,13 +161,13 @@ The project follows a standard React application structure with specific directo
 *   Handles message input and sending via `onSendMessage` prop.
 *   **Markdown Rendering:** Integrates `react-markdown` with `remarkGfm` to correctly render Markdown formatting in AI responses, including **underlined hyperlinks**, improving readability. The `prose dark:prose-invert` Tailwind classes are applied to ensure consistent typography.
 
-### 4.9. `VideoChatDialog.tsx` (New Component)
+### 4.9. `VideoChatDialog.tsx` (Updated Component)
 *   **Purpose:** Centralizes the AI conversational chat experience for video analyses into a reusable pop-up dialog.
 *   **Props:** Accepts `isOpen` (boolean to control visibility), `onOpenChange` (callback to update `isOpen`), `initialAnalysisResult` (optional, for new analyses from `AnalyzeVideo`), and `initialBlogPost` (optional, for analyses loaded from `BlogPostDetail`).
 *   **Internal State:** Manages `chatMessages`, `outputLengthPreference`, `selectedPersona`, `currentExternalContext`, and `currentAnalysisResult`.
-*   **Context Initialization:** On dialog open, it checks `initialAnalysisResult` or `initialBlogPost` to set `currentAnalysisResult`. If `initialBlogPost` is provided, it reconstructs the `AnalysisResponse` object from the blog post data, including `ai_analysis_json` and `raw_comments_for_chat`.
+*   **Context Initialization:** On dialog open, it checks `initialAnalysisResult` or `initialBlogPost` to set `currentAnalysisResult`. If `initialBlogPost` is provided, it reconstructs the `AnalysisResponse` object from the blog post data, including `ai_analysis_json`, `raw_comments_for_chat`, and **`custom_qa_results`**.
 *   **External Context Fetching:** Uses an internal `fetchExternalContextMutation` (calling `fetch-external-context` Edge Function) to get up-to-date external information based on the video's title and tags, *once per dialog open*.
-*   **Chat Mutation:** Uses an internal `chatMutation` (calling `chat-analyzer` Edge Function) to send user messages and receive AI responses.
+*   **Chat Mutation:** Uses an internal `chatMutation` (calling `chat-analyzer` Edge Function) to send user messages and receive AI responses. The `customQaResults` are now passed as part of the `analysisResult` to the `chat-analyzer` Edge Function.
 *   **AI Controls:** Provides `Select` components for users to choose `selectedPersona` and `outputLengthPreference`, which are passed to the `chat-analyzer` Edge Function.
 *   **UI:** Renders the `ChatInterface` component within the dialog.
 
@@ -177,7 +180,7 @@ The project follows a standard React application structure with specific directo
 
 ### 4.11. `MyAnalyses.tsx` (New Page)
 *   **Purpose:** Displays a list of blog posts (video analyses) created by the currently authenticated user.
-*   **Data Fetching:** Uses `useQuery` to fetch `blog_posts` where `author_id` matches the current user's ID, ordered by `created_at`.
+*   **Data Fetching:** Uses `useQuery` to fetch `blog_posts` where `author_id` matches the current user's ID, ordered by `created_at`. The `BlogPost` interface has been updated to include `custom_qa_results`.
 *   **Search Functionality:** Similar client-side search as `VideoAnalysisLibrary.tsx`.
 *   **UI Elements:** Displays user-specific analyses in `Card` components, linked to `BlogPostDetail.tsx`.
 *   **`LibraryCopilot` Integration:** Renders the `LibraryCopilot` component, passing the user's `blogPosts` for AI-powered search within their personal history.
@@ -223,6 +226,7 @@ The project follows a standard React application structure with specific directo
     *   `thumbnail_url`: TEXT (YouTube video thumbnail URL).
     *   `original_video_link`: TEXT (Original YouTube video URL).
     *   `ai_analysis_json`: JSONB (Stores the full AI sentiment analysis result **and the top 10 raw comments for chat context**).
+    *   `custom_qa_results`: JSONB[] (New column: Stores an array of custom questions and their AI-generated answers).
 *   **Row Level Security (RLS) for `public.blog_posts`:** Enabled.
     *   `Authenticated users can create blog posts`: `FOR INSERT TO authenticated WITH CHECK (auth.uid() = author_id)`
     *   `Authenticated users can update their own blog posts`: `FOR UPDATE TO authenticated USING (auth.uid() = author_id)`
@@ -239,34 +243,26 @@ The project follows a standard React application structure with specific directo
     *   Automatically calls `handle_new_user` whenever a new user is inserted into `auth.users`, ensuring a profile is created for every new signup.
 
 ### 5.5. Supabase Edge Function (`supabase/functions/youtube-analyzer/index.ts`)
-This Deno-based serverless function is the core backend logic for video analysis and blog post generation, **now enhanced with an intelligent caching mechanism, SEO-focused AI prompting, and API key rotation.**
+This Deno-based serverless function is the core backend logic for video analysis and blog post generation, **now enhanced with an intelligent caching mechanism, SEO-focused AI prompting, API key rotation, and custom question processing.**
 *   **CORS Handling:** Includes `corsHeaders` and handles `OPTIONS` preflight requests.
 *   **Supabase Client Initialization:** Creates a Supabase client within the function, passing the user's `Authorization` header.
 *   **User Authentication:** Verifies the user's session.
-*   **Input Validation:** Checks for `videoLink` and extracts `videoId`.
+*   **Input Validation:** Checks for `videoLink` and extracts `videoId`. Now also receives `customQuestions` array.
 *   **Analysis Caching Logic:**
     *   Upon receiving a `videoLink`, the function first extracts the `videoId`.
     *   It then queries the `public.blog_posts` table to check if an entry with this `videoId` already exists.
-    *   **If an `existingBlogPost` is found:** The function immediately returns the stored `videoTitle`, `videoDescription` (from `meta_description`), `videoThumbnailUrl`, `videoTags` (from `keywords`), `creatorName`, the `ai_analysis_json` (the full AI sentiment analysis result **including `raw_comments_for_chat`**), the `blogPostSlug`, and the `originalVideoLink`. This bypasses all subsequent YouTube API and Longcat AI calls, saving resources and preventing duplicate blog posts.
-    *   **If no existing analysis is found:** The function proceeds with the full analysis workflow: fetching video details and comments from YouTube, performing AI sentiment analysis, generating a new SEO-optimized blog post, and then inserting all this data (including the `aiAnalysis` and `raw_comments_for_chat` into the `ai_analysis_json` column) into the `public.blog_posts` table.
+    *   **If an `existingBlogPost` is found:** The function immediately returns the stored `videoTitle`, `videoDescription` (from `meta_description`), `videoThumbnailUrl`, `videoTags` (from `keywords`), `creatorName`, the `ai_analysis_json` (the full AI sentiment analysis result **including `raw_comments_for_chat`**), the `blogPostSlug`, the `originalVideoLink`, and **`custom_qa_results`**. This bypasses all subsequent YouTube API and Longcat AI calls, saving resources and preventing duplicate blog posts.
+    *   **If no existing analysis is found:** The function proceeds with the full analysis workflow: fetching video details and comments from YouTube, performing AI sentiment analysis, generating a new SEO-optimized blog post, **processing custom questions and generating answers**, and then inserting all this data (including the `aiAnalysis`, `raw_comments_for_chat`, and `customQaResults`) into the `public.blog_posts` table.
 *   **API Key Retrieval & Rotation:**
     *   Retrieves a list of `YOUTUBE_API_KEY`s and `LONGCAT_AI_API_KEY`s using the `getApiKeys` helper function.
-    *   For each API call (YouTube video details, YouTube comments, Longcat AI analysis, Longcat AI blog post generation), it iterates through the available keys. If a request fails with a rate limit error (HTTP 429 or YouTube's `quotaExceeded` 403), it attempts the request again with the next key in the list.
+    *   For each API call (YouTube video details, YouTube comments, Longcat AI analysis, Longcat AI blog post generation, **and Longcat AI custom question answering**), it iterates through the available keys. If a request fails with a rate limit error (HTTP 429 or YouTube's `quotaExceeded` 403), it attempts the request again with the next key in the list.
 *   **YouTube Data API Calls (if new analysis):** Fetches video `snippet` (title, description, thumbnail, tags, `channelTitle`) and top-level comments (`maxResults=100`).
 *   **Comment Processing (if new analysis):** Maps comments to include `text` and `likeCount`, enforces a minimum of 50 comments, and sorts them by `likeCount`.
 *   **Longcat AI API Call (Analysis - if new analysis):** Constructs a `longcatPrompt` including video details, tags, and weighted comments. Instructs the AI to prioritize comments with higher like counts. Sends a `POST` request to Longcat AI, requesting a `json_object` response for sentiment analysis.
-*   **Longcat AI API Call (Blog Post Generation - if new analysis):** After successful sentiment analysis, a *second* `POST` request is made to Longcat AI.
-    *   A `blogPostPrompt` is crafted, providing all video details, analysis results, and top comments.
-    *   **SEO Prompt Refinements:** The AI is explicitly instructed to generate:
-        *   A compelling, SEO-optimized title following the pattern `{{VideoTitle}} YouTube Comment Sentiment Analysis ({{Year}}) | SentiVibe`.
-        *   A concise meta description: `Discover how audiences responded to {{VideoTitle}} with SentiVibe's AI comment analysis: sentiment, emotions, key themes.`.
-        *   A clean, URL-friendly slug (lowercase, hyphen-separated, no path segments).
-        *   Structured content with `<h1>`, `<h2>`, and `<h3>` headings.
-        *   Content that naturally sprinkles keyword variations.
-        *   A content block layout (Intro, Sentiment Summary, Top Keywords, Viewer Insights, Conclusion/CTA).
-    *   `max_tokens` is increased to `2000` to allow for longer blog posts.
-*   **Database Insertion (if new analysis):** The parsed `generatedBlogPost` data (including `video_id`, `title`, `slug`, `meta_description`, `keywords`, `content`, `published_at`, `author_id`, `creator_name`, `thumbnail_url`, `original_video_link`) and the `aiAnalysis` (stored in the `ai_analysis_json` column **along with `raw_comments_for_chat`**) are inserted into the `public.blog_posts` table using the Supabase client.
-*   **Response:** Returns a `200 OK` response with video details, comments, the AI analysis result, the `blogPostSlug`, and the `originalVideoLink` for frontend linking.
+*   **Longcat AI API Call (Blog Post Generation - if new analysis):** After successful sentiment analysis, a *second* `POST` request is made to Longcat AI for blog post generation.
+*   **Longcat AI API Call (Custom Questions - if new analysis):** If `customQuestions` are provided, the function iterates through each question. For each, it constructs a specific prompt including the full video analysis context and the user's question, instructing the AI to generate an answer of the specified `wordCount`. These answers are collected into `customQaResults`.
+*   **Database Insertion (if new analysis):** The parsed `generatedBlogPost` data, `aiAnalysis` (stored in `ai_analysis_json` along with `raw_comments_for_chat`), and the `customQaResults` are inserted into the `public.blog_posts` table.
+*   **Response:** Returns a `200 OK` response with video details, comments, the AI analysis result, the `blogPostSlug`, the `originalVideoLink`, and the `customQaResults` for frontend display.
 *   **Error Handling:** Includes comprehensive `try-catch` blocks for API calls and database operations.
 
 ### 5.6. Supabase Edge Function (`supabase/functions/fetch-external-context/index.ts`)
@@ -282,10 +278,10 @@ This Deno-based serverless function is responsible for fetching external, up-to-
 *   **Cost Optimization:** This function is called only once per video analysis session from the frontend, reducing repeated Google Search API calls.
 
 ### 5.7. Supabase Edge Function (`supabase/functions/chat-analyzer/index.ts`)
-This Deno-based serverless function handles the conversational AI aspect. **It now includes API key rotation and explicit instructions for Markdown hyperlinks.**
+This Deno-based serverless function handles the conversational AI aspect. **It now includes API key rotation and explicit instructions for Markdown hyperlinks, and incorporates custom Q&A results into its context.**
 *   **CORS Handling:** Includes `corsHeaders` and handles `OPTIONS` preflight requests.
 *   **Supabase Client Initialization & User Authentication:** Verifies the user.
-*   **Input:** Receives `userMessage`, `chatMessages` (conversation history), `analysisResult` (full video analysis including top comments, creator name, thumbnail URL, **and the `aiAnalysis` object, whether from a new analysis or cache**), `externalContext` (pre-fetched Google search results), `outputLengthPreference`, and `selectedPersona` from the frontend.
+*   **Input:** Receives `userMessage`, `chatMessages` (conversation history), `analysisResult` (full video analysis including top comments, creator name, thumbnail URL, `aiAnalysis` object, and **`customQaResults`**), `externalContext` (pre-fetched Google search results), `outputLengthPreference`, and `selectedPersona` from the frontend.
 *   **API Key Retrieval & Rotation:**
     *   Retrieves a list of `LONGCAT_AI_API_KEY`s using the `getApiKeys` helper function.
     *   Iterates through the available keys, retrying the Longcat AI API call with the next key if a rate limit error (HTTP 429) is encountered.
@@ -294,6 +290,7 @@ This Deno-based serverless function handles the conversational AI aspect. **It n
 *   **Prompt Construction:**
     *   **System Prompt:** Dynamically generated based on persona, including instructions for information prioritization, adherence to response length, explicit word count targets, and **Markdown link formatting**.
     *   **Analysis Context:** Formats `analysisResult` (video details, sentiment, themes, summary, top 10 raw comments, creator name, thumbnail URL) into a dedicated string.
+    *   **Custom Q&A Context:** A new section is added to the `fullContext` string, including the `customQaResults` if available, allowing the chat AI to reference these pre-generated answers.
     *   **External Context:** Integrates the received `externalContext` into the user's prompt, clearly labeled.
     *   **Conversation History:** Appends formatted `chatMessages` to maintain conversational flow.
     *   **User Message:** Includes the current `userMessage`.

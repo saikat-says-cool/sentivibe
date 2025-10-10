@@ -8,13 +8,19 @@ import { Loader2, Search, Youtube } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/integrations/supabase/auth';
-import LibraryCopilot from '@/components/LibraryCopilot'; // Import the LibraryCopilot component
+import LibraryCopilot from '@/components/LibraryCopilot';
 
 interface AiAnalysisResult {
   overall_sentiment: string;
   emotional_tones: string[];
   key_themes: string[];
   summary_insights: string;
+}
+
+interface CustomQuestion {
+  question: string;
+  wordCount: number;
+  answer?: string;
 }
 
 interface StoredAiAnalysisContent extends AiAnalysisResult {
@@ -37,6 +43,7 @@ interface BlogPost {
   updated_at: string;
   original_video_link: string;
   ai_analysis_json: StoredAiAnalysisContent | null;
+  custom_qa_results?: CustomQuestion[]; // New field
 }
 
 const fetchMyBlogPosts = async (userId: string): Promise<BlogPost[]> => {
@@ -44,7 +51,7 @@ const fetchMyBlogPosts = async (userId: string): Promise<BlogPost[]> => {
     .from('blog_posts')
     .select('*')
     .eq('author_id', userId)
-    .order('created_at', { ascending: false }); // Order by creation date for history
+    .order('created_at', { ascending: false });
 
   if (error) {
     throw new Error(error.message);
@@ -59,7 +66,7 @@ const MyAnalyses = () => {
   const { data: blogPosts, isLoading, error } = useQuery<BlogPost[], Error>({
     queryKey: ['myBlogPosts', userId],
     queryFn: () => fetchMyBlogPosts(userId!),
-    enabled: !!userId && !isAuthLoading, // Only fetch if user ID is available and auth is not loading
+    enabled: !!userId && !isAuthLoading,
   });
 
   const [searchTerm, setSearchTerm] = useState('');

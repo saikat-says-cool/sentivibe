@@ -62,7 +62,7 @@ serve(async (req) => {
       });
     }
 
-    const { userMessage, chatMessages, analysisResult, externalContext, outputLengthPreference, selectedPersona } = await req.json();
+    const { userMessage, chatMessages, analysisResult, externalContext, outputLengthPreference, selectedPersona, customQaResults } = await req.json();
 
     if (!userMessage || !analysisResult) {
       return new Response(JSON.stringify({ error: 'User message and analysis result are required.' }), {
@@ -141,6 +141,16 @@ serve(async (req) => {
         break;
     }
 
+    // Add custom QA results to the context if available
+    let customQaContext = "";
+    if (customQaResults && customQaResults.length > 0) {
+      customQaContext = "\n\n--- Pre-generated Custom Q&A Results ---\n";
+      customQaResults.forEach((qa: any, index: number) => {
+        customQaContext += `Q${index + 1}: ${qa.question}\nA${index + 1}: ${qa.answer || "No answer generated."}\n\n`;
+      });
+      customQaContext += "--- End Custom Q&A Results ---";
+    }
+
     // Combine all context into a single string to be part of the system message
     const fullContext = `
     --- Video Analysis Context ---
@@ -155,6 +165,7 @@ serve(async (req) => {
     ${analysisResult.comments.slice(0, 10).map((comment: string, index: number) => `${index + 1}. ${comment}`).join('\n')}
     --- End Video Analysis Context ---
     ${externalContext ? `\n\n--- Recent External Information ---\n${externalContext}\n--- End External Information ---` : ''}
+    ${customQaContext}
     `;
 
     // Convert chatMessages to the format expected by Longcat AI

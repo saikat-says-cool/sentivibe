@@ -7,13 +7,19 @@ import { Button } from '@/components/ui/button';
 import { Loader2, Search, Youtube } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
-import LibraryCopilot from '@/components/LibraryCopilot'; // Import the new component
+import LibraryCopilot from '@/components/LibraryCopilot';
 
 interface AiAnalysisResult {
   overall_sentiment: string;
   emotional_tones: string[];
   key_themes: string[];
   summary_insights: string;
+}
+
+interface CustomQuestion {
+  question: string;
+  wordCount: number;
+  answer?: string;
 }
 
 interface StoredAiAnalysisContent extends AiAnalysisResult {
@@ -34,8 +40,9 @@ interface BlogPost {
   thumbnail_url: string;
   created_at: string;
   updated_at: string;
-  original_video_link: string; // Added this as it's now stored
-  ai_analysis_json: StoredAiAnalysisContent | null; // Added this
+  original_video_link: string;
+  ai_analysis_json: StoredAiAnalysisContent | null;
+  custom_qa_results?: CustomQuestion[]; // New field
 }
 
 const fetchBlogPosts = async (): Promise<BlogPost[]> => {

@@ -62,7 +62,7 @@ serve(async (req) => {
       });
     }
 
-    const { videoLink, customInstructions } = await req.json(); // Destructure customInstructions
+    const { videoLink, customQuestions } = await req.json(); // Destructure customQuestions
     if (!videoLink) {
       return new Response(JSON.stringify({ error: 'Video link is required' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -98,7 +98,7 @@ serve(async (req) => {
 
     if (existingBlogPost) {
       console.log(`Reusing existing analysis for video ID: ${videoId}`);
-      // Return existing data, including the stored AI analysis and original video link
+      // Return existing data, including the stored AI analysis, original video link, and custom QA results
       return new Response(JSON.stringify({
         message: `Reusing existing analysis for video ID: ${videoId}`,
         videoTitle: existingBlogPost.title,
@@ -116,6 +116,7 @@ serve(async (req) => {
         },
         blogPostSlug: existingBlogPost.slug,
         originalVideoLink: existingBlogPost.original_video_link, // Include original video link
+        customQaResults: existingBlogPost.custom_qa_results || [], // Include custom QA results
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
@@ -248,11 +249,6 @@ serve(async (req) => {
 
     YouTube Comments:\n\n${formattedCommentsForAI.join('\n')}`;
 
-    // Add custom instructions if provided
-    if (customInstructions) {
-      longcatPrompt += `\n\nUser's Custom Instructions: ${customInstructions}\n`;
-    }
-
     longcatPrompt += `\n\nNote: Subtitles were not available for this video. Please base your analysis solely on the comments, video title, description, tags, and creator name.`;
 
 
@@ -280,7 +276,7 @@ serve(async (req) => {
       if (longcatResponse.ok) {
         break;
       } else if (longcatResponse.status === 429) {
-        console.warn(`Longcat AI API key hit rate limit for analysis. Trying next key.`);
+        console.warn(`Longcat AI API key hit quota limit for analysis. Trying next key.`);
         continue;
       }
       break;
@@ -389,7 +385,72 @@ serve(async (req) => {
     // Log the generated slug for debugging
     console.log("Generated Blog Post Slug:", generatedBlogPost.slug);
 
-    // Insert the generated blog post into the database, including ai_analysis_json
+    // --- Process Custom Questions ---
+    const customQaResults: { question: string; wordCount: number; answer: string }[] = [];
+    if (customQuestions && customQuestions.length > 0) {
+      for (const qa of customQuestions) {
+        if (qa.question.trim() === "") continue; // Skip empty questions
+
+        const customQuestionPrompt = `Based on the following YouTube video analysis, answer the user's custom question.
+        
+        Video Title: "${videoTitle}"
+        Video Description: "${videoDescription}"
+        Video Creator: "${creatorName}"
+        Video Tags: ${videoTags.length > 0 ? videoTags.join(', ') : 'None'}
+        Overall Sentiment: ${aiAnalysis.overall_sentiment}
+        Emotional Tones: ${aiAnalysis.emotional_tones.join(', ')}
+        Key Themes: ${aiAnalysis.key_themes.join(', ')}
+        Summary Insights: ${aiAnalysis.summary_insights}
+        Top Comments (for reference):
+        ${allFetchedCommentsText.slice(0, 10).map((comment: string, index: number) => `- ${comment}`).join('\n')}
+
+        User's Question: "${qa.question}"
+        
+        Please provide an answer that is approximately ${qa.wordCount} words long. Ensure the answer is complete and directly addresses the question using the provided context.
+        `;
+
+        let customQaResponse;
+        for (const currentLongcatApiKey of longcatApiKeys) {
+          customQaResponse = await fetch(longcatApiUrl, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${currentLongcatApiKey}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              model: "LongCat-Flash-Chat",
+              messages: [
+                { "role": "system", "content": "You are an expert AI assistant providing concise and accurate answers based on provided context. Adhere strictly to the requested word count." },
+                { "role": "user", "content": customQuestionPrompt }
+              ],
+              max_tokens: Math.ceil(qa.wordCount * 1.5), // Allow some buffer for token count
+              temperature: 0.5,
+              stream: false,
+            }),
+          });
+
+          if (customQaResponse.ok) {
+            break;
+          } else if (customQaResponse.status === 429) {
+            console.warn(`Longcat AI API key hit rate limit for custom QA. Trying next key.`);
+            continue;
+          }
+          break;
+        }
+
+        if (!customQaResponse || !customQaResponse.ok) {
+          const errorData = customQaResponse ? await customQaResponse.json() : { message: "No response from Longcat AI for custom question" };
+          console.error('Longcat AI Custom QA API error:', errorData);
+          customQaResults.push({ ...qa, answer: `Error generating answer: ${errorData.message || 'Unknown error'}` });
+        } else {
+          const customQaData = await customQaResponse.json();
+          const answerContent = customQaData.choices[0].message.content;
+          customQaResults.push({ ...qa, answer: answerContent });
+        }
+      }
+    }
+
+    // Insert the generated blog post into the database, including ai_analysis_json and custom_qa_results
     const { error: insertError } = await supabaseClient
       .from('blog_posts')
       .insert({
@@ -408,6 +469,7 @@ serve(async (req) => {
           ...aiAnalysis,
           raw_comments_for_chat: allFetchedCommentsText.slice(0, 10), // Store top 10 comments
         },
+        custom_qa_results: customQaResults, // Store custom QA results
       });
 
     if (insertError) {
@@ -431,6 +493,7 @@ serve(async (req) => {
       aiAnalysis: aiAnalysis,
       blogPostSlug: generatedBlogPost.slug, // Return the slug for linking
       originalVideoLink: videoLink, // Return the original video link
+      customQaResults: customQaResults, // Return custom QA results
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,

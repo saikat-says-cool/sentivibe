@@ -20,12 +20,17 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 
-// Re-defining interfaces for clarity and self-containment of this component
 interface AiAnalysisResult {
   overall_sentiment: string;
   emotional_tones: string[];
   key_themes: string[];
   summary_insights: string;
+}
+
+interface CustomQuestion {
+  question: string;
+  wordCount: number;
+  answer?: string;
 }
 
 interface StoredAiAnalysisContent extends AiAnalysisResult {
@@ -48,6 +53,7 @@ interface BlogPost {
   created_at: string;
   updated_at: string;
   ai_analysis_json: StoredAiAnalysisContent | null;
+  custom_qa_results?: CustomQuestion[]; // New field
 }
 
 interface AnalysisResponse {
@@ -61,6 +67,7 @@ interface AnalysisResponse {
   aiAnalysis: AiAnalysisResult;
   blogPostSlug?: string;
   originalVideoLink?: string;
+  customQaResults?: CustomQuestion[]; // New field
 }
 
 interface Message {
@@ -72,8 +79,8 @@ interface Message {
 interface VideoChatDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  initialAnalysisResult?: AnalysisResponse | null; // For AnalyzeVideo page
-  initialBlogPost?: BlogPost | null; // For BlogPostDetail page
+  initialAnalysisResult?: AnalysisResponse | null;
+  initialBlogPost?: BlogPost | null;
 }
 
 const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
@@ -88,7 +95,6 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
   const [currentExternalContext, setCurrentExternalContext] = useState<string | null>(null);
   const [currentAnalysisResult, setCurrentAnalysisResult] = useState<AnalysisResponse | null>(null);
 
-  // Effect to initialize chat and analysis context when dialog opens or initial data changes
   useEffect(() => {
     if (isOpen) {
       let analysisToUse: AnalysisResponse | null = null;
@@ -96,14 +102,13 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
       if (initialAnalysisResult) {
         analysisToUse = initialAnalysisResult;
       } else if (initialBlogPost && initialBlogPost.ai_analysis_json) {
-        // Reconstruct AnalysisResponse from BlogPost
         analysisToUse = {
           videoTitle: initialBlogPost.title,
           videoDescription: initialBlogPost.meta_description || '',
           videoThumbnailUrl: initialBlogPost.thumbnail_url || '',
           videoTags: initialBlogPost.keywords || [],
           creatorName: initialBlogPost.creator_name || 'Unknown Creator',
-          videoSubtitles: '', // Subtitles are not stored in blog_posts
+          videoSubtitles: '',
           comments: initialBlogPost.ai_analysis_json.raw_comments_for_chat || [],
           aiAnalysis: {
             overall_sentiment: initialBlogPost.ai_analysis_json.overall_sentiment || 'N/A',
@@ -113,6 +118,7 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
           },
           blogPostSlug: initialBlogPost.slug,
           originalVideoLink: initialBlogPost.original_video_link,
+          customQaResults: initialBlogPost.custom_qa_results, // Load custom QA results
         };
       }
       
@@ -126,7 +132,6 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
             text: `Analysis for "${analysisToUse.videoTitle}" loaded. What would you like to know about it?`,
           },
         ]);
-        // Trigger external context fetch for the loaded video
         const searchQuery = `${analysisToUse.videoTitle} ${analysisToUse.videoTags.join(' ')}`;
         fetchExternalContextMutation.mutate(searchQuery);
       } else {
@@ -139,7 +144,6 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
         ]);
       }
     } else {
-      // Reset chat state when dialog closes
       setChatMessages([]);
       setCurrentExternalContext(null);
       setCurrentAnalysisResult(null);
@@ -162,7 +166,6 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
     },
     onError: (err: Error) => {
       console.error("Error fetching external context for chat:", err);
-      // Optionally display an error, but don't block chat if external context fails
     },
   });
 
@@ -174,15 +177,13 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
         text: userMessageText,
       };
       
-      // Add user message immediately
       setChatMessages((prev) => [...prev, newUserMessage]);
 
-      // Prepare a placeholder for the AI's response
       const aiMessageId = Date.now().toString() + '-ai';
       const aiPlaceholderMessage: Message = {
         id: aiMessageId,
         sender: 'ai',
-        text: 'Thinking...', // Placeholder text
+        text: 'Thinking...',
       };
       setChatMessages((prev) => [...prev, aiPlaceholderMessage]);
 
@@ -193,11 +194,12 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
       const { data, error: invokeError } = await supabase.functions.invoke('chat-analyzer', {
         body: {
           userMessage: userMessageText,
-          chatMessages: [...chatMessages, newUserMessage], // Send full history including new user message
+          chatMessages: [...chatMessages, newUserMessage],
           analysisResult: currentAnalysisResult,
           externalContext: currentExternalContext,
           outputLengthPreference: outputLengthPreference,
           selectedPersona: selectedPersona,
+          customQaResults: currentAnalysisResult.customQaResults, // Pass custom QA results
         },
       });
 
@@ -206,11 +208,9 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
         throw new Error(invokeError.message || "Failed to invoke chat function.");
       }
       
-      // Assuming data is { aiResponse: "..." }
       return data.aiResponse;
     },
     onSuccess: (aiResponseContent: string) => {
-      // Update the last AI message with the actual content
       setChatMessages((prev) =>
         prev.map((msg, index) =>
           index === prev.length - 1 && msg.sender === 'ai' && msg.text === 'Thinking...'
@@ -221,7 +221,6 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
     },
     onError: (err: Error) => {
       console.error("Chat Error:", err);
-      // Find the last AI placeholder message and update it with an error
       setChatMessages((prev) =>
         prev.map((msg, index) =>
           index === prev.length - 1 && msg.sender === 'ai' && msg.text === 'Thinking...'
