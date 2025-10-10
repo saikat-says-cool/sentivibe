@@ -41,12 +41,15 @@ const fetchBlogPostBySlug = async (slug: string): Promise<BlogPost | null> => {
 };
 
 const BlogPostDetail = () => {
-  const { slug } = useParams<{ slug: string }>();
+  const { slug: urlParamSlug } = useParams<{ slug: string }>(); // Renamed to avoid confusion
+  
+  // Reconstruct the full slug that matches the database entry
+  const fullDbSlug = urlParamSlug ? `/analyze/youtube-comments/${urlParamSlug}` : null;
 
   const { data: blogPost, isLoading, error } = useQuery<BlogPost | null, Error>({
-    queryKey: ['blogPost', slug],
-    queryFn: () => fetchBlogPostBySlug(slug!), // FIX IS HERE: Pass slug directly
-    enabled: !!slug, // Only run query if slug is available
+    queryKey: ['blogPost', fullDbSlug],
+    queryFn: () => fetchBlogPostBySlug(fullDbSlug!), // Pass the fully reconstructed slug
+    enabled: !!fullDbSlug, // Only run query if fullDbSlug is available
   });
 
   if (isLoading) {
@@ -115,7 +118,12 @@ const BlogPostDetail = () => {
             "@type": "ImageObject",
             "url": `${window.location.origin}/favicon.ico` // Assuming favicon is a good logo representation
           }
-        }
+        },
+        "mainEntityOfPage": {
+          "@type": "WebPage",
+          "@id": canonicalUrl
+        },
+        "keywords": blogPost.keywords.join(', ')
       }
     ]
   };
