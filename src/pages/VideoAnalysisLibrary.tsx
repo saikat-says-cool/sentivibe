@@ -113,7 +113,7 @@ const VideoAnalysisLibrary = () => {
                 {post.thumbnail_url ? (
                   <img
                     src={post.thumbnail_url}
-                    alt={post.title}
+                    alt={`Thumbnail for ${post.title}`}
                     className="w-full h-40 object-cover rounded-t-lg"
                   />
                 ) : (

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -21,7 +21,7 @@ interface BlogPost {
   author_id: string;
   creator_name: string;
   thumbnail_url: string;
-  original_video_link: string; // Added original_video_link
+  original_video_link: string;
   created_at: string;
   updated_at: string;
 }
@@ -53,6 +53,69 @@ const BlogPostDetail = () => {
   });
 
   console.log("useQuery state - isLoading:", isLoading, "error:", error, "blogPost:", blogPost);
+
+  useEffect(() => {
+    if (blogPost) {
+      // Update document title
+      document.title = blogPost.title;
+
+      // Update meta description
+      let metaDescriptionTag = document.querySelector('meta[name="description"]');
+      if (!metaDescriptionTag) {
+        metaDescriptionTag = document.createElement('meta');
+        metaDescriptionTag.setAttribute('name', 'description');
+        document.head.appendChild(metaDescriptionTag);
+      }
+      metaDescriptionTag.setAttribute('content', blogPost.meta_description);
+
+      // Add JSON-LD Structured Data for BlogPosting
+      const schemaData = {
+        "@context": "https://schema.org",
+        "@type": "BlogPosting",
+        "headline": blogPost.title,
+        "description": blogPost.meta_description,
+        "image": blogPost.thumbnail_url,
+        "datePublished": blogPost.published_at,
+        "dateModified": blogPost.updated_at,
+        "author": {
+          "@type": "Person",
+          "name": blogPost.creator_name || "SentiVibe AI"
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "SentiVibe",
+          "logo": {
+            "@type": "ImageObject",
+            "url": `${window.location.origin}/logo.png` // Assuming a logo.png in public folder
+          }
+        },
+        "mainEntityOfPage": {
+          "@type": "WebPage",
+          "@id": `${window.location.origin}/blog/${blogPost.slug}`
+        }
+      };
+
+      let scriptTag = document.querySelector('script[type="application/ld+json"]');
+      if (!scriptTag) {
+        scriptTag = document.createElement('script');
+        scriptTag.setAttribute('type', 'application/ld+json');
+        document.head.appendChild(scriptTag);
+      }
+      scriptTag.textContent = JSON.stringify(schemaData);
+
+    } else {
+      // Reset to default if no blog post is loaded
+      document.title = "SentiVibe - Video Analysis Library";
+      const metaDescriptionTag = document.querySelector('meta[name="description"]');
+      if (metaDescriptionTag) {
+        metaDescriptionTag.setAttribute('content', 'Unlock the true sentiment behind YouTube comments. Analyze, understand, and gain insights into audience reactions with AI-powered sentiment analysis.');
+      }
+      const scriptTag = document.querySelector('script[type="application/ld+json"]');
+      if (scriptTag) {
+        scriptTag.remove();
+      }
+    }
+  }, [blogPost]);
 
   if (isLoading) {
     return (
@@ -98,7 +161,7 @@ const BlogPostDetail = () => {
           {blogPost.thumbnail_url && (
             <img
               src={blogPost.thumbnail_url}
-              alt={blogPost.title}
+              alt={`Thumbnail for ${blogPost.title}`}
               className="w-full h-auto rounded-md mb-4"
             />
           )}
