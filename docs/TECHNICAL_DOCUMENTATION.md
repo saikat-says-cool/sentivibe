@@ -17,45 +17,47 @@ The application is built using the following technologies:
 *   **Icons:** `lucide-react`
 *   **Utilities:** `clsx`, `tailwind-merge` (`cn` utility)
 *   **Markdown Rendering:** `react-markdown`, `remark-gfm`
-*   **Font:** Google Fonts (Arimo)
+*   **Fonts:** Google Fonts (`Arimo` for body, `Plus Jakarta Sans` for headings)
+*   **Toast Notifications:** `sonner`
 
 ## 3. Project Structure
 The project follows a standard React application structure with specific directories for organization:
 
-*   `public/`: Static assets like `logo.png`, `favicon.ico`, `robots.txt`.
+*   `public/`: Static assets like `logo.svg` (for favicon), `favicon.ico`, `robots.txt`.
 *   `src/`: Main application source code.
     *   `src/App.tsx`: Main application component, handles routing and context providers.
     *   `src/main.tsx`: Entry point for React rendering.
-    *   `src/globals.css`: Global Tailwind CSS styles and custom CSS variables.
+    *   `src/globals.css`: Global Tailwind CSS styles, custom CSS variables for the **Crowd Black/Pure White** theme, and custom sentiment colors.
     *   `src/lib/utils.ts`: Utility functions (e.g., `cn` for Tailwind class merging).
     *   `src/utils/toast.ts`: Utility functions for `sonner` toast notifications.
     *   `src/components/`: Reusable UI components.
-        *   `src/components/Header.tsx`: Global application header with branding and navigation.
+        *   `src/components/Header.tsx`: Global application header with the **SentiVibe wordmark** and a **theme toggle**.
+        *   `src/components/ModeToggle.tsx`: Component for switching between light and dark themes.
         *   `src/components/ChatInterface.tsx`: Generic chat UI component.
         *   `src/components/ProtectedRoute.tsx`: Component for protecting routes.
-        *   `src/components/Footer.tsx`: Application footer.
+        *   `src/components/Footer.tsx`: Application footer, now including the **brand ethics disclosure**.
         *   `src/components/theme-provider.tsx`: Theme context provider.
         *   `src/components/ui/`: Shadcn/ui components (e.g., Button, Card, Input, Badge, Alert, Skeleton, Collapsible).
     *   `src/hooks/`: Custom React hooks.
         *   `src/hooks/use-mobile.tsx`: Hook for detecting mobile viewport.
         *   `src/hooks/use-toast.ts`: Shadcn/ui toast hook (distinct from `sonner` toasts).
     *   `src/pages/`: Application pages/views.
-        *   `src/pages/Index.tsx`: Landing page.
-        *   `src/pages/Login.tsx`: User authentication page.
-        *   `src/pages/AnalyzeVideo.tsx`: Main page for YouTube video analysis and AI chat. **Now also handles loading analysis context from navigation state for chat.**
+        *   `src/pages/Index.tsx`: Landing page, updated with new tagline and wordmark styling.
+        *   `src/pages/Login.tsx`: User authentication page, styled to integrate with the new color palette.
+        *   `src/pages/AnalyzeVideo.tsx`: Main page for YouTube video analysis and AI chat. **Now also handles loading analysis context from navigation state for chat, includes branded PDF export, and AI persona/length controls.**
         *   `src/pages/VideoAnalysisLibrary.tsx`: Page to list and search generated blog posts (video analyses).
-        *   `src/pages/BlogPostDetail.tsx`: Page to display the full content of a single generated blog post. **Now includes a button to initiate AI chat with the post's context.**
+        *   `src/pages/BlogPostDetail.tsx`: Page to display the full content of a single generated blog post. **Now includes a button to initiate AI chat with the post's context, and dynamic SEO meta tags/JSON-LD.**
         *   `src/pages/NotFound.tsx`: 404 error page.
     *   `src/integrations/supabase/`: Supabase-specific integration files.
         *   `src/integrations/supabase/client.ts`: Supabase client initialization.
         *   `src/integrations/supabase/auth.tsx`: React Context Provider and hook for managing Supabase user sessions.
 *   `supabase/`: Supabase-related backend files.
     *   `supabase/functions/`: Supabase Edge Functions.
-        *   `supabase/functions/youtube-analyzer/index.ts`: Edge Function for video analysis, **implementing caching to reuse existing analyses, storing top comments for chat context**, and blog post generation/insertion.
+        *   `supabase/functions/youtube-analyzer/index.ts`: Edge Function for video analysis, **implementing caching to reuse existing analyses, storing top comments for chat context, generating SEO-optimized blog posts with new title/meta formats**, and blog post generation/insertion.
         *   `supabase/functions/fetch-external-context/index.ts`: Edge Function for performing a one-time Google Custom Search.
-        *   `supabase/functions/chat-analyzer/index.ts`: Edge Function for handling AI chat conversations.
+        *   `supabase/functions/chat-analyzer/index.ts`: Edge Function for handling AI chat conversations, now incorporating persona and response length preferences.
     *   `supabase/migrations/`: Database migration files.
-*   `tailwind.config.ts`: Tailwind CSS configuration, including custom fonts and colors.
+*   `tailwind.config.ts`: Tailwind CSS configuration, including custom fonts (`Arimo`, `Plus Jakarta Sans`) and the new brand color palette.
 *   `.env`: Environment variables (e.g., Supabase URLs, API keys).
 
 ## 4. Core Application Flow & Components
@@ -65,7 +67,7 @@ The project follows a standard React application structure with specific directo
     *   `QueryClientProvider`: Manages global state for data fetching with TanStack Query.
     *   `ThemeProvider`: Manages light/dark theme.
     *   `AuthProvider`: Custom provider for Supabase authentication session management.
-    *   `Toaster` (Shadcn/ui) and `Sonner` (external library): For displaying notifications.
+    *   `Toaster` (from `sonner`): For displaying toast notifications, configured to use brand colors for success/error/neutral.
 *   **`AppRoutes` Component:** Encapsulates `BrowserRouter` and `Routes`.
     *   Renders the `Header` component globally.
     *   Defines application routes: `/`, `/login`, `/analyze-video`, `/library`, `/blog/:slug`, and a catch-all `*` for `NotFound`.
@@ -73,20 +75,21 @@ The project follows a standard React application structure with specific directo
 
 ### 4.2. `Header.tsx`
 *   A React component that renders a consistent header across all pages.
-*   Displays the "SentiVibe" word logo, which acts as a link back to the homepage (`/`).
+*   Displays the **SentiVibe wordmark** (`<span className="text-foreground">Senti</span><span className="text-accent">Vibe</span>`) using the `font-heading` (Plus Jakarta Sans) typeface.
 *   Includes a navigation link to the `/library` route, accessible to authenticated users.
-*   Styled with Tailwind CSS for a clean, black-and-white appearance.
+*   Integrates the `ModeToggle` component for theme switching.
+*   Styled with Tailwind CSS for a clean, **Crowd Black** and **Pure White** appearance.
 
 ### 4.3. `Index.tsx` (Landing Page)
 *   The default entry point for unauthenticated users or when navigating to the root.
-*   Features the "SentiVibe" word logo prominently.
-*   Provides a brief description of the application's purpose.
+*   Features the **SentiVibe wordmark** prominently (`text-5xl font-extrabold tracking-tight`).
+*   Displays the new tagline: "Unlock the true sentiment behind YouTube comments. Analyze, understand, and gain insights into audience reactions with AI-powered sentiment analysis."
 *   Includes a call-to-action button (`<Link to="/analyze-video">Analyze a Video</Link>` or `<Link to="/login">Get Started</Link>`) to direct users to the analysis page or login.
 
 ### 4.4. `Login.tsx` (Authentication Page)
 *   Utilizes the `@supabase/auth-ui-react` component for a pre-built authentication UI.
 *   Configured with `supabaseClient` from `src/integrations/supabase/client.ts`.
-*   Uses `ThemeSupa` for styling and a `light` theme.
+*   Uses `ThemeSupa` for styling and a `light` theme, with `brand` and `brandAccent` colors mapped to `primary` and `primary-foreground` from the new palette.
 *   Automatically redirects authenticated users to the homepage (`/`) using `useAuth` and `useNavigate`.
 *   Displays a "Welcome to SentiVibe" message.
 
@@ -96,20 +99,20 @@ The project follows a standard React application structure with specific directo
 *   **Supabase Edge Function Invocation:**
     *   **`analyzeVideoMutation`:** Uses `useMutation` to call the `youtube-analyzer` Supabase Edge Function. `onSuccess` updates `analysisResult` (which now includes `blogPostSlug` and `originalVideoLink`) and then triggers `fetchExternalContextMutation`.
     *   **`fetchExternalContextMutation`:** Calls the `fetch-external-context` Edge Function *once* after a successful video analysis (or when loading from a blog post). It uses the video title and tags as a search query and stores the results in `externalContext` state.
-    *   **`chatMutation`:** Handles asynchronous calls to the `chat-analyzer` Supabase Edge Function, sending conversation history, analysis results, external context, and AI preferences.
+    *   **`chatMutation`:** Handles asynchronous calls to the `chat-analyzer` Supabase Edge Function, sending conversation history, analysis results, external context, and AI preferences (`outputLengthPreference`, `selectedPersona`).
 *   **UI Elements:**
     *   `Input` for video link submission, `Textarea` for custom instructions.
-    *   `Button` to trigger analysis, showing a `Loader2` icon when pending.
+    *   `Button` to trigger analysis, showing a `Loader2` icon (styled with `text-accent`) when pending.
     *   `Card` components to structure the input form, display results, and house the chat interface.
     *   `Skeleton` components provide a loading state visual for both analysis and external context fetching.
     *   `Alert` component displays any errors from the analysis process.
-    *   `Badge` components are used to display sentiment, emotional tones, and key themes.
+    *   `Badge` components are used to display sentiment (using `sentiment-positive`, `sentiment-negative`, `sentiment-neutral` classes), emotional tones, and key themes.
     *   `Collapsible` component is prepared for subtitles (though currently empty).
     *   `ChatInterface` component is rendered after a successful analysis, displaying conversation history and allowing user input. The chat input is disabled while analysis or external context fetching is pending.
     *   **AI Controls:** Includes `Select` components for `outputLengthPreference` and `selectedPersona`.
     *   Displays a "View Blog Post" `Button` with a `Link` to `/blog/${analysisResult.blogPostSlug}` after a successful analysis.
     *   Displays an "Original Video" `Button` with an `<a>` tag linking to `analysisResult.originalVideoLink`.
-*   **PDF Download:** Integrates `html2pdf.js` to convert the analysis results `Card` into a downloadable PDF.
+*   **PDF Download:** Integrates `html2pdf.js` to convert the analysis results `Card` into a downloadable PDF. The PDF generation now includes a custom header with the SentiVibe logo and tagline.
 
 ### 4.6. `VideoAnalysisLibrary.tsx`
 *   **Purpose:** Displays a list of all generated blog posts (video analyses) from the Supabase database.
@@ -145,8 +148,8 @@ The project follows a standard React application structure with specific directo
 
 ### 4.8. `ChatInterface.tsx` (Generic Chat UI)
 *   A reusable component designed to display a list of messages and provide an input field for sending new messages.
-*   Supports both 'user' and 'ai' sender types, with distinct styling and icons (`User2`, `Bot`).
-*   Includes a loading indicator (`Loader2`) when `isLoading` is true.
+*   Supports both 'user' and 'ai' sender types, with distinct styling.
+*   Includes a loading indicator (`Loader2` styled with `text-muted-foreground`) when `isLoading` is true.
 *   Automatically scrolls to the bottom of the chat on new messages.
 *   Handles message input and sending via `onSendMessage` prop.
 *   **Markdown Rendering:** Integrates `react-markdown` with `remarkGfm` to correctly render Markdown formatting in AI responses, improving readability.
@@ -227,8 +230,8 @@ This Deno-based serverless function is the core backend logic for video analysis
 *   **Longcat AI API Call (Blog Post Generation - if new analysis):** After successful sentiment analysis, a *second* `POST` request is made to Longcat AI.
     *   A `blogPostPrompt` is crafted, providing all video details, analysis results, and top comments.
     *   **SEO Prompt Refinements:** The AI is explicitly instructed to generate:
-        *   A compelling, SEO-optimized title (max 60 chars) following the pattern `{{VideoTitle}} YouTube Comment Sentiment Analysis ({{Year}}) | SentiVibe`.
-        *   A concise meta description (max 155 chars) including target keywords.
+        *   A compelling, SEO-optimized title following the pattern `{{VideoTitle}} YouTube Comment Sentiment Analysis ({{Year}}) | SentiVibe`.
+        *   A concise meta description: `Discover how audiences responded to {{VideoTitle}} with SentiVibe's AI comment analysis: sentiment, emotions, key themes.`.
         *   A clean, URL-friendly slug (lowercase, hyphen-separated, no path segments).
         *   Structured content with `<h1>`, `<h2>`, and `<h3>` headings.
         *   Content that naturally sprinkles keyword variations.
@@ -273,10 +276,11 @@ This Deno-based serverless function handles the conversational AI aspect. **It n
 ## 6. Styling and Branding
 *   **Tailwind CSS:** Used extensively for all styling, providing a utility-first approach.
 *   **`src/globals.css`:**
-    *   Defines custom CSS variables for a **black and white color palette** for both light and dark modes. This ensures consistent theming across the application.
+    *   Defines custom CSS variables for the **Crowd Black** and **Pure White** color palette for both light and dark modes. This ensures consistent theming across the application.
+    *   Includes specific variables for **Positive Green**, **Neutral Gray**, **Negative Red**, and **Accent Blue** to be used for sentiment and interactive elements.
     *   Applies the `Arimo` font globally to the `body` element.
-*   **`tailwind.config.ts`:** Configures Tailwind to use `Arimo` as the default `font-sans` family.
-*   **Branding:** The application features a "SentiVibe" word logo with `text-3xl font-extrabold tracking-tight` styling in the header and `text-5xl font-extrabold tracking-tight` on the landing page, replacing any image-based logos.
+*   **`tailwind.config.ts`:** Configures Tailwind to use `Arimo` as the default `font-sans` family and `Plus Jakarta Sans` for `font-heading`. It also extends the color palette with the new brand colors and sentiment-specific colors.
+*   **Branding:** The application features a distinct "SentiVibe" word logo with `text-3xl font-extrabold tracking-tight` styling in the header and `text-5xl font-extrabold tracking-tight` on the landing page, using the `font-heading` (Plus Jakarta Sans) typeface. The "Vibe" part of the logo is highlighted with the `text-accent` color.
 
 ## 7. Dependencies
 Key dependencies include:

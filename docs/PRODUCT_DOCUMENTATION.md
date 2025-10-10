@@ -3,7 +3,11 @@
 ## 1. Product Overview
 **SentiVibe** is an innovative web application designed to empower users with deep insights into public sentiment surrounding YouTube videos. By leveraging advanced AI, SentiVibe analyzes video comments to extract overall sentiment, emotional tones, key themes, and actionable summary insights. Beyond static reports, it now offers a **context-aware conversational AI** that can answer follow-up questions, drawing from the video analysis, top comments, external up-to-date information, and its own general knowledge. It also features **programmatic SEO**, automatically generating and publishing SEO-optimized blog posts for each video analysis, and organizing them in a searchable **Video Analysis Library**. It's an essential tool for content creators, marketers, researchers, and anyone interested in understanding audience reactions to online video content.
 
-**Mission:** To unlock the true sentiment and key discussions within YouTube comments, providing clear, AI-driven analysis, intelligent conversational insights, and automatically generated, discoverable content that helps users understand their audience better and expand their reach.
+**Mission:** To decode the voice of the crowd—transforming unstructured online reactions into clear, actionable insight.
+**Tagline:** “See what the crowd really feels.”
+**Extended Descriptor:** AI‑powered YouTube Comment Insights & Sentiment Analysis
+**Tone:** Professional clarity + warm confidence + data‑science credibility.
+**Voice keywords:** Insightful, factual, transparent, modern, minimal.
 
 ## 2. Key Features
 
@@ -34,7 +38,7 @@
 *   **SEO Optimization:** Each generated blog post includes:
     *   A compelling, SEO-optimized title (e.g., `{{VideoTitle}} YouTube Comment Sentiment Analysis ({{Year}}) | SentiVibe`).
     *   A URL-friendly slug (e.g., `/blog/{{slugified-video-title}}`).
-    *   A concise meta description (e.g., `Analyze YouTube comments on {{VideoTitle}} to discover audience sentiment, insights, and reactions instantly with AI.`).
+    *   A concise meta description (e.g., `Discover how audiences responded to {{VideoTitle}} with SentiVibe's AI comment analysis: sentiment, emotions, key themes.`).
     *   A list of relevant keywords.
     *   Structured content with appropriate headings (H1, H2, H3) in Markdown format, following a logical content block layout (Intro, Sentiment Summary, Top Keywords, Viewer Insights, Conclusion/CTA).
     *   **Dynamic Meta Tags:** Blog post detail pages dynamically update the browser title and meta description for optimal search engine indexing.
@@ -62,22 +66,24 @@
 
 ### 2.5. Interactive & Clear Analysis Reports
 *   **Structured Display:** Analysis results are presented in a clean, easy-to-read card format.
-*   **Visual Cues:** Uses badges to highlight sentiment, emotional tones, and key themes for quick comprehension.
+*   **Visual Cues:** Uses **Positive Green**, **Negative Red**, and **Neutral Gray** badges to highlight sentiment, emotional tones, and key themes for quick comprehension.
 *   **Raw Comment Snippets:** Displays the top 10 most popular comments (by like count) to give users a direct glimpse into the source data.
-*   **Loading Indicators:** Provides clear visual feedback during the analysis process, including fetching external context, with skeleton loaders and spinning icons.
+*   **Loading Indicators:** Provides clear visual feedback during the analysis process, including fetching external context, with skeleton loaders and spinning icons in **Accent Blue**.
 *   **Error Handling:** Displays user-friendly alerts for any issues encountered during analysis (e.g., invalid link, insufficient comments, API errors).
 *   **Formatted Chat Responses:** AI responses in the chat interface are now rendered with proper Markdown formatting, improving readability and presentation.
 *   **Enhanced Navigation:** Each analysis report includes a direct link to its corresponding SEO-optimized blog post in the library, and a link to the original YouTube video.
 
 ### 2.6. Professional PDF Report Export
 *   **One-Click Download:** Users can easily download the complete analysis report as a beautifully formatted PDF document.
+*   **Branded Header:** The PDF report includes a header featuring the SentiVibe logo and the tagline "YouTube Audience Insight Report — Powered by SentiVibe."
 *   **Shareable & Archivable:** Ideal for sharing insights with teams, clients, or for archiving research findings.
 *   **Customizable Filename:** The PDF filename is automatically generated based on the video title for easy organization.
 
 ### 2.7. Responsive & Modern User Interface
 *   **Intuitive Design:** A clean, minimalist interface built with Shadcn/ui components and Tailwind CSS.
 *   **Mobile-Friendly:** The application is designed to be fully responsive, providing an optimal experience across desktops, tablets, and mobile devices.
-*   **Consistent Branding:** Features a sleek black and white theme with the elegant "Arimo" font and a prominent "SentiVibe" word logo, ensuring a professional and unified brand presence.
+*   **Consistent Branding:** Features a sleek **Crowd Black** and **Pure White** theme with **Positive Green**, **Negative Red**, and **Accent Blue** for emotional cues and interactive elements. The application uses the **Arimo** font for body text and **Plus Jakarta Sans** for headings and the prominent "SentiVibe" word logo, ensuring a professional and unified brand presence.
+*   **Theme Toggle:** Users can switch between light and dark modes using a dedicated theme toggle.
 
 ## 3. How to Use SentiVibe
 
@@ -89,9 +95,10 @@
 6.  **Review Report & Blog Post:** Once the analysis is complete, a detailed report will appear. You will see a "View Blog Post" button to navigate to the full, SEO-optimized blog post, and an "Original Video" button to view the YouTube video.
 7.  **Customize AI Chat (Optional):** Before chatting, use the dropdowns above the chat interface to select your preferred **AI Persona** and **Response Length**.
 8.  **Chat with AI:** Below the analysis report, a chat interface will appear. You can now ask questions about the video, its comments, or related topics. The AI will use all available context and your chosen persona/length preferences to provide informed answers.
-9.  **Download PDF Report:** To save or share the report, click the "Download Report PDF" button. A PDF file will be generated and downloaded to your device.
+9.  **Download PDF Report:** To save or share the report, click the "Download Report PDF" button. A PDF file will be generated and downloaded to your device, featuring a branded header.
 10. **Explore the Analysis Library:** Navigate to the "Analysis Library" from the header. Here, you can browse all past video analyses, search by video title, creator, or keywords, and click on any entry to view its full blog post.
 11. **Chat from Library (New!):** From a blog post detail page, click the "Chat with AI" button to seamlessly transition to the analysis page with the blog post's context pre-loaded, ready for conversation.
+12. **Toggle Theme:** Use the moon/sun icon in the header to switch between light and dark modes.
 
 ## 4. Value Proposition
 SentiVibe provides immense value by:
@@ -101,9 +108,10 @@ SentiVibe provides immense value by:
 *   **Personalized Interaction:** Users can tailor the AI's conversational style and response detail to match their specific needs and preferences.
 *   **Informing Strategy:** Helps content creators understand what resonates with their audience, marketers to gauge campaign reception, and researchers to analyze public opinion with a more complete picture.
 *   **Providing Actionable Data:** The weighted analysis ensures that the most impactful opinions are prioritized, and the AI can elaborate on these.
-*   **Professional Reporting:** Enables easy sharing of findings with high-quality PDF reports.
+*   **Professional Reporting:** Enables easy sharing of findings with high-quality PDF reports, now with a professional branded header.
 *   **Cost-Effective Intelligence:** Streamlined external search ensures you get the necessary up-to-date information without incurring excessive API costs.
 *   **Boosting SEO & Content Strategy:** Automatically generates valuable, SEO-optimized content, expanding your digital footprint and making your insights discoverable to a wider audience through search engines. The searchable library further enhances content discoverability within the app, **ensuring no duplicate blog posts for the same video.** Comprehensive SEO features like dynamic meta tags, structured data, Open Graph tags, and proper alt text ensure maximum visibility and crawlability.
 *   **Seamless Workflow:** The ability to initiate AI chat directly from a saved blog post creates a more integrated and efficient user workflow, allowing for immediate follow-up questions on past analyses.
+*   **Modern & Intuitive Experience:** A sleek, responsive, and themeable user interface that aligns with modern design principles and your distinct brand identity.
 
 SentiVibe is continuously evolving, with a strong foundation laid for future enhancements to further enrich your video analysis, conversational AI, and content generation experience.
