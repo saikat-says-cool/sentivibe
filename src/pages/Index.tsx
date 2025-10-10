@@ -13,7 +13,7 @@ function Index() {
       <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-2xl">
         Unlock the true sentiment behind YouTube comments. Analyze, understand, and gain insights into audience reactions with AI-powered sentiment analysis.
       </p>
-      <div className="space-x-4">
+      <div className="flex flex-col sm:flex-row sm:space-x-4 space-y-2 sm:space-y-0">
         {session ? (
           <Button asChild size="lg" className="bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200">
             <Link to="/analyze-video">Analyze a Video</Link>

@@ -1,10 +1,10 @@
 import React, { useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom'; // Added useNavigate
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, ArrowLeft, Youtube, MessageSquare } from 'lucide-react'; // Added MessageSquare
+import { Loader2, ArrowLeft, Youtube, MessageSquare } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -18,7 +18,7 @@ interface AiAnalysisResult {
 }
 
 interface StoredAiAnalysisContent extends AiAnalysisResult {
-  raw_comments_for_chat?: string[]; // Added for chat context
+  raw_comments_for_chat?: string[];
 }
 
 interface BlogPost {
@@ -36,7 +36,7 @@ interface BlogPost {
   original_video_link: string;
   created_at: string;
   updated_at: string;
-  ai_analysis_json: StoredAiAnalysisContent | null; // Updated to new interface
+  ai_analysis_json: StoredAiAnalysisContent | null;
 }
 
 const fetchBlogPostBySlug = async (slug: string): Promise<BlogPost | null> => {
@@ -47,7 +47,7 @@ const fetchBlogPostBySlug = async (slug: string): Promise<BlogPost | null> => {
     .eq('slug', slug)
     .single();
 
-  if (error && error.code !== 'PGRST116') { // PGRST116 means no rows found
+  if (error && error.code !== 'PGRST116') {
     console.error("Supabase fetch error:", error);
     throw new Error(error.message);
   }
@@ -57,13 +57,13 @@ const fetchBlogPostBySlug = async (slug: string): Promise<BlogPost | null> => {
 
 const BlogPostDetail = () => {
   const { slug } = useParams<{ slug: string }>();
-  const navigate = useNavigate(); // Initialize useNavigate
+  const navigate = useNavigate();
   console.log("Current URL slug from useParams:", slug);
 
   const { data: blogPost, isLoading, error } = useQuery<BlogPost | null, Error>({
     queryKey: ['blogPost', slug],
     queryFn: () => fetchBlogPostBySlug(slug!),
-    enabled: !!slug, // Only run query if slug is available
+    enabled: !!slug,
   });
 
   console.log("useQuery state - isLoading:", isLoading, "error:", error, "blogPost:", blogPost);
@@ -212,11 +212,11 @@ const BlogPostDetail = () => {
 
   return (
     <div className="container mx-auto p-4 max-w-3xl">
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-2">
         <Link to="/library" className="text-blue-500 hover:underline flex items-center w-fit">
           <ArrowLeft className="h-4 w-4 mr-2" /> Back to Analysis Library
         </Link>
-        <div className="flex space-x-2"> {/* Group buttons */}
+        <div className="flex flex-wrap gap-2">
           <Button asChild>
             <Link to="/analyze-video">Analyze a New Video</Link>
           </Button>
