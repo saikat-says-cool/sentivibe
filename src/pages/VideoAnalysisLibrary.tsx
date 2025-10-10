@@ -8,6 +8,17 @@ import { Loader2, Search, Youtube } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
 
+interface AiAnalysisResult {
+  overall_sentiment: string;
+  emotional_tones: string[];
+  key_themes: string[];
+  summary_insights: string;
+}
+
+interface StoredAiAnalysisContent extends AiAnalysisResult {
+  raw_comments_for_chat?: string[];
+}
+
 interface BlogPost {
   id: string;
   video_id: string;
@@ -22,6 +33,8 @@ interface BlogPost {
   thumbnail_url: string;
   created_at: string;
   updated_at: string;
+  original_video_link: string; // Added this as it's now stored
+  ai_analysis_json: StoredAiAnalysisContent | null; // Added this
 }
 
 const fetchBlogPosts = async (): Promise<BlogPost[]> => {

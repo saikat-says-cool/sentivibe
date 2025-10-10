@@ -1,14 +1,25 @@
 import React, { useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom'; // Added useNavigate
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, ArrowLeft, Youtube } from 'lucide-react';
+import { Loader2, ArrowLeft, Youtube, MessageSquare } from 'lucide-react'; // Added MessageSquare
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
+
+interface AiAnalysisResult {
+  overall_sentiment: string;
+  emotional_tones: string[];
+  key_themes: string[];
+  summary_insights: string;
+}
+
+interface StoredAiAnalysisContent extends AiAnalysisResult {
+  raw_comments_for_chat?: string[]; // Added for chat context
+}
 
 interface BlogPost {
   id: string;
@@ -25,6 +36,7 @@ interface BlogPost {
   original_video_link: string;
   created_at: string;
   updated_at: string;
+  ai_analysis_json: StoredAiAnalysisContent | null; // Updated to new interface
 }
 
 const fetchBlogPostBySlug = async (slug: string): Promise<BlogPost | null> => {
@@ -45,6 +57,7 @@ const fetchBlogPostBySlug = async (slug: string): Promise<BlogPost | null> => {
 
 const BlogPostDetail = () => {
   const { slug } = useParams<{ slug: string }>();
+  const navigate = useNavigate(); // Initialize useNavigate
   console.log("Current URL slug from useParams:", slug);
 
   const { data: blogPost, isLoading, error } = useQuery<BlogPost | null, Error>({
@@ -203,9 +216,17 @@ const BlogPostDetail = () => {
         <Link to="/library" className="text-blue-500 hover:underline flex items-center w-fit">
           <ArrowLeft className="h-4 w-4 mr-2" /> Back to Analysis Library
         </Link>
-        <Button asChild>
-          <Link to="/analyze-video">Analyze a New Video</Link>
-        </Button>
+        <div className="flex space-x-2"> {/* Group buttons */}
+          <Button asChild>
+            <Link to="/analyze-video">Analyze a New Video</Link>
+          </Button>
+          <Button 
+            onClick={() => navigate('/analyze-video', { state: { blogPost: blogPost } })} 
+            className="flex items-center gap-2"
+          >
+            <MessageSquare className="h-4 w-4" /> Chat with AI
+          </Button>
+        </div>
       </div>
       <Card className="mb-6">
         <CardHeader>

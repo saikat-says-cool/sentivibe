@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react"; // Added useEffect
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,13 +22,35 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Link } from "react-router-dom"; // Import Link from react-router-dom
+import { Link, useLocation } from "react-router-dom"; // Import Link and useLocation from react-router-dom
 
 interface AiAnalysisResult {
   overall_sentiment: string;
   emotional_tones: string[];
   key_themes: string[];
   summary_insights: string;
+}
+
+interface StoredAiAnalysisContent extends AiAnalysisResult {
+  raw_comments_for_chat?: string[];
+}
+
+interface BlogPost {
+  id: string;
+  video_id: string;
+  title: string;
+  slug: string;
+  meta_description: string;
+  keywords: string[];
+  content: string;
+  published_at: string;
+  author_id: string;
+  creator_name: string;
+  thumbnail_url: string;
+  original_video_link: string;
+  created_at: string;
+  updated_at: string;
+  ai_analysis_json: StoredAiAnalysisContent | null;
 }
 
 interface AnalysisResponse {
@@ -41,7 +63,7 @@ interface AnalysisResponse {
   comments: string[];
   aiAnalysis: AiAnalysisResult;
   blogPostSlug?: string;
-  originalVideoLink?: string; // Added originalVideoLink
+  originalVideoLink?: string;
 }
 
 interface Message {
@@ -51,6 +73,9 @@ interface Message {
 }
 
 const AnalyzeVideo = () => {
+  const location = useLocation();
+  const initialBlogPost = location.state?.blogPost as BlogPost | undefined;
+
   const [videoLink, setVideoLink] = useState("");
   const [customInstructions, setCustomInstructions] = useState("");
   const [analysisResult, setAnalysisResult] = useState<AnalysisResponse | null>(null);
@@ -60,6 +85,44 @@ const AnalyzeVideo = () => {
   const [outputLengthPreference, setOutputLengthPreference] = useState<string>("standard");
   const [selectedPersona, setSelectedPersona] = useState<string>("friendly");
   const analysisReportRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (initialBlogPost) {
+      // Reconstruct AnalysisResponse from initialBlogPost
+      const loadedAnalysis: AnalysisResponse = {
+        videoTitle: initialBlogPost.title,
+        videoDescription: initialBlogPost.meta_description,
+        videoThumbnailUrl: initialBlogPost.thumbnail_url,
+        videoTags: initialBlogPost.keywords || [],
+        creatorName: initialBlogPost.creator_name || 'Unknown Creator',
+        videoSubtitles: '', // Subtitles are not stored in blog_posts
+        comments: initialBlogPost.ai_analysis_json?.raw_comments_for_chat || [], // Get comments from stored AI analysis
+        aiAnalysis: {
+          overall_sentiment: initialBlogPost.ai_analysis_json?.overall_sentiment || 'N/A',
+          emotional_tones: initialBlogPost.ai_analysis_json?.emotional_tones || [],
+          key_themes: initialBlogPost.ai_analysis_json?.key_themes || [],
+          summary_insights: initialBlogPost.ai_analysis_json?.summary_insights || 'No insights available.',
+        },
+        blogPostSlug: initialBlogPost.slug,
+        originalVideoLink: initialBlogPost.original_video_link,
+      };
+      setAnalysisResult(loadedAnalysis);
+
+      // Trigger external context fetch for the loaded video
+      const searchQuery = `${loadedAnalysis.videoTitle} ${loadedAnalysis.videoTags.join(' ')}`;
+      fetchExternalContextMutation.mutate(searchQuery);
+
+      setChatMessages([
+        {
+          id: 'ai-initial-loaded',
+          sender: 'ai',
+          text: `Analysis for "${loadedAnalysis.videoTitle}" loaded. What would you like to know about it?`,
+        },
+      ]);
+      // Clear the state so that refreshing the page doesn't re-load the same blog post
+      // navigate(location.pathname, { replace: true }); // This might be tricky with direct URL access
+    }
+  }, [initialBlogPost]); // Depend on initialBlogPost
 
   const fetchExternalContextMutation = useMutation({
     mutationFn: async (query: string) => {
@@ -230,6 +293,7 @@ const AnalyzeVideo = () => {
                 onChange={(e) => setVideoLink(e.target.value)}
                 required
                 className="mt-1"
+                disabled={!!analysisResult || analyzeVideoMutation.isPending}
               />
             </div>
             <div>
@@ -240,9 +304,10 @@ const AnalyzeVideo = () => {
                 value={customInstructions}
                 onChange={(e) => setCustomInstructions(e.target.value)}
                 className="mt-1 min-h-[80px]"
+                disabled={!!analysisResult || analyzeVideoMutation.isPending}
               />
             </div>
-            <Button type="submit" className="w-full" disabled={analyzeVideoMutation.isPending}>
+            <Button type="submit" className="w-full" disabled={!!analysisResult || analyzeVideoMutation.isPending}>
               {analyzeVideoMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Analyze Comments
             </Button>

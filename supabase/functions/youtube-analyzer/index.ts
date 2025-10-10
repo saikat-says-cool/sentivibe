@@ -107,8 +107,13 @@ serve(async (req) => {
         videoTags: existingBlogPost.keywords, // Using keywords as a fallback for video tags
         creatorName: existingBlogPost.creator_name,
         videoSubtitles: '', // Subtitles are not stored, so keep empty
-        comments: [], // Raw comments are not stored for reuse, so keep empty
-        aiAnalysis: existingBlogPost.ai_analysis_json, // Use the stored AI analysis
+        comments: existingBlogPost.ai_analysis_json?.raw_comments_for_chat || [], // Extract comments from stored AI analysis
+        aiAnalysis: { // Reconstruct AiAnalysisResult from stored JSON
+          overall_sentiment: existingBlogPost.ai_analysis_json?.overall_sentiment || 'N/A',
+          emotional_tones: existingBlogPost.ai_analysis_json?.emotional_tones || [],
+          key_themes: existingBlogPost.ai_analysis_json?.key_themes || [],
+          summary_insights: existingBlogPost.ai_analysis_json?.summary_insights || 'No insights available.',
+        },
         blogPostSlug: existingBlogPost.slug,
         originalVideoLink: existingBlogPost.original_video_link, // Include original video link
       }), {
@@ -399,7 +404,10 @@ serve(async (req) => {
         creator_name: creatorName, // New column
         thumbnail_url: videoThumbnailUrl, // New column
         original_video_link: videoLink, // Store the original video link
-        ai_analysis_json: aiAnalysis, // Store the full AI analysis JSON
+        ai_analysis_json: { // Store the full AI analysis JSON AND top comments for chat context
+          ...aiAnalysis,
+          raw_comments_for_chat: allFetchedCommentsText.slice(0, 10), // Store top 10 comments
+        },
       });
 
     if (insertError) {
@@ -419,7 +427,7 @@ serve(async (req) => {
       videoTags: videoTags,               // Include video tags
       creatorName: creatorName,           // Include creator name
       videoSubtitles: videoSubtitles, // Will be an empty string for now
-      comments: allFetchedCommentsText,
+      comments: allFetchedCommentsText, // Return all fetched comments for initial display
       aiAnalysis: aiAnalysis,
       blogPostSlug: generatedBlogPost.slug, // Return the slug for linking
       originalVideoLink: videoLink, // Return the original video link
