@@ -57,19 +57,19 @@ serve(async (req) => {
     }
 
     // Determine max_tokens based on outputLengthPreference
-    let maxTokens = 500; // Default to a reasonable standard length
+    let maxTokens = 800; // Default to a reasonable standard length
     switch (outputLengthPreference) {
       case 'concise':
-        maxTokens = 200; 
+        maxTokens = 400; 
         break;
       case 'standard':
-        maxTokens = 600; 
+        maxTokens = 800; 
         break;
       case 'detailed':
-        maxTokens = 1000;
+        maxTokens = 1200;
         break;
       default:
-        maxTokens = 600; 
+        maxTokens = 800; 
     }
 
     // Base instructions for all personas, emphasizing completeness
