@@ -16,6 +16,7 @@ The application is built using the following technologies:
 *   **PDF Generation:** `html2pdf.js`
 *   **Icons:** `lucide-react`
 *   **Utilities:** `clsx`, `tailwind-merge` (`cn` utility)
+*   **Markdown Rendering:** `react-markdown`
 *   **Font:** Google Fonts (Arimo)
 
 ## 3. Project Structure
@@ -85,11 +86,11 @@ The project follows a standard React application structure with specific directo
 *   Displays a "Welcome to SentiVibe" message.
 
 ### 4.5. `AnalyzeVideo.tsx` (Video Analysis Page)
-*   **State Management:** Manages `videoLink` input, `customInstructions`, `analysisResult`, `error`, `chatMessages`, and `externalContext` states using `useState`.
+*   **State Management:** Manages `videoLink` input, `customInstructions`, `analysisResult`, `error`, `chatMessages`, `externalContext`, `outputLengthPreference`, and `selectedPersona` states using `useState`.
 *   **Supabase Edge Function Invocation:**
     *   **`analyzeVideoMutation`:** Uses `useMutation` to call the `youtube-analyzer` Supabase Edge Function. `onSuccess` updates `analysisResult` and then triggers `fetchExternalContextMutation`.
     *   **`fetchExternalContextMutation`:** A new `useMutation` hook that calls the `fetch-external-context` Edge Function *once* after a successful video analysis. It uses the video title and tags as a search query and stores the results in `externalContext` state.
-    *   **`chatMutation`:** Uses `useMutation` to handle asynchronous calls to the `chat-analyzer` Supabase Edge Function. It sends the `userMessage`, `chatMessages` history, `analysisResult`, and the pre-fetched `externalContext`.
+    *   **`chatMutation`:** Uses `useMutation` to handle asynchronous calls to the `chat-analyzer` Supabase Edge Function. It sends the `userMessage`, `chatMessages` history, `analysisResult`, the pre-fetched `externalContext`, and the user's `outputLengthPreference` and `selectedPersona`.
 *   **UI Elements:**
     *   `Input` for video link submission.
     *   `Textarea` for custom instructions.
@@ -100,6 +101,7 @@ The project follows a standard React application structure with specific directo
     *   `Badge` components are used to display sentiment, emotional tones, and key themes.
     *   `Collapsible` component is prepared for subtitles (though currently empty).
     *   `ChatInterface` component is rendered after a successful analysis, displaying conversation history and allowing user input. The chat input is disabled while analysis or external context fetching is pending.
+    *   **AI Controls:** Includes `Select` components for `outputLengthPreference` (Concise, Standard, Detailed) and `selectedPersona` (Friendly Assistant, Therapist, Storyteller, Motivational Coach, Argumentative), allowing users to customize the AI's behavior.
 *   **PDF Download:**
     *   Integrates `html2pdf.js` to convert the analysis results `Card` into a downloadable PDF.
     *   A `useRef` (`analysisReportRef`) is used to target the specific DOM element for conversion.
@@ -111,6 +113,7 @@ The project follows a standard React application structure with specific directo
 *   Includes a loading indicator (`Loader2`) when `isLoading` is true.
 *   Automatically scrolls to the bottom of the chat on new messages.
 *   Handles message input and sending via `onSendMessage` prop.
+*   **Markdown Rendering:** Integrates `react-markdown` to correctly render Markdown formatting in AI responses, improving readability.
 
 ## 5. Supabase Integration Details
 
@@ -173,13 +176,12 @@ This new Deno-based serverless function is responsible for fetching external, up
 This Deno-based serverless function handles the conversational AI aspect.
 *   **CORS Handling:** Includes `corsHeaders` and handles `OPTIONS` preflight requests.
 *   **Supabase Client Initialization & User Authentication:** Verifies the user.
-*   **Input:** Receives `userMessage`, `chatMessages` (conversation history), `analysisResult` (full video analysis including top comments), and `externalContext` (pre-fetched Google search results) from the frontend.
+*   **Input:** Receives `userMessage`, `chatMessages` (conversation history), `analysisResult` (full video analysis including top comments), `externalContext` (pre-fetched Google search results), `outputLengthPreference`, and `selectedPersona` from the frontend.
 *   **API Key Retrieval:** Accesses `LONGCAT_AI_API_KEY` from Supabase environment secrets.
+*   **Dynamic `max_tokens`:** Adjusts the `max_tokens` parameter for the Longcat AI API call based on the `outputLengthPreference` (concise, standard, detailed) received from the frontend.
+*   **Dynamic `systemPrompt`:** Constructs the AI's `systemPrompt` based on the `selectedPersona` (Friendly Assistant, Therapist, Storyteller, Motivational Coach, Argumentative), guiding the AI's tone, style, and conversational boundaries.
 *   **Prompt Construction:**
-    *   **System Prompt:** Defines the AI's persona (`SentiVibe AI`) and a clear hierarchy for information usage:
-        1.  **Prioritize:** Video analysis context (including top comments) for video-specific questions.
-        2.  **Augment:** Provided `externalContext` for up-to-date or broader context, relating it back to the video.
-        3.  **Leverage:** AI's own pre-existing knowledge for general, time-independent questions not covered by the above.
+    *   **System Prompt:** Dynamically generated based on persona, including instructions for information prioritization and adherence to response length.
     *   **Analysis Context:** Formats `analysisResult` (video details, sentiment, themes, summary, and **top 10 raw comments**) into a dedicated string.
     *   **External Context:** Integrates the received `externalContext` into the user's prompt, clearly labeled.
     *   **Conversation History:** Appends formatted `chatMessages` to maintain conversational flow.
@@ -205,6 +207,7 @@ Key dependencies include:
 *   `html2pdf.js`: Client-side PDF generation.
 *   `tailwind-merge`, `clsx`: Utilities for merging Tailwind CSS classes.
 *   `sonner`: For toast notifications.
+*   `react-markdown`: For rendering Markdown in chat messages.
 *   Shadcn/ui components and their Radix UI foundations.
 *   Google Custom Search API (external service).
 

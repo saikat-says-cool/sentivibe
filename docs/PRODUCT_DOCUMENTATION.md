@@ -29,6 +29,8 @@
 
 ### 2.3. Context-Aware Conversational AI
 *   **Interactive Q&A:** After a video analysis, users can engage in a chat with SentiVibe AI to ask follow-up questions about the video, its comments, or related topics.
+*   **Customizable AI Persona:** Users can select from various AI personas (e.g., Friendly Assistant, Therapist, Storyteller, Motivational Coach, Argumentative) to tailor the AI's tone and conversational style to their preference.
+*   **Adjustable Response Length:** Users have explicit control over the AI's response verbosity, choosing between concise, standard, or detailed answers.
 *   **Multi-Source Intelligence:** The AI intelligently synthesizes information from:
     *   **Video Analysis Report:** All details from the initial analysis (sentiment, themes, summary).
     *   **Exact Top Comments:** The raw text of the top 10 most popular comments, allowing for deep dives into audience feedback.
@@ -42,6 +44,7 @@
 *   **Raw Comment Snippets:** Displays the top 10 most popular comments (by like count) to give users a direct glimpse into the source data.
 *   **Loading Indicators:** Provides clear visual feedback during the analysis process, including fetching external context, with skeleton loaders and spinning icons.
 *   **Error Handling:** Displays user-friendly alerts for any issues encountered during analysis (e.g., invalid link, insufficient comments, API errors).
+*   **Formatted Chat Responses:** AI responses in the chat interface are now rendered with proper Markdown formatting, improving readability and presentation.
 
 ### 2.5. Professional PDF Report Export
 *   **One-Click Download:** Users can easily download the complete analysis report as a beautifully formatted PDF document.
@@ -67,13 +70,15 @@
     *   Key themes.
     *   A summary of insights.
     *   The top 10 most popular raw comments.
-7.  **Chat with AI:** Below the analysis report, a chat interface will appear. You can now ask questions about the video, its comments, or related topics. The AI will use all available context to provide informed answers.
-8.  **Download PDF Report:** To save or share the report, click the "Download Report PDF" button. A PDF file will be generated and downloaded to your device.
+7.  **Customize AI Chat (Optional):** Before chatting, use the dropdowns above the chat interface to select your preferred **AI Persona** and **Response Length**.
+8.  **Chat with AI:** Below the analysis report, a chat interface will appear. You can now ask questions about the video, its comments, or related topics. The AI will use all available context and your chosen persona/length preferences to provide informed answers.
+9.  **Download PDF Report:** To save or share the report, click the "Download Report PDF" button. A PDF file will be generated and downloaded to your device.
 
 ## 4. Value Proposition
 SentiVibe provides immense value by:
 *   **Saving Time:** Automates the tedious process of manually sifting through thousands of comments and researching related topics.
 *   **Gaining Deeper Understanding:** Offers AI-driven insights and interactive conversations that go beyond surface-level reading, incorporating direct audience feedback and broader context.
+*   **Personalized Interaction:** Users can tailor the AI's conversational style and response detail to match their specific needs and preferences.
 *   **Informing Strategy:** Helps content creators understand what resonates with their audience, marketers to gauge campaign reception, and researchers to analyze public opinion with a more complete picture.
 *   **Providing Actionable Data:** The weighted analysis ensures that the most impactful opinions are prioritized, and the AI can elaborate on these.
 *   **Professional Reporting:** Enables easy sharing of findings with high-quality PDF reports.
