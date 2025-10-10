@@ -45,7 +45,7 @@ const BlogPostDetail = () => {
 
   const { data: blogPost, isLoading, error } = useQuery<BlogPost | null, Error>({
     queryKey: ['blogPost', slug],
-    queryFn: () => fetchBlogPostBySlug(`/analyze/youtube-comments/${slug!}`), // Fetch with prefixed slug
+    queryFn: () => fetchBlogPostBySlug(slug!), // FIX IS HERE: Pass slug directly
     enabled: !!slug, // Only run query if slug is available
   });
 
