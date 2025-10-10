@@ -8,6 +8,7 @@ import { Loader2, ArrowLeft, Youtube } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button'; // Import Button
 
 interface BlogPost {
   id: string;
@@ -153,9 +154,14 @@ const BlogPostDetail = () => {
 
   return (
     <div className="container mx-auto p-4 max-w-3xl">
-      <Link to="/library" className="text-blue-500 hover:underline mb-4 flex items-center w-fit">
-        <ArrowLeft className="h-4 w-4 mr-2" /> Back to Analysis Library
-      </Link>
+      <div className="flex justify-between items-center mb-4">
+        <Link to="/library" className="text-blue-500 hover:underline flex items-center w-fit">
+          <ArrowLeft className="h-4 w-4 mr-2" /> Back to Analysis Library
+        </Link>
+        <Button asChild>
+          <Link to="/analyze-video">Analyze a New Video</Link>
+        </Button>
+      </div>
       <Card className="mb-6">
         <CardHeader>
           {blogPost.thumbnail_url && (
@@ -171,6 +177,9 @@ const BlogPostDetail = () => {
           )}
           <p className="text-sm text-gray-500 dark:text-gray-400">
             Published on: {new Date(blogPost.published_at).toLocaleDateString()}
+            {blogPost.updated_at && blogPost.updated_at !== blogPost.published_at && (
+              <span> (Last updated: {new Date(blogPost.updated_at).toLocaleDateString()})</span>
+            )}
           </p>
           {blogPost.original_video_link && (
             <a 
