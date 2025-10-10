@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Youtube, Download, MessageSquare } from "lucide-react";
+import { Loader2, Youtube, Download, MessageSquare, Link as LinkIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -22,6 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Link } from "react-router-dom"; // Import Link from react-router-dom
 
 interface AiAnalysisResult {
   overall_sentiment: string;
@@ -35,9 +36,11 @@ interface AnalysisResponse {
   videoDescription: string;
   videoThumbnailUrl: string;
   videoTags: string[];
+  creatorName: string; // Added creatorName
   videoSubtitles: string;
   comments: string[];
   aiAnalysis: AiAnalysisResult;
+  blogPostSlug?: string; // Added blogPostSlug
 }
 
 interface Message {
@@ -270,7 +273,14 @@ const AnalyzeVideo = () => {
 
       {analysisResult && (
         <>
-          <div className="flex justify-end mb-4">
+          <div className="flex justify-end mb-4 space-x-2">
+            {analysisResult.blogPostSlug && (
+              <Button asChild variant="outline" className="flex items-center gap-2">
+                <Link to={`/blog/${analysisResult.blogPostSlug}`}>
+                  <LinkIcon className="h-4 w-4" /> View Blog Post
+                </Link>
+              </Button>
+            )}
             <Button onClick={handleDownloadPdf} className="flex items-center gap-2">
               <Download className="h-4 w-4" /> Download Report PDF
             </Button>
@@ -285,6 +295,9 @@ const AnalyzeVideo = () => {
                 />
               )}
               <CardTitle className="text-2xl">{analysisResult.videoTitle}</CardTitle>
+              {analysisResult.creatorName && (
+                <p className="text-md text-gray-600 dark:text-gray-400 mt-1">By: {analysisResult.creatorName}</p>
+              )}
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">{analysisResult.videoDescription}</p>
             </CardHeader>
             <CardContent className="space-y-6">

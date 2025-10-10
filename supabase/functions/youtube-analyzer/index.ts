@@ -66,7 +66,7 @@ serve(async (req) => {
       });
     }
 
-    // --- Fetch Video Details (Title, Description, Thumbnails, Tags) ---
+    // --- Fetch Video Details (Title, Description, Thumbnails, Tags, Channel Title) ---
     const videoDetailsApiUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=${youtubeApiKey}`;
     const videoDetailsResponse = await fetch(videoDetailsApiUrl);
 
@@ -85,6 +85,7 @@ serve(async (req) => {
     const videoDescription = videoSnippet?.description || 'No description available.';
     const videoThumbnailUrl = videoSnippet?.thumbnails?.high?.url || videoSnippet?.thumbnails?.medium?.url || '';
     const videoTags = videoSnippet?.tags || [];
+    const creatorName = videoSnippet?.channelTitle || 'Unknown Creator'; // Extract creator name
 
     const videoSubtitles = ''; // No subtitles will be fetched for now.
 
@@ -140,6 +141,7 @@ serve(async (req) => {
     
     Video Title: "${videoTitle}"
     Video Description: "${videoDescription}"
+    Video Creator: "${creatorName}"
     Video Tags: ${videoTags.length > 0 ? videoTags.join(', ') : 'None'}
 
     Respond in a structured JSON format.
@@ -159,7 +161,7 @@ serve(async (req) => {
       longcatPrompt += `\n\nUser's Custom Instructions: ${customInstructions}\n`;
     }
 
-    longcatPrompt += `\n\nNote: Subtitles were not available for this video. Please base your analysis solely on the comments, video title, description, and tags.`;
+    longcatPrompt += `\n\nNote: Subtitles were not available for this video. Please base your analysis solely on the comments, video title, description, tags, and creator name.`;
 
 
     const longcatApiUrl = "https://api.longcat.chat/openai/v1/chat/completions";
@@ -172,7 +174,7 @@ serve(async (req) => {
       body: JSON.stringify({
         model: "LongCat-Flash-Chat",
         messages: [
-          { "role": "system", "content": "You are an expert sentiment analysis AI. Your task is to analyze a YouTube video's comments, providing a concise summary of sentiment, emotional tone, key themes, and overall insights. Prioritize popular comments and use video title, description, and tags for broader context. Respond in a structured JSON format." },
+          { "role": "system", "content": "You are an expert sentiment analysis AI. Your task is to analyze a YouTube video's comments, providing a concise summary of sentiment, emotional tone, key themes, and overall insights. Prioritize popular comments and use video title, description, tags, and creator name for broader context. Respond in a structured JSON format." },
           { "role": "user", "content": longcatPrompt }
         ],
         max_tokens: 1000,
@@ -200,15 +202,112 @@ serve(async (req) => {
 
     const aiAnalysis = JSON.parse(aiContent);
 
+    // --- Generate SEO-optimized blog post ---
+    const blogPostPrompt = `Based on the following YouTube video analysis, generate a comprehensive, SEO-optimized blog post.
+    
+    Video Title: "${videoTitle}"
+    Video Description: "${videoDescription}"
+    Video Creator: "${creatorName}"
+    Video Tags: ${videoTags.length > 0 ? videoTags.join(', ') : 'None'}
+    Overall Sentiment: ${aiAnalysis.overall_sentiment}
+    Emotional Tones: ${aiAnalysis.emotional_tones.join(', ')}
+    Key Themes: ${aiAnalysis.key_themes.join(', ')}
+    Summary Insights: ${aiAnalysis.summary_insights}
+    Top Comments (for reference, do not list all):
+    ${allFetchedCommentsText.slice(0, 5).map((comment: string, index: number) => `- ${comment}`).join('\n')}
+
+    The blog post should:
+    1. Have a compelling, SEO-optimized title (max 70 characters).
+    2. Generate a URL-friendly slug from the title (lowercase, hyphen-separated).
+    3. Include a concise meta description (max 160 characters).
+    4. List 5-10 relevant keywords as an array.
+    5. Be structured with an H1 (the title), H2s for sections, and H3s for sub-sections.
+    6. Be at least 500 words long.
+    7. Discuss the public sentiment, emotional tones, and key themes of the video.
+    8. Incorporate insights from the summary and reference the top comments naturally.
+    9. Be written in Markdown format.
+
+    Respond in a structured JSON format:
+    {
+      "title": "SEO Optimized Blog Post Title",
+      "slug": "seo-optimized-blog-post-title",
+      "meta_description": "A concise meta description for search engines.",
+      "keywords": ["keyword1", "keyword2", "keyword3"],
+      "content": "# H1 Title\\n\\nIntroduction...\\n\\n## H2 Section\\n\\nContent...\\n\\n### H3 Sub-section\\n\\nMore content..."
+    }
+    `;
+
+    const blogPostResponse = await fetch(longcatApiUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${longcatApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: "LongCat-Flash-Chat", // Or a more capable model if available
+        messages: [
+          { "role": "system", "content": "You are an expert SEO content writer. Your task is to generate a detailed, SEO-optimized blog post in Markdown format based on provided video analysis data. Ensure the output is a valid JSON object." },
+          { "role": "user", "content": blogPostPrompt }
+        ],
+        max_tokens: 2000, // Increased tokens for a longer blog post
+        temperature: 0.7,
+        response_format: { type: "json_object" }
+      }),
+    });
+
+    if (!blogPostResponse.ok) {
+      const errorData = await blogPostResponse.json();
+      console.error('Longcat AI Blog Post API error:', errorData);
+      return new Response(JSON.stringify({ error: 'Failed to generate blog post from Longcat AI', details: errorData }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: blogPostResponse.status,
+      });
+    }
+
+    const blogPostData = await blogPostResponse.json();
+    let blogPostContent = blogPostData.choices[0].message.content;
+
+    if (blogPostContent.startsWith('```json') && blogPostContent.endsWith('```')) {
+      blogPostContent = blogPostContent.substring(7, blogPostContent.length - 3).trim();
+    }
+    const generatedBlogPost = JSON.parse(blogPostContent);
+
+    // Insert the generated blog post into the database
+    const { error: insertError } = await supabaseClient
+      .from('blog_posts')
+      .insert({
+        video_id: videoId,
+        title: generatedBlogPost.title,
+        slug: generatedBlogPost.slug,
+        meta_description: generatedBlogPost.meta_description,
+        keywords: generatedBlogPost.keywords,
+        content: generatedBlogPost.content,
+        published_at: new Date().toISOString(), // Publish immediately
+        author_id: user.id, // Link to the user who initiated the analysis
+        creator_name: creatorName, // New column
+        thumbnail_url: videoThumbnailUrl, // New column
+      });
+
+    if (insertError) {
+      console.error('Supabase Blog Post Insert Error:', insertError);
+      return new Response(JSON.stringify({ error: 'Failed to save blog post to database', details: insertError }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500,
+      });
+    }
+
+
     return new Response(JSON.stringify({
       message: `Successfully fetched comments and performed AI analysis for video ID: ${videoId}`,
       videoTitle: videoTitle,
       videoDescription: videoDescription,
       videoThumbnailUrl: videoThumbnailUrl, // Include thumbnail URL
       videoTags: videoTags,               // Include video tags
+      creatorName: creatorName,           // Include creator name
       videoSubtitles: videoSubtitles, // Will be an empty string for now
       comments: allFetchedCommentsText,
       aiAnalysis: aiAnalysis,
+      blogPostSlug: generatedBlogPost.slug, // Return the slug for linking
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
