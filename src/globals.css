@@ -102,4 +102,9 @@
   body {
     @apply bg-background text-foreground font-sans; /* Apply Arimo font */
   }
+
+  /* Custom rule to underline links within prose content */
+  .prose a {
+    text-decoration: underline;
+  }
 }
