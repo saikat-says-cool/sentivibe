@@ -1,8 +1,9 @@
 import React, { useRef, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Send, Bot, User2, Loader2 } from 'lucide-react'; // Added Loader2
+import { Send, Bot, User2, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import ReactMarkdown from 'react-markdown'; // Import ReactMarkdown
 
 interface Message {
   id: string;
@@ -67,7 +68,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ messages, onSendMessage, 
                   : "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-bl-none"
               )}
             >
-              <p className="text-sm">{message.text}</p>
+              {/* Use ReactMarkdown to render the message text */}
+              <ReactMarkdown className="text-sm prose dark:prose-invert">
+                {message.text}
+              </ReactMarkdown>
               <span className="text-xs opacity-75 mt-1 block">
                 {message.timestamp}
               </span>
