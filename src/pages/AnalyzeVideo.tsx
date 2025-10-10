@@ -126,73 +126,50 @@ const AnalyzeVideo = () => {
       // Add user message immediately
       setChatMessages((prev) => [...prev, newUserMessage]);
 
-      // Prepare a placeholder for the AI's streaming response
+      // Prepare a placeholder for the AI's response
       const aiMessageId = Date.now().toString() + '-ai';
       const aiPlaceholderMessage: Message = {
         id: aiMessageId,
         sender: 'ai',
-        text: '', // Start with empty text
+        text: 'Thinking...', // Placeholder text
       };
       setChatMessages((prev) => [...prev, aiPlaceholderMessage]);
 
-      // Manually fetch the stream from the Edge Function URL
-      const edgeFunctionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat-analyzer`;
-      const streamResponse = await fetch(edgeFunctionUrl, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      const { data, error: invokeError } = await supabase.functions.invoke('chat-analyzer', {
+        body: {
           userMessage: userMessageText,
           chatMessages: [...chatMessages, newUserMessage], // Send full history including new user message
           analysisResult: analysisResult,
           externalContext: externalContext,
           outputLengthPreference: outputLengthPreference,
           selectedPersona: selectedPersona,
-        }),
+        },
       });
 
-      if (!streamResponse.ok) {
-        const errorData = await streamResponse.json();
-        throw new Error(errorData.error?.message || "Failed to get AI response stream.");
+      if (invokeError) {
+        console.error("Supabase Function Invoke Error:", invokeError);
+        throw new Error(invokeError.message || "Failed to invoke chat function.");
       }
-
-      const reader = streamResponse.body?.getReader();
-      const decoder = new TextDecoder();
-      let accumulatedText = '';
-
-      if (!reader) {
-        throw new Error('Failed to get readable stream from AI response.');
-      }
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) {
-          break;
-        }
-        const chunk = decoder.decode(value, { stream: true });
-        accumulatedText += chunk;
-
-        // Update the specific AI message with the new chunk
-        setChatMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === aiMessageId ? { ...msg, text: accumulatedText } : msg
-          )
-        );
-      }
-      return { aiResponse: accumulatedText }; // Return the full response for onSuccess
+      
+      // Assuming data is { aiResponse: "..." }
+      return data.aiResponse;
     },
-    onSuccess: (data) => {
-      // The UI is already updated incrementally, so onSuccess just confirms completion
-      console.log("AI streaming complete:", data.aiResponse);
+    onSuccess: (aiResponseContent: string) => {
+      // Update the last AI message with the actual content
+      setChatMessages((prev) =>
+        prev.map((msg, index) =>
+          index === prev.length - 1 && msg.sender === 'ai' && msg.text === 'Thinking...'
+            ? { ...msg, text: aiResponseContent }
+            : msg
+        )
+      );
     },
     onError: (err: Error) => {
       console.error("Chat Error:", err);
       // Find the last AI placeholder message and update it with an error
       setChatMessages((prev) =>
         prev.map((msg, index) =>
-          index === prev.length - 1 && msg.sender === 'ai' && msg.text === ''
+          index === prev.length - 1 && msg.sender === 'ai' && msg.text === 'Thinking...'
             ? { ...msg, text: `Error: ${err.message}. Please try again.` }
             : msg
         )
@@ -401,7 +378,7 @@ const AnalyzeVideo = () => {
                   <Select
                     value={selectedPersona}
                     onValueChange={setSelectedPersona}
-                    disabled={isChatDisabled}
+                    disabled={chatMutation.isPending || fetchExternalContextMutation.isPending}
                   >
                     <SelectTrigger id="persona-select" className="w-[140px]">
                       <SelectValue placeholder="Select persona" />
@@ -420,7 +397,7 @@ const AnalyzeVideo = () => {
                   <Select
                     value={outputLengthPreference}
                     onValueChange={setOutputLengthPreference}
-                    disabled={isChatDisabled}
+                    disabled={chatMutation.isPending || fetchExternalContextMutation.isPending}
                   >
                     <SelectTrigger id="output-length" className="w-[140px]">
                       <SelectValue placeholder="Select length" />
