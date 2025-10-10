@@ -218,7 +218,7 @@ serve(async (req) => {
 
     The blog post should:
     1. Have a compelling, SEO-optimized title (max 70 characters).
-    2. Generate a URL-friendly slug from the title (lowercase, hyphen-separated).
+    2. Generate a URL-friendly slug from the title (lowercase, hyphen-separated, **without any leading or trailing slashes or path segments**).
     3. Include a concise meta description (max 160 characters).
     4. List 5-10 relevant keywords as an array.
     5. Be structured with an H1 (the title), H2s for sections, and H3s for sub-sections.
@@ -230,7 +230,7 @@ serve(async (req) => {
     Respond in a structured JSON format:
     {
       "title": "SEO Optimized Blog Post Title",
-      "slug": "seo-optimized-blog-post-title",
+      "slug": "seo-optimized-blog-post-title", // Example: "my-awesome-blog-post" NOT "/blog/my-awesome-blog-post"
       "meta_description": "A concise meta description for search engines.",
       "keywords": ["keyword1", "keyword2", "keyword3"],
       "content": "# H1 Title\\n\\nIntroduction...\\n\\n## H2 Section\\n\\nContent...\\n\\n### H3 Sub-section\\n\\nMore content..."
@@ -271,6 +271,9 @@ serve(async (req) => {
       blogPostContent = blogPostContent.substring(7, blogPostContent.length - 3).trim();
     }
     const generatedBlogPost = JSON.parse(blogPostContent);
+
+    // Log the generated slug for debugging
+    console.log("Generated Blog Post Slug:", generatedBlogPost.slug);
 
     // Insert the generated blog post into the database
     const { error: insertError } = await supabaseClient

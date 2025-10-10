@@ -109,14 +109,8 @@ serve(async (req) => {
         break;
     }
 
-    let conversationHistory = chatMessages.map((msg: any) => ({
-      role: msg.sender === 'user' ? 'user' : 'assistant',
-      content: msg.text,
-    }));
-
-    // Ensure the initial analysis context is always at the beginning of the conversation for the AI
-    // Now includes the top comments explicitly
-    const analysisContext = `
+    // Combine all context into a single string to be part of the system message
+    const fullContext = `
     --- Video Analysis Context ---
     Video Title: "${analysisResult.videoTitle}"
     Video Description: "${analysisResult.videoDescription}"
@@ -128,35 +122,20 @@ serve(async (req) => {
     Top Comments (by popularity):
     ${analysisResult.comments.slice(0, 10).map((comment: string, index: number) => `${index + 1}. ${comment}`).join('\n')}
     --- End Video Analysis Context ---
+    ${externalContext ? `\n\n--- Recent External Information ---\n${externalContext}\n--- End External Information ---` : ''}
     `;
 
-    let userPromptContent = `Based on the video analysis and our conversation so far, please answer my question.`;
-
-    if (externalContext) {
-      userPromptContent += `\n\n--- Recent External Information ---\n${externalContext}\n--- End External Information ---`;
-      userPromptContent += `\n\nMy question: ${userMessage}`;
-    } else {
-      userPromptContent += `\n\nMy question: ${userMessage}`;
-    }
+    // Convert chatMessages to the format expected by Longcat AI
+    const conversationHistory = chatMessages.map((msg: any) => ({
+      role: msg.sender === 'user' ? 'user' : 'assistant',
+      content: msg.text,
+    }));
 
     const messages = [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: analysisContext + userPromptContent },
+      { role: "system", content: systemPrompt + "\n\n" + fullContext }, // System message with persona and all context
+      ...conversationHistory, // Existing chat history
+      { role: "user", content: userMessage }, // Current user message
     ];
-
-    // If there's existing chat history, append it after the initial context
-    if (conversationHistory.length > 0) {
-      // Remove the last user message from conversationHistory as it's already in userPromptContent
-      const lastMessage = conversationHistory[conversationHistory.length - 1];
-      if (lastMessage.role === 'user' && lastMessage.content === userMessage) {
-        conversationHistory = conversationHistory.slice(0, -1);
-      }
-      messages.push(...conversationHistory);
-    }
-    
-    // Add the current user message as the last message in the conversation
-    messages.push({ role: "user", content: userMessage });
-
 
     const longcatApiUrl = "https://api.longcat.chat/openai/v1/chat/completions";
     
