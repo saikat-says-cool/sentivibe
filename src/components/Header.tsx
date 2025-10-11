@@ -3,20 +3,24 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/integrations/supabase/auth';
 import { ModeToggle } from './ModeToggle';
+import MobileNav from './MobileNav'; // Import the new MobileNav component
 
 const Header = () => {
   const { session } = useAuth();
 
   return (
-    <header className="bg-background border-b border-border p-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-      <Link to="/" className="flex items-center space-x-2">
-        <h1 className="text-3xl font-extrabold tracking-tight text-foreground font-heading">
-          <span className="text-foreground">Senti</span>
-          <span className="text-accent">Vibe</span>
-        </h1>
-      </Link>
-      <nav className="flex flex-wrap items-center gap-x-4 gap-y-2">
-        <ul className="flex flex-wrap items-center gap-x-4 gap-y-2">
+    <header className="bg-background border-b border-border p-4 flex items-center justify-between">
+      <div className="flex items-center space-x-4">
+        <MobileNav /> {/* Mobile navigation for small screens */}
+        <Link to="/" className="flex items-center space-x-2">
+          <h1 className="text-3xl font-extrabold tracking-tight text-foreground font-heading">
+            <span className="text-foreground">Senti</span>
+            <span className="text-accent">Vibe</span>
+          </h1>
+        </Link>
+      </div>
+      <nav className="hidden md:flex items-center space-x-4"> {/* Desktop navigation for medium and larger screens */}
+        <ul className="flex space-x-4">
           <li>
             <Link 
               to="/analyze-video" 
