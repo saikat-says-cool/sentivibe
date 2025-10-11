@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Loader2, GitCompare, PlusCircle, XCircle, MessageSquare, RefreshCw } from 'lucide-react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query'; // Added useQuery
 import { supabase } from '@/integrations/supabase/client';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Link, useLocation } from 'react-router-dom';
@@ -59,6 +59,16 @@ const PAID_TIER_LIMITS = {
   maxCustomQuestionWordCount: 500,
 };
 
+// Function to fetch anonymous usage
+const fetchAnonUsage = async () => {
+  const { data, error } = await supabase.functions.invoke('get-anon-usage');
+  if (error) {
+    console.error("Error fetching anon usage:", error);
+    throw new Error(error.message || "Failed to fetch anonymous usage data.");
+  }
+  return data;
+};
+
 const CreateMultiComparison = () => {
   const location = useLocation();
   const initialMultiComparison = location.state?.multiComparison as MultiComparisonResult | undefined;
@@ -77,6 +87,14 @@ const CreateMultiComparison = () => {
   const isPaidTier = subscriptionStatus === 'active' && subscriptionPlanId !== 'free';
   const currentLimits = isPaidTier ? PAID_TIER_LIMITS : FREE_TIER_LIMITS;
 
+  // Fetch anonymous usage if not authenticated
+  const { data: anonUsage, refetch: refetchAnonUsage } = useQuery({
+    queryKey: ['anonUsageMultiComp'],
+    queryFn: fetchAnonUsage,
+    enabled: !user, // Only fetch if user is not logged in
+    refetchOnWindowFocus: false,
+  });
+
   const createMultiComparisonMutation = useMutation({
     mutationFn: async (payload: { videoLinks: string[]; customComparativeQuestions: CustomComparativeQuestion[]; forceRecompare?: boolean }) => {
       setError(null);
@@ -88,6 +106,16 @@ const CreateMultiComparison = () => {
 
       if (invokeError) {
         console.error("Supabase Function Invoke Error (multi-video-comparator):", invokeError);
+        // Check if the error is a FunctionsHttpError with a 403 status
+        if (invokeError.name === 'FunctionsHttpError' && invokeError.context?.status === 403) {
+          try {
+            const errorBody = await invokeError.context.json();
+            throw new Error(errorBody.error || "Daily limit exceeded. Please upgrade.");
+          } catch (jsonError) {
+            console.error("Failed to parse 403 error response:", jsonError);
+            throw new Error(invokeError.message || "Daily limit exceeded. Please upgrade.");
+          }
+        }
         throw new Error(invokeError.message || "Failed to invoke multi-video comparison function.");
       }
       return data;
@@ -98,7 +126,12 @@ const CreateMultiComparison = () => {
       if (data.slug) {
         queryClient.invalidateQueries({ queryKey: ['multiComparison', data.slug] });
       }
-      setComparisonsToday(prev => prev + 1);
+      // Refetch anon usage if unauthenticated, otherwise update authenticated count
+      if (!user) {
+        refetchAnonUsage();
+      } else {
+        setComparisonsToday(prev => prev + 1); // For authenticated users, update local state
+      }
     },
     onError: (err: Error) => {
       setError(err.message);
@@ -107,24 +140,32 @@ const CreateMultiComparison = () => {
   });
 
   useEffect(() => {
-    const fetchDailyComparisonCount = async () => {
-      const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-      const { count, error } = await supabase
-        .from('multi_comparisons')
-        .select('id', { count: 'exact', head: true })
-        .gte('created_at', twentyFourHoursAgo)
-        .or(`author_id.eq.${user?.id || 'null'},author_id.is.null`);
+    const updateComparisonsToday = async () => {
+      if (user) { // Authenticated user
+        const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+        const { count, error } = await supabase
+          .from('multi_comparisons')
+          .select('id', { count: 'exact', head: true })
+          .gte('created_at', twentyFourHoursAgo)
+          .eq('author_id', user.id); // Filter by authenticated user's ID
 
-      if (error) {
-        console.error("Error fetching daily comparison count:", error);
-        setComparisonsToday(0);
-      } else {
-        setComparisonsToday(count || 0);
+        if (error) {
+          console.error("Error fetching daily comparison count for authenticated user:", error);
+          setComparisonsToday(0);
+        } else {
+          setComparisonsToday(count || 0);
+        }
+      } else { // Unauthenticated user (IP-based)
+        if (anonUsage) {
+          setComparisonsToday(anonUsage.comparisons_count);
+        } else {
+          setComparisonsToday(0);
+        }
       }
     };
 
-    fetchDailyComparisonCount();
-  }, [user, subscriptionStatus, subscriptionPlanId, createMultiComparisonMutation.isSuccess]);
+    updateComparisonsToday();
+  }, [user, anonUsage, createMultiComparisonMutation.isSuccess]); // Depend on anonUsage and user
 
   useEffect(() => {
     if (initialMultiComparison) {
@@ -254,9 +295,9 @@ const CreateMultiComparison = () => {
             <p className="text-sm text-muted-foreground mt-1">
               Comparisons today: {comparisonsToday}/{currentLimits.dailyComparisons}
               {!isPaidTier && (
-                <span className="ml-2 text-blue-500">
-                  <Link to="/upgrade" className="underline">Upgrade to a paid tier</Link> for more comparisons.
-                </span>
+                  <span className="ml-2 text-blue-500">
+                    <Link to="/upgrade" className="underline">Upgrade to a paid tier</Link> for more comparisons.
+                  </span>
               )}
             </p>
 
