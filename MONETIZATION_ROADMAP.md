@@ -152,7 +152,7 @@ To successfully integrate a tiered access and usage model into SentiVibe, allowi
 *   **Checkpoint 3.3: Payment Gateway Integration**
     *   **Description:** Integrate a payment gateway (e.g., Stripe) for handling Pro Subscriber payments and managing subscriptions.
     *   **Affected Areas:** New backend services, Frontend (subscription management UI).
-    *   **Status:** Pending
+    *   **Status:** Pending (Requires manual integration)
     *   **Notes:** This is a major external integration and is outside the scope of direct AI assistance for code generation. It requires manual setup with a payment provider like Stripe.
 
 ---
@@ -174,15 +174,14 @@ To successfully integrate a tiered access and usage model into SentiVibe, allowi
     *   **Free Member:** Email support / community.
     *   **Pro Subscriber:** Priority support via chat.
     *   **Affected Areas:** External (support system integration), Frontend (support links).
-    *   **Status:** Pending
+    *   **Status:** Future Update
 
 *   **Checkpoint 4.3: API Key Integration (Future)**
     *   **Guest:** ❌
     *   **Free Member:** ❌
     *   **Pro Subscriber:** ✅ Access endpoint for batch analysis.
     *   **Affected Areas:** New backend services, Frontend (API key management UI).
-    *   **Status:** Pending
-    *   **Notes:** This is a future expansion for advanced users.
+    *   **Status:** Future Update
 
 ---
 
