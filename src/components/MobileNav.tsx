@@ -87,6 +87,15 @@ const MobileNav: React.FC<MobileNavProps> = ({ onLinkClick }) => {
             )}
             <li>
               <Link 
+                to="/pricing" 
+                className="block px-4 py-2 text-lg font-medium hover:bg-accent hover:text-accent-foreground rounded-md"
+                onClick={handleLinkClick}
+              >
+                Pricing
+              </Link>
+            </li>
+            <li>
+              <Link 
                 to="/how-it-works" 
                 className="block px-4 py-2 text-lg font-medium hover:bg-accent hover:text-accent-foreground rounded-md"
                 onClick={handleLinkClick}
