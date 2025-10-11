@@ -9,6 +9,7 @@ import { Link } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/integrations/supabase/auth';
 import LibraryCopilot from '@/components/LibraryCopilot';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'; // Import Alert components
 
 interface AiAnalysisResult {
   overall_sentiment: string;
@@ -61,13 +62,15 @@ const fetchMyBlogPosts = async (userId: string): Promise<BlogPost[]> => {
 };
 
 const MyAnalyses = () => {
-  const { user, isLoading: isAuthLoading } = useAuth();
+  const { user, isLoading: isAuthLoading, subscriptionStatus, subscriptionPlanId } = useAuth();
   const userId = user?.id;
+
+  const isPaidTier = subscriptionStatus === 'active' && subscriptionPlanId !== 'free';
 
   const { data: blogPosts, isLoading, error } = useQuery<BlogPost[], Error>({
     queryKey: ['myBlogPosts', userId],
     queryFn: () => fetchMyBlogPosts(userId!),
-    enabled: !!userId && !isAuthLoading,
+    enabled: !!userId && !isAuthLoading && isPaidTier, // Only fetch if user is logged in AND is on a paid tier
   });
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -86,7 +89,44 @@ const MyAnalyses = () => {
     }
   }, [searchTerm, blogPosts]);
 
-  if (isAuthLoading || isLoading) {
+  if (isAuthLoading) {
+    return (
+      <div className="container mx-auto p-4 max-w-4xl text-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
+        <p className="text-lg text-muted-foreground">Loading user session...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="container mx-auto p-4 max-w-4xl text-center text-gray-500 dark:text-gray-400">
+        <h2 className="text-2xl font-bold mb-4">Access Denied</h2>
+        <p>Please log in to view your analysis history.</p>
+        <Button asChild className="mt-4">
+          <Link to="/login">Go to Login</Link>
+        </Button>
+      </div>
+    );
+  }
+
+  if (!isPaidTier) {
+    return (
+      <div className="container mx-auto p-4 max-w-4xl text-center">
+        <Alert variant="default" className="max-w-md mx-auto">
+          <AlertTitle className="text-xl font-bold">Upgrade to Access "My Analyses"</AlertTitle>
+          <AlertDescription className="mt-2">
+            Your personal analysis history is a premium feature. Upgrade to a paid tier to save and view all your past video analyses and comparisons.
+          </AlertDescription>
+          <Button asChild className="mt-4">
+            <Link to="/upgrade">Upgrade Now</Link>
+          </Button>
+        </Alert>
+      </div>
+    );
+  }
+
+  if (isLoading) {
     return (
       <div className="container mx-auto p-4 max-w-4xl">
         <h1 className="text-3xl font-bold mb-6">My Analysis History</h1>
@@ -109,18 +149,6 @@ const MyAnalyses = () => {
     return (
       <div className="container mx-auto p-4 max-w-4xl text-red-500">
         Error loading your analysis history: {error.message}
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <div className="container mx-auto p-4 max-w-4xl text-center text-gray-500 dark:text-gray-400">
-        <h2 className="text-2xl font-bold mb-4">Access Denied</h2>
-        <p>Please log in to view your analysis history.</p>
-        <Button asChild className="mt-4">
-          <Link to="/login">Go to Login</Link>
-        </Button>
       </div>
     );
   }
