@@ -46,6 +46,33 @@ function stripMarkdownFences(content: string): string {
   return content;
 }
 
+// Helper function to generate a unique slug
+async function generateUniqueSlug(supabaseClient: any, baseSlug: string): Promise<string> {
+  let uniqueSlug = baseSlug;
+  let counter = 0;
+  while (true) {
+    const { data, error } = await supabaseClient
+      .from('multi_comparisons')
+      .select('slug')
+      .eq('slug', uniqueSlug)
+      .single();
+
+    if (error && error.code === 'PGRST116') { // PGRST116 means no rows found, so slug is unique
+      return uniqueSlug;
+    } else if (error) {
+      console.error("Error checking slug uniqueness:", error);
+      throw new Error(`Failed to check slug uniqueness: ${error.message}`);
+    }
+
+    // Slug exists, append a random string or counter
+    counter++;
+    uniqueSlug = `${baseSlug}-${Math.random().toString(36).substring(2, 8)}`; // Append random string
+    if (counter > 5) { // Fallback to counter if random fails multiple times
+      uniqueSlug = `${baseSlug}-${Date.now().toString().slice(-5)}`;
+    }
+  }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -372,6 +399,10 @@ serve(async (req) => {
         }
       }
     }
+
+    // Ensure slug is unique
+    const uniqueSlug = await generateUniqueSlug(supabaseClient, generatedMultiComparisonBlogPost.slug);
+    generatedMultiComparisonBlogPost.slug = uniqueSlug;
 
     // --- Step 4: Save Multi-Comparison to Database ---
     const now = new Date().toISOString();
