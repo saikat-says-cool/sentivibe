@@ -69,8 +69,7 @@ To successfully integrate a tiered access and usage model into SentiVibe, allowi
         *   **Free Member:** 3 analyses / day (≈ 100 comments full set).
         *   **Pro Subscriber:** Unlimited analyses (no caps).
     *   **Affected Areas:** Frontend (`AnalyzeVideo.tsx`), Backend (`youtube-analyzer` Edge Function), Database (`user_daily_usage`).
-    *   **Status:** In Progress (Backend limits and tiered comment fetching implemented)
-    *   **Notes:** This requires a new database table for `user_daily_usage` to track analysis counts.
+    *   **Status:** Completed
 
 *   **Checkpoint 1.4: Weighted Sentiment Analysis - Tiered Depth**
     *   **Guest:** Basic scoring (e.g., only overall sentiment, simplified summary).

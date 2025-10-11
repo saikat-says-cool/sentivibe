@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { useMutation, useQueryClient } from "@tanstack/react-query"; // Import useQueryClient
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Youtube, Download, MessageSquare, Link as LinkIcon, PlusCircle, XCircle, RefreshCw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +16,7 @@ import html2pdf from 'html2pdf.js';
 import { Textarea } from "@/components/ui/textarea";
 import { Link, useLocation } from "react-router-dom";
 import VideoChatDialog from "@/components/VideoChatDialog";
+import { useAuth } from "@/integrations/supabase/auth";
 
 interface AiAnalysisResult {
   overall_sentiment: string;
@@ -69,6 +70,12 @@ interface AnalysisResponse {
   lastReanalyzedAt?: string; // New field
 }
 
+// Define daily limits and comment counts per tier (mirroring backend for display)
+const GUEST_DAILY_LIMIT = 1;
+const FREE_DAILY_LIMIT = 3;
+const GUEST_COMMENT_COUNT = 30;
+const FREE_PRO_COMMENT_COUNT = 100;
+
 const AnalyzeVideo = () => {
   const location = useLocation();
   const initialBlogPost = location.state?.blogPost as BlogPost | undefined;
@@ -81,7 +88,44 @@ const AnalyzeVideo = () => {
   const [error, setError] = useState<string | null>(null);
   const [isChatDialogOpen, setIsChatDialogOpen] = useState(false);
   const analysisReportRef = useRef<HTMLDivElement>(null);
-  const queryClient = useQueryClient(); // Initialize queryClient
+  const queryClient = useQueryClient();
+
+  const { user, subscriptionTier, isLoading: isAuthLoading } = useAuth();
+
+  // Fetch daily usage for the current user
+  const { data: dailyUsage, isLoading: isUsageLoading } = useQuery<{ analyses_count: number } | null, Error>({
+    queryKey: ['dailyUsage', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null; // Guests don't have daily usage tracked in DB
+      const { data, error } = await supabase
+        .from('user_daily_usage')
+        .select('analyses_count')
+        .eq('user_id', user.id)
+        .eq('date', new Date().toISOString().split('T')[0])
+        .single();
+      if (error && error.code !== 'PGRST116') throw error; // PGRST116 means no rows found
+      return data;
+    },
+    enabled: !!user?.id && !isAuthLoading, // Only fetch if user is authenticated and auth is loaded
+  });
+
+  const currentDailyCount = dailyUsage?.analyses_count || 0;
+  let maxAnalysesForTier = 0;
+  let maxCommentsForTier = FREE_PRO_COMMENT_COUNT; // Default for free/pro
+
+  if (subscriptionTier === 'guest') {
+    maxAnalysesForTier = GUEST_DAILY_LIMIT;
+    maxCommentsForTier = GUEST_COMMENT_COUNT;
+  } else if (subscriptionTier === 'free') {
+    maxAnalysesForTier = FREE_DAILY_LIMIT;
+    maxCommentsForTier = FREE_PRO_COMMENT_COUNT;
+  } else if (subscriptionTier === 'pro') {
+    maxAnalysesForTier = Infinity; // No limit for Pro
+    maxCommentsForTier = FREE_PRO_COMMENT_COUNT;
+  }
+
+  const dailyLimitExceeded = subscriptionTier !== 'pro' && currentDailyCount >= maxAnalysesForTier;
+  const isPageLoading = isAuthLoading || isUsageLoading;
 
   useEffect(() => {
     if (initialBlogPost) {
@@ -111,20 +155,15 @@ const AnalyzeVideo = () => {
         setIsChatDialogOpen(true);
       }
       if (forceReanalyzeFromNav) {
-        // Trigger re-analysis if navigated with forceReanalyze flag
-        // The existing analysisResult will be displayed until the new one loads
         analyzeVideoMutation.mutate({ videoLink: initialBlogPost.original_video_link, customQuestions: [], forceReanalyze: true });
       }
     }
-  }, [initialBlogPost, openChatImmediately, forceReanalyzeFromNav]);
+  }, [initialBlogPost, openChatImmediately, forceReanalyzeFromNav, user?.id, subscriptionTier]);
 
   const analyzeVideoMutation = useMutation({
     mutationFn: async (payload: { videoLink: string; customQuestions: CustomQuestion[]; forceReanalyze?: boolean }) => {
       setError(null);
       setIsChatDialogOpen(false);
-
-      // Do NOT set analysisResult to null here. Keep old data visible during refresh.
-      // setAnalysisResult(null); 
 
       const { data, error: invokeError } = await supabase.functions.invoke('youtube-analyzer', {
         body: payload,
@@ -132,37 +171,43 @@ const AnalyzeVideo = () => {
 
       if (invokeError) {
         console.error("Supabase Function Invoke Error:", invokeError);
+        // Check for specific daily limit error from backend
+        if (invokeError.message.includes('Daily analysis limit exceeded')) {
+          throw new Error(`DAILY_LIMIT_EXCEEDED:${invokeError.message}`);
+        }
         throw new Error(invokeError.message || "Failed to invoke analysis function.");
       }
       return data;
     },
     onSuccess: (data) => {
       setAnalysisResult(data);
-      // Invalidate queries to ensure fresh data is fetched if user navigates back
-      queryClient.invalidateQueries({ queryKey: ['blogPosts'] }); // For VideoAnalysisLibrary
-      queryClient.invalidateQueries({ queryKey: ['myBlogPosts'] }); // For MyAnalyses
+      queryClient.invalidateQueries({ queryKey: ['blogPosts'] });
+      queryClient.invalidateQueries({ queryKey: ['myBlogPosts'] });
+      queryClient.invalidateQueries({ queryKey: ['dailyUsage', user?.id] }); // Invalidate daily usage query
       if (data.blogPostSlug) {
-        queryClient.invalidateQueries({ queryKey: ['blogPost', data.blogPostSlug] }); // For BlogPostDetail
+        queryClient.invalidateQueries({ queryKey: ['blogPost', data.blogPostSlug] });
       }
     },
     onError: (err: Error) => {
-      setError(err.message);
-      setAnalysisResult(null); // Clear analysis result on error
+      if (err.message.startsWith('DAILY_LIMIT_EXCEEDED:')) {
+        setError(err.message.replace('DAILY_LIMIT_EXCEEDED:', ''));
+      } else {
+        setError(err.message);
+      }
+      setAnalysisResult(null);
     },
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (videoLink.trim()) {
+    if (videoLink.trim() && !dailyLimitExceeded) {
       const validQuestions = customQuestions.filter(q => q.question.trim() !== "");
       analyzeVideoMutation.mutate({ videoLink, customQuestions: validQuestions, forceReanalyze: false });
     }
   };
 
   const handleRefreshAnalysis = () => {
-    if (analysisResult?.originalVideoLink) {
-      // When refreshing, we don't pass custom questions from the form,
-      // as the Edge Function will merge existing ones.
+    if (analysisResult?.originalVideoLink && !dailyLimitExceeded) {
       analyzeVideoMutation.mutate({ videoLink: analysisResult.originalVideoLink, customQuestions: [], forceReanalyze: true });
     }
   };
@@ -177,7 +222,6 @@ const AnalyzeVideo = () => {
 
   const handleQuestionChange = (index: number, field: keyof CustomQuestion, value: string | number) => {
     const newQuestions = [...customQuestions];
-    // Ensure wordCount is a number
     if (field === 'wordCount') {
       newQuestions[index][field] = Number(value);
     } else {
@@ -200,6 +244,23 @@ const AnalyzeVideo = () => {
     }
   };
 
+  if (isPageLoading) {
+    return (
+      <div className="container mx-auto p-4 max-w-3xl">
+        <Card className="p-6 space-y-4">
+          <Skeleton className="h-8 w-3/4" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-1/2" />
+          <div className="flex items-center space-x-2 mt-4">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span className="text-sm text-gray-500">Loading user data...</span>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto p-4 max-w-3xl">
       <Card className="mb-6">
@@ -220,9 +281,22 @@ const AnalyzeVideo = () => {
                 onChange={(e) => setVideoLink(e.target.value)}
                 required
                 className="mt-1"
-                disabled={analyzeVideoMutation.isPending}
+                disabled={analyzeVideoMutation.isPending || dailyLimitExceeded}
               />
             </div>
+
+            {subscriptionTier !== 'pro' && (
+              <Alert className="mt-4">
+                <AlertTitle>Daily Analysis Limit</AlertTitle>
+                <AlertDescription>
+                  You are on the <span className="font-semibold">{subscriptionTier}</span> tier. You have performed <span className="font-semibold">{currentDailyCount}</span> out of <span className="font-semibold">{maxAnalysesForTier === Infinity ? 'unlimited' : maxAnalysesForTier}</span> analyses today.
+                  {dailyLimitExceeded && (
+                    <p className="text-red-500 mt-1">You have reached your daily analysis limit. Upgrade to Pro for unlimited analyses!</p>
+                  )}
+                  <p className="mt-1">Comments fetched per analysis: <span className="font-semibold">{maxCommentsForTier}</span>.</p>
+                </AlertDescription>
+              </Alert>
+            )}
 
             <Separator />
 
@@ -237,7 +311,7 @@ const AnalyzeVideo = () => {
                     value={qa.question}
                     onChange={(e) => handleQuestionChange(index, 'question', e.target.value)}
                     className="mt-1 min-h-[60px]"
-                    disabled={analyzeVideoMutation.isPending}
+                    disabled={analyzeVideoMutation.isPending || dailyLimitExceeded}
                   />
                 </div>
                 <div className="w-24">
@@ -251,7 +325,7 @@ const AnalyzeVideo = () => {
                     value={qa.wordCount}
                     onChange={(e) => handleQuestionChange(index, 'wordCount', e.target.value)}
                     className="mt-1"
-                    disabled={analyzeVideoMutation.isPending}
+                    disabled={analyzeVideoMutation.isPending || dailyLimitExceeded}
                   />
                 </div>
                 {customQuestions.length > 1 && (
@@ -260,7 +334,7 @@ const AnalyzeVideo = () => {
                     variant="ghost"
                     size="icon"
                     onClick={() => handleRemoveQuestion(index)}
-                    disabled={analyzeVideoMutation.isPending}
+                    disabled={analyzeVideoMutation.isPending || dailyLimitExceeded}
                     className="self-end sm:self-auto"
                   >
                     <XCircle className="h-5 w-5 text-red-500" />
@@ -272,13 +346,13 @@ const AnalyzeVideo = () => {
               type="button"
               variant="outline"
               onClick={handleAddQuestion}
-              disabled={analyzeVideoMutation.isPending}
+              disabled={analyzeVideoMutation.isPending || dailyLimitExceeded}
               className="w-full flex items-center gap-2"
             >
               <PlusCircle className="h-4 w-4" /> Add Another Question
             </Button>
 
-            <Button type="submit" className="w-full" disabled={analyzeVideoMutation.isPending}>
+            <Button type="submit" className="w-full" disabled={analyzeVideoMutation.isPending || dailyLimitExceeded}>
               {analyzeVideoMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Analyze Comments & Get Answers
             </Button>
@@ -323,7 +397,7 @@ const AnalyzeVideo = () => {
                 </Link>
               </Button>
             )}
-            <Button onClick={handleRefreshAnalysis} className="flex items-center gap-2" disabled={analyzeVideoMutation.isPending}>
+            <Button onClick={handleRefreshAnalysis} className="flex items-center gap-2" disabled={analyzeVideoMutation.isPending || dailyLimitExceeded}>
               {analyzeVideoMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />} Refresh Analysis
             </Button>
             <Button onClick={() => setIsChatDialogOpen(true)} className="flex items-center gap-2">
