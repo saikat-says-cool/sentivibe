@@ -245,7 +245,12 @@ serve(async (req) => {
       console.error('Longcat AI Core Comparison API error:', errorData);
       throw new Error(`Failed to get core comparison from Longcat AI: ${errorData.message}`);
     }
-    const coreComparisonData = JSON.parse(coreComparisonResponse.choices[0].message.content);
+    const longcatDataCore = await coreComparisonResponse.json();
+    if (!longcatDataCore.choices || longcatDataCore.choices.length === 0 || !longcatDataCore.choices[0].message || !longcatDataCore.choices[0].message.content) {
+      console.error('Longcat AI Core Comparison API returned unexpected structure:', longcatDataCore);
+      throw new Error('Longcat AI Core Comparison API returned an empty or malformed response.');
+    }
+    const coreComparisonData = JSON.parse(longcatDataCore.choices[0].message.content);
 
     // --- AI Call for Comparative Blog Post Generation ---
     const blogPostComparisonPrompt = `
@@ -300,7 +305,12 @@ serve(async (req) => {
       console.error('Longcat AI Comparison Blog Post API error:', errorData);
       throw new Error(`Failed to generate comparison blog post from Longcat AI: ${errorData.message}`);
     }
-    const generatedComparisonBlogPost = JSON.parse(blogPostComparisonResponse.choices[0].message.content);
+    const longcatDataBlogPost = await blogPostComparisonResponse.json();
+    if (!longcatDataBlogPost.choices || longcatDataBlogPost.choices.length === 0 || !longcatDataBlogPost.choices[0].message || !longcatDataBlogPost.choices[0].message.content) {
+      console.error('Longcat AI Comparison Blog Post API returned unexpected structure:', longcatDataBlogPost);
+      throw new Error('Longcat AI Comparison Blog Post API returned an empty or malformed response.');
+    }
+    const generatedComparisonBlogPost = JSON.parse(longcatDataBlogPost.choices[0].message.content);
 
     // --- Process Custom Comparative Questions ---
     let combinedComparativeQaResults: { question: string; wordCount: number; answer: string }[] = [];
@@ -345,8 +355,13 @@ serve(async (req) => {
           combinedComparativeQaResults.push({ ...qa, answer: `Error generating answer: ${errorData.message || 'Unknown error'}` });
         } else {
           const customQaData = await customQaResponse.json();
-          const answerContent = customQaData.choices[0].message.content;
-          combinedComparativeQaResults.push({ ...qa, answer: answerContent });
+          if (!customQaData.choices || customQaData.choices.length === 0 || !customQaData.choices[0].message || !customQaData.choices[0].message.content) {
+            console.error('Longcat AI Custom Comparative QA API returned unexpected structure:', customQaData);
+            combinedComparativeQaResults.push({ ...qa, answer: `Error generating answer: AI returned empty or malformed response.` });
+          } else {
+            const answerContent = customQaData.choices[0].message.content;
+            combinedComparativeQaResults.push({ ...qa, answer: answerContent });
+          }
         }
       }
     }
