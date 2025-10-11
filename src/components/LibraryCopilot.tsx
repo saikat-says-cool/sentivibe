@@ -8,7 +8,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from '@/components/ui/button';
-import { MessageSquarePlus, Loader2 } from 'lucide-react';
+import { MessageSquarePlus } from 'lucide-react';
 import ChatInterface from './ChatInterface';
 import { useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -46,7 +46,7 @@ const PAID_TIER_LIMITS = {
 };
 
 const LibraryCopilot: React.FC<LibraryCopilotProps> = ({ blogPosts }) => {
-  const { user, subscriptionStatus, subscriptionPlanId } = useAuth(); // Get auth and subscription info
+  const { subscriptionStatus, subscriptionPlanId } = useAuth(); // Get auth and subscription info
 
   const [isOpen, setIsOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
@@ -137,11 +137,11 @@ const LibraryCopilot: React.FC<LibraryCopilotProps> = ({ blogPosts }) => {
       setChatMessages((prev) =>
         prev.map((msg, index) =>
           index === prev.length - 1 && msg.sender === 'ai' && msg.text === 'Thinking...'
-            ? { ...msg, text: `Error: ${err.message}. Please try again.` }
+            ? { ...msg, text: `Error: ${(err as Error).message}. Please try again.` }
             : msg
         )
       );
-      setError(err.message); // Set error state on mutation error
+      setError((err as Error).message); // Set error state on mutation error
     },
   });
 

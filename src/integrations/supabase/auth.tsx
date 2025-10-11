@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Session, User, PostgrestError } from '@supabase/supabase-js'; // Import PostgrestError
 import { supabase } from './client';
@@ -59,7 +60,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     getSessionAndSubscription();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, _session) => {
       // When auth state changes, re-fetch session and subscription
       getSessionAndSubscription();
     });

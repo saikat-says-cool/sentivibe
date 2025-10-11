@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { Loader2, Youtube, GitCompare, PlusCircle, XCircle, MessageSquare, BarChart, RefreshCw } from 'lucide-react'; // Added missing icons
+import { Loader2, GitCompare, PlusCircle, XCircle, MessageSquare, RefreshCw } from 'lucide-react'; // Removed Youtube, BarChart
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -336,6 +336,10 @@ const CreateMultiComparison = () => {
 
       {createMultiComparisonMutation.isPending && (
         <Card className="p-6 space-y-4">
+          <Skeleton className="h-8 w-3/4" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-1/2" />
           <div className="flex items-center space-x-2 mt-4">
             <Loader2 className="h-4 w-4 animate-spin" />
             <span className="text-sm text-gray-500">Fetching video data, performing AI multi-comparison, and generating insights...</span>

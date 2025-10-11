@@ -6,8 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from '@/components/ui/button';
-import { MessageSquare, Loader2 } from 'lucide-react';
+import { MessageSquare } from 'lucide-react';
 import ChatInterface from './ChatInterface';
 import { useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -72,6 +71,7 @@ interface AnalysisResponse {
   blogPostSlug?: string;
   originalVideoLink?: string;
   customQaResults?: CustomQuestion[];
+  lastReanalyzedAt?: string;
 }
 
 interface Message {
@@ -104,7 +104,7 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
   initialAnalysisResult,
   initialBlogPost,
 }) => {
-  const { user, subscriptionStatus, subscriptionPlanId } = useAuth(); // Get auth and subscription info
+  const { subscriptionStatus, subscriptionPlanId } = useAuth(); // Get auth and subscription info
 
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
   const [desiredWordCount, setDesiredWordCount] = useState<number>(300);
@@ -191,7 +191,7 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
     },
     onError: (err: Error) => {
       console.error("Error fetching external context for chat:", err);
-      setError(`Failed to fetch external context: ${err.message}`);
+      setError(`Failed to fetch external context: ${(err as Error).message}`);
     },
   });
 
@@ -250,11 +250,11 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
       setChatMessages((prev) =>
         prev.map((msg, index) =>
           index === prev.length - 1 && msg.sender === 'ai' && msg.text === 'Thinking...'
-            ? { ...msg, text: `Error: ${err.message}. Please try again.` }
+            ? { ...msg, text: `Error: ${(err as Error).message}. Please try again.` }
             : msg
         )
       );
-      setError(`Failed to get AI response: ${err.message}`); // Set error state on chat mutation error
+      setError(`Failed to get AI response: ${(err as Error).message}`); // Set error state on chat mutation error
     },
   });
 
@@ -347,6 +347,7 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
             messages={chatMessages}
             onSendMessage={handleSendMessage}
             isLoading={chatMutation.isPending || fetchExternalContextMutation.isPending}
+            disabled={isChatDisabled || isChatLimitReached}
           />
         </div>
       </DialogContent>

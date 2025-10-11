@@ -49,7 +49,7 @@ const PAID_TIER_LIMITS = {
   maxCustomQuestionWordCount: 500,
 };
 
-serve(async (req) => {
+serve(async (req: Request) => {
   // Handle CORS preflight request
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -72,7 +72,10 @@ serve(async (req) => {
     const { data: { user } } = await supabaseClient.auth.getUser();
     let isPaidTier = false;
     let currentLimits = FREE_TIER_LIMITS;
-    let userSubscriptionId: string | null = null;
+    let userSubscriptionId: string | null = null; // Will be user.id for authenticated, null for anon
+
+    const clientIp = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
+    const now = new Date();
 
     if (user) {
       userSubscriptionId = user.id;
@@ -89,6 +92,9 @@ serve(async (req) => {
         isPaidTier = true;
         currentLimits = PAID_TIER_LIMITS;
       }
+    } else {
+      // Unauthenticated user: use IP-based tracking for free tier limits
+      userSubscriptionId = null; // Explicitly null for anon users
     }
 
     const longcatApiKeys = getApiKeys('LONGCAT_AI_API_KEY'); // Declared here
@@ -117,13 +123,12 @@ serve(async (req) => {
     // If it's a cached, fresh analysis without forceReanalyze, it doesn't count.
     let isNewAnalysisOrForcedReanalysis = false;
 
-    const { data: existingBlogPost, error: fetchError } = await supabaseClient
+    const { data: existingBlogPost, error: _fetchError } = await supabaseClient
       .from('blog_posts')
       .select('*')
       .eq('video_id', videoId)
       .single();
 
-    const now = new Date();
     let shouldPerformFullReanalysis = false;
 
     if (existingBlogPost) {
@@ -140,28 +145,89 @@ serve(async (req) => {
     }
 
     if (isNewAnalysisOrForcedReanalysis) {
-      const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
-      let { count, error: countError } = await supabaseClient
-        .from('blog_posts')
-        .select('id', { count: 'exact', head: true })
-        .gte('created_at', twentyFourHoursAgo)
-        .or(`author_id.eq.${userSubscriptionId},author_id.is.null`); // Count analyses by current user OR unauthenticated analyses
+      if (user) { // Authenticated user limit check
+        const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
+        let { count, error: countError } = await supabaseClient
+          .from('blog_posts')
+          .select('id', { count: 'exact', head: true })
+          .gte('created_at', twentyFourHoursAgo)
+          .eq('author_id', user.id);
 
-      if (countError) {
-        console.error("Error counting daily analyses:", countError);
-        return new Response(JSON.stringify({ error: 'Failed to check daily analysis limit.' }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 500,
-        });
-      }
+        if (countError) {
+          console.error("Error counting daily analyses for authenticated user:", countError);
+          return new Response(JSON.stringify({ error: 'Failed to check daily analysis limit.' }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 500,
+          });
+        }
 
-      if (count !== null && count >= currentLimits.dailyAnalyses) {
-        return new Response(JSON.stringify({ 
-          error: `Daily analysis limit (${currentLimits.dailyAnalyses}) exceeded. ${isPaidTier ? 'You have reached your paid tier limit.' : 'Upgrade to a paid tier for more analyses.'}` 
-        }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 403,
-        });
+        if (count !== null && count >= currentLimits.dailyAnalyses) {
+          return new Response(JSON.stringify({ 
+            error: `Daily analysis limit (${currentLimits.dailyAnalyses}) exceeded. ${isPaidTier ? 'You have reached your paid tier limit.' : 'Upgrade to a paid tier for more analyses.'}` 
+          }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 403,
+          });
+        }
+      } else { // Unauthenticated user IP-based limit check
+        let { data: anonUsage, error: anonError } = await supabaseClient
+          .from('anon_usage')
+          .select('*')
+          .eq('ip_address', clientIp)
+          .single();
+
+        if (anonError && anonError.code !== 'PGRST116') {
+          console.error("Error fetching anon usage for IP:", clientIp, anonError);
+          return new Response(JSON.stringify({ error: 'Failed to check anonymous usage data.' }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 500,
+          });
+        }
+
+        const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+        let currentAnalysesCount = 0;
+        let lastResetAt = now.toISOString();
+
+        if (anonUsage) {
+          if (new Date(anonUsage.last_reset_at) < twentyFourHoursAgo) {
+            // Reset counts if older than 24 hours
+            currentAnalysesCount = 0;
+            lastResetAt = now.toISOString();
+          } else {
+            currentAnalysesCount = anonUsage.analyses_count;
+            lastResetAt = anonUsage.last_reset_at;
+          }
+        }
+
+        if (currentAnalysesCount >= FREE_TIER_LIMITS.dailyAnalyses) {
+          return new Response(JSON.stringify({ 
+            error: `Daily analysis limit (${FREE_TIER_LIMITS.dailyAnalyses}) exceeded for your IP address. Upgrade to a paid tier for more analyses.` 
+          }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 403,
+          });
+        }
+
+        // Increment count and update anon_usage
+        currentAnalysesCount++;
+        const { error: updateAnonError } = await supabaseClient
+          .from('anon_usage')
+          .upsert({ 
+            ip_address: clientIp, 
+            analyses_count: currentAnalysesCount, 
+            comparisons_count: anonUsage?.comparisons_count || 0, // Preserve other counts
+            copilot_queries_count: anonUsage?.copilot_queries_count || 0, // Preserve other counts
+            last_reset_at: lastResetAt,
+            updated_at: now.toISOString(),
+          }, { onConflict: 'ip_address' });
+
+        if (updateAnonError) {
+          console.error("Error updating anon usage for IP:", clientIp, updateAnonError);
+          return new Response(JSON.stringify({ error: 'Failed to update anonymous usage data.' }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 500,
+          });
+        }
       }
     }
 
@@ -395,7 +461,7 @@ serve(async (req) => {
       Key Themes: ${aiAnalysis.key_themes.join(', ')}
       Summary Insights: ${aiAnalysis.summary_insights}
       Top Comments (for reference, do not list all):
-      ${allFetchedCommentsText.slice(0, 5).map((comment: string, index: number) => `- ${comment}`).join('\n')}
+      ${allFetchedCommentsText.slice(0, 5).map((comment: string, _index: number) => `- ${comment}`).join('\n')}
 
       The blog post should:
       1. Have a compelling, SEO-optimized title (max 70 characters).
@@ -442,7 +508,7 @@ serve(async (req) => {
         if (blogPostResponse.ok) {
           break;
         } else if (blogPostResponse.status === 429) {
-          console.warn(`Longcat AI API key hit rate limit for blog post generation. Trying next key.`);
+          console.warn(`Longcat AI API key ${currentLongcatApiKey} hit quota limit for blog post generation. Trying next key.`);
           continue;
         }
         break;
@@ -499,7 +565,7 @@ serve(async (req) => {
           --- End Video Analysis Context ---
 
           --- Top Comments (for reference) ---
-          ${allFetchedCommentsText.slice(0, 10).map((comment: string, index: number) => `- ${comment}`).join('\n')}
+          ${allFetchedCommentsText.slice(0, 10).map((comment: string, _index: number) => `- ${comment}`).join('\n')}
           --- End Top Comments ---
 
           User's Question: "${qa.question}"
@@ -530,7 +596,7 @@ serve(async (req) => {
             if (customQaResponse.ok) {
               break;
             } else if (customQaResponse.status === 429) {
-              console.warn(`Longcat AI API key hit rate limit for custom QA. Trying next key.`);
+              console.warn(`Longcat AI API key ${currentLongcatApiKey} hit rate limit for custom QA. Trying next key.`);
               continue;
             }
             break;
@@ -588,7 +654,7 @@ serve(async (req) => {
             keywords: generatedBlogPost.keywords,
             content: generatedBlogPost.content,
             published_at: now.toISOString(),
-            author_id: user?.id,
+            author_id: userSubscriptionId, // Use userSubscriptionId (null for anon)
             creator_name: creatorName,
             thumbnail_url: videoThumbnailUrl,
             original_video_link: videoLink,
@@ -630,9 +696,9 @@ serve(async (req) => {
       status: 200,
     });
 
-  } catch (error) {
-    console.error('Edge Function error:', error.message);
-    return new Response(JSON.stringify({ error: error.message }), {
+  } catch (error: unknown) {
+    console.error('Edge Function error:', (error as Error).message);
+    return new Response(JSON.stringify({ error: (error as Error).message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 500,
     });

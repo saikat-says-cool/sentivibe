@@ -6,8 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from '@/components/ui/button';
-import { MessageSquare, Loader2 } from 'lucide-react';
+import { MessageSquare } from 'lucide-react'; // Removed Button, Loader2
 import ChatInterface from './ChatInterface';
 import { useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -77,7 +76,7 @@ const MultiComparisonChatDialog: React.FC<MultiComparisonChatDialogProps> = ({
   onOpenChange,
   initialMultiComparisonResult,
 }) => {
-  const { user, subscriptionStatus, subscriptionPlanId } = useAuth(); // Get auth and subscription info
+  const { subscriptionStatus, subscriptionPlanId } = useAuth(); // Get auth and subscription info
 
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
   const [desiredWordCount, setDesiredWordCount] = useState<number>(300);
@@ -136,7 +135,7 @@ const MultiComparisonChatDialog: React.FC<MultiComparisonChatDialogProps> = ({
     },
     onError: (err: Error) => {
       console.error("Error fetching external context for multi-comparison chat:", err);
-      setError(`Failed to fetch external context: ${err.message}`);
+      setError(`Failed to fetch external context: ${(err as Error).message}`);
     },
   });
 
@@ -194,11 +193,11 @@ const MultiComparisonChatDialog: React.FC<MultiComparisonChatDialogProps> = ({
       setChatMessages((prev) =>
         prev.map((msg, index) =>
           index === prev.length - 1 && msg.sender === 'ai' && msg.text === 'Thinking...'
-            ? { ...msg, text: `Error: ${err.message}. Please try again.` }
+            ? { ...msg, text: `Error: ${(err as Error).message}. Please try again.` }
             : msg
         )
       );
-      setError(`Failed to get AI response: ${err.message}`); // Set error state on chat mutation error
+      setError(`Failed to get AI response: ${(err as Error).message}`); // Set error state on chat mutation error
     },
   });
 

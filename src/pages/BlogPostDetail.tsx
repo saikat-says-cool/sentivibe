@@ -1,15 +1,16 @@
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import React, { useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, ArrowLeft, Youtube, MessageSquare, BarChart, RefreshCw } from 'lucide-react'; // Added RefreshCw icon
+import { ArrowLeft, Youtube, MessageSquare, BarChart, RefreshCw } from 'lucide-react'; // Removed Loader2
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
+// import { Separator } from '@/components/ui/separator'; // Removed unused import
 
 interface AiAnalysisResult {
   overall_sentiment: string;
@@ -219,6 +220,17 @@ const BlogPostDetail = () => {
     );
   }
 
+  const contentWithoutDuplicateTitle = (markdownContent: string, title: string): string => {
+    const lines = markdownContent.split('\n');
+    if (lines.length > 0 && lines[0].startsWith('#')) {
+      const firstLineTitle = lines[0].substring(1).trim();
+      if (title.includes(firstLineTitle) || firstLineTitle.includes(title)) {
+        return lines.slice(1).join('\n').trim();
+      }
+    }
+    return markdownContent;
+  };
+
   return (
     <div className="container mx-auto p-4 max-w-3xl">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-2">
@@ -291,7 +303,7 @@ const BlogPostDetail = () => {
         </CardHeader>
         <CardContent className="prose dark:prose-invert max-w-none">
           <ReactMarkdown remarkPlugins={[remarkGfm]}>
-            {blogPost.content}
+            {contentWithoutDuplicateTitle(blogPost.content, blogPost.title)}
           </ReactMarkdown>
         </CardContent>
         {blogPost.keywords && blogPost.keywords.length > 0 && (
