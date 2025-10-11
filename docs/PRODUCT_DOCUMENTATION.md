@@ -13,7 +13,7 @@
 
 ### 2.1. Secure User Authentication & Tiered Offerings
 *   **Public Access:** Core features like video analysis and the analysis library are now accessible to **all users, even without logging in, under a Free Tier with specific limits.**
-*   **Personalized Experience:** Users can securely sign up and log in to access personalized features like "My Analyses" history (available in Paid Tier).
+*   **Personalized Experience:** Users can securely sign up and log in to access personalized features like "My Analyses" history (available in Paid Tier) and the new **Account Center**.
 *   **Protected Content:** User-specific analysis history is protected, ensuring only authenticated users can access their own saved reports (Paid Tier feature).
 *   **Tiered System:** SentiVibe now operates with a tiered offering system:
     *   **Unauthenticated User Tier:** Limited access to core features, IP-based usage limits, watermarked PDF reports, and ad-supported.
@@ -149,12 +149,13 @@
 11. **Engage with AI:** You can now ask questions about the video, its comments, the pre-generated community answers, or related topics. The AI will use all available context and your chosen persona/length preferences to provide informed answers, including clickable Markdown links.
 12. **Download PDF Report:** To save or share the report, click the "Download Report PDF" button. A PDF file will be generated and downloaded to your device, featuring a branded header and including the community Q&A section. **Note: Free Tier reports will be watermarked.**
 13. **Explore the Analysis Library:** Navigate to the "Analysis Library" from the header or landing page. Here, you can browse all past single video analyses, search by video title, creator, or keywords.
-14. **Use Library Copilot:** On both the "Analysis Library" and "My Analyses" pages, click the "Library Copilot" button to open an AI chat that helps you find specific analyses from your collection, providing direct links to the blog posts. **It will also suggest new, related analysis topics or video ideas based on your query and the existing library content. Note: Daily queries are limited by your current tier.**
+14. **Use Library Copilot:** On both the "Analysis Library" and "My Analyses" pages, click the "Library Copilot" button to open an AI chat that helps you find specific analyses from your collection, providing direct links to the blog posts. **It will also suggest new, related analysis topics or video ideas based on the user's query and the existing library content. Note: Daily queries are limited by your current tier.**
 15. **Explore the Comparison Library:** Navigate to the "Comparison Library" from the header or landing page. Here, you can browse all past multi-video comparisons, search by comparison title, video titles, or keywords.
 16. **Use Comparison Library Copilot:** On the "Comparison Library" page, click the "Comparison Copilot" button to open an AI chat that helps you find specific comparisons from your collection, providing direct links to the blog posts. **It will also suggest new, related comparative analysis topics or video pairs based on your query and the existing library content. Note: Daily queries are limited by your current tier.**
 17. **Sign Up / Log In (Optional):** If you wish to save your analysis history and access higher limits, sign up or log in. You can then access your personal analyses via the "My Analyses" link in the header (Paid Tier feature).
 18. **View Pricing:** The pricing details are available on the <Link to="/upgrade">Upgrade page</Link>.
-19. **Toggle Theme:** Use the moon/sun icon in the header to switch between dark, system, or any of the **new Emerald, Crimson, Yellow, Cyan, Deep Blue, Forest Green, and Purple Haze themes**.
+19. **Manage Account:** Authenticated users can visit the new "Account" page to view and update their profile information and check their subscription status.
+20. **Toggle Theme:** Use the moon/sun icon in the header to switch between dark, system, or any of the **new Emerald, Crimson, Yellow, Cyan, Deep Blue, Forest Green, and Purple Haze themes**.
 
 ## 4. Value Proposition
 SentiVibe provides immense value by:

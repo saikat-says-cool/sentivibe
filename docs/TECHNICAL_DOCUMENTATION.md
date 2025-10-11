@@ -31,7 +31,7 @@ The project follows a standard React application structure with specific directo
     *   `src/lib/utils.ts`: Utility functions (e.g., `cn` for Tailwind class merging).
     *   `src/utils/toast.ts`: Utility functions for `sonner` toast notifications.
     *   `src/components/`: Reusable UI components.
-        *   `src/components/Header.tsx`: Global application header with the **SentiVibe wordmark**, a **theme toggle**, and **public links to 'Analyze a Video', 'Analysis Library', 'Compare Videos', 'Comparison Library'**. Now includes an "Upgrade" button for authenticated free users.
+        *   `src/components/Header.tsx`: Global application header with the **SentiVibe wordmark**, a **theme toggle**, and **public links to 'Analyze a Video', 'Analysis Library', 'Compare Videos', 'Comparison Library'**. Now includes an "Upgrade" button for authenticated free users and an "Account" link.
         *   `src/components/ModeToggle.tsx`: Component for switching between themes.
         *   `src/components/ChatInterface.tsx`: Generic chat UI component, now with `disabled` prop for tier limits.
         *   `src/components/ProtectedRoute.tsx`: Component for protecting routes (now less critical due to public-first strategy, but still present for `MyAnalyses`).
@@ -61,6 +61,7 @@ The project follows a standard React application structure with specific directo
         *   `src/pages/ComparisonDetail.tsx`: (Legacy, but still present) Page for displaying two-video comparisons.
         *   `src/pages/NotFound.tsx`: 404 error page.
         *   `src/pages/Upgrade.tsx`: Page detailing the benefits of upgrading to a paid tier.
+        *   `src/pages/AccountCenter.tsx`: **New page for authenticated users to manage their profile and view subscription details.**
     *   `src/integrations/`: Supabase-related client-side files.
         *   `src/integrations/supabase/client.ts`: Supabase client initialization.
         *   `src/integrations/supabase/auth.tsx`: **Updated AuthProvider to fetch and expose `subscriptionStatus` and `subscriptionPlanId` via the `useAuth` hook.**
@@ -90,14 +91,14 @@ The project follows a standard React application structure with specific directo
     *   `Toaster` (from `sonner`): For displaying toast notifications, configured to use brand colors for success/error/neutral.
 *   **`AppRoutes` Component:** Encapsulates `BrowserRouter` and `Routes`.
     *   Renders the `Header` component globally.
-    *   Defines application routes: `/`, `/login`, `/analyze-video`, `/library`, `/my-analyses`, `/blog/:slug`, `/create-multi-comparison`, `/multi-comparison-library`, `/multi-comparison/:slug`, `/upgrade`, `/about-us`, `/how-it-works`, and a catch-all `*` for `NotFound`.
+    *   Defines application routes: `/`, `/login`, `/analyze-video`, `/library`, `/my-analyses`, `/blog/:slug`, `/create-multi-comparison`, `/multi-comparison-library`, `/multi-comparison/:slug`, `/upgrade`, `/account`, `/about-us`, `/how-it-works`, and a catch-all `*` for `NotFound`.
 *   **`ProtectedRoute` Component:** A higher-order component that ensures only authenticated users can access specific routes (e.g., `/my-analyses`). It redirects unauthenticated users to `/login`. Note: `/analyze-video`, `/library`, `/create-multi-comparison`, and `/multi-comparison-library` are now publicly accessible.
 
 ### 4.2. `Header.tsx`
 *   A React component that renders a consistent header across all pages.
 *   Displays the **SentiVibe wordmark** (`<span className="text-foreground">Senti</span><span className="text-accent">Vibe</span>`) using the `font-heading` (Jura) typeface.
 *   **Now includes navigation links to `/analyze-video`, `/library`, `/create-multi-comparison`, `/multi-comparison-library`, `/how-it-works`, and `/about-us` for all users.**
-*   Includes a link to `/my-analyses` for authenticated users.
+*   Includes a link to `/my-analyses` and the new `/account` page for authenticated users.
 *   **Conditionally renders an "Upgrade" button for authenticated users who are not on a paid tier.**
 *   Includes a link to `/login` ("Sign In / Sign Up") for unauthenticated users.
 *   Integrates the `ModeToggle` component for theme switching.
@@ -167,7 +168,7 @@ The project follows a standard React application structure with specific directo
 *   **SEO Enhancements:**
     *   **Dynamic Meta Tags:** `useEffect` hook dynamically updates `document.title` and `meta name="description"` based on the blog post's title and meta description.
     *   **Open Graph (OG) Tags:** Dynamically adds `og:title`, `og:description`, `og:image`, `og:url`, `og:type`, and `og:site_name` meta tags for rich social media previews.
-    *   **Structured Data (JSON-LD):** Includes `BlogPosting` and `SoftwareApplication` schema markup to provide structured information to search engines, enhancing visibility and potential for rich results.
+    *   **Structured Data (JSON-LD):** Blog post detail pages incorporate `BlogPosting` and `SoftwareApplication` schema markup to provide structured information to search engines, enhancing visibility and potential for rich results.
     *   **Alt Text:** `img` tags for thumbnails include descriptive `alt` attributes.
     *   **Content Freshness:** Displays `published_at`, `updated_at`, and `last_reanalyzed_at` dates.
 *   **UI Elements:**
@@ -310,6 +311,10 @@ The project follows a standard React application structure with specific directo
 ### 4.19. `Upgrade.tsx` (Upgrade Page)
 *   **Purpose:** Informs users about the benefits of upgrading to a paid tier.
 *   **UI:** Displays a comparison of features and limits between the Free Tier and Paid Tier, with a call to action to upgrade.
+
+### 4.20. `AccountCenter.tsx` (Account Center Page)
+*   **Purpose:** Provides a dedicated page for authenticated users to view and manage their profile information and subscription details.
+*   **UI:** Displays user's email, first name, last name, and avatar. Shows current subscription status and plan. Includes a form to update first and last names and a button to sign out. Links to the Upgrade page for free tier users.
 
 ## 5. Supabase Integration Details
 
@@ -546,7 +551,7 @@ This Deno-based serverless function handles the conversational AI aspect for **m
 *   **Tier Determination:** Determines the `currentLimits` (chat message limit, max response word count) based on the authenticated `user`'s subscription status or defaults to `UNAUTHENTICATED_LIMITS`.
 *   **Usage Enforcement:**
     *   **Chat Message Limit:** Enforces `chatMessageLimit` per session.
-    *   **Desired Word Count Limit:** Enforces `maxResponseWordCount`.
+    *   **Desired Word Count Limit:** Enforces `maxResponseWord Count`.
 *   **Input:** Receives `userMessage`, `chatMessages`, `multiComparisonResult` (including structured comparison data, custom comparative Q&A, and raw comments for each video), `externalContext`, `desiredWordCount`, and `selectedPersona`.
 *   **API Key Retrieval & Rotation:** Retrieves `LONGCAT_AI_API_KEY`s and handles rate limits.
 *   **Dynamic `max_tokens`:** Adjusts `max_tokens` based on `finalDesiredWordCount`.

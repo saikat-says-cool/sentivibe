@@ -75,15 +75,26 @@ const MobileNav: React.FC<MobileNavProps> = ({ onLinkClick }) => {
               </Link>
             </li>
             {session && (
-              <li>
-                <Link 
-                  to="/my-analyses" 
-                  className="block px-4 py-2 text-lg font-medium hover:bg-accent hover:text-accent-foreground rounded-md"
-                  onClick={handleLinkClick}
-                >
-                  My Analyses
-                </Link>
-              </li>
+              <>
+                <li>
+                  <Link 
+                    to="/my-analyses" 
+                    className="block px-4 py-2 text-lg font-medium hover:bg-accent hover:text-accent-foreground rounded-md"
+                    onClick={handleLinkClick}
+                  >
+                    My Analyses
+                  </Link>
+                </li>
+                <li>
+                  <Link 
+                    to="/account" 
+                    className="block px-4 py-2 text-lg font-medium hover:bg-accent hover:text-accent-foreground rounded-md"
+                    onClick={handleLinkClick}
+                  >
+                    Account
+                  </Link>
+                </li>
+              </>
             )}
             <li>
               <Link 
