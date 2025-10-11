@@ -205,6 +205,9 @@ const CreateMultiComparison = () => {
             >
               <PlusCircle className="h-4 w-4" /> Add Another Video
             </Button>
+            <p className="text-sm text-muted-foreground mt-2">
+              <span className="font-semibold text-red-500">Important:</span> Each video must have at least 50 comments for a proper sentiment analysis. Analysis may take up to 30 seconds per video.
+            </p>
 
             <Separator />
 

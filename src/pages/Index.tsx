@@ -22,12 +22,15 @@ function Index() {
               Paste a YouTube link and let our AI generate a detailed blog post.
             </CardDescription>
           </CardHeader>
-          <CardContent className="flex-grow flex items-center justify-center">
+          <CardContent className="flex-grow flex items-center justify-center flex-col">
             <Link to="/analyze-video">
               <Button size="lg" className="text-lg px-8 py-6">
                 Start Analyzing <ArrowRightIcon className="ml-2 h-5 w-5" />
               </Button>
             </Link>
+            <p className="text-xs text-muted-foreground mt-4 max-w-[250px]">
+              Requires 50+ comments. Analysis may take up to 30 seconds.
+            </p>
           </CardContent>
         </Card>
 
@@ -38,12 +41,15 @@ function Index() {
               Compare audience sentiment and insights between two or more YouTube videos.
             </CardDescription>
           </CardHeader>
-          <CardContent className="flex-grow flex items-center justify-center">
+          <CardContent className="flex-grow flex items-center justify-center flex-col">
             <Link to="/create-multi-comparison">
               <Button size="lg" className="text-lg px-8 py-6">
                 Start Comparing <GitCompare className="ml-2 h-5 w-5" />
               </Button>
             </Link>
+            <p className="text-xs text-muted-foreground mt-4 max-w-[250px]">
+              Each video requires 50+ comments. Analysis may take up to 30 seconds per video.
+            </p>
           </CardContent>
         </Card>
 

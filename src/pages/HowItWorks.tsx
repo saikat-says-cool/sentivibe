@@ -23,7 +23,7 @@ const HowItWorks = () => {
                 <h2 className="text-xl font-semibold mb-1">1. Analyze a Single Video</h2>
                 <p>
                   Simply paste any public YouTube video link into our analyzer. Our AI will intelligently fetch video details, up to 100 comments, and apply a weighted sentiment analysis, prioritizing comments with higher likes.
-                  <span className="font-semibold text-red-500"> Note: Videos must have at least 50 comments for a robust analysis.</span>
+                  <span className="font-semibold text-red-500"> Important: Videos must have at least 50 comments for a robust analysis. Analysis may take up to 30 seconds.</span>
                 </p>
                 <p className="mt-2">
                   Enhance your insights by adding custom questions with desired word counts. Our AI will generate precise answers, which are then integrated into your report and saved for the community. We also employ smart caching and staleness logic to ensure your analyses are always fresh and efficient.
@@ -41,7 +41,7 @@ const HowItWorks = () => {
                   Gain a competitive edge by comparing audience sentiment and engagement across two or more YouTube videos. Our AI identifies commonalities, highlights unique aspects, and reveals overall sentiment trends across your selected content.
                 </p>
                 <p className="mt-2">
-                  Submit custom comparative questions to delve deeper into specific aspects of the videos. SentiVibe intelligently caches comparisons and refreshes stale data, ensuring your multi-video insights are always current and relevant.
+                  <span className="font-semibold text-red-500">Important: Each video must have at least 50 comments for a robust analysis. Analysis may take up to 30 seconds per video.</span> Submit custom comparative questions to delve deeper into specific aspects of the videos. SentiVibe intelligently caches comparisons and refreshes stale data, ensuring your multi-video insights are always current and relevant.
                 </p>
               </div>
             </div>
