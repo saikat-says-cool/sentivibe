@@ -20,6 +20,9 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { useAuth } from '@/integrations/supabase/auth'; // Import useAuth
+import { Link } from 'react-router-dom'; // Import Link for upgrade prompt
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"; // Import Alert components
 
 interface CustomComparativeQuestion {
   question: string;
@@ -53,15 +56,32 @@ interface ComparisonChatDialogProps {
   initialComparisonResult: ComparisonResultForChat | null;
 }
 
+// Define tier limits for chat (matching backend for consistency)
+const FREE_TIER_LIMITS = {
+  chatMessageLimit: 5, // Max AI responses per session
+  maxResponseWordCount: 100,
+};
+
+const PAID_TIER_LIMITS = {
+  chatMessageLimit: 100, // Max AI responses per session
+  maxResponseWordCount: 500,
+};
+
 const ComparisonChatDialog: React.FC<ComparisonChatDialogProps> = ({
   isOpen,
   onOpenChange,
   initialComparisonResult,
 }) => {
+  const { user, subscriptionStatus, subscriptionPlanId } = useAuth(); // Get auth and subscription info
+
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
   const [desiredWordCount, setDesiredWordCount] = useState<number>(300);
   const [selectedPersona, setSelectedPersona] = useState<string>("friendly");
   const [currentExternalContext, setCurrentExternalContext] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null); // Define error state
+
+  const isPaidTier = subscriptionStatus === 'active' && subscriptionPlanId !== 'free';
+  const currentLimits = isPaidTier ? PAID_TIER_LIMITS : FREE_TIER_LIMITS;
 
   useEffect(() => {
     if (isOpen) {
@@ -84,11 +104,15 @@ const ComparisonChatDialog: React.FC<ComparisonChatDialogProps> = ({
           },
         ]);
       }
+      // Reset desired word count to current tier's max when dialog opens
+      setDesiredWordCount(currentLimits.maxResponseWordCount);
+      setError(null); // Clear error when dialog opens
     } else {
       setChatMessages([]);
       setCurrentExternalContext(null);
+      setError(null); // Clear error when dialog closes
     }
-  }, [isOpen, initialComparisonResult]);
+  }, [isOpen, initialComparisonResult, currentLimits.maxResponseWordCount]); // Add currentLimits to dependencies
 
   const fetchExternalContextMutation = useMutation({
     mutationFn: async (query: string) => {
@@ -106,6 +130,7 @@ const ComparisonChatDialog: React.FC<ComparisonChatDialogProps> = ({
     },
     onError: (err: Error) => {
       console.error("Error fetching external context for comparison chat:", err);
+      setError(`Failed to fetch external context: ${err.message}`);
     },
   });
 
@@ -167,16 +192,26 @@ const ComparisonChatDialog: React.FC<ComparisonChatDialogProps> = ({
             : msg
         )
       );
+      setError(`Failed to get AI response: ${err.message}`); // Set error state on chat mutation error
     },
   });
 
   const handleSendMessage = (messageText: string) => {
     if (messageText.trim() && initialComparisonResult) {
+      // Count AI messages in current session to check limit
+      const aiMessageCount = chatMessages.filter(msg => msg.sender === 'ai').length;
+      if (aiMessageCount >= currentLimits.chatMessageLimit) {
+        setError(`Chat message limit (${currentLimits.chatMessageLimit} AI responses) exceeded for this session. ${isPaidTier ? 'You have reached your paid tier limit.' : 'Upgrade to a paid tier for more chat messages.'}`);
+        return;
+      }
+      setError(null); // Clear previous errors
       chatMutation.mutate(messageText);
     }
   };
 
   const isChatDisabled = !initialComparisonResult || chatMutation.isPending || fetchExternalContextMutation.isPending;
+  const aiResponsesInSession = chatMessages.filter(msg => msg.sender === 'ai').length;
+  const isChatLimitReached = aiResponsesInSession >= currentLimits.chatMessageLimit;
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -195,7 +230,7 @@ const ComparisonChatDialog: React.FC<ComparisonChatDialogProps> = ({
             <Select
               value={selectedPersona}
               onValueChange={setSelectedPersona}
-              disabled={isChatDisabled}
+              disabled={isChatDisabled || isChatLimitReached}
             >
               <SelectTrigger id="persona-select" className="w-[140px]">
                 <SelectValue placeholder="Select persona" />
@@ -215,15 +250,36 @@ const ComparisonChatDialog: React.FC<ComparisonChatDialogProps> = ({
               id="desired-word-count"
               type="number"
               min="50"
-              max="1500"
+              max={currentLimits.maxResponseWordCount} // Dynamically set max based on tier
               step="50"
               value={desiredWordCount}
               onChange={(e) => setDesiredWordCount(Number(e.target.value))}
               className="w-[100px]"
-              disabled={isChatDisabled}
+              disabled={isChatDisabled || isChatLimitReached}
             />
           </div>
         </div>
+        {error && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertTitle>Chat Limit Reached</AlertTitle>
+            <AlertDescription>
+              {error}
+              {!isPaidTier && (
+                <span className="ml-2 text-blue-500">
+                  <Link to="/upgrade" className="underline">Upgrade to a paid tier</Link> for more chat messages.
+                </span>
+              )}
+            </AlertDescription>
+          </Alert>
+        )}
+        <p className="text-sm text-muted-foreground mb-2">
+          AI responses remaining: {Math.max(0, currentLimits.chatMessageLimit - aiResponsesInSession)}/{currentLimits.chatMessageLimit}
+          {!isPaidTier && isChatLimitReached && (
+            <span className="ml-2 text-blue-500">
+              <Link to="/upgrade" className="underline">Upgrade to a paid tier</Link> for more chat messages.
+            </span>
+          )}
+        </p>
         <div className="flex-1 overflow-hidden">
           <ChatInterface
             messages={chatMessages}
