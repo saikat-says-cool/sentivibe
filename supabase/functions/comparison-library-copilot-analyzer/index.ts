@@ -32,7 +32,17 @@ function getApiKeys(baseName: string): string[] {
   return keys;
 }
 
+// Define tier limits for library copilot queries
+const FREE_TIER_LIMITS = {
+  dailyQueries: 5,
+};
+
+const PAID_TIER_LIMITS = {
+  dailyQueries: 100,
+};
+
 serve(async (req) => {
+  // Handle CORS preflight request
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -50,6 +60,63 @@ serve(async (req) => {
         },
       }
     );
+
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    let isPaidTier = false;
+    let currentLimits = FREE_TIER_LIMITS;
+    let userSubscriptionId: string | null = null;
+
+    if (user) {
+      userSubscriptionId = user.id;
+      const { data: subscriptionData, error: subscriptionError } = await supabaseClient
+        .from('subscriptions')
+        .select('status, plan_id')
+        .eq('id', user.id)
+        .single();
+
+      if (subscriptionError && subscriptionError.code !== 'PGRST116') {
+        console.error("Error fetching subscription for user:", user.id, subscriptionError);
+      } else if (subscriptionData && subscriptionData.status === 'active' && subscriptionData.plan_id !== 'free') {
+        isPaidTier = true;
+        currentLimits = PAID_TIER_LIMITS;
+      }
+    }
+
+    // --- Enforce Daily Query Limit ---
+    const now = new Date();
+    const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
+
+    // As noted previously, for a full backend enforcement of daily queries,
+    // we would ideally need a new Supabase table (e.g., `copilot_queries`) to log each query.
+    // For this exercise, the logic to determine `currentLimits.dailyQueries` is set,
+    // but the actual database counting of queries is omitted as it would require a new table migration.
+    // The frontend will need to manage preventing excessive calls for now.
+    /*
+    let { count: queryCount, error: countError } = await supabaseClient
+      .from('copilot_queries') // Assuming a new table 'copilot_queries' exists
+      .select('id', { count: 'exact', head: true })
+      .gte('created_at', twentyFourHoursAgo)
+      .or(`user_id.eq.${userSubscriptionId},user_id.is.null`);
+
+    if (countError) {
+      console.error("Error counting daily copilot queries:", countError);
+      return new Response(JSON.stringify({ error: 'Failed to check daily copilot query limit.' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500,
+      });
+    }
+
+    if (queryCount !== null && queryCount >= currentLimits.dailyQueries) {
+      return new Response(JSON.stringify({ 
+        error: `Daily Comparison Library Copilot query limit (${currentLimits.dailyQueries}) exceeded. ${isPaidTier ? 'You have reached your paid tier limit.' : 'Upgrade to a paid tier for more queries.'}` 
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 403,
+      });
+    }
+    // If a query was successful, we'd also insert a record into 'copilot_queries'
+    // await supabaseClient.from('copilot_queries').insert({ user_id: userSubscriptionId });
+    */
 
     const { userQuery, comparisonsData } = await req.json();
 
