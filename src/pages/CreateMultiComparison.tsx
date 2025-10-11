@@ -9,8 +9,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'; // Import u
 import { supabase } from '@/integrations/supabase/client';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Link } from 'react-router-dom';
-// ComparisonDataDisplay will need to be adapted or replaced for multi-video, keeping it for now
-import ComparisonDataDisplay from '@/components/ComparisonDataDisplay'; 
+import MultiComparisonDataDisplay from '@/components/MultiComparisonDataDisplay'; // Import the new component
 import MultiComparisonChatDialog from '@/components/MultiComparisonChatDialog'; // Import new multi-comparison chat dialog
 
 // New interfaces for multi-comparison
@@ -286,11 +285,8 @@ const CreateMultiComparison = () => {
               </p>
               <div className="mt-4">
                 <h3 className="text-lg font-semibold mb-2">Comparison Overview</h3>
-                {/* For now, display raw JSON. We'll create a dedicated component later. */}
                 {multiComparisonResult.comparison_data_json && (
-                  <pre className="bg-gray-100 dark:bg-gray-700 p-4 rounded-md text-sm overflow-auto">
-                    {JSON.stringify(multiComparisonResult.comparison_data_json, null, 2)}
-                  </pre>
+                  <MultiComparisonDataDisplay data={multiComparisonResult.comparison_data_json} />
                 )}
               </div>
 

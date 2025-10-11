@@ -71,7 +71,7 @@ function Index() {
             </CardDescription>
           </CardHeader>
           <CardContent className="flex-grow flex items-center justify-center">
-            <Link to="/comparison-library">
+            <Link to="/multi-comparison-library">
               <Button variant="outline" size="lg" className="text-lg px-8 py-6">
                 View Comparison Library <GitCompare className="ml-2 h-5 w-5" />
               </Button>

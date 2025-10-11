@@ -7,7 +7,13 @@ import { Button } from '@/components/ui/button';
 import { Loader2, Search, GitCompare } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
-import ComparisonLibraryCopilot from '@/components/ComparisonLibraryCopilot'; // Import the new copilot
+import ComparisonLibraryCopilot from '@/components/ComparisonLibraryCopilot'; // Import the copilot
+
+interface MultiComparisonVideoSummary {
+  title: string;
+  thumbnail_url: string;
+  original_video_link: string;
+}
 
 interface CustomComparativeQuestion {
   question: string;
@@ -15,10 +21,8 @@ interface CustomComparativeQuestion {
   answer?: string;
 }
 
-interface Comparison {
+interface MultiComparison {
   id: string;
-  video_a_blog_post_id: string;
-  video_b_blog_post_id: string;
   title: string;
   slug: string;
   meta_description: string;
@@ -30,55 +34,66 @@ interface Comparison {
   last_compared_at: string;
   comparison_data_json: any;
   custom_comparative_qa_results: CustomComparativeQuestion[];
-  video_a_thumbnail_url?: string;
-  video_b_thumbnail_url?: string;
-  videoATitle?: string; // Added for copilot context
-  videoBTitle?: string; // Added for copilot context
+  overall_thumbnail_url?: string;
+  videos: MultiComparisonVideoSummary[]; // Flattened video data for display
 }
 
-const fetchComparisons = async (): Promise<Comparison[]> => {
+const fetchMultiComparisons = async (): Promise<MultiComparison[]> => {
   const { data, error } = await supabase
-    .from('comparisons')
+    .from('multi_comparisons')
     .select(`
       *,
-      videoA:blog_posts!video_a_blog_post_id (title),
-      videoB:blog_posts!video_b_blog_post_id (title)
+      multi_comparison_videos (
+        video_order,
+        blog_posts (title, thumbnail_url, original_video_link)
+      )
     `)
     .order('created_at', { ascending: false });
 
   if (error) {
     throw new Error(error.message);
   }
-  // Map the data to include videoATitle and videoBTitle directly
-  return data.map(comp => ({
-    ...comp,
-    videoATitle: comp.videoA?.title,
-    videoBTitle: comp.videoB?.title,
-  })) || [];
+
+  return data.map(mc => {
+    const videos = mc.multi_comparison_videos
+      .sort((a: any, b: any) => a.video_order - b.video_order)
+      .map((mcv: any) => ({
+        title: mcv.blog_posts.title,
+        thumbnail_url: mcv.blog_posts.thumbnail_url,
+        original_video_link: mcv.blog_posts.original_video_link,
+      }));
+
+    return {
+      ...mc,
+      videos,
+      // These are for the copilot to have context, even if not directly displayed
+      videoATitle: videos[0]?.title,
+      videoBTitle: videos[1]?.title,
+    };
+  }) || [];
 };
 
-const ComparisonLibrary = () => {
-  const { data: comparisons, isLoading, error } = useQuery<Comparison[], Error>({
-    queryKey: ['comparisons'],
-    queryFn: fetchComparisons,
+const MultiComparisonLibrary = () => {
+  const { data: multiComparisons, isLoading, error } = useQuery<MultiComparison[], Error>({
+    queryKey: ['multiComparisons'],
+    queryFn: fetchMultiComparisons,
   });
 
   const [searchTerm, setSearchTerm] = useState('');
-  const [filteredComparisons, setFilteredComparisons] = useState<Comparison[]>([]);
+  const [filteredComparisons, setFilteredComparisons] = useState<MultiComparison[]>([]);
 
   useEffect(() => {
-    if (comparisons) {
+    if (multiComparisons) {
       const lowerCaseSearchTerm = searchTerm.toLowerCase();
-      const results = comparisons.filter(comp =>
+      const results = multiComparisons.filter(comp =>
         comp.title.toLowerCase().includes(lowerCaseSearchTerm) ||
         (comp.meta_description && comp.meta_description.toLowerCase().includes(lowerCaseSearchTerm)) ||
         (comp.keywords && comp.keywords.some(keyword => keyword.toLowerCase().includes(lowerCaseSearchTerm))) ||
-        (comp.videoATitle && comp.videoATitle.toLowerCase().includes(lowerCaseSearchTerm)) ||
-        (comp.videoBTitle && comp.videoBTitle.toLowerCase().includes(lowerCaseSearchTerm))
+        (comp.videos && comp.videos.some(video => video.title.toLowerCase().includes(lowerCaseSearchTerm)))
       );
       setFilteredComparisons(results);
     }
-  }, [searchTerm, comparisons]);
+  }, [searchTerm, multiComparisons]);
 
   if (isLoading) {
     return (
@@ -121,8 +136,8 @@ const ComparisonLibrary = () => {
         <Button variant="outline" size="icon" className="sm:hidden">
           <Search className="h-4 w-4" />
         </Button>
-        {comparisons && comparisons.length > 0 && (
-          <ComparisonLibraryCopilot comparisons={comparisons} />
+        {multiComparisons && multiComparisons.length > 0 && (
+          <ComparisonLibraryCopilot comparisons={multiComparisons} />
         )}
       </div>
 
@@ -132,25 +147,30 @@ const ComparisonLibrary = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredComparisons.map((comp) => (
-          <Link to={`/comparison/${comp.slug}`} key={comp.id}>
+          <Link to={`/multi-comparison/${comp.slug}`} key={comp.id}>
             <Card className="h-full flex flex-col hover:shadow-lg transition-shadow duration-200">
               <CardHeader className="p-0">
-                {comp.video_a_thumbnail_url && comp.video_b_thumbnail_url ? (
-                  <div className="flex w-full h-40 rounded-t-lg overflow-hidden">
-                    <img
-                      src={comp.video_a_thumbnail_url}
-                      alt={`Thumbnail for Video A in ${comp.title}`}
-                      className="w-1/2 h-full object-cover"
-                    />
-                    <img
-                      src={comp.video_b_thumbnail_url}
-                      alt={`Thumbnail for Video B in ${comp.title}`}
-                      className="w-1/2 h-full object-cover"
-                    />
-                  </div>
+                {comp.overall_thumbnail_url ? (
+                  <img
+                    src={comp.overall_thumbnail_url}
+                    alt={`Thumbnail for ${comp.title}`}
+                    className="w-full h-40 object-cover rounded-t-lg"
+                  />
                 ) : (
-                  <div className="w-full h-40 bg-gray-200 dark:bg-gray-700 flex items-center justify-center rounded-t-lg">
-                    <GitCompare className="h-12 w-12 text-gray-400 dark:text-gray-500" />
+                  <div className="flex w-full h-40 rounded-t-lg overflow-hidden">
+                    {comp.videos.slice(0, 2).map((video, index) => (
+                      <img
+                        key={index}
+                        src={video.thumbnail_url}
+                        alt={`Thumbnail for ${video.title}`}
+                        className="w-1/2 h-full object-cover"
+                      />
+                    ))}
+                    {comp.videos.length === 0 && (
+                      <div className="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                        <GitCompare className="h-12 w-12 text-gray-400 dark:text-gray-500" />
+                      </div>
+                    )}
                   </div>
                 )}
               </CardHeader>
@@ -168,4 +188,4 @@ const ComparisonLibrary = () => {
   );
 };
 
-export default ComparisonLibrary;
+export default MultiComparisonLibrary;

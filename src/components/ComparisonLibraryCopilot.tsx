@@ -14,14 +14,13 @@ import { useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom'; // Keep Link for potential future use if AI suggests blog posts
 
-interface Comparison {
+interface MultiComparison {
   id: string;
   title: string;
   slug: string;
   meta_description: string;
   keywords: string[];
-  video_a_thumbnail_url?: string;
-  video_b_thumbnail_url?: string;
+  overall_thumbnail_url?: string;
   videoATitle?: string; // Assuming these might be available from joined data or passed
   videoBTitle?: string; // Assuming these might be available from joined data or passed
 }
@@ -33,7 +32,7 @@ interface Message {
 }
 
 interface ComparisonLibraryCopilotProps {
-  comparisons: Comparison[];
+  comparisons: MultiComparison[]; // Now expects MultiComparison type
 }
 
 const ComparisonLibraryCopilot: React.FC<ComparisonLibraryCopilotProps> = ({ comparisons }) => {
