@@ -476,7 +476,7 @@ serve(async (req) => {
         ${JSON.stringify(coreMultiComparisonData, null, 2)}
 
         The blog post should:
-        1. Have a compelling, SEO-optimized title (max 70 characters).
+        1. Have a compelling, SEO-optimized title (max 70 characters) in the format: "Multi-Video Sentiment Comparison: ${videoTitles.slice(0, 2).join(' vs ')}${videoTitles.length > 2 ? ' and more' : ''} ({{Year}}) | SentiVibe".
         2. Generate a URL-friendly slug from the title (lowercase, hyphen-separated, **without any leading or trailing slashes or path segments**).
         3. Include a concise meta description (max 160 characters).
         4. List 5-10 relevant keywords as an array, combining keywords from all videos and comparison terms.
