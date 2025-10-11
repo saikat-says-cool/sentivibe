@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Loader2, Search, Youtube } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useAuth } from '@/integrations/supabase/auth';
 import LibraryCopilot from '@/components/LibraryCopilot';
 
 interface AiAnalysisResult {
@@ -46,11 +47,12 @@ interface BlogPost {
   last_reanalyzed_at?: string; // New field
 }
 
-const fetchBlogPosts = async (): Promise<BlogPost[]> => {
+const fetchMyBlogPosts = async (userId: string): Promise<BlogPost[]> => {
   const { data, error } = await supabase
     .from('blog_posts')
     .select('*')
-    .order('published_at', { ascending: false });
+    .eq('author_id', userId)
+    .order('created_at', { ascending: false });
 
   if (error) {
     throw new Error(error.message);
@@ -58,10 +60,14 @@ const fetchBlogPosts = async (): Promise<BlogPost[]> => {
   return data || [];
 };
 
-const VideoAnalysisLibrary = () => {
+const MyAnalyses = () => {
+  const { user, isLoading: isAuthLoading } = useAuth();
+  const userId = user?.id;
+
   const { data: blogPosts, isLoading, error } = useQuery<BlogPost[], Error>({
-    queryKey: ['blogPosts'],
-    queryFn: fetchBlogPosts,
+    queryKey: ['myBlogPosts', userId],
+    queryFn: () => fetchMyBlogPosts(userId!),
+    enabled: !!userId && !isAuthLoading,
   });
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -80,10 +86,10 @@ const VideoAnalysisLibrary = () => {
     }
   }, [searchTerm, blogPosts]);
 
-  if (isLoading) {
+  if (isAuthLoading || isLoading) {
     return (
       <div className="container mx-auto p-4 max-w-4xl">
-        <h1 className="text-3xl font-bold mb-6">Analysis Library</h1>
+        <h1 className="text-3xl font-bold mb-6">My Analysis History</h1>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[...Array(6)].map((_, i) => (
             <Card key={i}>
@@ -102,18 +108,30 @@ const VideoAnalysisLibrary = () => {
   if (error) {
     return (
       <div className="container mx-auto p-4 max-w-4xl text-red-500">
-        Error loading analysis library: {error.message}
+        Error loading your analysis history: {error.message}
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="container mx-auto p-4 max-w-4xl text-center text-gray-500 dark:text-gray-400">
+        <h2 className="text-2xl font-bold mb-4">Access Denied</h2>
+        <p>Please log in to view your analysis history.</p>
+        <Button asChild className="mt-4">
+          <Link to="/login">Go to Login</Link>
+        </Button>
       </div>
     );
   }
 
   return (
     <div className="container mx-auto p-4 max-w-4xl">
-      <h1 className="text-3xl font-bold mb-6">Analysis Library</h1>
+      <h1 className="text-3xl font-bold mb-6">My Analysis History</h1>
       <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-2 mb-6">
         <Input
           type="text"
-          placeholder="Search by title, creator, or keywords..."
+          placeholder="Search your analyses by title, creator, or keywords..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="flex-1"
@@ -127,7 +145,7 @@ const VideoAnalysisLibrary = () => {
       </div>
 
       {filteredPosts.length === 0 && (
-        <p className="text-center text-gray-500 dark:text-gray-400">No analysis found matching your criteria.</p>
+        <p className="text-center text-gray-500 dark:text-gray-400">You haven't performed any analyses yet.</p>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -153,7 +171,7 @@ const VideoAnalysisLibrary = () => {
                   <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-1">By: {post.creator_name}</p>
                 )}
                 <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
-                  Published: {new Date(post.published_at).toLocaleDateString()}
+                  Created: {new Date(post.created_at).toLocaleDateString()}
                 </p>
               </CardContent>
             </Card>
@@ -164,4 +182,4 @@ const VideoAnalysisLibrary = () => {
   );
 };
 
-export default VideoAnalysisLibrary;
+export default MyAnalyses;

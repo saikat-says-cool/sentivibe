@@ -3,21 +3,22 @@ import Index from './pages/Index';
 import Login from './pages/Login';
 import AnalyzeVideo from './pages/AnalyzeVideo';
 import VideoAnalysisLibrary from './pages/VideoAnalysisLibrary';
+import MyAnalyses from './pages/MyAnalyses'; // New import
 import BlogPostDetail from './pages/BlogPostDetail';
-import NotFound from './pages/NotFound';
+import { Toaster } from "@/components/ui/toaster";
+import { AuthProvider } from './integrations/supabase/auth';
+import ProtectedRoute from './components/ProtectedRoute';
+import { ThemeProvider } from './components/theme-provider';
 import Header from './components/Header';
 import Footer from './components/Footer';
-import { AuthProvider } from './integrations/supabase/auth';
-import { ThemeProvider } from './components/theme-provider';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Toaster } from "@/components/ui/sonner";
 
 const queryClient = new QueryClient();
 
 function App() {
   return (
-    <AuthProvider>
-      <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
+    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+      <AuthProvider>
         <QueryClientProvider client={queryClient}>
           <Router>
             <div className="flex flex-col min-h-screen">
@@ -26,10 +27,31 @@ function App() {
                 <Routes>
                   <Route path="/" element={<Index />} />
                   <Route path="/login" element={<Login />} />
-                  <Route path="/analyze-video" element={<AnalyzeVideo />} />
-                  <Route path="/library" element={<VideoAnalysisLibrary />} />
+                  <Route
+                    path="/analyze-video"
+                    element={
+                      <ProtectedRoute>
+                        <AnalyzeVideo />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/library"
+                    element={
+                      <ProtectedRoute>
+                        <VideoAnalysisLibrary />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/my-analyses" // New protected route
+                    element={
+                      <ProtectedRoute>
+                        <MyAnalyses />
+                      </ProtectedRoute>
+                    }
+                  />
                   <Route path="/blog/:slug" element={<BlogPostDetail />} />
-                  <Route path="*" element={<NotFound />} />
                 </Routes>
               </main>
               <Footer />
@@ -37,8 +59,8 @@ function App() {
             </div>
           </Router>
         </QueryClientProvider>
-      </ThemeProvider>
-    </AuthProvider>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 
