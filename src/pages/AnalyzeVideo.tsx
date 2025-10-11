@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query"; // Added useQuery
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Youtube, Download, MessageSquare, Link as LinkIcon, PlusCircle, XCircle, RefreshCw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -70,10 +70,17 @@ interface AnalysisResponse {
   lastReanalyzedAt?: string;
 }
 
-const FREE_TIER_LIMITS = {
+// Define tier limits (matching backend for consistency)
+const UNAUTHENTICATED_LIMITS = {
   dailyAnalyses: 2,
   maxCustomQuestions: 1,
   maxCustomQuestionWordCount: 100,
+};
+
+const AUTHENTICATED_FREE_TIER_LIMITS = {
+  dailyAnalyses: 5,
+  maxCustomQuestions: 2,
+  maxCustomQuestionWordCount: 150,
 };
 
 const PAID_TIER_LIMITS = {
@@ -110,13 +117,23 @@ const AnalyzeVideo = () => {
   const queryClient = useQueryClient();
 
   const isPaidTier = subscriptionStatus === 'active' && subscriptionPlanId !== 'free';
-  const currentLimits = isPaidTier ? PAID_TIER_LIMITS : FREE_TIER_LIMITS;
+  const isAuthenticatedFreeTier = user && !isPaidTier; // Authenticated but not paid
+  const isUnauthenticated = !user; // Not logged in
 
-  // Fetch anonymous usage if not authenticated
+  let currentLimits;
+  if (isPaidTier) {
+    currentLimits = PAID_TIER_LIMITS;
+  } else if (isAuthenticatedFreeTier) {
+    currentLimits = AUTHENTICATED_FREE_TIER_LIMITS;
+  } else { // Unauthenticated
+    currentLimits = UNAUTHENTICATED_LIMITS;
+  }
+
+  // Fetch anonymous usage if unauthenticated
   const { data: anonUsage, refetch: refetchAnonUsage } = useQuery({
     queryKey: ['anonUsage'],
     queryFn: fetchAnonUsage,
-    enabled: !user, // Only fetch if user is not logged in
+    enabled: isUnauthenticated, // Only fetch if user is not logged in
     refetchOnWindowFocus: false,
   });
 
@@ -153,10 +170,11 @@ const AnalyzeVideo = () => {
         queryClient.invalidateQueries({ queryKey: ['blogPost', data.blogPostSlug] });
       }
       // Refetch anon usage if unauthenticated, otherwise update authenticated count
-      if (!user) {
+      if (isUnauthenticated) {
         refetchAnonUsage();
       } else {
-        setAnalysesToday(prev => prev + 1); // For authenticated users, update local state
+        // For authenticated users, update local state and refetch from DB to be accurate
+        queryClient.invalidateQueries({ queryKey: ['dailyAnalysesCount', user?.id] });
       }
     },
     onError: (err: Error) => {
@@ -165,33 +183,35 @@ const AnalyzeVideo = () => {
     },
   });
 
-  useEffect(() => {
-    const updateAnalysesToday = async () => {
-      if (user) { // Authenticated user
-        const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-        const { count, error } = await supabase
-          .from('blog_posts')
-          .select('id', { count: 'exact', head: true })
-          .gte('created_at', twentyFourHoursAgo)
-          .eq('author_id', user.id); // Filter by authenticated user's ID
+  // Fetch daily analysis count for authenticated users
+  const { data: authenticatedAnalysesCount } = useQuery<number, Error>({ // Removed refetch: refetchAuthenticatedAnalysesCount
+    queryKey: ['dailyAnalysesCount', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return 0;
+      const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const { count, error } = await supabase
+        .from('blog_posts')
+        .select('id', { count: 'exact', head: true })
+        .gte('created_at', twentyFourHoursAgo)
+        .eq('author_id', user.id);
 
-        if (error) {
-          console.error("Error fetching daily analysis count for authenticated user:", error);
-          setAnalysesToday(0);
-        } else {
-          setAnalysesToday(count || 0);
-        }
-      } else { // Unauthenticated user (IP-based)
-        if (anonUsage) {
-          setAnalysesToday(anonUsage.analyses_count);
-        } else {
-          setAnalysesToday(0);
-        }
+      if (error) {
+        console.error("Error fetching daily analysis count for authenticated user:", error);
+        return 0;
       }
-    };
+      return count || 0;
+    },
+    enabled: !!user && !isUnauthenticated, // Only fetch if user is logged in
+    refetchOnWindowFocus: false,
+  });
 
-    updateAnalysesToday();
-  }, [user, anonUsage, analyzeVideoMutation.isSuccess]); // Depend on anonUsage and user
+  useEffect(() => {
+    if (isUnauthenticated) {
+      setAnalysesToday(anonUsage?.analyses_count || 0);
+    } else if (user) {
+      setAnalysesToday(authenticatedAnalysesCount || 0);
+    }
+  }, [isUnauthenticated, user, anonUsage, authenticatedAnalysesCount]);
 
   useEffect(() => {
     if (initialBlogPost) {
@@ -217,14 +237,25 @@ const AnalyzeVideo = () => {
       setAnalysisResult(loadedAnalysis);
       setVideoLink(initialBlogPost.original_video_link || "");
 
+      // Initialize custom questions from loaded blog post, respecting current tier limits
+      const initialLoadedQuestions = initialBlogPost.custom_qa_results?.map(qa => ({
+        question: qa.question,
+        wordCount: Math.min(qa.wordCount, currentLimits.maxCustomQuestionWordCount)
+      })) || [{ question: "", wordCount: currentLimits.maxCustomQuestionWordCount }];
+      setCustomQuestions(initialLoadedQuestions.slice(0, currentLimits.maxCustomQuestions));
+
+
       if (openChatImmediately) {
         setIsChatDialogOpen(true);
       }
       if (forceReanalyzeFromNav) {
         analyzeVideoMutation.mutate({ videoLink: initialBlogPost.original_video_link, customQuestions: [], forceReanalyze: true });
       }
+    } else {
+      // Reset custom questions to default for new analysis, respecting current tier limits
+      setCustomQuestions([{ question: "", wordCount: currentLimits.maxCustomQuestionWordCount }]);
     }
-  }, [initialBlogPost, openChatImmediately, forceReanalyzeFromNav, analyzeVideoMutation]);
+  }, [initialBlogPost, openChatImmediately, forceReanalyzeFromNav, analyzeVideoMutation, currentLimits.maxCustomQuestions, currentLimits.maxCustomQuestionWordCount]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -280,7 +311,7 @@ const AnalyzeVideo = () => {
       tempDiv.style.height = element.offsetHeight + 'px'; // Match original height
       tempDiv.innerHTML = element.innerHTML; // Copy content
 
-      if (!isPaidTier) {
+      if (!isPaidTier) { // Apply watermark for both unauthenticated and authenticated free tiers
         const watermark = document.createElement('div');
         watermark.style.position = 'absolute';
         watermark.style.top = '50%';
@@ -291,7 +322,6 @@ const AnalyzeVideo = () => {
         watermark.style.color = 'rgba(0, 0, 0, 0.1)'; // Light gray, semi-transparent
         watermark.style.zIndex = '1000';
         watermark.style.pointerEvents = 'none'; // Ensure it doesn't interfere with content
-        watermark.style.whiteSpace = 'nowrap';
         watermark.textContent = 'SentiVibe - Free Tier';
         tempDiv.appendChild(watermark);
       }
