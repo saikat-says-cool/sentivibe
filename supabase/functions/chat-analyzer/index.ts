@@ -53,14 +53,14 @@ serve(async (req) => {
       }
     );
 
-    // Verify user authentication
-    const { data: { user } } = await supabaseClient.auth.getUser();
-    if (!user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 401,
-      });
-    }
+    // No longer blocking unauthenticated users for chat
+    // const { data: { user } } = await supabaseClient.auth.getUser();
+    // if (!user) {
+    //   return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+    //     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    //     status: 401,
+    //   });
+    // }
 
     const { userMessage, chatMessages, analysisResult, externalContext, desiredWordCount, selectedPersona, customQaResults } = await req.json();
 

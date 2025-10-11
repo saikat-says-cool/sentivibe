@@ -56,14 +56,9 @@ serve(async (req) => {
       }
     );
 
-    // Verify user authentication (optional, but good practice for protected functions)
+    // Fetch user session, but do not block if no user is logged in.
+    // The `author_id` will be set to null if no user is authenticated.
     const { data: { user } } = await supabaseClient.auth.getUser();
-    if (!user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 401,
-      });
-    }
 
     const { videoLink, customQuestions, forceReanalyze } = await req.json();
     if (!videoLink) {
@@ -521,7 +516,7 @@ serve(async (req) => {
             keywords: generatedBlogPost.keywords,
             content: generatedBlogPost.content,
             published_at: now.toISOString(), // Publish immediately
-            author_id: user.id, // Link to the user who initiated the analysis
+            author_id: user?.id, // Link to the user who initiated the analysis, or null if unauthenticated
             creator_name: creatorName, // New column
             thumbnail_url: videoThumbnailUrl, // New column
             original_video_link: videoLink, // Store the original video link
