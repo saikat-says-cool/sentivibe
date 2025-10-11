@@ -141,18 +141,19 @@ To successfully integrate a tiered access and usage model into SentiVibe, allowi
     *   **Notes:** This is a significant external integration and requires careful placement to avoid disrupting UX.
 
 *   **Checkpoint 3.2: Priority Queue & Speed**
-    *   **Guest:** Standard (public threads shared).
-    *   **Free Member:** Faster requests.
-    *   **Pro Subscriber:** Immediate execution (high priority token).
+    *   **Description:**
+        *   **Guest:** Standard (public threads shared).
+        *   **Free Member:** Faster requests.
+        *   **Pro Subscriber:** Immediate execution (high priority token).
     *   **Affected Areas:** Backend (Edge Functions - potential for queuing logic or different API key usage based on tier).
-    *   **Status:** Pending
-    *   **Notes:** This is an advanced optimization that might involve multiple sets of API keys or a custom queuing system.
+    *   **Status:** Skipped
+    *   **Notes:** This checkpoint was skipped as all API keys have the same rate limit, making tiered speed implementation impractical with the current setup.
 
 *   **Checkpoint 3.3: Payment Gateway Integration**
     *   **Description:** Integrate a payment gateway (e.g., Stripe) for handling Pro Subscriber payments and managing subscriptions.
     *   **Affected Areas:** New backend services, Frontend (subscription management UI).
     *   **Status:** Pending
-    *   **Notes:** This is a major external integration and is outside the scope of direct AI assistance for code generation.
+    *   **Notes:** This is a major external integration and is outside the scope of direct AI assistance for code generation. It requires manual setup with a payment provider like Stripe.
 
 ---
 
