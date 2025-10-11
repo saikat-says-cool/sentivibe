@@ -425,7 +425,11 @@ const AnalyzeVideo = () => {
                 </Link>
               </Button>
             )}
-            <Button onClick={handleRefreshAnalysis} className="flex items-center gap-2" disabled={analyzeVideoMutation.isPending || dailyLimitExceeded}>
+            <Button
+              onClick={handleRefreshAnalysis}
+              className="flex items-center gap-2"
+              disabled={analyzeVideoMutation.isPending || dailyLimitExceeded || subscriptionTier === 'guest' || subscriptionTier === 'free'}
+            >
               {analyzeVideoMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />} Refresh Analysis
             </Button>
             <Button onClick={() => setIsChatDialogOpen(true)} className="flex items-center gap-2">

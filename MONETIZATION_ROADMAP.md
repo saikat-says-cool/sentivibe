@@ -96,7 +96,7 @@ To successfully integrate a tiered access and usage model into SentiVibe, allowi
     *   **Free Member:** Auto-refresh after 30 days (no manual "Refresh Now").
     *   **Pro Subscriber:** Manual "Refresh Now" anytime.
     *   **Affected Areas:** Frontend (`AnalyzeVideo.tsx`, `BlogPostDetail.tsx` - "Refresh Analysis" button visibility/behavior), Backend (`youtube-analyzer` Edge Function - staleness check logic).
-    *   **Status:** Pending
+    *   **Status:** Completed
 
 *   **Checkpoint 2.3: Chat with AI (Insight Dialog)**
     *   **Guest:** No access.

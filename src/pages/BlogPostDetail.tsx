@@ -241,6 +241,7 @@ const BlogPostDetail = () => {
           <Button
             onClick={() => navigate('/analyze-video', { state: { blogPost: blogPost, openChat: false, forceReanalyze: true } })}
             className="flex items-center gap-2"
+            disabled={subscriptionTier === 'guest' || subscriptionTier === 'free'}
           >
             <RefreshCw className="h-4 w-4" /> Refresh Analysis
           </Button>
