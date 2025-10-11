@@ -299,7 +299,7 @@ const AnalyzeVideo = () => {
       const opt = {
         margin: 1,
         filename: `SentiVibe_Report_${analysisResult.videoTitle.replace(/[^a-z0-9]/gi, '_')}.pdf`,
-        image: { type: 'jpeg' as 'jpeg', quality: 0.98 },
+        image: { type: 'jpeg' as const, quality: 0.98 }, // Corrected: 'jpeg' as const
         html2canvas: { scale: 2, logging: true, dpi: 192, letterRendering: true },
         jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' as 'portrait' }
       };
@@ -367,7 +367,7 @@ const AnalyzeVideo = () => {
                 Analyses today: {analysesToday}/{currentLimits.dailyAnalyses}
                 {!isPaidTier && (
                   <span className="ml-2 text-blue-500">
-                    <Link to="/upgrade" className="underline">Upgrade to a paid tier</Link> for more analyses.
+                    <Link to="/login" className="underline">Upgrade to a paid tier</Link> for more analyses.
                   </span>
                 )}
               </p>
@@ -428,7 +428,7 @@ const AnalyzeVideo = () => {
             </Button>
             {!isPaidTier && customQuestions.length >= currentLimits.maxCustomQuestions && (
               <p className="text-sm text-red-500 mt-1">
-                You can only ask {currentLimits.maxCustomQuestions} custom question(s) on the free tier. <Link to="/upgrade" className="underline">Upgrade</Link> to ask more.
+                You can only ask {currentLimits.maxCustomQuestions} custom question(s) on the free tier. <Link to="/login" className="underline">Upgrade</Link> to ask more.
               </p>
             )}
 
@@ -440,7 +440,7 @@ const AnalyzeVideo = () => {
               <Alert variant="destructive" className="mt-4">
                 <AlertTitle>Daily Limit Reached</AlertTitle>
                 <AlertDescription>
-                  You have reached your daily limit of {currentLimits.dailyAnalyses} analyses. Please try again tomorrow or <Link to="/upgrade" className="underline">upgrade to a paid tier</Link> for more analyses.
+                  You have reached your daily limit of {currentLimits.dailyAnalyses} analyses. Please try again tomorrow or <Link to="/login" className="underline">upgrade to a paid tier</Link> for more analyses.
                 </AlertDescription>
               </Alert>
             )}
@@ -474,14 +474,18 @@ const AnalyzeVideo = () => {
             {analysisResult.originalVideoLink && (
               <Button asChild variant="outline" className="flex items-center gap-2">
                 <a href={analysisResult.originalVideoLink} target="_blank" rel="noopener noreferrer">
-                  <Youtube className="h-4 w-4" /> Original Video
+                  <span> {/* Wrap children in a single span */}
+                    <Youtube className="h-4 w-4 mr-2" /> Original Video
+                  </span>
                 </a>
               </Button>
             )}
             {analysisResult.blogPostSlug && (
               <Button asChild variant="outline" className="flex items-center gap-2">
                 <Link to={`/blog/${analysisResult.blogPostSlug}`}>
-                  <LinkIcon className="h-4 w-4" /> View Blog Post
+                  <span> {/* Wrap children in a single span */}
+                    <LinkIcon className="h-4 w-4 mr-2" /> View Blog Post
+                  </span>
                 </Link>
               </Button>
             )}

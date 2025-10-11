@@ -22,11 +22,13 @@ function Index() {
             </CardDescription>
           </CardHeader>
           <CardContent className="flex-grow flex items-center justify-center flex-col">
-            <Link to="/analyze-video">
-              <Button size="lg" className="text-lg px-8 py-6">
-                Start Analyzing <ArrowRightIcon className="ml-2 h-5 w-5" />
-              </Button>
-            </Link>
+            <Button asChild size="lg" className="text-lg px-8 py-6">
+              <Link to="/analyze-video">
+                <span> {/* Wrap children in a single span */}
+                  Start Analyzing <ArrowRightIcon className="ml-2 h-5 w-5" />
+                </span>
+              </Link>
+            </Button>
             <p className="text-xs text-muted-foreground mt-4 max-w-[250px]">
               Requires 50+ comments. Analysis may take up to 30 seconds.
             </p>
@@ -41,11 +43,13 @@ function Index() {
             </CardDescription>
           </CardHeader>
           <CardContent className="flex-grow flex items-center justify-center flex-col">
-            <Link to="/create-multi-comparison">
-              <Button size="lg" className="text-lg px-8 py-6">
-                Start Comparing <GitCompare className="ml-2 h-5 w-5" />
-              </Button>
-            </Link>
+            <Button asChild size="lg" className="text-lg px-8 py-6">
+              <Link to="/create-multi-comparison">
+                <span> {/* Wrap children in a single span */}
+                  Start Comparing <GitCompare className="ml-2 h-5 w-5" />
+                </span>
+              </Link>
+            </Button>
             <p className="text-xs text-muted-foreground mt-4 max-w-[250px]">
               Each video requires 50+ comments. Analysis may take up to 30 seconds per video.
             </p>
@@ -60,11 +64,13 @@ function Index() {
             </CardDescription>
           </CardHeader>
           <CardContent className="flex-grow flex items-center justify-center">
-            <Link to="/library">
-              <Button variant="outline" size="lg" className="text-lg px-8 py-6">
-                View Analysis Library <ArrowRightIcon className="ml-2 h-5 w-5" />
-              </Button>
-            </Link>
+            <Button asChild variant="outline" size="lg" className="text-lg px-8 py-6">
+              <Link to="/library">
+                <span> {/* Wrap children in a single span */}
+                  View Analysis Library <ArrowRightIcon className="ml-2 h-5 w-5" />
+                </span>
+              </Link>
+            </Button>
           </CardContent>
         </Card>
 
@@ -76,11 +82,13 @@ function Index() {
             </CardDescription>
           </CardHeader>
           <CardContent className="flex-grow flex items-center justify-center">
-            <Link to="/multi-comparison-library">
-              <Button variant="outline" size="lg" className="text-lg px-8 py-6">
-                View Comparison Library <GitCompare className="ml-2 h-5 w-5" />
-              </Button>
-            </Link>
+            <Button asChild variant="outline" size="lg" className="text-lg px-8 py-6">
+              <Link to="/multi-comparison-library">
+                <span> {/* Wrap children in a single span */}
+                  View Comparison Library <GitCompare className="ml-2 h-5 w-5" />
+                </span>
+              </Link>
+            </Button>
           </CardContent>
         </Card>
       </div>

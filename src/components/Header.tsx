@@ -5,10 +5,8 @@ import { ModeToggle } from './ModeToggle';
 import MobileNav from './MobileNav';
 
 const Header = () => {
-  const { session, subscriptionStatus, subscriptionPlanId } = useAuth(); // Get subscription info
+  const { session } = useAuth(); // Corrected destructuring, removed unused subscriptionStatus and subscriptionPlanId
 
-  // const isPaidTier = subscriptionStatus === 'active' && subscriptionPlanId !== 'free'; // Removed as no longer used
-  // const showUpgradeButton = session && !isPaidTier; // Removed as no longer used
   const showAuthButtons = !session; // Show Sign In/Sign Up if not logged in
 
   return (
