@@ -4,11 +4,11 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, ArrowLeft, GitCompare, Youtube } from 'lucide-react'; // Added Youtube icon
+import { Loader2, ArrowLeft, GitCompare, Youtube } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Skeleton } from '@/components/ui/skeleton';
-import ComparisonDataDisplay from '@/components/ComparisonDataDisplay'; // Import the new component
+import ComparisonDataDisplay from '@/components/ComparisonDataDisplay';
 
 interface CustomComparativeQuestion {
   question: string;
@@ -38,8 +38,8 @@ interface Comparison {
   last_compared_at: string;
   comparison_data_json: any;
   custom_comparative_qa_results: CustomComparativeQuestion[];
-  videoA?: BlogPostSummary; // Added for video A details
-  videoB?: BlogPostSummary; // Added for video B details
+  videoA?: BlogPostSummary;
+  videoB?: BlogPostSummary;
 }
 
 const fetchComparisonBySlug = async (slug: string): Promise<Comparison | null> => {
@@ -195,6 +195,22 @@ const ComparisonDetail = () => {
     );
   }
 
+  // Function to remove the first H1 from markdown content
+  const removeFirstH1 = (markdownContent: string, title: string): string => {
+    const lines = markdownContent.split('\n');
+    if (lines.length > 0 && lines[0].startsWith('#')) {
+      const firstLineTitle = lines[0].substring(1).trim(); // Remove '#' and trim
+      // Check if the first H1 roughly matches the comparison title
+      // Using a simple includes check for robustness against minor AI variations
+      if (title.includes(firstLineTitle) || firstLineTitle.includes(title)) {
+        return lines.slice(1).join('\n').trim();
+      }
+    }
+    return markdownContent;
+  };
+
+  const contentWithoutDuplicateTitle = removeFirstH1(comparison.content, comparison.title);
+
   return (
     <div className="container mx-auto p-4 max-w-3xl">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-2">
@@ -244,7 +260,7 @@ const ComparisonDetail = () => {
         </CardHeader>
         <CardContent className="prose dark:prose-invert max-w-none">
           <ReactMarkdown remarkPlugins={[remarkGfm]}>
-            {comparison.content}
+            {contentWithoutDuplicateTitle}
           </ReactMarkdown>
         </CardContent>
         {comparison.keywords && comparison.keywords.length > 0 && (
