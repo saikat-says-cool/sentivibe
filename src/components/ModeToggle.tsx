@@ -22,9 +22,7 @@ export function ModeToggle() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => setTheme("light")}>
-          Light
-        </DropdownMenuItem>
+        {/* Removed Light option */}
         <DropdownMenuItem onClick={() => setTheme("dark")}>
           Dark
         </DropdownMenuItem>
@@ -42,6 +40,15 @@ export function ModeToggle() {
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => setTheme("cyan")}>
           Cyan
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setTheme("deep-blue")}>
+          Deep Blue
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setTheme("forest-green")}>
+          Forest Green
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setTheme("purple-haze")}>
+          Purple Haze
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
