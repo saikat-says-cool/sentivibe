@@ -17,6 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Link, useLocation } from "react-router-dom";
 import VideoChatDialog from "@/components/VideoChatDialog";
 import { useAuth } from "@/integrations/supabase/auth";
+import AdBanner from "@/components/AdBanner"; // Import AdBanner
 
 interface AiAnalysisResult {
   overall_sentiment: string;
@@ -324,6 +325,7 @@ const AnalyzeVideo = () => {
 
   return (
     <div className="container mx-auto p-4 max-w-3xl">
+      <AdBanner location="top" /> {/* Top ad banner */}
       <Card className="mb-6">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -630,6 +632,7 @@ const AnalyzeVideo = () => {
               </div>
             </CardContent>
           </Card>
+          <AdBanner location="inline" /> {/* Inline ad banner */}
 
           <VideoChatDialog
             isOpen={isChatDialogOpen}
