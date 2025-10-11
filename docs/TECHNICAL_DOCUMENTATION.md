@@ -1,7 +1,7 @@
 # SentiVibe Technical Documentation
 
 ## 1. Introduction
-This document provides a comprehensive technical overview of the SentiVibe application, detailing its architecture, core components, data flow, Supabase integration, and external API interactions. SentiVibe is a React-based web application designed to perform AI-powered sentiment analysis on YouTube video comments, engage in context-aware conversations about the analysis, and automatically generate SEO-optimized blog posts for each analysis, which are then stored and made discoverable in a dedicated library. It now also supports **user-defined custom questions** that are answered by AI and included in the analysis report, and features a **staleness-freshness logic** to ensure analyses remain up-to-date. The application now operates with a **public-first approach**, allowing unauthenticated users to access core analysis and library features, with enhanced theming options.
+This document provides a comprehensive technical overview of the SentiVibe application, detailing its architecture, core components, data flow, Supabase integration, and external API interactions. SentiVibe is a React-based web application designed to perform AI-powered sentiment analysis on YouTube video comments, engage in context-aware conversations about the analysis, and automatically generate SEO-optimized blog posts for each analysis, which are then stored and made discoverable in a dedicated library. It now also supports **user-defined custom questions** that are answered by AI and included in the analysis report, and features a **staleness-freshness logic** to ensure analyses remain up-to-date. The application has been extended to support **multi-video comparisons**, including dedicated comparative insights, blog posts, and a robust staleness/freshness mechanism. The application now operates with a **public-first approach**, allowing unauthenticated users to access core analysis and library features, with enhanced theming options.
 
 ## 2. Tech Stack
 The application is built using the following technologies:
@@ -31,35 +31,46 @@ The project follows a standard React application structure with specific directo
     *   `src/lib/utils.ts`: Utility functions (e.g., `cn` for Tailwind class merging).
     *   `src/utils/toast.ts`: Utility functions for `sonner` toast notifications.
     *   `src/components/`: Reusable UI components.
-        *   `src/components/Header.tsx`: Global application header with the **SentiVibe wordmark**, a **theme toggle**, and **public links to 'Analyze a Video' and 'Analysis Library'**.
+        *   `src/components/Header.tsx`: Global application header with the **SentiVibe wordmark**, a **theme toggle**, and **public links to 'Analyze a Video', 'Analysis Library', 'Compare Videos', and 'Comparison Library'**.
         *   `src/components/ModeToggle.tsx`: Component for switching between light, dark, system, and **new Emerald, Crimson, Yellow, and Cyan themes**.
         *   `src/components/ChatInterface.tsx`: Generic chat UI component.
         *   `src/components/ProtectedRoute.tsx`: Component for protecting routes (now less critical due to public-first strategy, but still present for `MyAnalyses`).
         *   `src/components/Footer.tsx`: Application footer, now including the **brand ethics disclosure**.
         *   `src/components/theme-provider.tsx`: Theme context provider, **updated to support new themes**.
-        *   `src/components/VideoChatDialog.tsx`: **Updated component for the centralized AI chat pop-up, now passing custom Q&A results as context and allowing precise word count control.**
+        *   `src/components/VideoChatDialog.tsx`: **Updated component for the centralized AI chat pop-up for single video analyses, now passing custom Q&A results as context and allowing precise word count control.**
         *   `src/components/LibraryCopilot.tsx`: **Enhanced AI assistant for searching the analysis library and recommending new analysis topics.**
+        *   `src/components/ComparisonDataDisplay.tsx`: **New component to display structured comparison data for two videos.**
+        *   `src/components/MultiComparisonDataDisplay.tsx`: **New component to display structured comparison data for multiple videos.**
+        *   `src/components/ComparisonChatDialog.tsx`: **New component for the centralized AI chat pop-up for two-video comparisons.**
+        *   `src/components/MultiComparisonChatDialog.tsx`: **New component for the centralized AI chat pop-up for multi-video comparisons.**
+        *   `src/components/ComparisonLibraryCopilot.tsx`: **New AI assistant for searching the comparison library and recommending new comparative analysis topics.**
         *   `src/components/ui/`: Shadcn/ui components (e.g., Button, Card, Input, Badge, Alert, Skeleton, Collapsible).
     *   `src/hooks/`: Custom React hooks.
         *   `src/hooks/use-mobile.tsx`: Hook for detecting mobile viewport.
         *   `src/hooks/use-toast.ts`: Shadcn/ui toast hook (distinct from `sonner` toasts).
     *   `src/pages/`: Application pages/views.
-        *   `src/pages/Index.tsx`: **Updated landing page, now featuring direct calls to action for analyzing videos and exploring the library, removing the previous static cover page.**
+        *   `src/pages/Index.tsx`: **Updated landing page, now featuring direct calls to action for analyzing videos, comparing videos, and exploring both analysis and comparison libraries.**
         *   `src/pages/Login.tsx`: User authentication page, styled to integrate with the new color palette.
-        *   `src/pages/AnalyzeVideo.tsx`: **Significantly updated main page for YouTube video analysis, now featuring dynamic custom question input fields with word limits, displaying AI-generated answers, including a 'Refresh Analysis' button and 'Last Full Analysis' timestamp, and a disclaimer about the 50-comment minimum.**
+        *   `src/pages/AnalyzeVideo.tsx`: **Significantly updated main page for YouTube video analysis, now featuring dynamic custom question input fields with word limits, displaying AI-generated answers, including a 'Refresh Analysis' button and 'Last Full Analysis' timestamp, and a disclaimer about the 50-comment minimum. Also explicitly lists top 10 comments.**
         *   `src/pages/VideoAnalysisLibrary.tsx`: **Updated page to list and search generated blog posts (video analyses), with updated BlogPost interface, and integrating the enhanced `LibraryCopilot`.**
         *   `src/pages/MyAnalyses.tsx`: **Updated page to list a user's own analyses, now integrating the enhanced `LibraryCopilot` and with updated BlogPost interface.**
-        *   `src/pages/BlogPostDetail.tsx`: **Updated page to display the full content of a single generated blog post, including the new custom Q&A section, a 'Go to Video Analysis' button, a 'Refresh Analysis' button, and the 'Last Full Analysis' timestamp.**
+        *   `src/pages/BlogPostDetail.tsx`: **Updated page to display the full content of a single generated blog post, including the new custom Q&A section, a 'Go to Video Analysis' button, a 'Refresh Analysis' button, the 'Last Full Analysis' timestamp, and explicitly lists top 10 comments.**
+        *   `src/pages/CreateMultiComparison.tsx`: **New page for initiating multi-video comparisons, allowing input of multiple video links and custom comparative questions. Displays the multi-comparison analysis results, links to individual video analyses, and includes a 'Refresh Comparison' button and 'Last Compared' timestamp.**
+        *   `src/pages/MultiComparisonLibrary.tsx`: **New page to list and search generated multi-video comparison blog posts, integrating the `ComparisonLibraryCopilot`. Displays the first video thumbnail with a '+X more' badge for multi-video comparisons.**
+        *   `src/pages/MultiComparisonDetail.tsx`: **New page to display the full content of a single generated multi-video comparison blog post. Includes links to individual video analyses, a 'Go to Multi-Comparison Analysis' button, a 'Refresh Comparison' button, the 'Last Full Comparison' timestamp, and explicitly lists top 10 comments for each video.**
+        *   `src/pages/ComparisonDetail.tsx`: (Legacy, but still present) Page for displaying two-video comparisons.
         *   `src/pages/NotFound.tsx`: 404 error page.
-    *   `src/integrations/supabase/`: Supabase-specific integration files.
-        *   `src/integrations/supabase/client.ts`: Supabase client initialization.
-        *   `src/integrations/supabase/auth.tsx`: React Context Provider and hook for managing Supabase user sessions.
 *   `supabase/`: Supabase-related backend files.
     *   `supabase/functions/`: Supabase Edge Functions.
-        *   `supabase/functions/youtube-analyzer/index.ts`: **Significantly updated Edge Function for video analysis, now implementing staleness-freshness logic, processing custom questions, making additional AI calls for answers, and storing these Q&A results in the database, even for cached videos. It also handles a `forceReanalyze` flag. AI prompts have been extensively engineered for high-quality, production-grade responses for sentiment analysis, blog post generation, and custom Q&A, and the authentication check has been removed to allow unauthenticated access.**
+        *   `supabase/functions/youtube-analyzer/index.ts`: **Significantly updated Edge Function for video analysis, now implementing staleness-freshness logic, processing custom questions, making additional AI calls for answers, and storing these Q&A results in the database, even for cached videos. It also handles a `forceReanalyze` flag and explicitly stores top 10 comments. AI prompts have been extensively engineered for high-quality, production-grade responses for sentiment analysis, blog post generation, and custom Q&A, and the authentication check has been removed to allow unauthenticated access.**
         *   `supabase/functions/fetch-external-context/index.ts`: Edge Function for performing a one-time Google Custom Search.
-        *   `supabase/functions/chat-analyzer/index.ts`: **Updated Edge Function for handling AI chat conversations, now incorporating custom Q&A results into the AI's context and using a desired word count for response length. AI prompts have been extensively engineered for high-quality, production-grade responses, including a strict information hierarchy, precise word count adherence, and mandatory Markdown hyperlink formatting. The authentication check has been removed to allow unauthenticated access.**
+        *   `supabase/functions/chat-analyzer/index.ts`: **Updated Edge Function for handling AI chat conversations for single videos, now incorporating custom Q&A results into the AI's context and using a desired word count for response length. AI prompts have been extensively engineered for high-quality, production-grade responses, including a strict information hierarchy, precise word count adherence, and mandatory Markdown hyperlink formatting. The authentication check has been removed to allow unauthenticated access.**
         *   `supabase/functions/library-copilot-analyzer/index.ts`: **Enhanced Edge Function for handling AI chat for the Library Copilot, now performing semantic search and proactively recommending new analysis topics. AI prompts have been extensively engineered for high-quality, production-grade responses, including precise matching, clear recommendations, and mandatory Markdown hyperlink formatting. The authentication check has been removed to allow unauthenticated access.**
+        *   `supabase/functions/video-comparator/index.ts`: (Legacy, but still present) Edge Function for two-video comparisons.
+        *   `supabase/functions/comparison-chat-analyzer/index.ts`: **New Edge Function for handling AI chat conversations for two-video comparisons.**
+        *   `supabase/functions/multi-video-comparator/index.ts`: **New Edge Function for multi-video comparisons, implementing robust staleness/freshness logic, orchestrating individual video analysis refreshes, generating comparative insights, and handling custom comparative questions. It also ensures individual blog post IDs and slugs are returned.**
+        *   `supabase/functions/multi-comparison-chat-analyzer/index.ts`: **New Edge Function for handling AI chat conversations for multi-video comparisons.**
+        *   `supabase/functions/comparison-library-copilot-analyzer/index.ts`: **New Edge Function for handling AI chat for the Comparison Library Copilot, performing semantic search and recommending new comparative analysis topics.**
     *   `supabase/migrations/`: Database migration files.
 *   `tailwind.config.ts`: Tailwind CSS configuration, including custom fonts (`Arimo`, `Plus Jakarta Sans`) and the new brand color palette.
 *   `.env`: Environment variables (e.g., Supabase URLs, API keys).
@@ -74,13 +85,13 @@ The project follows a standard React application structure with specific directo
     *   `Toaster` (from `sonner`): For displaying toast notifications, configured to use brand colors for success/error/neutral.
 *   **`AppRoutes` Component:** Encapsulates `BrowserRouter` and `Routes`.
     *   Renders the `Header` component globally.
-    *   Defines application routes: `/`, `/login`, `/analyze-video`, `/library`, `/my-analyses`, `/blog/:slug`, and a catch-all `*` for `NotFound`.
-*   **`ProtectedRoute` Component:** A higher-order component that ensures only authenticated users can access specific routes (e.g., `/my-analyses`). It redirects unauthenticated users to `/login`. Note: `/analyze-video` and `/library` are now publicly accessible.
+    *   Defines application routes: `/`, `/login`, `/analyze-video`, `/library`, `/my-analyses`, `/blog/:slug`, `/create-multi-comparison`, `/multi-comparison-library`, `/multi-comparison/:slug`, and a catch-all `*` for `NotFound`.
+*   **`ProtectedRoute` Component:** A higher-order component that ensures only authenticated users can access specific routes (e.g., `/my-analyses`). It redirects unauthenticated users to `/login`. Note: `/analyze-video`, `/library`, `/create-multi-comparison`, and `/multi-comparison-library` are now publicly accessible.
 
 ### 4.2. `Header.tsx`
 *   A React component that renders a consistent header across all pages.
 *   Displays the **SentiVibe wordmark** (`<span className="text-foreground">Senti</span><span className="text-accent">Vibe</span>`) using the `font-heading` (Plus Jakarta Sans) typeface.
-*   **Now includes navigation links to `/analyze-video` and `/library` for all users.**
+*   **Now includes navigation links to `/analyze-video`, `/library`, `/create-multi-comparison`, and `/multi-comparison-library` for all users.**
 *   Includes a link to `/my-analyses` for authenticated users.
 *   Integrates the `ModeToggle` component for theme switching.
 *   Styled with Tailwind CSS for a clean, **Crowd Black** and **Pure White** appearance.
@@ -89,7 +100,7 @@ The project follows a standard React application structure with specific directo
 *   **The default entry point for all users.**
 *   Features the **SentiVibe wordmark** prominently (`text-5xl font-extrabold tracking-tight`).
 *   Displays the new tagline: "Unlock the true sentiment behind YouTube comments. Analyze, understand, and gain insights into audience reactions with AI-powered sentiment analysis."
-*   **Includes clear calls-to-action** with buttons to "Analyze a Video" and "Explore the Library," directly guiding users to the core functionalities.
+*   **Includes clear calls-to-action** with buttons to "Analyze a Video", "Compare Videos", "Explore the Library", and "View Comparisons", directly guiding users to the core functionalities.
 
 ### 4.4. `Login.tsx` (Authentication Page)
 *   Utilizes the `@supabase/auth-ui-react` component for a pre-built authentication UI.
@@ -119,6 +130,7 @@ The project follows a standard React application structure with specific directo
     *   **"Chat with AI" Button:** Triggers the `VideoChatDialog` pop-up.
     *   **Community Q&A Display:** A new section displays the AI-generated answers for all community questions.
     *   **`Last Full Analysis` Timestamp:** Displays the `lastReanalyzedAt` date to indicate the freshness of the core sentiment analysis.
+    *   **Top 10 Raw Comments:** A dedicated section lists the top 10 most popular comments.
 *   **PDF Download:** Integrates `html2pdf.js` to convert the analysis results `Card` into a downloadable PDF. The PDF generation now includes a custom header with the SentiVibe logo and tagline, and the community Q&A section.
 *   **`VideoChatDialog` Integration:** Renders the `VideoChatDialog` component, passing `isChatDialogOpen`, `onOpenChange`, and `initialAnalysisResult` (which now includes `customQaResults`) as props.
 
@@ -152,6 +164,7 @@ The project follows a standard React application structure with specific directo
     *   Renders the `content` field (which is in Markdown) using `react-markdown` and `remarkGfm` for proper formatting.
     *   Displays `keywords` using `Badge` components.
     *   **Community Q&A Section:** A new section displays the AI-generated answers for all community questions if `blogPost.custom_qa_results` are present.
+    *   **Top 10 Raw Comments:** A dedicated section lists the top 10 most popular comments (from `ai_analysis_json.raw_comments_for_chat`).
     *   Includes a "Back to Analysis Library" `Link` for easy navigation.
     *   Includes an "Analyze a New Video" `Button` linking to `/analyze-video`.
     *   Includes an "Original Video" `<a>` tag linking to `blogPost.original_video_link`.
@@ -159,7 +172,63 @@ The project follows a standard React application structure with specific directo
     *   Handles cases where the blog post is not found or an error occurs.
 *   **`VideoChatDialog` Integration:** Renders the `VideoChatDialog` component, passing `isChatDialogOpen`, `onOpenChange`, and `blogPost` as props.
 
-### 4.8. `ChatInterface.tsx` (Generic Chat UI)
+### 4.8. `CreateMultiComparison.tsx` (Multi-Video Comparison Page)
+*   **Purpose:** Allows users to input multiple YouTube video links and custom comparative questions to generate a multi-video comparison analysis.
+*   **State Management:** Manages `videoLinks` (array of strings), `customComparativeQuestions` (array of objects), `multiComparisonResult`, `error`, and `isChatDialogOpen`.
+*   **Initial Load from Navigation:** Uses `useLocation` to check for an `initialMultiComparison` object passed via navigation state. If present, it pre-fills the `videoLinks` and `customComparativeQuestions` fields and sets the `multiComparisonResult`. It also handles a `forceRecompare` flag to trigger an immediate re-comparison.
+*   **Supabase Edge Function Invocation:**
+    *   **`createMultiComparisonMutation`:** Uses `useMutation` to call the `multi-video-comparator` Supabase Edge Function. The payload includes `videoLinks`, `customComparativeQuestions`, and an optional `forceRecompare` flag.
+*   **UI Elements:**
+    *   Dynamic input fields for `videoLinks` (minimum 2, with add/remove buttons).
+    *   Dynamic input fields for `customComparativeQuestions` (with question and word count, and add/remove buttons).
+    *   `Button` to trigger the comparison, showing a `Loader2` icon when pending.
+    *   `Alert` component displays any errors.
+    *   **Display of Individual Video Thumbnails:** Shows a row of clickable thumbnails for each video in the comparison, each linking to its respective `BlogPostDetail.tsx` page. A clear instruction "Click on any video thumbnail above to view its individual analysis." is provided.
+    *   **`Last Compared` Timestamp:** Displays the `last_compared_at` date from `multiComparisonResult`.
+    *   **"Refresh Comparison" Button:** Triggers `handleRefreshComparison` to force a full re-comparison.
+    *   **"Chat with AI" Button:** Opens the `MultiComparisonChatDialog`.
+    *   **"View Full Multi-Comparison Blog Post" Button:** Links to the `MultiComparisonDetail.tsx` page.
+    *   **`MultiComparisonDataDisplay`:** Renders the structured comparative insights.
+    *   **Comparative Q&A Display:** Displays AI-generated answers to custom comparative questions.
+*   **`MultiComparisonChatDialog` Integration:** Renders the `MultiComparisonChatDialog` component, passing `isChatDialogOpen`, `onOpenChange`, and `multiComparisonResult` as props.
+
+### 4.9. `MultiComparisonLibrary.tsx` (Multi-Comparison Library Page)
+*   **Purpose:** Displays a list of all generated multi-video comparison blog posts from the Supabase database.
+*   **Data Fetching:** Uses `useQuery` to fetch entries from the `public.multi_comparisons` table, joining with `multi_comparison_videos` and `blog_posts` to get details of the constituent videos.
+*   **Search Functionality:** Implements client-side search by comparison title, video titles, or keywords.
+*   **UI Elements:**
+    *   `Input` for the search bar.
+    *   `Card` components for each comparison.
+    *   **Thumbnail Display:** Displays the first video's thumbnail. If there are more videos, a `Badge` with "+X more" is overlaid to indicate a multi-video comparison.
+    *   Each `Card` is wrapped in a `Link` to navigate to the `MultiComparisonDetail.tsx` page.
+    *   `Skeleton` components provide loading state visuals.
+    *   **`ComparisonLibraryCopilot` Integration:** Renders the AI copilot for searching comparisons and suggesting new topics.
+
+### 4.10. `MultiComparisonDetail.tsx` (Multi-Comparison Blog Post Detail Page)
+*   **Purpose:** Displays the full content of a single, SEO-optimized multi-video comparison blog post.
+*   **Data Fetching:** Uses `useParams` to extract the `slug` and `useQuery` to fetch the specific multi-comparison from `public.multi_comparisons`, joining with `multi_comparison_videos` and `blog_posts` to get all video details, including `ai_analysis_json` for raw comments.
+*   **SEO Enhancements:** Dynamically updates `document.title`, `meta description`, `Open Graph tags`, and `JSON-LD structured data` based on the comparison's details.
+*   **UI Elements:**
+    *   Displays the comparison `title`, `meta_description`, `keywords`, `created_at`, `updated_at`, and `last_compared_at`.
+    *   **Display of Individual Video Thumbnails:** Shows a row of clickable thumbnails for each video in the comparison, each linking to its respective `BlogPostDetail.tsx` page. A clear instruction "Click on any video thumbnail above to view its individual analysis." is provided.
+    *   Renders the `content` field (Markdown) using `react-markdown`.
+    *   **`MultiComparisonDataDisplay`:** Renders the structured comparative insights.
+    *   **Comparative Q&A Section:** Displays AI-generated answers to custom comparative questions.
+    *   **Top 10 Raw Comments for Each Video:** A dedicated section lists the top 10 most popular comments for *each* video in the comparison.
+    *   **"Go to Multi-Comparison Analysis" Button:** Navigates to `/create-multi-comparison`, passing the `multiComparison` object in `location.state` to pre-fill the analysis view.
+    *   **"Refresh Comparison" Button:** Navigates to `/create-multi-comparison`, passing the `multiComparison` object and `forceRecompare: true` in `location.state` to trigger a full re-comparison.
+    *   **"Chat with AI" Button:** Opens the `MultiComparisonChatDialog`.
+    *   Includes a "Back to Comparison Library" `Link`.
+*   **`MultiComparisonChatDialog` Integration:** Renders the `MultiComparisonChatDialog` component, passing `isChatDialogOpen`, `onOpenChange`, and `multiComparison` as props.
+
+### 4.11. `MyAnalyses.tsx` (User's Analysis History Page)
+*   **Purpose:** Displays a list of blog posts (video analyses) created by the currently authenticated user.
+*   **Data Fetching:** Uses `useQuery` to fetch `blog_posts` where `author_id` matches the current user's ID, ordered by `created_at`. The `BlogPost` interface has been updated to include `custom_qa_results` and `last_reanalyzed_at`.
+*   **Search Functionality:** Similar client-side search as `VideoAnalysisLibrary.tsx`.
+*   **UI Elements:** Displays user-specific analyses in `Card` components, linked to `BlogPostDetail.tsx`.
+*   **`LibraryCopilot` Integration:** Renders the **enhanced** `LibraryCopilot` component, passing the user's `blogPosts` for AI-powered search and topic recommendations within their personal history.
+
+### 4.12. `ChatInterface.tsx` (Generic Chat UI)
 *   A reusable component designed to display a list of messages and provide an input field for sending new messages.
 *   Supports both 'user' and 'ai' sender types, with distinct styling.
 *   Includes a loading indicator (`Loader2` styled with `text-muted-foreground`) when `isLoading` is true.
@@ -167,9 +236,9 @@ The project follows a standard React application structure with specific directo
 *   Handles message input and sending via `onSendMessage` prop.
 *   **Markdown Rendering:** Integrates `react-markdown` with `remarkGfm` to correctly render Markdown formatting in AI responses, including **underlined hyperlinks**, improving readability. The `prose dark:prose-invert` Tailwind classes are applied to ensure consistent typography.
 
-### 4.9. `VideoChatDialog.tsx` (Updated Component)
-*   **Purpose:** Centralizes the AI conversational chat experience for video analyses into a reusable pop-up dialog.
-*   **Props:** Accepts `isOpen` (boolean to control visibility), `onOpenChange` (callback to update `isOpen`), `initialAnalysisResult` (optional, for new analyses from `AnalyzeVideo`), and `initialBlogPost` (optional, for analyses loaded from `BlogPostDetail`).
+### 4.13. `VideoChatDialog.tsx` (Single Video Chat Dialog)
+*   **Purpose:** Centralizes the AI conversational chat experience for single video analyses into a reusable pop-up dialog.
+*   **Props:** Accepts `isOpen`, `onOpenChange`, `initialAnalysisResult` (for new analyses from `AnalyzeVideo`), and `initialBlogPost` (for analyses loaded from `BlogPostDetail`).
 *   **Internal State:** Manages `chatMessages`, `desiredWordCount`, `selectedPersona`, `currentExternalContext`, and `currentAnalysisResult`.
 *   **Context Initialization:** On dialog open, it checks `initialAnalysisResult` or `initialBlogPost` to set `currentAnalysisResult`. If `initialBlogPost` is provided, it reconstructs the `AnalysisResponse` object from the blog post data, including `ai_analysis_json`, `raw_comments_for_chat`, and **`custom_qa_results`**.
 *   **External Context Fetching:** Uses an internal `fetchExternalContextMutation` (calling `fetch-external-context` Edge Function) to get up-to-date external information based on the video's title and tags, *once per dialog open*.
@@ -177,19 +246,39 @@ The project follows a standard React application structure with specific directo
 *   **AI Controls:** Provides a `Select` component for users to choose `selectedPersona` and an `Input` for `desiredWordCount`, which are passed to the `chat-analyzer` Edge Function.
 *   **UI:** Renders the `ChatInterface` component within the dialog.
 
-### 4.10. `LibraryCopilot.tsx` (Enhanced Component)
-*   **Purpose:** Provides an AI assistant within the analysis library pages to help users find specific video analyses **and recommend new analysis topics.**
+### 4.14. `MultiComparisonChatDialog.tsx` (Multi-Video Comparison Chat Dialog)
+*   **Purpose:** Centralizes the AI conversational chat experience for multi-video comparisons into a reusable pop-up dialog.
+*   **Props:** Accepts `isOpen`, `onOpenChange`, and `initialMultiComparisonResult`.
+*   **Internal State:** Manages `chatMessages`, `desiredWordCount`, `selectedPersona`, and `currentExternalContext`.
+*   **Context Initialization:** On dialog open, it sets `initialMultiComparisonResult` and fetches external context based on the comparison title.
+*   **External Context Fetching:** Uses `fetchExternalContextMutation` to get external information.
+*   **Chat Mutation:** Uses `chatMutation` (calling `multi-comparison-chat-analyzer` Edge Function) to send user messages and receive AI responses. The `multiComparisonResult` (including `custom_comparative_qa_results` and `raw_comments_for_chat` for each video) is passed as context.
+*   **AI Controls:** Provides `Select` for `selectedPersona` and `Input` for `desiredWordCount`.
+*   **UI:** Renders the `ChatInterface` component.
+
+### 4.15. `LibraryCopilot.tsx` (Single Video Library Copilot)
+*   **Purpose:** Provides an AI assistant within the single video analysis library pages to help users find specific video analyses **and recommend new analysis topics.**
 *   **Props:** Accepts `blogPosts` (an array of `BlogPost` objects) from the parent page.
 *   **Internal State:** Manages `isOpen` (for the dialog) and `chatMessages`.
 *   **Chat Mutation:** Uses `copilotChatMutation` to invoke the **enhanced** `library-copilot-analyzer` Edge Function, passing the user's query and a simplified list of `blogPostsData`.
 *   **Markdown Links:** The AI is instructed to respond with clickable Markdown links (`[Title](/blog/slug)`) to relevant blog posts.
 
-### 4.11. `MyAnalyses.tsx` (New Page)
-*   **Purpose:** Displays a list of blog posts (video analyses) created by the currently authenticated user.
-*   **Data Fetching:** Uses `useQuery` to fetch `blog_posts` where `author_id` matches the current user's ID, ordered by `created_at`. The `BlogPost` interface has been updated to include `custom_qa_results` and `last_reanalyzed_at`.
-*   **Search Functionality:** Similar client-side search as `VideoAnalysisLibrary.tsx`.
-*   **UI Elements:** Displays user-specific analyses in `Card` components, linked to `BlogPostDetail.tsx`.
-*   **`LibraryCopilot` Integration:** Renders the **enhanced** `LibraryCopilot` component, passing the user's `blogPosts` for AI-powered search and topic recommendations within their personal history.
+### 4.16. `ComparisonLibraryCopilot.tsx` (Multi-Video Comparison Library Copilot)
+*   **Purpose:** Provides an AI assistant within the multi-video comparison library page to help users find specific comparisons **and recommend new comparative analysis topics.**
+*   **Props:** Accepts `comparisons` (an array of `MultiComparison` objects) from the parent page.
+*   **Internal State:** Manages `isOpen` (for the dialog) and `chatMessages`.
+*   **Chat Mutation:** Uses `copilotChatMutation` to invoke the `comparison-library-copilot-analyzer` Edge Function, passing the user's query and a simplified list of `comparisonsData`.
+*   **Markdown Links:** The AI is instructed to respond with clickable Markdown links (`[Title](/comparison/slug)`) to relevant comparison blog posts.
+
+### 4.17. `ComparisonDataDisplay.tsx` (Two-Video Comparison Data Display)
+*   **Purpose:** A reusable component to display structured comparative insights for two videos.
+*   **Props:** Accepts `data` (an object containing `sentiment_delta`, `emotional_tone_breakdown`, `top_themes_intersection`, etc.).
+*   **UI:** Renders the comparison data in a clear, card-based format with badges and icons.
+
+### 4.18. `MultiComparisonDataDisplay.tsx` (Multi-Video Comparison Data Display)
+*   **Purpose:** A reusable component to display structured comparative insights for multiple videos.
+*   **Props:** Accepts `data` (an object containing `overall_sentiment_trend`, `common_emotional_tones`, `divergent_emotional_tones`, `common_themes`, `unique_themes`, `summary_insights`, `video_summaries`).
+*   **UI:** Renders the multi-comparison data in a clear, card-based format with badges.
 
 ## 5. Supabase Integration Details
 
@@ -203,7 +292,7 @@ The project follows a standard React application structure with specific directo
 *   Subscribes to `onAuthStateChange` events to keep the session state updated in real-time.
 *   Provides `session` (the current Supabase session), `user`, and `isLoading` (whether the session is being fetched) to child components via the `useAuth` hook.
 
-### 5.3. Database Schema (`public.profiles`, `public.blog_posts`)
+### 5.3. Database Schema (`public.profiles`, `public.blog_posts`, `public.multi_comparisons`, `public.multi_comparison_videos`)
 *   **Table:** `public.profiles` (Existing)
     *   `id`: UUID, Primary Key, references `auth.users(id)` (CASCADE on delete).
     *   `first_name`: TEXT
@@ -239,8 +328,37 @@ The project follows a standard React application structure with specific directo
     *   `Authenticated users can update their own blog posts`: `FOR UPDATE TO authenticated USING (auth.uid() = author_id)`
     *   `Authenticated users can delete their own blog posts`: `FOR DELETE TO authenticated USING (auth.uid() = author_id)`
     *   `Public read access for published blog posts`: `FOR SELECT USING (published_at IS NOT NULL)`
-    *   **`Allow anon users to insert blog posts with null author_id`**: `FOR INSERT TO anon WITH CHECK (author_id IS NULL)`
+    *   `Allow anon users to insert blog posts with null author_id`: `FOR INSERT TO anon WITH CHECK (author_id IS NULL)`
     *   These policies ensure authenticated users manage their own posts, only published posts are publicly viewable, and unauthenticated users can create public analyses.
+*   **Table:** `public.multi_comparisons` (New)
+    *   `id`: UUID, Primary Key, defaults to `gen_random_uuid()`.
+    *   `title`: TEXT, NOT NULL.
+    *   `slug`: TEXT, NOT NULL, UNIQUE.
+    *   `meta_description`: TEXT.
+    *   `keywords`: TEXT[] (Array of keywords).
+    *   `content`: TEXT, NOT NULL (Blog post content in Markdown).
+    *   `author_id`: UUID, references `auth.users(id)` (ON DELETE SET NULL).
+    *   `created_at`: TIMESTAMP WITH TIME ZONE, defaults to `NOW()`.
+    *   `updated_at`: TIMESTAMP WITH TIME ZONE, defaults to `NOW()`.
+    *   `last_compared_at`: TIMESTAMP WITH TIME ZONE, defaults to `NOW()` (Tracks the last time a full multi-comparison was performed).
+    *   `comparison_data_json`: JSONB (Stores the structured AI multi-comparison result).
+    *   `custom_comparative_qa_results`: JSONB[] (Stores an array of custom comparative questions and their AI-generated answers).
+    *   `overall_thumbnail_url`: TEXT (A representative thumbnail for the comparison, if applicable).
+*   **Row Level Security (RLS) for `public.multi_comparisons`:** Enabled.
+    *   `Authenticated users can create multi-comparisons`: `FOR INSERT TO authenticated WITH CHECK (auth.uid() = author_id)`
+    *   `Authenticated users can update their own multi-comparisons`: `FOR UPDATE TO authenticated USING (auth.uid() = author_id)`
+    *   `Authenticated users can delete their own multi-comparisons`: `FOR DELETE TO authenticated USING (auth.uid() = author_id)`
+    *   `Public read access for multi-comparisons`: `FOR SELECT USING (true)`
+    *   `Allow anon users to insert multi-comparisons with null author_id`: `FOR INSERT TO anon WITH CHECK (author_id IS NULL)`
+*   **Table:** `public.multi_comparison_videos` (New Junction Table)
+    *   `multi_comparison_id`: UUID, NOT NULL, references `public.multi_comparisons(id)` (ON DELETE CASCADE).
+    *   `blog_post_id`: UUID, NOT NULL, references `public.blog_posts(id)` (ON DELETE CASCADE).
+    *   `video_order`: INTEGER, NOT NULL (Order of video in the comparison).
+    *   **Composite Primary Key:** `(multi_comparison_id, blog_post_id)`
+*   **Row Level Security (RLS) for `public.multi_comparison_videos`:** Enabled.
+    *   `Users can manage videos in their multi-comparisons`: `FOR ALL TO authenticated USING (EXISTS (SELECT 1 FROM multi_comparisons WHERE multi_comparisons.id = multi_comparison_videos.multi_comparison_id AND multi_comparisons.author_id = auth.uid()))`
+    *   `Public read access for multi-comparison videos`: `FOR SELECT USING (EXISTS (SELECT 1 FROM multi_comparisons WHERE multi_comparisons.id = multi_comparison_videos.multi_comparison_id AND true))`
+    *   `Allow anon to link videos to their multi-comparisons`: `FOR INSERT TO anon WITH CHECK (EXISTS (SELECT 1 FROM multi_comparisons WHERE multi_comparisons.id = multi_comparison_videos.multi_comparison_id AND multi_comparisons.author_id IS NULL))`
 
 ### 5.4. Database Functions & Triggers
 *   **Function:** `public.handle_new_user()` (Existing)
@@ -260,9 +378,9 @@ This Deno-based serverless function is the core backend logic for video analysis
     *   Upon receiving a `videoLink`, the function first extracts the `videoId`.
     *   It then queries the `public.blog_posts` table to check if an entry with this `videoId` already exists.
     *   **If an `existingBlogPost` is found:**
-        *   It checks the `last_reanalyzed_at` timestamp against a `STALENESS_THRESHOLD_DAYS` (e.g., 30 days).
+        *   It checks the `last_reanalyzed_at` timestamp against a `STALENESS_THRESHOLD_DAYS` (currently 30 days).
         *   If `forceReanalyze` is `true` OR the analysis is `stale`, it proceeds with a **full re-analysis**.
-        *   Otherwise (analysis is fresh and no `forceReanalyze`), it reuses the existing `ai_analysis_json` and `content`.
+        *   Otherwise (analysis is fresh and no `forceReanalyze`), it reuses the existing core analysis data.
     *   **If no existing analysis is found OR a full re-analysis is triggered:** The function proceeds with the full analysis workflow:
         *   Fetch the latest video details and comments from YouTube.
         *   Perform AI sentiment analysis using Longcat AI.
@@ -283,7 +401,38 @@ This Deno-based serverless function is the core backend logic for video analysis
 *   **Response:** Returns a `200 OK` response with video details, comments, the AI analysis result, the `blogPostSlug`, the `originalVideoLink`, the `customQaResults`, and the `lastReanalyzedAt` timestamp for frontend display.
 *   **Error Handling:** Includes comprehensive `try-catch` blocks for API calls and database operations.
 
-### 5.6. Supabase Edge Function (`supabase/functions/fetch-external-context/index.ts`)
+### 5.6. Supabase Edge Function (`supabase/functions/multi-video-comparator/index.ts`)
+This Deno-based serverless function is responsible for orchestrating multi-video comparisons, including individual video analysis, comparative AI insights, and blog post generation. **It implements robust staleness/freshness logic for the multi-comparison itself, ensures individual videos are up-to-date, and handles custom comparative questions.**
+*   **CORS Handling:** Includes `corsHeaders` and handles `OPTIONS` preflight requests.
+*   **Supabase Client Initialization & User Authentication:** Creates a Supabase client within the function, gracefully handling a potentially missing user `Authorization` header. The `author_id` for new multi-comparisons will be set to `user?.id` (which can be `null` for unauthenticated users).
+*   **Input Validation:** Checks for `videoLinks` (minimum 2) and extracts `videoIds`. Also receives `customComparativeQuestions` and an optional `forceRecompare` flag.
+*   **Orchestrate Individual Video Analysis:**
+    *   For each `videoLink` provided, it first checks if an analysis for that video exists in `public.blog_posts`.
+    *   It applies the `STALENESS_THRESHOLD_DAYS` to the individual video's `last_reanalyzed_at`.
+    *   If an individual video's analysis is stale or if a full re-analysis is explicitly forced, it invokes the `youtube-analyzer` Edge Function with `forceReanalyze: true` to ensure the latest data.
+    *   It collects the fresh `blog_posts` data for all videos.
+*   **Multi-Comparison Caching & Staleness Logic:**
+    *   After ensuring all individual videos are fresh, it attempts to find an existing `multi_comparison` in the database that matches the exact set of `blog_post_id`s.
+    *   If an `existingMultiComparison` is found, it checks its `last_compared_at` timestamp against `STALENESS_THRESHOLD_DAYS`.
+    *   If `forceRecompare` is `true` OR the multi-comparison is `stale`, it proceeds with a full re-generation of the comparative insights and blog post.
+    *   Otherwise (multi-comparison is fresh and no `forceRecompare`), it reuses the existing `comparison_data_json` and `content`.
+*   **API Key Retrieval & Rotation:** Retrieves `LONGCAT_AI_API_KEY`s and iterates through them for AI calls, handling rate limits.
+*   **External Context Fetching:** Invokes `fetch-external-context` once per comparison (if regenerating or new questions) to get broader, up-to-date information relevant to the comparison.
+*   **Longcat AI Calls (if regenerating multi-comparison):**
+    *   **Core Multi-Comparison Data:** Constructs a prompt with all individual video analyses and external context, instructing Longcat AI to generate structured comparative insights (overall sentiment trend, common/divergent emotional tones, themes, summary insights, individual video summaries) in JSON format.
+    *   **Multi-Comparative Blog Post Generation:** Constructs a prompt with the core comparison data, instructing Longcat AI to generate a comprehensive, SEO-optimized blog post in Markdown format, also in JSON.
+*   **Process Custom Comparative Questions:**
+    *   If `customComparativeQuestions` are provided, it processes each question.
+    *   It constructs a specific prompt including all video analyses, core comparison data, and the user's question, instructing Longcat AI to generate an answer of the specified `wordCount`.
+    *   These answers are collected and merged with any existing `custom_comparative_qa_results`.
+*   **Slug Generation:** Ensures a unique `slug` for the multi-comparison blog post.
+*   **Database Save/Update:**
+    *   If an `existingMultiComparison` was found and re-generated, it updates the existing entry in `public.multi_comparisons` with new content, insights, Q&A, and updates `last_compared_at` and `updated_at`.
+    *   If it's a new multi-comparison, it inserts a new entry into `public.multi_comparisons` and then populates the `public.multi_comparison_videos` junction table to link the constituent `blog_posts`.
+*   **Response:** Returns a `200 OK` response with the full `MultiComparisonResult` object, including the `id`, `title`, `slug`, `meta_description`, `keywords`, `content`, `created_at`, `last_compared_at`, `comparison_data_json`, `custom_comparative_qa_results`, `overall_thumbnail_url`, and a `videos` array (containing `blog_post_id`, `slug`, `title`, `thumbnail_url`, `original_video_link`, and `raw_comments_for_chat` for each video).
+*   **Error Handling:** Includes comprehensive `try-catch` blocks.
+
+### 5.7. Supabase Edge Function (`supabase/functions/fetch-external-context/index.ts`)
 This Deno-based serverless function is responsible for fetching external, up-to-date information using Google Custom Search. **It now includes API key rotation.**
 *   **CORS Handling:** Includes `corsHeaders` and handles `OPTIONS` preflight requests.
 *   **Input Validation:** Checks for a `query` string.
@@ -293,10 +442,10 @@ This Deno-based serverless function is responsible for fetching external, up-to-
 *   **Google Custom Search API Call:** Performs a search using the provided query.
 *   **Result Processing:** Extracts snippets from the top 3 search results.
 *   **Response:** Returns a `200 OK` response with `externalSearchResults`.
-*   **Cost Optimization:** This function is called only once per video analysis session from the frontend, reducing repeated Google Search API calls.
+*   **Cost Optimization:** This function is called only once per video analysis or comparison session from the frontend, reducing repeated Google Search API calls.
 
-### 5.7. Supabase Edge Function (`supabase/functions/chat-analyzer/index.ts`)
-This Deno-based serverless function handles the conversational AI aspect. **It now includes API key rotation and explicit instructions for Markdown hyperlinks, and incorporates custom Q&A results into its context. AI prompts have been extensively engineered for high-quality, production-grade responses, including a strict information hierarchy, precise word count adherence, and mandatory Markdown hyperlink formatting. The authentication check has been removed to allow unauthenticated access.**
+### 5.8. Supabase Edge Function (`supabase/functions/chat-analyzer/index.ts`)
+This Deno-based serverless function handles the conversational AI aspect for **single video analyses**. **It now includes API key rotation and explicit instructions for Markdown hyperlinks, and incorporates custom Q&A results into its context. AI prompts have been extensively engineered for high-quality, production-grade responses, including a strict information hierarchy, precise word count adherence, and mandatory Markdown hyperlink formatting. The authentication check has been removed to allow unauthenticated access.**
 *   **CORS Handling:** Includes `corsHeaders` and handles `OPTIONS` preflight requests.
 *   **Supabase Client Initialization & User Authentication:** Creates a Supabase client within the function, gracefully handling a potentially missing user `Authorization` header. The explicit user authentication check has been removed.
 *   **Input:** Receives `userMessage`, `chatMessages` (conversation history), `analysisResult` (full video analysis including top comments, creator name, thumbnail URL, `aiAnalysis` object, and **`customQaResults`**), `externalContext` (pre-fetched Google search results), `desiredWordCount`, and `selectedPersona` from the frontend.
@@ -316,8 +465,27 @@ This Deno-based serverless function handles the conversational AI aspect. **It n
 *   **Response:** Returns a `200 OK` response with the AI's `aiResponse`.
 *   **Cost Efficiency:** This function no longer makes direct Google Search API calls, relying on the frontend to provide the `externalContext`. **Note:** While the core video analysis is cached, the `fetch-external-context` function is still invoked on each new analysis request from the frontend to ensure the chat AI has the most up-to-date external information.
 
-### 5.8. Supabase Edge Function (`supabase/functions/library-copilot-analyzer/index.ts`) (Enhanced)
-This Deno-based serverless function handles the AI-powered search within the analysis library **and now acts as an analysis topic recommender. AI prompts have been extensively engineered for high-quality, production-grade responses, including precise matching, clear recommendations, and mandatory Markdown hyperlink formatting. The authentication check has been removed to allow unauthenticated access.**
+### 5.9. Supabase Edge Function (`supabase/functions/multi-comparison-chat-analyzer/index.ts`)
+This Deno-based serverless function handles the conversational AI aspect for **multi-video comparisons**.
+*   **CORS Handling:** Includes `corsHeaders` and handles `OPTIONS` preflight requests.
+*   **Supabase Client Initialization & User Authentication:** Creates a Supabase client within the function, gracefully handling a potentially missing user `Authorization` header.
+*   **Input:** Receives `userMessage`, `chatMessages`, `multiComparisonResult` (including structured comparison data, custom comparative Q&A, and raw comments for each video), `externalContext`, `desiredWordCount`, and `selectedPersona`.
+*   **API Key Retrieval & Rotation:** Retrieves `LONGCAT_AI_API_KEY`s and handles rate limits.
+*   **Dynamic `max_tokens`:** Adjusts `max_tokens` based on `desiredWordCount`.
+*   **Dynamic `systemPrompt`:** Constructs the AI's `systemPrompt` based on `selectedPersona`, including instructions for information prioritization, word count, and Markdown hyperlink formatting.
+*   **Prompt Construction:**
+    *   **System Prompt:** Dynamically generated based on persona, including instructions for information prioritization, adherence to response length, explicit word count targets, and Markdown link formatting.
+    *   **Multi-Comparison Context:** Formats `multiComparisonResult` (comparison title, meta description, keywords, structured comparison data, individual video contexts including top comments) into a dedicated string.
+    *   **Custom Comparative Q&A Context:** Includes `custom_comparative_qa_results` if available.
+    *   **External Context:** Integrates `externalContext`.
+    *   **Conversation History:** Appends formatted `chatMessages`.
+    *   **User Message:** Includes the current `userMessage`.
+*   **Longcat AI API Call:** Sends the constructed `messages` array to the Longcat AI API.
+*   **Response:** Returns a `200 OK` response with the AI's `aiResponse`.
+*   **Error Handling:** Includes comprehensive `try-catch` blocks.
+
+### 5.10. Supabase Edge Function (`supabase/functions/library-copilot-analyzer/index.ts`)
+This Deno-based serverless function handles the AI-powered search within the single video analysis library **and now acts as an analysis topic recommender. AI prompts have been extensively engineered for high-quality, production-grade responses, including precise matching, clear recommendations, and mandatory Markdown hyperlink formatting. The authentication check has been removed to allow unauthenticated access.**
 *   **CORS Handling:** Includes `corsHeaders` and handles `OPTIONS` preflight requests.
 *   **Supabase Client Initialization & User Authentication:** Creates a Supabase client within the function, gracefully handling a potentially missing user `Authorization` header. The explicit user authentication check has been removed.
 *   **Input:** Receives `userQuery` and `blogPostsData` (a simplified list of blog posts) from the frontend.
@@ -325,6 +493,17 @@ This Deno-based serverless function handles the AI-powered search within the ana
 *   **`systemPrompt`:** Explicitly instructs the AI to identify relevant blog posts and provide their titles with **Markdown links in the format `[Title of Blog Post](/blog/slug-of-blog-post)`**. **It also now instructs the AI to suggest 1 to 3 new, related analysis topics or video ideas based on the user's query and the existing library content.**
 *   **Longcat AI API Call:** Sends the formatted blog post data and user query to the Longcat AI API.
 *   **Response:** Returns a `200 OK` response with the AI's `aiResponse` containing the recommendations with clickable Markdown links and new topic suggestions.
+
+### 5.11. Supabase Edge Function (`supabase/functions/comparison-library-copilot-analyzer/index.ts`)
+This Deno-based serverless function handles the AI-powered search within the multi-video comparison library **and acts as a comparative analysis topic recommender.**
+*   **CORS Handling:** Includes `corsHeaders` and handles `OPTIONS` preflight requests.
+*   **Supabase Client Initialization & User Authentication:** Creates a Supabase client within the function, gracefully handling a potentially missing user `Authorization` header.
+*   **Input:** Receives `userQuery` and `comparisonsData` (a simplified list of multi-comparisons) from the frontend.
+*   **API Key Retrieval & Rotation:** Retrieves `LONGCAT_AI_API_KEY`s and handles rate limits.
+*   **`systemPrompt`:** Explicitly instructs the AI to identify relevant comparison blog posts and provide their titles with **Markdown links in the format `[Title of Comparison Blog Post](/comparison/slug-of-comparison-blog-post)`**. **It also instructs the AI to suggest 1 to 3 new, related comparative analysis topics or video pairs based on the user's query and the existing library content.**
+*   **Longcat AI API Call:** Sends the formatted comparison data and user query to the Longcat AI API.
+*   **Response:** Returns a `200 OK` response with the AI's `aiResponse` containing the recommendations with clickable Markdown links and new topic suggestions.
+*   **Error Handling:** Includes comprehensive `try-catch` blocks.
 
 ## 6. Styling and Branding
 *   **Tailwind CSS:** Used extensively for all styling, providing a utility-first approach.
