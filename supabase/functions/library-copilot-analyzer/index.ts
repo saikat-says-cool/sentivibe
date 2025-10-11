@@ -62,6 +62,22 @@ serve(async (req) => {
       });
     }
 
+    // Fetch user's subscription tier
+    let subscriptionTier: string = 'free'; // Default to 'free' if profile not found
+    const { data: profile, error: profileError } = await supabaseClient
+      .from('profiles')
+      .select('subscription_tier')
+      .eq('id', user.id)
+      .single();
+
+    if (profileError && profileError.code !== 'PGRST116') { // PGRST116 means no rows found
+      console.error("Error fetching user profile for tier:", profileError);
+      // Continue with default 'free' tier if there's an error fetching profile
+    } else if (profile) {
+      subscriptionTier = profile.subscription_tier;
+    }
+    // console.log(`User ${user.id} has subscription tier: ${subscriptionTier}`); // For debugging
+
     const { userQuery, blogPostsData } = await req.json();
 
     if (!userQuery || !blogPostsData || !Array.isArray(blogPostsData)) {
@@ -150,7 +166,7 @@ serve(async (req) => {
     const longcatData = await longcatResponse.json();
     const aiContent = longcatData.choices[0].message.content;
 
-    return new Response(JSON.stringify({ aiResponse: aiContent }), {
+    return new Response(JSON.stringify({ aiResponse: aiContent, subscriptionTier: subscriptionTier }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     });

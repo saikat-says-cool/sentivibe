@@ -56,7 +56,7 @@ serve(async (req) => {
       }
     );
 
-    // Verify user authentication (optional, but good practice for protected functions)
+    // Verify user authentication
     const { data: { user } } = await supabaseClient.auth.getUser();
     if (!user) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
@@ -64,6 +64,22 @@ serve(async (req) => {
         status: 401,
       });
     }
+
+    // Fetch user's subscription tier
+    let subscriptionTier: string = 'free'; // Default to 'free' if profile not found
+    const { data: profile, error: profileError } = await supabaseClient
+      .from('profiles')
+      .select('subscription_tier')
+      .eq('id', user.id)
+      .single();
+
+    if (profileError && profileError.code !== 'PGRST116') { // PGRST116 means no rows found
+      console.error("Error fetching user profile for tier:", profileError);
+      // Continue with default 'free' tier if there's an error fetching profile
+    } else if (profile) {
+      subscriptionTier = profile.subscription_tier;
+    }
+    // console.log(`User ${user.id} has subscription tier: ${subscriptionTier}`); // For debugging
 
     const { videoLink, customQuestions, forceReanalyze } = await req.json(); // Destructure customQuestions and forceReanalyze
     if (!videoLink) {
@@ -423,7 +439,7 @@ serve(async (req) => {
           Overall Sentiment: ${aiAnalysis.overall_sentiment}
           Emotional Tones: ${aiAnalysis.emotional_tones.join(', ')}
           Key Themes: ${aiAnalysis.key_themes.join(', ')}
-          Summary Insights: ${aiAnalysis.summary_insights}
+          Summary Insights: ${aiAnalysis.aiAnalysis.summary_insights}
           Top Comments (for reference):
           ${allFetchedCommentsText.slice(0, 10).map((comment: string, index: number) => `- ${comment}`).join('\n')}
 
@@ -632,6 +648,7 @@ serve(async (req) => {
       originalVideoLink: originalVideoLink, // Return the original video link
       customQaResults: combinedQaResults, // Return custom QA results
       lastReanalyzedAt: lastReanalyzedAt, // Return the last re-analyzed timestamp
+      subscriptionTier: subscriptionTier, // Include subscription tier in response
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,

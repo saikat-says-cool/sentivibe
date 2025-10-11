@@ -1,5 +1,7 @@
 // @ts-ignore
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+// @ts-ignore
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -38,6 +40,44 @@ serve(async (req) => {
   }
 
   try {
+    // @ts-ignore
+    const supabaseClient = createClient(
+      // @ts-ignore
+      Deno.env.get('SUPABASE_URL') ?? '',
+      // @ts-ignore
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      {
+        global: {
+          headers: { Authorization: req.headers.get('Authorization')! },
+        },
+      }
+    );
+
+    // Verify user authentication
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 401,
+      });
+    }
+
+    // Fetch user's subscription tier
+    let subscriptionTier: string = 'free'; // Default to 'free' if profile not found
+    const { data: profile, error: profileError } = await supabaseClient
+      .from('profiles')
+      .select('subscription_tier')
+      .eq('id', user.id)
+      .single();
+
+    if (profileError && profileError.code !== 'PGRST116') { // PGRST116 means no rows found
+      console.error("Error fetching user profile for tier:", profileError);
+      // Continue with default 'free' tier if there's an error fetching profile
+    } else if (profile) {
+      subscriptionTier = profile.subscription_tier;
+    }
+    // console.log(`User ${user.id} has subscription tier: ${subscriptionTier}`); // For debugging
+
     const { query } = await req.json();
 
     if (!query) {
@@ -91,7 +131,7 @@ serve(async (req) => {
       // Take top 3 search results and concatenate their snippets
       externalSearchResults = searchData.items.slice(0, 3).map((item: any) => `Title: ${item.title}\nSnippet: ${item.snippet}\nURL: ${item.link}`).join('\n\n');
     }
-    return new Response(JSON.stringify({ externalSearchResults }), {
+    return new Response(JSON.stringify({ externalSearchResults, subscriptionTier: subscriptionTier }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     });

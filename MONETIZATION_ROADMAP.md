@@ -40,7 +40,7 @@ To successfully integrate a tiered access and usage model into SentiVibe, allowi
 *   **Checkpoint 0.3: Edge Function User Tier Retrieval**
     *   **Description:** Update all relevant Supabase Edge Functions (`youtube-analyzer`, `chat-analyzer`, `library-copilot-analyzer`, `fetch-external-context`) to retrieve the calling user's `subscription_tier` from the database or JWT claims.
     *   **Affected Areas:** Backend (All Edge Functions).
-    *   **Status:** Pending
+    *   **Status:** Completed
 
 ---
 
