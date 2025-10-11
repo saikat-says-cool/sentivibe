@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, ArrowLeft, Youtube, MessageSquare, BarChart } from 'lucide-react'; // Added BarChart icon
+import { Loader2, ArrowLeft, Youtube, MessageSquare, BarChart, RefreshCw } from 'lucide-react'; // Added RefreshCw icon
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -45,6 +45,7 @@ interface BlogPost {
   updated_at: string;
   ai_analysis_json: StoredAiAnalysisContent | null;
   custom_qa_results?: CustomQuestion[]; // New field
+  last_reanalyzed_at?: string; // New field
 }
 
 const fetchBlogPostBySlug = async (slug: string): Promise<BlogPost | null> => {
@@ -235,6 +236,12 @@ const BlogPostDetail = () => {
             <BarChart className="h-4 w-4" /> Go to Video Analysis
           </Button>
           <Button
+            onClick={() => navigate('/analyze-video', { state: { blogPost: blogPost, openChat: false, forceReanalyze: true } })}
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className="h-4 w-4" /> Refresh Analysis
+          </Button>
+          <Button
             onClick={() => navigate('/analyze-video', { state: { blogPost: blogPost, openChat: true } })}
             className="flex items-center gap-2"
           >
@@ -261,6 +268,11 @@ const BlogPostDetail = () => {
               <span> (Last updated: {new Date(blogPost.updated_at).toLocaleDateString()})</span>
             )}
           </p>
+          {blogPost.last_reanalyzed_at && (
+            <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
+              Last Full Analysis: {new Date(blogPost.last_reanalyzed_at).toLocaleDateString()}
+            </p>
+          )}
           {blogPost.original_video_link && (
             <a
               href={blogPost.original_video_link}

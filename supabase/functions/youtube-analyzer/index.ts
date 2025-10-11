@@ -33,6 +33,9 @@ function getApiKeys(baseName: string): string[] {
   return keys;
 }
 
+// Define staleness threshold (e.g., 30 days)
+const STALENESS_THRESHOLD_DAYS = 30;
+
 serve(async (req) => {
   // Handle CORS preflight request
   if (req.method === 'OPTIONS') {
@@ -62,7 +65,7 @@ serve(async (req) => {
       });
     }
 
-    const { videoLink, customQuestions } = await req.json(); // Destructure customQuestions
+    const { videoLink, customQuestions, forceReanalyze } = await req.json(); // Destructure customQuestions and forceReanalyze
     if (!videoLink) {
       return new Response(JSON.stringify({ error: 'Video link is required' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -117,119 +120,39 @@ serve(async (req) => {
     let blogPostSlug: string;
     let originalVideoLink: string;
     let combinedQaResults: { question: string; wordCount: number; answer: string }[] = [];
+    let lastReanalyzedAt: string; // To store the timestamp
+
+    const now = new Date();
+    let shouldPerformFullReanalysis = false;
 
     if (existingBlogPost) {
-      console.log(`Reusing existing analysis for video ID: ${videoId}`);
-      videoTitle = existingBlogPost.title;
-      videoDescription = existingBlogPost.meta_description;
-      videoThumbnailUrl = existingBlogPost.thumbnail_url;
-      videoTags = existingBlogPost.keywords || [];
-      creatorName = existingBlogPost.creator_name;
-      allFetchedCommentsText = existingBlogPost.ai_analysis_json?.raw_comments_for_chat || [];
-      aiAnalysis = existingBlogPost.ai_analysis_json;
-      blogPostSlug = existingBlogPost.slug;
-      originalVideoLink = existingBlogPost.original_video_link;
-      combinedQaResults = existingBlogPost.custom_qa_results || [];
-
-      // --- Process NEW Custom Questions for an existing analysis ---
-      if (customQuestions && customQuestions.length > 0) {
-        for (const qa of customQuestions) {
-          if (qa.question.trim() === "") continue; // Skip empty questions
-
-          const customQuestionPrompt = `Based on the following YouTube video analysis, answer the user's custom question.
-          
-          Video Title: "${videoTitle}"
-          Video Description: "${videoDescription}"
-          Video Creator: "${creatorName}"
-          Video Tags: ${videoTags.length > 0 ? videoTags.join(', ') : 'None'}
-          Overall Sentiment: ${aiAnalysis.overall_sentiment}
-          Emotional Tones: ${aiAnalysis.emotional_tones.join(', ')}
-          Key Themes: ${aiAnalysis.key_themes.join(', ')}
-          Summary Insights: ${aiAnalysis.summary_insights}
-          Top Comments (for reference):
-          ${allFetchedCommentsText.slice(0, 10).map((comment: string, index: number) => `- ${comment}`).join('\n')}
-
-          User's Question: "${qa.question}"
-          
-          Please provide an answer that is approximately ${qa.wordCount} words long. Ensure the answer is complete and directly addresses the question using the provided context.
-          `;
-
-          let customQaResponse;
-          for (const currentLongcatApiKey of longcatApiKeys) {
-            customQaResponse = await fetch(longcatApiUrl, {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${currentLongcatApiKey}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                model: "LongCat-Flash-Chat",
-                messages: [
-                  { "role": "system", "content": "You are an expert AI assistant providing concise and accurate answers based on provided context. Adhere strictly to the requested word count." },
-                  { "role": "user", "content": customQuestionPrompt }
-                ],
-                max_tokens: Math.ceil(qa.wordCount * 1.5), // Allow some buffer for token count
-                temperature: 0.5,
-                stream: false,
-              }),
-            });
-
-            if (customQaResponse.ok) {
-              break;
-            } else if (customQaResponse.status === 429) {
-              console.warn(`Longcat AI API key hit rate limit for custom QA. Trying next key.`);
-              continue;
-            }
-            break;
-          }
-
-          if (!customQaResponse || !customQaResponse.ok) {
-            const errorData = customQaResponse ? await customQaResponse.json() : { message: "No response from Longcat AI for custom question" };
-            console.error('Longcat AI Custom QA API error:', errorData);
-            combinedQaResults.push({ ...qa, answer: `Error generating answer: ${errorData.message || 'Unknown error'}` });
-          } else {
-            const customQaData = await customQaResponse.json();
-            const answerContent = customQaData.choices[0].message.content;
-            combinedQaResults.push({ ...qa, answer: answerContent });
-          }
-        }
-
-        // Update the existing blog post with the new combined custom QA results
-        const { error: updateError } = await supabaseClient
-          .from('blog_posts')
-          .update({ custom_qa_results: combinedQaResults, updated_at: new Date().toISOString() })
-          .eq('id', existingBlogPost.id);
-
-        if (updateError) {
-          console.error('Supabase Blog Post Update Error for custom QA:', updateError);
-          return new Response(JSON.stringify({ error: 'Failed to update blog post with new custom questions', details: updateError }), {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: 500,
-          });
-        }
+      const lastReanalyzedDate = new Date(existingBlogPost.last_reanalyzed_at);
+      const daysSinceLastReanalysis = (now.getTime() - lastReanalyzedDate.getTime()) / (1000 * 60 * 60 * 24);
+      
+      if (forceReanalyze || daysSinceLastReanalysis > STALENESS_THRESHOLD_DAYS) {
+        console.log(`Triggering full re-analysis for video ID: ${videoId}. Force: ${forceReanalyze}, Stale: ${daysSinceLastReanalysis > STALENESS_THRESHOLD_DAYS}`);
+        shouldPerformFullReanalysis = true;
+      } else {
+        console.log(`Reusing existing analysis for video ID: ${videoId}. Analysis is fresh.`);
+        videoTitle = existingBlogPost.title;
+        videoDescription = existingBlogPost.meta_description;
+        videoThumbnailUrl = existingBlogPost.thumbnail_url;
+        videoTags = existingBlogPost.keywords || [];
+        creatorName = existingBlogPost.creator_name;
+        allFetchedCommentsText = existingBlogPost.ai_analysis_json?.raw_comments_for_chat || [];
+        aiAnalysis = existingBlogPost.ai_analysis_json;
+        blogPostSlug = existingBlogPost.slug;
+        originalVideoLink = existingBlogPost.original_video_link;
+        combinedQaResults = existingBlogPost.custom_qa_results || [];
+        lastReanalyzedAt = existingBlogPost.last_reanalyzed_at;
       }
-
-      // Return existing data, potentially updated with new custom QA results
-      return new Response(JSON.stringify({
-        message: `Reusing existing analysis for video ID: ${videoId}`,
-        videoTitle: videoTitle,
-        videoDescription: videoDescription,
-        videoThumbnailUrl: videoThumbnailUrl,
-        videoTags: videoTags,
-        creatorName: creatorName,
-        videoSubtitles: videoSubtitles,
-        comments: allFetchedCommentsText,
-        aiAnalysis: aiAnalysis,
-        blogPostSlug: blogPostSlug,
-        originalVideoLink: originalVideoLink,
-        customQaResults: combinedQaResults, // Return the combined results
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200,
-      });
-
     } else {
-      // --- If no existing analysis, proceed with new analysis ---
+      console.log(`No existing analysis found for video ID: ${videoId}. Performing full analysis.`);
+      shouldPerformFullReanalysis = true;
+    }
+
+    if (shouldPerformFullReanalysis) {
+      // --- If no existing analysis or analysis is stale/forced, proceed with new analysis ---
 
       // Access the YouTube API Keys from Supabase Secrets
       const youtubeApiKeys = getApiKeys('YOUTUBE_API_KEY');
@@ -369,7 +292,7 @@ serve(async (req) => {
         if (longcatResponse.ok) {
           break;
         } else if (longcatResponse.status === 429) {
-          console.warn(`Longcat AI API key hit quota limit for analysis. Trying next key.`);
+          console.warn(`Longcat AI API key hit rate limit for analysis. Trying next key.`);
           continue;
         }
         break;
@@ -479,8 +402,14 @@ serve(async (req) => {
       console.log("Generated Blog Post Slug:", generatedBlogPost.slug);
       blogPostSlug = generatedBlogPost.slug;
       originalVideoLink = videoLink; // Store the original video link
+      lastReanalyzedAt = now.toISOString(); // Set current time for new/re-analysis
 
-      // --- Process Custom Questions for a NEW analysis ---
+      // Initialize combinedQaResults with existing ones if re-analyzing
+      if (existingBlogPost) {
+        combinedQaResults = existingBlogPost.custom_qa_results || [];
+      }
+
+      // --- Process Custom Questions for a NEW or RE-analysis ---
       if (customQuestions && customQuestions.length > 0) {
         for (const qa of customQuestions) {
           if (qa.question.trim() === "") continue; // Skip empty questions
@@ -544,55 +473,169 @@ serve(async (req) => {
         }
       }
 
-      // Insert the generated blog post into the database, including ai_analysis_json and custom_qa_results
-      const { error: insertError } = await supabaseClient
-        .from('blog_posts')
-        .insert({
-          video_id: videoId,
-          title: generatedBlogPost.title,
-          slug: generatedBlogPost.slug,
-          meta_description: generatedBlogPost.meta_description,
-          keywords: generatedBlogPost.keywords,
-          content: generatedBlogPost.content,
-          published_at: new Date().toISOString(), // Publish immediately
-          author_id: user.id, // Link to the user who initiated the analysis
-          creator_name: creatorName, // New column
-          thumbnail_url: videoThumbnailUrl, // New column
-          original_video_link: videoLink, // Store the original video link
-          ai_analysis_json: { // Store the full AI analysis JSON AND top comments for chat context
-            ...aiAnalysis,
-            raw_comments_for_chat: allFetchedCommentsText.slice(0, 10), // Store top 10 comments
-          },
-          custom_qa_results: combinedQaResults, // Store custom QA results
-        });
+      // If existing blog post, update it. Otherwise, insert new.
+      if (existingBlogPost) {
+        const { error: updateError } = await supabaseClient
+          .from('blog_posts')
+          .update({
+            title: generatedBlogPost.title,
+            slug: generatedBlogPost.slug,
+            meta_description: generatedBlogPost.meta_description,
+            keywords: generatedBlogPost.keywords,
+            content: generatedBlogPost.content,
+            creator_name: creatorName,
+            thumbnail_url: videoThumbnailUrl,
+            original_video_link: videoLink,
+            ai_analysis_json: {
+              ...aiAnalysis,
+              raw_comments_for_chat: allFetchedCommentsText.slice(0, 10),
+            },
+            custom_qa_results: combinedQaResults,
+            last_reanalyzed_at: lastReanalyzedAt, // Update this timestamp
+            updated_at: now.toISOString(), // Also update general updated_at
+          })
+          .eq('id', existingBlogPost.id);
 
-      if (insertError) {
-        console.error('Supabase Blog Post Insert Error:', insertError);
-        return new Response(JSON.stringify({ error: 'Failed to save blog post to database', details: insertError }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 500,
-        });
+        if (updateError) {
+          console.error('Supabase Blog Post Update Error during re-analysis:', updateError);
+          return new Response(JSON.stringify({ error: 'Failed to update blog post during re-analysis', details: updateError }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 500,
+          });
+        }
+      } else {
+        // Insert the generated blog post into the database, including ai_analysis_json and custom_qa_results
+        const { error: insertError } = await supabaseClient
+          .from('blog_posts')
+          .insert({
+            video_id: videoId,
+            title: generatedBlogPost.title,
+            slug: generatedBlogPost.slug,
+            meta_description: generatedBlogPost.meta_description,
+            keywords: generatedBlogPost.keywords,
+            content: generatedBlogPost.content,
+            published_at: now.toISOString(), // Publish immediately
+            author_id: user.id, // Link to the user who initiated the analysis
+            creator_name: creatorName, // New column
+            thumbnail_url: videoThumbnailUrl, // New column
+            original_video_link: videoLink, // Store the original video link
+            ai_analysis_json: { // Store the full AI analysis JSON AND top comments for chat context
+              ...aiAnalysis,
+              raw_comments_for_chat: allFetchedCommentsText.slice(0, 10), // Store top 10 comments
+            },
+            custom_qa_results: combinedQaResults, // Store custom QA results
+            last_reanalyzed_at: lastReanalyzedAt, // Set this timestamp for new analysis
+            updated_at: now.toISOString(),
+          });
+
+        if (insertError) {
+          console.error('Supabase Blog Post Insert Error:', insertError);
+          return new Response(JSON.stringify({ error: 'Failed to save blog post to database', details: insertError }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 500,
+          });
+        }
       }
+    } else { // Analysis is fresh and no forceReanalyze, only process new custom questions
+      // Initialize combinedQaResults with existing ones
+      combinedQaResults = existingBlogPost.custom_qa_results || [];
 
+      if (customQuestions && customQuestions.length > 0) {
+        for (const qa of customQuestions) {
+          if (qa.question.trim() === "") continue; // Skip empty questions
 
-      return new Response(JSON.stringify({
-        message: `Successfully fetched comments and performed AI analysis for video ID: ${videoId}`,
-        videoTitle: videoTitle,
-        videoDescription: videoDescription,
-        videoThumbnailUrl: videoThumbnailUrl, // Include thumbnail URL
-        videoTags: videoTags,               // Include video tags
-        creatorName: creatorName,           // Include creator name
-        videoSubtitles: videoSubtitles, // Will be an empty string for now
-        comments: allFetchedCommentsText, // Return all fetched comments for initial display
-        aiAnalysis: aiAnalysis,
-        blogPostSlug: blogPostSlug, // Return the slug for linking
-        originalVideoLink: originalVideoLink, // Return the original video link
-        customQaResults: combinedQaResults, // Return custom QA results
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200,
-      });
+          const customQuestionPrompt = `Based on the following YouTube video analysis, answer the user's custom question.
+          
+          Video Title: "${videoTitle}"
+          Video Description: "${videoDescription}"
+          Video Creator: "${creatorName}"
+          Video Tags: ${videoTags.length > 0 ? videoTags.join(', ') : 'None'}
+          Overall Sentiment: ${aiAnalysis.overall_sentiment}
+          Emotional Tones: ${aiAnalysis.emotional_tones.join(', ')}
+          Key Themes: ${aiAnalysis.key_themes.join(', ')}
+          Summary Insights: ${aiAnalysis.summary_insights}
+          Top Comments (for reference):
+          ${allFetchedCommentsText.slice(0, 10).map((comment: string, index: number) => `- ${comment}`).join('\n')}
+
+          User's Question: "${qa.question}"
+          
+          Please provide an answer that is approximately ${qa.wordCount} words long. Ensure the answer is complete and directly addresses the question using the provided context.
+          `;
+
+          let customQaResponse;
+          for (const currentLongcatApiKey of longcatApiKeys) {
+            customQaResponse = await fetch(longcatApiUrl, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${currentLongcatApiKey}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                model: "LongCat-Flash-Chat",
+                messages: [
+                  { "role": "system", "content": "You are an expert AI assistant providing concise and accurate answers based on provided context. Adhere strictly to the requested word count." },
+                  { "role": "user", "content": customQuestionPrompt }
+                ],
+                max_tokens: Math.ceil(qa.wordCount * 1.5), // Allow some buffer for token count
+                temperature: 0.5,
+                stream: false,
+              }),
+            });
+
+            if (customQaResponse.ok) {
+              break;
+            } else if (customQaResponse.status === 429) {
+              console.warn(`Longcat AI API key hit rate limit for custom QA. Trying next key.`);
+              continue;
+            }
+            break;
+          }
+
+          if (!customQaResponse || !customQaResponse.ok) {
+            const errorData = customQaResponse ? await customQaResponse.json() : { message: "No response from Longcat AI for custom question" };
+            console.error('Longcat AI Custom QA API error:', errorData);
+            combinedQaResults.push({ ...qa, answer: `Error generating answer: ${errorData.message || 'Unknown error'}` });
+          } else {
+            const customQaData = await customQaResponse.json();
+            const answerContent = customQaData.choices[0].message.content;
+            combinedQaResults.push({ ...qa, answer: answerContent });
+          }
+        }
+
+        // Update the existing blog post with the new combined custom QA results
+        const { error: updateError } = await supabaseClient
+          .from('blog_posts')
+          .update({ custom_qa_results: combinedQaResults, updated_at: now.toISOString() })
+          .eq('id', existingBlogPost.id);
+
+        if (updateError) {
+          console.error('Supabase Blog Post Update Error for custom QA:', updateError);
+          return new Response(JSON.stringify({ error: 'Failed to update blog post with new custom questions', details: updateError }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 500,
+          });
+        }
+      }
     }
+
+    return new Response(JSON.stringify({
+      message: `Successfully fetched comments and performed AI analysis for video ID: ${videoId}`,
+      videoTitle: videoTitle,
+      videoDescription: videoDescription,
+      videoThumbnailUrl: videoThumbnailUrl, // Include thumbnail URL
+      videoTags: videoTags,               // Include video tags
+      creatorName: creatorName,           // Include creator name
+      videoSubtitles: videoSubtitles, // Will be an empty string for now
+      comments: allFetchedCommentsText, // Return all fetched comments for initial display
+      aiAnalysis: aiAnalysis,
+      blogPostSlug: blogPostSlug, // Return the slug for linking
+      originalVideoLink: originalVideoLink, // Return the original video link
+      customQaResults: combinedQaResults, // Return custom QA results
+      lastReanalyzedAt: lastReanalyzedAt, // Return the last re-analyzed timestamp
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 200,
+    });
 
   } catch (error) {
     console.error('Edge Function error:', error.message);

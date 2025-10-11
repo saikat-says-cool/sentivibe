@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Youtube, Download, MessageSquare, Link as LinkIcon, PlusCircle, XCircle } from "lucide-react";
+import { Loader2, Youtube, Download, MessageSquare, Link as LinkIcon, PlusCircle, XCircle, RefreshCw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -51,6 +51,7 @@ interface BlogPost {
   updated_at: string;
   ai_analysis_json: StoredAiAnalysisContent | null;
   custom_qa_results?: CustomQuestion[]; // New field
+  last_reanalyzed_at?: string; // New field
 }
 
 interface AnalysisResponse {
@@ -65,12 +66,14 @@ interface AnalysisResponse {
   blogPostSlug?: string;
   originalVideoLink?: string;
   customQaResults?: CustomQuestion[]; // New field
+  lastReanalyzedAt?: string; // New field
 }
 
 const AnalyzeVideo = () => {
   const location = useLocation();
   const initialBlogPost = location.state?.blogPost as BlogPost | undefined;
-  const openChatImmediately = location.state?.openChat as boolean | undefined; // New flag
+  const openChatImmediately = location.state?.openChat as boolean | undefined;
+  const forceReanalyzeFromNav = location.state?.forceReanalyze as boolean | undefined; // New flag
 
   const [videoLink, setVideoLink] = useState("");
   const [customQuestions, setCustomQuestions] = useState<CustomQuestion[]>([{ question: "", wordCount: 200 }]);
@@ -97,20 +100,29 @@ const AnalyzeVideo = () => {
         },
         blogPostSlug: initialBlogPost.slug,
         originalVideoLink: initialBlogPost.original_video_link,
-        customQaResults: initialBlogPost.custom_qa_results, // Load custom QA results
+        customQaResults: initialBlogPost.custom_qa_results,
+        lastReanalyzedAt: initialBlogPost.last_reanalyzed_at, // Load this
       };
       setAnalysisResult(loadedAnalysis);
-      // Conditionally open chat dialog based on the flag
+      setVideoLink(initialBlogPost.original_video_link || ""); // Pre-fill video link
+
       if (openChatImmediately) {
         setIsChatDialogOpen(true);
       }
+      if (forceReanalyzeFromNav) {
+        // Trigger re-analysis if navigated with forceReanalyze flag
+        analyzeVideoMutation.mutate({ videoLink: initialBlogPost.original_video_link, customQuestions: [], forceReanalyze: true });
+      }
     }
-  }, [initialBlogPost, openChatImmediately]);
+  }, [initialBlogPost, openChatImmediately, forceReanalyzeFromNav]);
 
   const analyzeVideoMutation = useMutation({
-    mutationFn: async (payload: { videoLink: string; customQuestions: CustomQuestion[] }) => {
+    mutationFn: async (payload: { videoLink: string; customQuestions: CustomQuestion[]; forceReanalyze?: boolean }) => {
       setError(null);
-      setAnalysisResult(null);
+      // Only clear analysisResult if it's a fresh analysis or a forced re-analysis
+      if (!analysisResult || payload.forceReanalyze) {
+        setAnalysisResult(null);
+      }
       setIsChatDialogOpen(false);
 
       const { data, error: invokeError } = await supabase.functions.invoke('youtube-analyzer', {
@@ -136,7 +148,15 @@ const AnalyzeVideo = () => {
     e.preventDefault();
     if (videoLink.trim()) {
       const validQuestions = customQuestions.filter(q => q.question.trim() !== "");
-      analyzeVideoMutation.mutate({ videoLink, customQuestions: validQuestions });
+      analyzeVideoMutation.mutate({ videoLink, customQuestions: validQuestions, forceReanalyze: false });
+    }
+  };
+
+  const handleRefreshAnalysis = () => {
+    if (analysisResult?.originalVideoLink) {
+      // When refreshing, we don't pass custom questions from the form,
+      // as the Edge Function will merge existing ones.
+      analyzeVideoMutation.mutate({ videoLink: analysisResult.originalVideoLink, customQuestions: [], forceReanalyze: true });
     }
   };
 
@@ -296,6 +316,9 @@ const AnalyzeVideo = () => {
                 </Link>
               </Button>
             )}
+            <Button onClick={handleRefreshAnalysis} className="flex items-center gap-2" disabled={analyzeVideoMutation.isPending}>
+              {analyzeVideoMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />} Refresh Analysis
+            </Button>
             <Button onClick={() => setIsChatDialogOpen(true)} className="flex items-center gap-2">
               <MessageSquare className="h-4 w-4" /> Chat with AI
             </Button>
@@ -317,6 +340,11 @@ const AnalyzeVideo = () => {
                 <p className="text-md text-gray-600 dark:text-gray-400 mt-1">By: {analysisResult.creatorName}</p>
               )}
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">{analysisResult.videoDescription}</p>
+              {analysisResult.lastReanalyzedAt && (
+                <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
+                  Last Full Analysis: {new Date(analysisResult.lastReanalyzedAt).toLocaleDateString()}
+                </p>
+              )}
             </CardHeader>
             <CardContent className="space-y-6">
               {analysisResult.videoTags && analysisResult.videoTags.length > 0 && (

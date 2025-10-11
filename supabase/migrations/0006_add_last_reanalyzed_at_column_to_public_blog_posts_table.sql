@@ -1,0 +1,2 @@
+ALTER TABLE public.blog_posts
+ADD COLUMN last_reanalyzed_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
