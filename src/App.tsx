@@ -3,11 +3,11 @@ import Index from './pages/Index';
 import Login from './pages/Login';
 import AnalyzeVideo from './pages/AnalyzeVideo';
 import VideoAnalysisLibrary from './pages/VideoAnalysisLibrary';
-import MyAnalyses from './pages/MyAnalyses'; // New import
+import MyAnalyses from './pages/MyAnalyses';
 import BlogPostDetail from './pages/BlogPostDetail';
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from './integrations/supabase/auth';
-import ProtectedRoute from './components/ProtectedRoute';
+// import ProtectedRoute from './components/ProtectedRoute'; // No longer needed
 import { ThemeProvider } from './components/theme-provider';
 import Header from './components/Header';
 import Footer from './components/Footer';
@@ -30,25 +30,22 @@ function App() {
                   <Route
                     path="/analyze-video"
                     element={
-                      <ProtectedRoute>
-                        <AnalyzeVideo />
-                      </ProtectedRoute>
+                      // Removed ProtectedRoute wrapper
+                      <AnalyzeVideo />
                     }
                   />
                   <Route
                     path="/library"
                     element={
-                      <ProtectedRoute>
-                        <VideoAnalysisLibrary />
-                      </ProtectedRoute>
+                      // Removed ProtectedRoute wrapper
+                      <VideoAnalysisLibrary />
                     }
                   />
                   <Route
-                    path="/my-analyses" // New protected route
+                    path="/my-analyses"
                     element={
-                      <ProtectedRoute>
-                        <MyAnalyses />
-                      </ProtectedRoute>
+                      // Removed ProtectedRoute wrapper
+                      <MyAnalyses />
                     }
                   />
                   <Route path="/blog/:slug" element={<BlogPostDetail />} />
