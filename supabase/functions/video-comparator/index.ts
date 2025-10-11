@@ -351,7 +351,7 @@ serve(async (req) => {
             headers: { 'Authorization': `Bearer ${currentLongcatApiKey}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({
               model: "LongCat-Flash-Chat",
-              messages: [{ "role": "system", "content": "You are SentiVibe AI, an insightful and precise AI assistant specializing in comparative analysis. Your task is to answer specific user questions about a comparison between two YouTube video analyses. Your answers must be accurate, directly derived from the provided context, and strictly adhere to the requested word count. If the answer cannot be fully derived from the provided context, state this clearly and concisely. Do not speculate or introduce external information unless explicitly instructed. Ensure the answer is comprehensive within the word limit, providing a complete and well-structured response." }, { "role": "user", "content": customComparativeQuestionPrompt }],
+              messages: [{ "role": "system", "content": "You are SentiVibe AI, an insightful and precise AI assistant specializing in comparative analysis. Your task is to answer specific user questions about a comparison between two YouTube video analyses. Your answers must be accurate, directly derived from the provided context, and strictly adhere to the requested word count. If the information is not present, indicate that. Ensure the answer is comprehensive within the word limit, providing a complete and well-structured response." }, { "role": "user", "content": customComparativeQuestionPrompt }],
               max_tokens: Math.ceil(qa.wordCount * 1.5),
               temperature: 0.5,
               stream: false,
@@ -414,6 +414,14 @@ serve(async (req) => {
       comparisonData: coreComparisonData,
       customComparativeQaResults: combinedComparativeQaResults,
       lastComparedAt: now,
+      // Include video A details
+      videoAThumbnailUrl: blogPostA.thumbnail_url,
+      videoATitle: blogPostA.title,
+      videoALink: blogPostA.original_video_link,
+      // Include video B details
+      videoBThumbnailUrl: blogPostB.thumbnail_url,
+      videoBTitle: blogPostB.title,
+      videoBLink: blogPostB.original_video_link,
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,

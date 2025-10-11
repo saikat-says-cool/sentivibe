@@ -26,6 +26,12 @@ interface ComparisonResult {
   comparisonData: any; // This will hold the structured comparison insights
   customComparativeQaResults: CustomComparativeQuestion[];
   lastComparedAt: string;
+  videoAThumbnailUrl: string;
+  videoATitle: string;
+  videoALink: string;
+  videoBThumbnailUrl: string;
+  videoBTitle: string;
+  videoBLink: string;
 }
 
 const CompareVideos = () => {
@@ -204,8 +210,31 @@ const CompareVideos = () => {
       {comparisonResult && (
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle className="text-2xl">{comparisonResult.comparisonTitle}</CardTitle>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4">
+              <div className="flex flex-col items-center text-center">
+                <a href={comparisonResult.videoALink} target="_blank" rel="noopener noreferrer" className="block hover:opacity-80 transition-opacity">
+                  <img
+                    src={comparisonResult.videoAThumbnailUrl}
+                    alt={`Thumbnail for ${comparisonResult.videoATitle}`}
+                    className="w-32 h-20 object-cover rounded-md shadow-md"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{comparisonResult.videoATitle}</p>
+                </a>
+              </div>
+              <GitCompare className="h-8 w-8 text-gray-400 dark:text-gray-500 flex-shrink-0" />
+              <div className="flex flex-col items-center text-center">
+                <a href={comparisonResult.videoBLink} target="_blank" rel="noopener noreferrer" className="block hover:opacity-80 transition-opacity">
+                  <img
+                    src={comparisonResult.videoBThumbnailUrl}
+                    alt={`Thumbnail for ${comparisonResult.videoBTitle}`}
+                    className="w-32 h-20 object-cover rounded-md shadow-md"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{comparisonResult.videoBTitle}</p>
+                </a>
+              </div>
+            </div>
+            <CardTitle className="text-2xl text-center">{comparisonResult.comparisonTitle}</CardTitle>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 text-center">
               Last Compared: {new Date(comparisonResult.lastComparedAt).toLocaleDateString()}
             </p>
           </CardHeader>

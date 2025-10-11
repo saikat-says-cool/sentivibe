@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, ArrowLeft, GitCompare } from 'lucide-react';
+import { Loader2, ArrowLeft, GitCompare, Youtube } from 'lucide-react'; // Added Youtube icon
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -14,6 +14,13 @@ interface CustomComparativeQuestion {
   question: string;
   wordCount: number;
   answer?: string;
+}
+
+interface BlogPostSummary {
+  id: string;
+  title: string;
+  thumbnail_url: string;
+  original_video_link: string;
 }
 
 interface Comparison {
@@ -31,12 +38,18 @@ interface Comparison {
   last_compared_at: string;
   comparison_data_json: any;
   custom_comparative_qa_results: CustomComparativeQuestion[];
+  videoA?: BlogPostSummary; // Added for video A details
+  videoB?: BlogPostSummary; // Added for video B details
 }
 
 const fetchComparisonBySlug = async (slug: string): Promise<Comparison | null> => {
   const { data, error } = await supabase
     .from('comparisons')
-    .select('*')
+    .select(`
+      *,
+      videoA:blog_posts!video_a_blog_post_id (id, title, thumbnail_url, original_video_link),
+      videoB:blog_posts!video_b_blog_post_id (id, title, thumbnail_url, original_video_link)
+    `)
     .eq('slug', slug)
     .single();
 
@@ -191,14 +204,41 @@ const ComparisonDetail = () => {
       </div>
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle className="text-3xl font-bold mb-2">{comparison.title}</CardTitle>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4">
+            {comparison.videoA && (
+              <div className="flex flex-col items-center text-center">
+                <a href={comparison.videoA.original_video_link} target="_blank" rel="noopener noreferrer" className="block hover:opacity-80 transition-opacity">
+                  <img
+                    src={comparison.videoA.thumbnail_url}
+                    alt={`Thumbnail for ${comparison.videoA.title}`}
+                    className="w-32 h-20 object-cover rounded-md shadow-md"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{comparison.videoA.title}</p>
+                </a>
+              </div>
+            )}
+            <GitCompare className="h-8 w-8 text-gray-400 dark:text-gray-500 flex-shrink-0" />
+            {comparison.videoB && (
+              <div className="flex flex-col items-center text-center">
+                <a href={comparison.videoB.original_video_link} target="_blank" rel="noopener noreferrer" className="block hover:opacity-80 transition-opacity">
+                  <img
+                    src={comparison.videoB.thumbnail_url}
+                    alt={`Thumbnail for ${comparison.videoB.title}`}
+                    className="w-32 h-20 object-cover rounded-md shadow-md"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{comparison.videoB.title}</p>
+                </a>
+              </div>
+            )}
+          </div>
+          <CardTitle className="text-3xl font-bold mb-2 text-center">{comparison.title}</CardTitle>
+          <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
             Compared on: {new Date(comparison.created_at).toLocaleDateString()}
             {comparison.updated_at && comparison.updated_at !== comparison.created_at && (
               <span> (Last updated: {new Date(comparison.updated_at).toLocaleDateString()})</span>
             )}
           </p>
-          <p className="text-md text-gray-700 dark:text-gray-300 mt-4 italic">
+          <p className="text-md text-gray-700 dark:text-gray-300 mt-4 italic text-center">
             {comparison.meta_description}
           </p>
         </CardHeader>
