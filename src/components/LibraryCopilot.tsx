@@ -10,7 +10,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { MessageSquarePlus } from 'lucide-react';
 import ChatInterface from './ChatInterface';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query'; // Added useQuery
 import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/integrations/supabase/auth'; // Import useAuth
@@ -45,8 +45,18 @@ const PAID_TIER_LIMITS = {
   dailyQueries: 100,
 };
 
+// Function to fetch anonymous usage
+const fetchAnonUsage = async () => {
+  const { data, error } = await supabase.functions.invoke('get-anon-usage');
+  if (error) {
+    console.error("Error fetching anon usage:", error);
+    throw new Error(error.message || "Failed to fetch anonymous usage data.");
+  }
+  return data;
+};
+
 const LibraryCopilot: React.FC<LibraryCopilotProps> = ({ blogPosts }) => {
-  const { subscriptionStatus, subscriptionPlanId } = useAuth(); // Get auth and subscription info
+  const { user, subscriptionStatus, subscriptionPlanId } = useAuth(); // Get auth and subscription info
 
   const [isOpen, setIsOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
@@ -56,14 +66,40 @@ const LibraryCopilot: React.FC<LibraryCopilotProps> = ({ blogPosts }) => {
   const isPaidTier = subscriptionStatus === 'active' && subscriptionPlanId !== 'free';
   const currentLimits = isPaidTier ? PAID_TIER_LIMITS : FREE_TIER_LIMITS;
 
-  // NOTE: For a full backend enforcement of daily queries, we would ideally need a new Supabase table
-  // (e.g., `copilot_queries`) to log each query. For this exercise, the logic to determine
-  // `currentLimits.dailyQueries` is set, but the actual database counting of queries is omitted
-  // as it would require a new table migration. The frontend will manage preventing excessive calls for now.
-  // For demonstration, we'll use a simple in-memory counter for the session or a placeholder.
-  // In a real app, this would involve a database query similar to AnalyzeVideo's daily count.
+  // Fetch anonymous usage if not authenticated
+  const { data: anonUsage, refetch: refetchAnonUsage } = useQuery({
+    queryKey: ['anonUsageLibraryCopilot'],
+    queryFn: fetchAnonUsage,
+    enabled: !user, // Only fetch if user is not logged in
+    refetchOnWindowFocus: false,
+  });
+
   useEffect(() => {
-    if (isOpen && chatMessages.length === 0) {
+    const updateQueriesToday = async () => {
+      if (user) { // Authenticated user
+        const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+        const { count, error } = await supabase
+          .from('copilot_queries_log')
+          .select('id', { count: 'exact', head: true })
+          .gte('created_at', twentyFourHoursAgo)
+          .eq('user_id', user.id);
+
+        if (error) {
+          console.error("Error fetching daily copilot query count for authenticated user:", error);
+          setQueriesToday(0);
+        } else {
+          setQueriesToday(count || 0);
+        }
+      } else { // Unauthenticated user (IP-based)
+        if (anonUsage) {
+          setQueriesToday(anonUsage.copilot_queries_count);
+        } else {
+          setQueriesToday(0);
+        }
+      }
+    };
+
+    if (isOpen) {
       setChatMessages([
         {
           id: 'ai-initial',
@@ -71,13 +107,13 @@ const LibraryCopilot: React.FC<LibraryCopilotProps> = ({ blogPosts }) => {
           text: "Hello! I'm your SentiVibe Library Copilot. I can help you find video analyses. Tell me what kind of video you're looking for, or ask me about specific topics!",
         },
       ]);
-      // Reset queriesToday when dialog opens for a new session, or fetch from DB if tracking
-      setQueriesToday(0); 
+      updateQueriesToday(); // Fetch initial count when dialog opens
       setError(null); // Clear error when dialog opens
-    } else if (!isOpen) {
+    } else {
+      setChatMessages([]);
       setError(null); // Clear error when dialog closes
     }
-  }, [isOpen, chatMessages.length]);
+  }, [isOpen, user, anonUsage]); // Depend on user and anonUsage
 
   const copilotChatMutation = useMutation({
     mutationFn: async (userQuery: string) => {
@@ -118,6 +154,16 @@ const LibraryCopilot: React.FC<LibraryCopilotProps> = ({ blogPosts }) => {
 
       if (invokeError) {
         console.error("Supabase Function Invoke Error (Library Copilot):", invokeError);
+        // Check if the error is a FunctionsHttpError with a 403 status
+        if (invokeError.name === 'FunctionsHttpError' && invokeError.context?.status === 403) {
+          try {
+            const errorBody = await invokeError.context.json();
+            throw new Error(errorBody.error || "Daily limit exceeded. Please upgrade.");
+          } catch (jsonError) {
+            console.error("Failed to parse 403 error response:", jsonError);
+            throw new Error(invokeError.message || "Daily limit exceeded. Please upgrade.");
+          }
+        }
         throw new Error(invokeError.message || "Failed to get AI response from copilot.");
       }
       return data.aiResponse;
@@ -130,7 +176,12 @@ const LibraryCopilot: React.FC<LibraryCopilotProps> = ({ blogPosts }) => {
             : msg
         )
       );
-      setQueriesToday(prev => prev + 1); // Increment query count on success
+      // Update queriesToday after a successful query
+      if (!user) {
+        refetchAnonUsage(); // Refetch anon usage to get updated count
+      } else {
+        setQueriesToday(prev => prev + 1); // For authenticated users, update local state
+      }
     },
     onError: (err: Error) => {
       console.error("Library Copilot Chat Error:", err);
