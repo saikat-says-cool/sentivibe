@@ -212,7 +212,7 @@ const ComparisonLibraryCopilot: React.FC<ComparisonLibraryCopilotProps> = ({ com
             ? { ...msg, text: `Error: ${(err as Error).message}. Please try again.` }
             : msg
         )
-      );
+      )
       setError((err as Error).message); // Set error state on mutation error
     },
   });
@@ -230,7 +230,9 @@ const ComparisonLibraryCopilot: React.FC<ComparisonLibraryCopilotProps> = ({ com
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button className="flex items-center gap-2">
-          <GitCompare className="h-4 w-4" /> Comparison Copilot
+          <span className="flex items-center gap-2"> {/* Added wrapper span */}
+            <GitCompare className="h-4 w-4" /> Comparison Copilot
+          </span>
         </Button>
       </DialogTrigger>
       <DialogContent className="flex h-full max-h-[90vh] w-full max-w-full flex-col sm:max-w-[90vw] md:max-w-[80vw] lg:max-w-[1000px]">
