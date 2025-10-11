@@ -36,6 +36,12 @@ function getApiKeys(baseName: string): string[] {
 // Define staleness threshold (e.g., 30 days)
 const STALENESS_THRESHOLD_DAYS = 30;
 
+// Define daily limits and comment counts per tier
+const GUEST_DAILY_LIMIT = 1;
+const FREE_DAILY_LIMIT = 3;
+const GUEST_COMMENT_COUNT = 30;
+const FREE_PRO_COMMENT_COUNT = 100; // Max comments for Free and Pro tiers
+
 serve(async (req) => {
   // Handle CORS preflight request
   if (req.method === 'OPTIONS') {
@@ -88,6 +94,56 @@ serve(async (req) => {
         status: 400,
       });
     }
+
+    // --- Enforce Daily Analysis Limits ---
+    let dailyLimitExceeded = false;
+    let currentDailyCount = 0;
+    let maxAnalysesForTier = 0;
+    let maxCommentsForTier = FREE_PRO_COMMENT_COUNT; // Default for free/pro
+
+    if (subscriptionTier === 'guest') {
+      maxAnalysesForTier = GUEST_DAILY_LIMIT;
+      maxCommentsForTier = GUEST_COMMENT_COUNT;
+    } else if (subscriptionTier === 'free') {
+      maxAnalysesForTier = FREE_DAILY_LIMIT;
+      maxCommentsForTier = FREE_PRO_COMMENT_COUNT;
+    } else if (subscriptionTier === 'pro') {
+      maxAnalysesForTier = Infinity; // No limit for Pro
+      maxCommentsForTier = FREE_PRO_COMMENT_COUNT;
+    }
+
+    if (subscriptionTier !== 'pro') {
+      const { data: usageData, error: usageError } = await supabaseClient
+        .from('user_daily_usage')
+        .select('analyses_count')
+        .eq('user_id', user.id)
+        .eq('date', new Date().toISOString().split('T')[0]) // Current date in YYYY-MM-DD format
+        .single();
+
+      if (usageError && usageError.code !== 'PGRST116') { // PGRST116 means no rows found
+        console.error("Error fetching daily usage:", usageError);
+        return new Response(JSON.stringify({ error: 'Failed to check daily usage limits.' }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500,
+        });
+      }
+
+      currentDailyCount = usageData?.analyses_count || 0;
+      if (currentDailyCount >= maxAnalysesForTier) {
+        dailyLimitExceeded = true;
+      }
+    }
+
+    if (dailyLimitExceeded) {
+      return new Response(JSON.stringify({ 
+        error: `Daily analysis limit exceeded for ${subscriptionTier} tier. You can perform ${maxAnalysesForTier} analyses per day. Please upgrade to Pro for unlimited analyses.`,
+        code: 'DAILY_LIMIT_EXCEEDED'
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 403, // Forbidden
+      });
+    }
+    // --- End Daily Analysis Limits Enforcement ---
 
     // Extract video ID from the link
     const videoIdMatch = videoLink.match(/(?:v=|\/videos\/|embed\/|youtu.be\/|\/v\/|\/e\/|watch\?v=|&v=)([^#&?]{11})/);
@@ -216,7 +272,7 @@ serve(async (req) => {
       // --- Fetch Comments ---
       let youtubeCommentsResponse;
       for (const currentYoutubeApiKey of youtubeApiKeys) { // Reuse youtubeApiKeys for comments
-        const youtubeCommentsApiUrl = `https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId=${videoId}&key=${currentYoutubeApiKey}&maxResults=100`;
+        const youtubeCommentsApiUrl = `https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId=${videoId}&key=${currentYoutubeApiKey}&maxResults=${maxCommentsForTier}`; // Use tiered maxResults
         youtubeCommentsResponse = await fetch(youtubeCommentsApiUrl);
         if (youtubeCommentsResponse.ok) {
           break; // Key worked, proceed
@@ -247,13 +303,16 @@ serve(async (req) => {
           }))
         : [];
 
-      // Enforce 50-comment minimum
-      if (commentsWithLikes.length < 50) {
-        return new Response(JSON.stringify({ error: `Video must have at least 50 comments to proceed with analysis. This video has ${commentsWithLikes.length} comments.` }), {
+      // Enforce 50-comment minimum for full analysis, but allow guest/free to proceed with fewer if their tier's maxCommentsForTier is met
+      if (commentsWithLikes.length < 50 && subscriptionTier !== 'guest') { // Guest can have fewer comments
+        return new Response(JSON.stringify({ error: `Video must have at least 50 comments to proceed with analysis for your tier. This video has ${commentsWithLikes.length} comments.` }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 400,
         });
       }
+      // For guest, if commentsWithLikes.length < GUEST_COMMENT_COUNT, it's fine, they just get fewer comments.
+      // For free/pro, if commentsWithLikes.length < FREE_PRO_COMMENT_COUNT, it's fine, they just get fewer comments up to 50 minimum.
+
 
       // Sort comments by likeCount in descending order for consistent processing and display
       commentsWithLikes.sort((a: any, b: any) => b.likeCount - a.likeCount);
@@ -439,7 +498,7 @@ serve(async (req) => {
           Overall Sentiment: ${aiAnalysis.overall_sentiment}
           Emotional Tones: ${aiAnalysis.emotional_tones.join(', ')}
           Key Themes: ${aiAnalysis.key_themes.join(', ')}
-          Summary Insights: ${aiAnalysis.aiAnalysis.summary_insights}
+          Summary Insights: ${aiAnalysis.summary_insights}
           Top Comments (for reference):
           ${allFetchedCommentsText.slice(0, 10).map((comment: string, index: number) => `- ${comment}`).join('\n')}
 
@@ -633,6 +692,27 @@ serve(async (req) => {
         }
       }
     }
+
+    // --- Increment Daily Usage Count after successful analysis ---
+    if (subscriptionTier !== 'pro') { // Only track usage for guest and free tiers
+      const { error: upsertError } = await supabaseClient
+        .from('user_daily_usage')
+        .upsert(
+          {
+            user_id: user.id,
+            date: new Date().toISOString().split('T')[0],
+            analyses_count: currentDailyCount + 1,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'user_id,date' } // Upsert on conflict of user_id and date
+        );
+
+      if (upsertError) {
+        console.error("Error updating daily usage count:", upsertError);
+        // This is a non-critical error, analysis already succeeded, so log but don't block response
+      }
+    }
+    // --- End Increment Daily Usage Count ---
 
     return new Response(JSON.stringify({
       message: `Successfully fetched comments and performed AI analysis for video ID: ${videoId}`,
