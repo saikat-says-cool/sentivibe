@@ -37,8 +37,12 @@ interface LibraryCopilotProps {
 }
 
 // Define tier limits for library copilot queries (matching backend for consistency)
-const FREE_TIER_LIMITS = {
+const UNAUTHENTICATED_LIMITS = {
   dailyQueries: 5,
+};
+
+const AUTHENTICATED_FREE_TIER_LIMITS = {
+  dailyQueries: 10,
 };
 
 const PAID_TIER_LIMITS = {
@@ -64,13 +68,23 @@ const LibraryCopilot: React.FC<LibraryCopilotProps> = ({ blogPosts }) => {
   const [error, setError] = useState<string | null>(null); // Define error state
 
   const isPaidTier = subscriptionStatus === 'active' && subscriptionPlanId !== 'free';
-  const currentLimits = isPaidTier ? PAID_TIER_LIMITS : FREE_TIER_LIMITS;
+  const isAuthenticatedFreeTier = user && !isPaidTier; // Authenticated but not paid
+  const isUnauthenticated = !user; // Not logged in
+
+  let currentLimits;
+  if (isPaidTier) {
+    currentLimits = PAID_TIER_LIMITS;
+  } else if (isAuthenticatedFreeTier) {
+    currentLimits = AUTHENTICATED_FREE_TIER_LIMITS;
+  } else { // Unauthenticated
+    currentLimits = UNAUTHENTICATED_LIMITS;
+  }
 
   // Fetch anonymous usage if not authenticated
   const { data: anonUsage, refetch: refetchAnonUsage } = useQuery({
     queryKey: ['anonUsageLibraryCopilot'],
     queryFn: fetchAnonUsage,
-    enabled: !user, // Only fetch if user is not logged in
+    enabled: isUnauthenticated, // Only fetch if user is not logged in
     refetchOnWindowFocus: false,
   });
 
@@ -113,7 +127,7 @@ const LibraryCopilot: React.FC<LibraryCopilotProps> = ({ blogPosts }) => {
       setChatMessages([]);
       setError(null); // Clear error when dialog closes
     }
-  }, [isOpen, user, anonUsage]); // Depend on user and anonUsage
+  }, [isOpen, user, anonUsage, isUnauthenticated]); // Depend on user, anonUsage, and isUnauthenticated
 
   const copilotChatMutation = useMutation({
     mutationFn: async (userQuery: string) => {
@@ -177,7 +191,7 @@ const LibraryCopilot: React.FC<LibraryCopilotProps> = ({ blogPosts }) => {
         )
       );
       // Update queriesToday after a successful query
-      if (!user) {
+      if (isUnauthenticated) {
         refetchAnonUsage(); // Refetch anon usage to get updated count
       } else {
         setQueriesToday(prev => prev + 1); // For authenticated users, update local state
