@@ -124,7 +124,7 @@ To successfully integrate a tiered access and usage model into SentiVibe, allowi
     *   **Free Member:** 1 PDF / day (branded header).
     *   **Pro Subscriber:** Unlimited PDFs (unbranded / customizable - future).
     *   **Affected Areas:** Frontend (`AnalyzeVideo.tsx` - PDF button visibility/limits), Database (`user_daily_usage`).
-    *   **Status:** Pending
+    *   **Status:** In Progress (Database schema updated)
 
 ---
 
