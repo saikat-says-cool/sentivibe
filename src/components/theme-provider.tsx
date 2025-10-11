@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from "react";
 
-type Theme = "dark" | "light" | "system" | "emerald"; // Added 'emerald'
+type Theme = "dark" | "light" | "system" | "emerald" | "crimson" | "yellow" | "cyan"; // Added new themes
 
 interface ThemeProviderProps {
   children: ReactNode;
@@ -34,7 +34,7 @@ export function ThemeProvider({
     const root = window.document.documentElement;
 
     // Remove all known theme-related classes
-    root.classList.remove("light", "dark", "theme-emerald");
+    root.classList.remove("light", "dark", "theme-emerald", "theme-crimson", "theme-yellow", "theme-cyan");
 
     const systemMode = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 
@@ -42,7 +42,7 @@ export function ThemeProvider({
       root.classList.add(systemMode);
     } else if (theme === "light" || theme === "dark") {
       root.classList.add(theme);
-    } else { // Custom theme like "emerald"
+    } else { // Custom theme like "emerald", "crimson", "yellow", "cyan"
       // Apply the base light/dark class first, then the custom theme class
       root.classList.add(systemMode); // This ensures .dark .theme-emerald styles apply correctly
       root.classList.add(`theme-${theme}`);
