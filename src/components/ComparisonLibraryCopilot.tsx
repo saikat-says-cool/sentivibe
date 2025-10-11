@@ -230,10 +230,8 @@ const ComparisonLibraryCopilot: React.FC<ComparisonLibraryCopilotProps> = ({ com
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button className="flex items-center gap-2">
-          {/* Wrap children in a single span to resolve React.Children.only error */}
-          <span>
-            <GitCompare className="h-4 w-4" /> Comparison Copilot
-          </span>
+          {/* Removed the extra <span> wrapper. Button should handle its children directly. */}
+          <GitCompare className="h-4 w-4" /> Comparison Copilot
         </Button>
       </DialogTrigger>
       <DialogContent className="flex h-full max-h-[90vh] w-full max-w-full flex-col sm:max-w-[90vw] md:max-w-[80vw] lg:max-w-[1000px]">

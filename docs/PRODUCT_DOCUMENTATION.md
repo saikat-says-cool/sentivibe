@@ -153,7 +153,7 @@
 15. **Explore the Comparison Library:** Navigate to the "Comparison Library" from the header or landing page. Here, you can browse all past multi-video comparisons, search by comparison title, video titles, or keywords.
 16. **Use Comparison Library Copilot:** On the "Comparison Library" page, click the "Comparison Copilot" button to open an AI chat that helps you find specific comparisons from your collection, providing direct links to the blog posts. **It will also suggest new, related comparative analysis topics or video pairs based on your query and the existing library content. Note: Daily queries are limited by your current tier.**
 17. **Sign Up / Log In (Optional):** If you wish to save your analysis history and access higher limits, sign up or log in. You can then access your personal analyses via the "My Analyses" link in the header (Paid Tier feature).
-18. **View Pricing & Upgrade:** The pricing and upgrade details are now available directly on the landing page.
+18. **View Pricing:** Navigate to the "Pricing" page from the header to see a detailed breakdown of features and limits for each tier.
 19. **Toggle Theme:** Use the moon/sun icon in the header to switch between dark, system, or any of the **new Emerald, Crimson, Yellow, Cyan, Deep Blue, Forest Green, and Purple Haze themes**.
 
 ## 4. Value Proposition

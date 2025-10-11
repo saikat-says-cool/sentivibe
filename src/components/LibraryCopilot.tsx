@@ -223,10 +223,8 @@ const LibraryCopilot: React.FC<LibraryCopilotProps> = ({ blogPosts }) => {
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button className="flex items-center gap-2">
-          {/* Wrap children in a single span to resolve React.Children.only error */}
-          <span>
-            <MessageSquarePlus className="h-4 w-4" /> Library Copilot
-          </span>
+          {/* Removed the extra <span> wrapper. Button should handle its children directly. */}
+          <MessageSquarePlus className="h-4 w-4" /> Library Copilot
         </Button>
       </DialogTrigger>
       <DialogContent className="flex h-full max-h-[90vh] w-full max-w-full flex-col sm:max-w-[90vw] md:max-w-[80vw] lg:max-w-[1000px]">
