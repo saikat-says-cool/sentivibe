@@ -10,7 +10,7 @@ const corsHeaders = {
 
 // Helper to get multiple API keys from environment variables
 function getApiKeys(baseName: string): string[] {
-  const keys: string[] = [];
+  const keys: string[] = []; // Corrected: should be string[]
   let i = 1;
   while (true) {
     // @ts-ignore

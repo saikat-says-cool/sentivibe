@@ -8,7 +8,7 @@ const corsHeaders = {
 
 // Helper to get multiple API keys from environment variables
 function getApiKeys(baseName: string): string[] {
-  const keys: string[] = [];
+  const keys: string[] = []; // Corrected: should be string[]
   let i = 1;
   while (true) {
     // @ts-ignore
@@ -69,7 +69,7 @@ serve(async (req) => {
       } else if (searchResponse.status === 403 || searchResponse.status === 429) {
         const errorData = await searchResponse.json();
         if (errorData.error?.errors?.[0]?.reason === 'quotaExceeded') {
-          console.warn(`Google Search API key ${currentGoogleSearchApiKey} hit quota limit. Trying next key.`);
+          console.warn(`Google Search API key ${currentGoogleSearchApiKey} hit quota limit for video details. Trying next key.`);
           continue; // Try next key
         }
       }
