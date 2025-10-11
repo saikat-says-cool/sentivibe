@@ -92,6 +92,13 @@
 *   **Consistent Branding:** Features a sleek **Crowd Black** and **Pure White** theme with **Positive Green**, **Negative Red**, and **Accent Blue** for emotional cues and interactive elements. The application uses the **Arimo** font for body text and **Plus Jakarta Sans** for headings and the prominent "SentiVibe" word logo, ensuring a professional and unified brand presence.
 *   **Theme Toggle:** Users can switch between light and dark modes using a dedicated theme toggle.
 
+### 2.8. Account Center (New!)
+*   **Personalized Profile Management:** Authenticated users can access a dedicated "Account Settings" page to manage their personal details.
+*   **View Account Information:** Users can view their registered email address and current subscription tier (e.g., Guest, Free, Pro).
+*   **Update Profile Details:** Users can easily update their `first_name` and `last_name`.
+*   **Secure Logout:** A prominent logout button allows users to securely end their session.
+*   **Data Persistence:** For Pro subscribers, theme preferences are saved to their profile in the database, ensuring a consistent experience across devices.
+
 ## 3. How to Use SentiVibe
 
 1.  **Access the Application:** Open SentiVibe in your web browser.
@@ -109,7 +116,8 @@
 13. **Explore the Analysis Library:** Navigate to the "Analysis Library" from the header. Here, you can browse all past video analyses, search by video title, creator, or keywords.
 14. **Use Library Copilot:** On both the "Analysis Library" and "My Analyses" pages, click the "Library Copilot" button to open an AI chat that helps you find specific analyses from your collection, providing direct links to the blog posts.
 15. **Chat from Library (New!):** From a blog post detail page, click the "Chat with AI" button to seamlessly open the **pop-up chat dialog** with the blog post's context pre-loaded, ready for conversation. You can also use the **"Go to Video Analysis" button** to view the full report first.
-16. **Toggle Theme:** Use the moon/sun icon in the header to switch between light and dark modes.
+16. **Toggle Theme:** Use the moon/sun icon in the header to switch between light and dark modes. Pro users' theme preferences are saved to their account.
+17. **Manage Account:** Click the user icon in the header and select "Account Settings" to view your email, subscription tier, and update your first and last name.
 
 ## 4. Value Proposition
 SentiVibe provides immense value by:

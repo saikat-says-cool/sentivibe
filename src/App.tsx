@@ -3,8 +3,9 @@ import Index from './pages/Index';
 import Login from './pages/Login';
 import AnalyzeVideo from './pages/AnalyzeVideo';
 import VideoAnalysisLibrary from './pages/VideoAnalysisLibrary';
-import MyAnalyses from './pages/MyAnalyses'; // New import
+import MyAnalyses from './pages/MyAnalyses';
 import BlogPostDetail from './pages/BlogPostDetail';
+import AccountCenter from './pages/AccountCenter'; // New import
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from './integrations/supabase/auth';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -44,10 +45,18 @@ function App() {
                     }
                   />
                   <Route
-                    path="/my-analyses" // New protected route
+                    path="/my-analyses"
                     element={
                       <ProtectedRoute>
                         <MyAnalyses />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/account" // New protected route
+                    element={
+                      <ProtectedRoute>
+                        <AccountCenter />
                       </ProtectedRoute>
                     }
                   />
