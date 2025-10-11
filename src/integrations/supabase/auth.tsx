@@ -23,18 +23,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const getSessionAndSubscription = async () => {
       setIsLoading(true);
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
       if (sessionError) {
         console.error("Error getting session:", sessionError);
       }
-      setSession(session);
-      setUser(session?.user || null);
+      setSession(currentSession);
+      setUser(currentSession?.user || null);
 
-      if (session?.user) {
+      if (currentSession?.user) {
         const { data: subscriptionData, error: subscriptionError } = await supabase
           .from('subscriptions')
           .select('status, plan_id')
-          .eq('id', session.user.id)
+          .eq('id', currentSession.user.id)
           .single();
 
         if (subscriptionError && (subscriptionError as PostgrestError).code !== 'PGRST116') { // PGRST116 means no rows found

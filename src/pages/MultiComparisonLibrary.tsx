@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, GitCompare } from 'lucide-react'; // Removed Loader2
+import { Search, GitCompare } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
 import ComparisonLibraryCopilot from '@/components/ComparisonLibraryCopilot'; // Import the copilot

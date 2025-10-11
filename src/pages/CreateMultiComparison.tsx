@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { Loader2, GitCompare, PlusCircle, XCircle, MessageSquare, RefreshCw } from 'lucide-react'; // Removed Youtube, BarChart
+import { Loader2, GitCompare, PlusCircle, XCircle, MessageSquare, RefreshCw } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -12,6 +12,7 @@ import { Link, useLocation } from 'react-router-dom';
 import MultiComparisonDataDisplay from '@/components/MultiComparisonDataDisplay';
 import MultiComparisonChatDialog from '@/components/MultiComparisonChatDialog';
 import { useAuth } from '@/integrations/supabase/auth';
+import { Skeleton } from '@/components/ui/skeleton'; // Import Skeleton
 
 // New interfaces for multi-comparison
 interface MultiComparisonVideo {

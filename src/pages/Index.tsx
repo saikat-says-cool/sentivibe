@@ -7,7 +7,7 @@ import { ArrowRightIcon, GitCompare } from 'lucide-react'; // Import GitCompare 
 
 function Index() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] text-center px-4 py-8"> {/* Removed bg-gradient-to-br from-background to-muted */}
+    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] text-center px-4 py-8">
       <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight mb-6 text-foreground">
         Unlock Video Insights with SentiVibe
       </h1>

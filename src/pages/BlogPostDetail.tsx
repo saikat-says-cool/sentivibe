@@ -5,12 +5,11 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Youtube, MessageSquare, BarChart, RefreshCw } from 'lucide-react'; // Removed Loader2
+import { ArrowLeft, Youtube, MessageSquare, BarChart, RefreshCw } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-// import { Separator } from '@/components/ui/separator'; // Removed unused import
 
 interface AiAnalysisResult {
   overall_sentiment: string;

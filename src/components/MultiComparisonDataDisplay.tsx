@@ -1,7 +1,6 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-// Removed unused imports: import { ArrowDown, ArrowUp, Minus } from 'lucide-react';
 
 interface VideoSummary {
   title: string;

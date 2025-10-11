@@ -8,7 +8,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from '@/components/ui/button';
-import { GitCompare } from 'lucide-react'; // Removed Loader2
+import { GitCompare } from 'lucide-react';
 import ChatInterface from './ChatInterface';
 import { useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -36,6 +36,15 @@ interface Message {
 interface ComparisonLibraryCopilotProps {
   comparisons: MultiComparison[]; // Now expects MultiComparison type
 }
+
+// Define tier limits for library copilot queries (matching backend for consistency)
+const FREE_TIER_LIMITS = {
+  dailyQueries: 5,
+};
+
+const PAID_TIER_LIMITS = {
+  dailyQueries: 100,
+};
 
 const ComparisonLibraryCopilot: React.FC<ComparisonLibraryCopilotProps> = ({ comparisons }) => {
   const { subscriptionStatus, subscriptionPlanId } = useAuth(); // Get auth and subscription info

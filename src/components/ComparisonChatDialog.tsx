@@ -6,8 +6,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from '@/components/ui/button';
-import { MessageSquare, Loader2 } from 'lucide-react';
 import ChatInterface from './ChatInterface';
 import { useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -23,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { useAuth } from '@/integrations/supabase/auth'; // Import useAuth
 import { Link } from 'react-router-dom'; // Import Link for upgrade prompt
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"; // Import Alert components
+import { MessageSquare } from 'lucide-react'; // Keep MessageSquare
 
 interface CustomComparativeQuestion {
   question: string;
@@ -72,7 +71,7 @@ const ComparisonChatDialog: React.FC<ComparisonChatDialogProps> = ({
   onOpenChange,
   initialComparisonResult,
 }) => {
-  const { user, subscriptionStatus, subscriptionPlanId } = useAuth(); // Get auth and subscription info
+  const { subscriptionStatus, subscriptionPlanId } = useAuth(); // Get auth and subscription info
 
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
   const [desiredWordCount, setDesiredWordCount] = useState<number>(300);
@@ -188,11 +187,11 @@ const ComparisonChatDialog: React.FC<ComparisonChatDialogProps> = ({
       setChatMessages((prev) =>
         prev.map((msg, index) =>
           index === prev.length - 1 && msg.sender === 'ai' && msg.text === 'Thinking...'
-            ? { ...msg, text: `Error: ${err.message}. Please try again.` }
+            ? { ...msg, text: `Error: ${(err as Error).message}. Please try again.` }
             : msg
         )
       );
-      setError(`Failed to get AI response: ${err.message}`); // Set error state on chat mutation error
+      setError(`Failed to get AI response: ${(err as Error).message}`); // Set error state on chat mutation error
     },
   });
 
@@ -285,6 +284,7 @@ const ComparisonChatDialog: React.FC<ComparisonChatDialogProps> = ({
             messages={chatMessages}
             onSendMessage={handleSendMessage}
             isLoading={chatMutation.isPending || fetchExternalContextMutation.isPending}
+            disabled={isChatDisabled || isChatLimitReached}
           />
         </div>
       </DialogContent>

@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import React, { createContext, useContext, useEffect, useState, ReactNode } from "react";
 
 type Theme = "dark" | "system" | "emerald" | "crimson" | "yellow" | "cyan" | "deep-blue" | "forest-green" | "purple-haze"; // Removed 'light', added new dark themes

@@ -1,10 +1,11 @@
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, ArrowLeft, GitCompare, Youtube, MessageSquare, BarChart, RefreshCw } from 'lucide-react'; // Added RefreshCw icon
+import { ArrowLeft, Youtube, MessageSquare, BarChart, RefreshCw } from 'lucide-react'; // Removed Loader2, GitCompare
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -53,7 +54,6 @@ const fetchMultiComparisonBySlug = async (slug: string): Promise<MultiComparison
       *,
       multi_comparison_videos (
         video_order,
-        blog_post_id,
         blog_posts (id, title, thumbnail_url, original_video_link, ai_analysis_json, slug)
       )
     `)
