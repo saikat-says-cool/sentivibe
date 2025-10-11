@@ -8,15 +8,15 @@ const Header = () => {
   const { session } = useAuth();
 
   return (
-    <header className="bg-background border-b border-border p-4 flex items-center justify-between">
+    <header className="bg-background border-b border-border p-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
       <Link to="/" className="flex items-center space-x-2">
         <h1 className="text-3xl font-extrabold tracking-tight text-foreground font-heading">
           <span className="text-foreground">Senti</span>
           <span className="text-accent">Vibe</span>
         </h1>
       </Link>
-      <nav className="flex items-center space-x-4">
-        <ul className="flex space-x-4">
+      <nav className="flex flex-wrap items-center gap-x-4 gap-y-2">
+        <ul className="flex flex-wrap items-center gap-x-4 gap-y-2">
           <li>
             <Link 
               to="/analyze-video" 

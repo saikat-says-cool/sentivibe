@@ -15,7 +15,7 @@ const HowItWorks = () => {
           </p>
 
           <div className="space-y-8">
-            <div className="flex items-start space-x-4">
+            <div className="flex flex-col sm:flex-row items-start sm:space-x-4 space-y-4 sm:space-y-0">
               <div className="flex-shrink-0 p-3 bg-accent text-accent-foreground rounded-full">
                 <Youtube className="h-6 w-6" />
               </div>
@@ -31,7 +31,7 @@ const HowItWorks = () => {
               </div>
             </div>
 
-            <div className="flex items-start space-x-4">
+            <div className="flex flex-col sm:flex-row items-start sm:space-x-4 space-y-4 sm:space-y-0">
               <div className="flex-shrink-0 p-3 bg-accent text-accent-foreground rounded-full">
                 <GitCompare className="h-6 w-6" />
               </div>
@@ -46,7 +46,7 @@ const HowItWorks = () => {
               </div>
             </div>
 
-            <div className="flex items-start space-x-4">
+            <div className="flex flex-col sm:flex-row items-start sm:space-x-4 space-y-4 sm:space-y-0">
               <div className="flex-shrink-0 p-3 bg-accent text-accent-foreground rounded-full">
                 <FileText className="h-6 w-6" />
               </div>
@@ -61,7 +61,7 @@ const HowItWorks = () => {
               </div>
             </div>
 
-            <div className="flex items-start space-x-4">
+            <div className="flex flex-col sm:flex-row items-start sm:space-x-4 space-y-4 sm:space-y-0">
               <div className="flex-shrink-0 p-3 bg-accent text-accent-foreground rounded-full">
                 <MessageSquare className="h-6 w-6" />
               </div>
@@ -73,7 +73,7 @@ const HowItWorks = () => {
               </div>
             </div>
 
-            <div className="flex items-start space-x-4">
+            <div className="flex flex-col sm:flex-row items-start sm:space-x-4 space-y-4 sm:space-y-0">
               <div className="flex-shrink-0 p-3 bg-accent text-accent-foreground rounded-full">
                 <Search className="h-6 w-6" />
               </div>
