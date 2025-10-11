@@ -64,11 +64,12 @@ To successfully integrate a tiered access and usage model into SentiVibe, allowi
     *   **Status:** Completed
 
 *   **Checkpoint 1.3: Analyze YouTube Video - Basic Limits**
-    *   **Guest:** 1 analysis / day (≈ 30 comments sample).
-    *   **Free Member:** 3 analyses / day (≈ 100 comments full set).
-    *   **Pro Subscriber:** Unlimited analyses (no caps).
-    *   **Affected Areas:** Frontend (`AnalyzeVideo.tsx`), Backend (`youtube-analyzer` Edge Function), Database (new table for daily usage tracking).
-    *   **Status:** Pending
+    *   **Description:**
+        *   **Guest:** 1 analysis / day (≈ 30 comments sample).
+        *   **Free Member:** 3 analyses / day (≈ 100 comments full set).
+        *   **Pro Subscriber:** Unlimited analyses (no caps).
+    *   **Affected Areas:** Frontend (`AnalyzeVideo.tsx`), Backend (`youtube-analyzer` Edge Function), Database (`user_daily_usage`).
+    *   **Status:** In Progress (Database table created)
     *   **Notes:** This requires a new database table for `user_daily_usage` to track analysis counts.
 
 *   **Checkpoint 1.4: Weighted Sentiment Analysis - Tiered Depth**
