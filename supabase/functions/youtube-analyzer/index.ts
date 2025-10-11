@@ -10,7 +10,7 @@ const corsHeaders = {
 
 // Helper to get multiple API keys from environment variables
 function getApiKeys(baseName: string): string[] {
-  const keys: string[] = []; // Corrected: should be string[]
+  const keys: string[] = [];
   let i = 1;
   while (true) {
     // @ts-ignore
@@ -65,7 +65,7 @@ serve(async (req) => {
       });
     }
 
-    const { videoLink, customQuestions, forceReanalyze } = await req.json(); // Destructure customQuestions and forceReanalyze
+    const { videoLink, customQuestions, forceReanalyze } = await req.json();
     if (!videoLink) {
       return new Response(JSON.stringify({ error: 'Video link is required' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -247,7 +247,8 @@ serve(async (req) => {
       allFetchedCommentsText = commentsWithLikes.map((comment: any) => comment.text); // Keep all fetched comments text for display
 
       // Prepare prompt for Longcat AI, instructing it to consider like counts as weights and subtitles as additional context
-      let longcatPrompt = `Analyze the following YouTube video content. When determining the overall sentiment, emotional tones, key themes, and summary insights, please give significantly more weight and importance to comments that have a higher 'Likes' count. This should reflect a weighted average sentiment where more popular comments have a greater influence on the final analysis.
+      let longcatPrompt = `Analyze the following YouTube video content.
+      Crucially, when assessing sentiment, emotional tones, and key themes, give **significantly more weight and importance to comments that have a higher 'Likes' counts**. This ensures the analysis reflects the sentiment of the most popular and influential opinions within the comment section.
       
       Video Title: "${videoTitle}"
       Video Description: "${videoDescription}"
@@ -280,7 +281,7 @@ serve(async (req) => {
           body: JSON.stringify({
             model: "LongCat-Flash-Chat",
             messages: [
-              { "role": "system", "content": "You are an expert sentiment analysis AI. Your task is to analyze a YouTube video's comments, providing a concise summary of sentiment, emotional tone, key themes, and overall insights. Prioritize popular comments and use video title, description, tags, and creator name for broader context. Respond in a structured JSON format." },
+              { "role": "system", "content": "You are SentiVibe AI, an advanced sentiment analysis engine with data-science credibility. Your primary task is to objectively analyze YouTube video comments, prioritizing those with higher 'Likes' counts to reflect influential audience sentiment. Generate a comprehensive summary including overall sentiment, specific emotional tones, key discussion themes, and actionable insights. Your analysis must be factual, transparent, and avoid conversational filler. The output must be a valid, well-formed JSON object, strictly adhering to the provided schema." },
               { "role": "user", "content": longcatPrompt }
             ],
             max_tokens: 1000,
@@ -318,7 +319,7 @@ serve(async (req) => {
       aiAnalysis = JSON.parse(aiContent);
 
       // --- Generate SEO-optimized blog post ---
-      const blogPostPrompt = `Based on the following YouTube video analysis, generate a comprehensive, SEO-optimized blog post.
+      const blogPostPrompt = `Based on the following YouTube video analysis, generate a comprehensive, SEO-optimized blog post for the SentiVibe platform. This post is intended for content creators and marketers seeking to understand audience reactions.
       
       Video Title: "${videoTitle}"
       Video Description: "${videoDescription}"
@@ -338,9 +339,10 @@ serve(async (req) => {
       4. List 5-10 relevant keywords as an array.
       5. Be structured with an H1 (the title), H2s for sections, and H3s for sub-sections.
       6. Be at least 500 words long.
-      7. Discuss the public sentiment, emotional tones, and key themes of the video.
-      8. Incorporate insights from the summary and reference the top comments naturally.
-      9. Be written in Markdown format.
+      7. Discuss the public sentiment, emotional tones, and key themes of the video, leveraging SentiVibe's AI insights.
+      8. Incorporate insights from the summary and reference the top comments naturally to support the analysis.
+      9. Conclude with a strong call to action, encouraging readers to use SentiVibe for their own video analysis.
+      10. Be written in Markdown format.
 
       Respond in a structured JSON format:
       {
@@ -348,7 +350,7 @@ serve(async (req) => {
         "slug": "seo-optimized-blog-post-title", // Example: "my-awesome-blog-post" NOT "/blog/my-awesome-blog-post"
         "meta_description": "A concise meta description for search engines.",
         "keywords": ["keyword1", "keyword2", "keyword3"],
-        "content": "# H1 Title\\n\\nIntroduction...\\n\\n## H2 Section\\n\\nContent...\\n\\n### H3 Sub-section\\n\\nMore content..."
+        "content": "# H1 Title\\n\\nIntroduction...\\n\\n## H2 Section\\n\\nContent...\\n\\n### H3 Sub-section\\n\\nMore content...\\n\\n## Conclusion\\n\\nCall to action..."
       }
       `;
 
@@ -363,7 +365,7 @@ serve(async (req) => {
           body: JSON.stringify({
             model: "LongCat-Flash-Chat", // Or a more capable model if available
             messages: [
-              { "role": "system", "content": "You are an expert SEO content writer. Your task is to generate a detailed, SEO-optimized blog post in Markdown format based on provided video analysis data. Ensure the output is a valid JSON object." },
+              { "role": "system", "content": "You are SentiVibe AI, an expert SEO content strategist and writer. Your task is to generate a high-quality, detailed, and SEO-optimized blog post in Markdown format. This post will be published on the SentiVibe platform to inform content creators and marketers about YouTube audience sentiment. The content must be engaging, insightful, and directly leverage the provided video analysis data. Ensure the output is a valid, well-formed JSON object, strictly adhering to the provided schema, and ready for immediate publication. Avoid generic phrases or fluff; focus on actionable insights and clear, professional language." },
               { "role": "user", "content": blogPostPrompt }
             ],
             max_tokens: 2000, // Increased tokens for a longer blog post
@@ -416,6 +418,7 @@ serve(async (req) => {
 
           const customQuestionPrompt = `Based on the following YouTube video analysis, answer the user's custom question.
           
+          --- Video Analysis Context ---
           Video Title: "${videoTitle}"
           Video Description: "${videoDescription}"
           Video Creator: "${creatorName}"
@@ -424,12 +427,15 @@ serve(async (req) => {
           Emotional Tones: ${aiAnalysis.emotional_tones.join(', ')}
           Key Themes: ${aiAnalysis.key_themes.join(', ')}
           Summary Insights: ${aiAnalysis.summary_insights}
-          Top Comments (for reference):
+          --- End Video Analysis Context ---
+
+          --- Top Comments (for reference) ---
           ${allFetchedCommentsText.slice(0, 10).map((comment: string, index: number) => `- ${comment}`).join('\n')}
+          --- End Top Comments ---
 
           User's Question: "${qa.question}"
           
-          Please provide an answer that is approximately ${qa.wordCount} words long. Ensure the answer is complete and directly addresses the question using the provided context.
+          Please provide an answer that is approximately ${qa.wordCount} words long. Your answer should primarily draw from the 'Video Analysis Context' and 'Top Comments' provided. If the information is not present, indicate that. Ensure the answer is complete and directly addresses the question.
           `;
 
           let customQaResponse;
@@ -443,7 +449,7 @@ serve(async (req) => {
               body: JSON.stringify({
                 model: "LongCat-Flash-Chat",
                 messages: [
-                  { "role": "system", "content": "You are an expert AI assistant providing concise and accurate answers based on provided context. Adhere strictly to the requested word count." },
+                  { "role": "system", "content": "You are SentiVibe AI, an insightful and precise AI assistant. Your task is to answer specific user questions about a YouTube video analysis. Your answers must be accurate, directly derived from the provided 'Video Analysis Context' and 'Top Comments', and strictly adhere to the requested word count. If the answer cannot be fully derived from the provided context, state this clearly and concisely. Do not speculate or introduce external information unless explicitly instructed. Format your answers for clarity, using bullet points or bolding where appropriate." },
                   { "role": "user", "content": customQuestionPrompt }
                 ],
                 max_tokens: Math.ceil(qa.wordCount * 1.5), // Allow some buffer for token count
@@ -546,6 +552,7 @@ serve(async (req) => {
 
           const customQuestionPrompt = `Based on the following YouTube video analysis, answer the user's custom question.
           
+          --- Video Analysis Context ---
           Video Title: "${videoTitle}"
           Video Description: "${videoDescription}"
           Video Creator: "${creatorName}"
@@ -554,12 +561,15 @@ serve(async (req) => {
           Emotional Tones: ${aiAnalysis.emotional_tones.join(', ')}
           Key Themes: ${aiAnalysis.key_themes.join(', ')}
           Summary Insights: ${aiAnalysis.summary_insights}
-          Top Comments (for reference):
+          --- End Video Analysis Context ---
+
+          --- Top Comments (for reference) ---
           ${allFetchedCommentsText.slice(0, 10).map((comment: string, index: number) => `- ${comment}`).join('\n')}
+          --- End Top Comments ---
 
           User's Question: "${qa.question}"
           
-          Please provide an answer that is approximately ${qa.wordCount} words long. Ensure the answer is complete and directly addresses the question using the provided context.
+          Please provide an answer that is approximately ${qa.wordCount} words long. Your answer should primarily draw from the 'Video Analysis Context' and 'Top Comments' provided. If the information is not present, indicate that. Ensure the answer is complete and directly addresses the question.
           `;
 
           let customQaResponse;
@@ -573,7 +583,7 @@ serve(async (req) => {
               body: JSON.stringify({
                 model: "LongCat-Flash-Chat",
                 messages: [
-                  { "role": "system", "content": "You are an expert AI assistant providing concise and accurate answers based on provided context. Adhere strictly to the requested word count." },
+                  { "role": "system", "content": "You are SentiVibe AI, an insightful and precise AI assistant. Your task is to answer specific user questions about a YouTube video analysis. Your answers must be accurate, directly derived from the provided 'Video Analysis Context' and 'Top Comments', and strictly adhere to the requested word count. If the answer cannot be fully derived from the provided context, state this clearly and concisely. Do not speculate or introduce external information unless explicitly instructed. Format your answers for clarity, using bullet points or bolding where appropriate." },
                   { "role": "user", "content": customQuestionPrompt }
                 ],
                 max_tokens: Math.ceil(qa.wordCount * 1.5), // Allow some buffer for token count
