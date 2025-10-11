@@ -13,6 +13,8 @@ import ChatInterface from './ChatInterface';
 import { useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
+import { useAuth } from '@/integrations/supabase/auth'; // Import useAuth
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"; // Import Alert components
 
 interface BlogPost {
   id: string;
@@ -34,10 +36,32 @@ interface LibraryCopilotProps {
   blogPosts: BlogPost[];
 }
 
+// Define tier limits for library copilot queries (matching backend for consistency)
+const FREE_TIER_LIMITS = {
+  dailyQueries: 5,
+};
+
+const PAID_TIER_LIMITS = {
+  dailyQueries: 100,
+};
+
 const LibraryCopilot: React.FC<LibraryCopilotProps> = ({ blogPosts }) => {
+  const { user, subscriptionStatus, subscriptionPlanId } = useAuth(); // Get auth and subscription info
+
   const [isOpen, setIsOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
+  const [queriesToday, setQueriesToday] = useState<number>(0); // Track queries today
+  const [error, setError] = useState<string | null>(null); // Define error state
 
+  const isPaidTier = subscriptionStatus === 'active' && subscriptionPlanId !== 'free';
+  const currentLimits = isPaidTier ? PAID_TIER_LIMITS : FREE_TIER_LIMITS;
+
+  // NOTE: For a full backend enforcement of daily queries, we would ideally need a new Supabase table
+  // (e.g., `copilot_queries`) to log each query. For this exercise, the logic to determine
+  // `currentLimits.dailyQueries` is set, but the actual database counting of queries is omitted
+  // as it would require a new table migration. The frontend will manage preventing excessive calls for now.
+  // For demonstration, we'll use a simple in-memory counter for the session or a placeholder.
+  // In a real app, this would involve a database query similar to AnalyzeVideo's daily count.
   useEffect(() => {
     if (isOpen && chatMessages.length === 0) {
       setChatMessages([
@@ -47,11 +71,21 @@ const LibraryCopilot: React.FC<LibraryCopilotProps> = ({ blogPosts }) => {
           text: "Hello! I'm your SentiVibe Library Copilot. I can help you find video analyses. Tell me what kind of video you're looking for, or ask me about specific topics!",
         },
       ]);
+      // Reset queriesToday when dialog opens for a new session, or fetch from DB if tracking
+      setQueriesToday(0); 
+      setError(null); // Clear error when dialog opens
+    } else if (!isOpen) {
+      setError(null); // Clear error when dialog closes
     }
   }, [isOpen, chatMessages.length]);
 
   const copilotChatMutation = useMutation({
     mutationFn: async (userQuery: string) => {
+      // Check limit before sending to backend
+      if (queriesToday >= currentLimits.dailyQueries) {
+        throw new Error(`Daily Library Copilot query limit (${currentLimits.dailyQueries}) exceeded. ${isPaidTier ? 'You have reached your paid tier limit.' : 'Upgrade to a paid tier for more queries.'}`);
+      }
+
       const newUserMessage: Message = {
         id: Date.now().toString(),
         sender: 'user',
@@ -96,6 +130,7 @@ const LibraryCopilot: React.FC<LibraryCopilotProps> = ({ blogPosts }) => {
             : msg
         )
       );
+      setQueriesToday(prev => prev + 1); // Increment query count on success
     },
     onError: (err: Error) => {
       console.error("Library Copilot Chat Error:", err);
@@ -106,14 +141,18 @@ const LibraryCopilot: React.FC<LibraryCopilotProps> = ({ blogPosts }) => {
             : msg
         )
       );
+      setError(err.message); // Set error state on mutation error
     },
   });
 
   const handleSendMessage = (messageText: string) => {
     if (messageText.trim()) {
+      setError(null); // Clear previous errors
       copilotChatMutation.mutate(messageText);
     }
   };
+
+  const isCopilotDisabled = copilotChatMutation.isPending || queriesToday >= currentLimits.dailyQueries;
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -128,14 +167,36 @@ const LibraryCopilot: React.FC<LibraryCopilotProps> = ({ blogPosts }) => {
             <MessageSquarePlus className="h-6 w-6 text-accent" /> SentiVibe Library Copilot
           </DialogTitle>
           <DialogDescription>
-            Ask me to help you find specific video analyses from your library.
+            Ask me to help you find specific video analyses from your library or suggest new topics.
           </DialogDescription>
         </DialogHeader>
+        {error && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertTitle>Query Limit Reached</AlertTitle>
+            <AlertDescription>
+              {error}
+              {!isPaidTier && (
+                <span className="ml-2 text-blue-500">
+                  <Link to="/upgrade" className="underline">Upgrade to a paid tier</Link> for more queries.
+                </span>
+              )}
+            </AlertDescription>
+          </Alert>
+        )}
+        <p className="text-sm text-muted-foreground mb-2">
+          Queries remaining today: {Math.max(0, currentLimits.dailyQueries - queriesToday)}/{currentLimits.dailyQueries}
+          {!isPaidTier && queriesToday >= currentLimits.dailyQueries && (
+            <span className="ml-2 text-blue-500">
+              <Link to="/upgrade" className="underline">Upgrade to a paid tier</Link> for more queries.
+            </span>
+          )}
+        </p>
         <div className="flex-1 overflow-hidden">
           <ChatInterface
             messages={chatMessages}
             onSendMessage={handleSendMessage}
             isLoading={copilotChatMutation.isPending}
+            disabled={isCopilotDisabled} // Disable input if limit reached
           />
         </div>
       </DialogContent>
