@@ -1,7 +1,7 @@
 # SentiVibe Technical Documentation
 
 ## 1. Introduction
-This document provides a comprehensive technical overview of the SentiVibe application, detailing its architecture, core components, data flow, Supabase integration, and external API interactions. SentiVibe is a React-based web application designed to perform AI-powered sentiment analysis on YouTube video comments, engage in context-aware conversations about the analysis, and automatically generate SEO-optimized blog posts for each analysis, which are then stored and made discoverable in a dedicated library. It now also supports **user-defined custom questions** that are answered by AI and included in the analysis report, and features a **staleness-freshness logic** to ensure analyses remain up-to-date.
+This document provides a comprehensive technical overview of the SentiVibe application, detailing its architecture, core components, data flow, Supabase integration, and external API interactions. SentiVibe is a React-based web application designed to perform AI-powered sentiment analysis on YouTube video comments, engage in context-aware conversations about the analysis, and automatically generate SEO-optimized blog posts for each analysis, which are then stored and made discoverable in a dedicated library. It now also supports **user-defined custom questions** that are answered by AI and included in the analysis report, and features a **staleness-freshness logic** to ensure analyses remain up-to-date. The application now operates with a **public-first approach**, allowing unauthenticated users to access core analysis and library features, with enhanced theming options.
 
 ## 2. Tech Stack
 The application is built using the following technologies:
@@ -27,16 +27,16 @@ The project follows a standard React application structure with specific directo
 *   `src/`: Main application source code.
     *   `src/App.tsx`: Main application component, handles routing and context providers.
     *   `src/main.tsx`: Entry point for React rendering.
-    *   `src/globals.css`: Global Tailwind CSS styles, custom CSS variables for the **Crowd Black/Pure White** theme, and custom sentiment colors.
+    *   `src/globals.css`: Global Tailwind CSS styles, custom CSS variables for the **Crowd Black/Pure White** theme, custom sentiment colors, and **new Emerald, Crimson, Yellow, and Cyan themes**.
     *   `src/lib/utils.ts`: Utility functions (e.g., `cn` for Tailwind class merging).
     *   `src/utils/toast.ts`: Utility functions for `sonner` toast notifications.
     *   `src/components/`: Reusable UI components.
-        *   `src/components/Header.tsx`: Global application header with the **SentiVibe wordmark** and a **theme toggle**.
-        *   `src/components/ModeToggle.tsx`: Component for switching between light and dark themes.
+        *   `src/components/Header.tsx`: Global application header with the **SentiVibe wordmark**, a **theme toggle**, and **public links to 'Analyze a Video' and 'Analysis Library'**.
+        *   `src/components/ModeToggle.tsx`: Component for switching between light, dark, system, and **new Emerald, Crimson, Yellow, and Cyan themes**.
         *   `src/components/ChatInterface.tsx`: Generic chat UI component.
-        *   `src/components/ProtectedRoute.tsx`: Component for protecting routes.
+        *   `src/components/ProtectedRoute.tsx`: Component for protecting routes (now less critical due to public-first strategy, but still present for `MyAnalyses`).
         *   `src/components/Footer.tsx`: Application footer, now including the **brand ethics disclosure**.
-        *   `src/components/theme-provider.tsx`: Theme context provider.
+        *   `src/components/theme-provider.tsx`: Theme context provider, **updated to support new themes**.
         *   `src/components/VideoChatDialog.tsx`: **Updated component for the centralized AI chat pop-up, now passing custom Q&A results as context and allowing precise word count control.**
         *   `src/components/LibraryCopilot.tsx`: **Enhanced AI assistant for searching the analysis library and recommending new analysis topics.**
         *   `src/components/ui/`: Shadcn/ui components (e.g., Button, Card, Input, Badge, Alert, Skeleton, Collapsible).
@@ -44,9 +44,9 @@ The project follows a standard React application structure with specific directo
         *   `src/hooks/use-mobile.tsx`: Hook for detecting mobile viewport.
         *   `src/hooks/use-toast.ts`: Shadcn/ui toast hook (distinct from `sonner` toasts).
     *   `src/pages/`: Application pages/views.
-        *   `src/pages/Index.tsx`: Landing page, updated with new tagline and wordmark styling.
+        *   `src/pages/Index.tsx`: **Updated landing page, now featuring direct calls to action for analyzing videos and exploring the library, removing the previous static cover page.**
         *   `src/pages/Login.tsx`: User authentication page, styled to integrate with the new color palette.
-        *   `src/pages/AnalyzeVideo.tsx`: **Significantly updated main page for YouTube video analysis, now featuring dynamic custom question input fields with word limits, displaying AI-generated answers, and including a 'Refresh Analysis' button and 'Last Full Analysis' timestamp.**
+        *   `src/pages/AnalyzeVideo.tsx`: **Significantly updated main page for YouTube video analysis, now featuring dynamic custom question input fields with word limits, displaying AI-generated answers, including a 'Refresh Analysis' button and 'Last Full Analysis' timestamp, and a disclaimer about the 50-comment minimum.**
         *   `src/pages/VideoAnalysisLibrary.tsx`: **Updated page to list and search generated blog posts (video analyses), with updated BlogPost interface, and integrating the enhanced `LibraryCopilot`.**
         *   `src/pages/MyAnalyses.tsx`: **Updated page to list a user's own analyses, now integrating the enhanced `LibraryCopilot` and with updated BlogPost interface.**
         *   `src/pages/BlogPostDetail.tsx`: **Updated page to display the full content of a single generated blog post, including the new custom Q&A section, a 'Go to Video Analysis' button, a 'Refresh Analysis' button, and the 'Last Full Analysis' timestamp.**
@@ -56,10 +56,10 @@ The project follows a standard React application structure with specific directo
         *   `src/integrations/supabase/auth.tsx`: React Context Provider and hook for managing Supabase user sessions.
 *   `supabase/`: Supabase-related backend files.
     *   `supabase/functions/`: Supabase Edge Functions.
-        *   `supabase/functions/youtube-analyzer/index.ts`: **Significantly updated Edge Function for video analysis, now implementing staleness-freshness logic, processing custom questions, making additional AI calls for answers, and storing these Q&A results in the database, even for cached videos. It also handles a `forceReanalyze` flag. AI prompts have been extensively engineered for high-quality, production-grade responses for sentiment analysis, blog post generation, and custom Q&A.**
+        *   `supabase/functions/youtube-analyzer/index.ts`: **Significantly updated Edge Function for video analysis, now implementing staleness-freshness logic, processing custom questions, making additional AI calls for answers, and storing these Q&A results in the database, even for cached videos. It also handles a `forceReanalyze` flag. AI prompts have been extensively engineered for high-quality, production-grade responses for sentiment analysis, blog post generation, and custom Q&A, and the authentication check has been removed to allow unauthenticated access.**
         *   `supabase/functions/fetch-external-context/index.ts`: Edge Function for performing a one-time Google Custom Search.
-        *   `supabase/functions/chat-analyzer/index.ts`: **Updated Edge Function for handling AI chat conversations, now incorporating custom Q&A results into the AI's context and using a desired word count for response length. AI prompts have been extensively engineered for high-quality, production-grade responses, including a strict information hierarchy, precise word count adherence, and mandatory Markdown hyperlink formatting.**
-        *   `supabase/functions/library-copilot-analyzer/index.ts`: **Enhanced Edge Function for handling AI chat for the Library Copilot, now performing semantic search and proactively recommending new analysis topics. AI prompts have been extensively engineered for high-quality, production-grade responses, including precise matching, clear recommendations, and mandatory Markdown hyperlink formatting.**
+        *   `supabase/functions/chat-analyzer/index.ts`: **Updated Edge Function for handling AI chat conversations, now incorporating custom Q&A results into the AI's context and using a desired word count for response length. AI prompts have been extensively engineered for high-quality, production-grade responses, including a strict information hierarchy, precise word count adherence, and mandatory Markdown hyperlink formatting. The authentication check has been removed to allow unauthenticated access.**
+        *   `supabase/functions/library-copilot-analyzer/index.ts`: **Enhanced Edge Function for handling AI chat for the Library Copilot, now performing semantic search and proactively recommending new analysis topics. AI prompts have been extensively engineered for high-quality, production-grade responses, including precise matching, clear recommendations, and mandatory Markdown hyperlink formatting. The authentication check has been removed to allow unauthenticated access.**
     *   `supabase/migrations/`: Database migration files.
 *   `tailwind.config.ts`: Tailwind CSS configuration, including custom fonts (`Arimo`, `Plus Jakarta Sans`) and the new brand color palette.
 *   `.env`: Environment variables (e.g., Supabase URLs, API keys).
@@ -69,26 +69,27 @@ The project follows a standard React application structure with specific directo
 ### 4.1. `App.tsx` (Root Component & Routing)
 *   **Context Providers:** Wraps the entire application with necessary contexts:
     *   `QueryClientProvider`: Manages global state for data fetching with TanStack Query.
-    *   `ThemeProvider`: Manages light/dark theme.
+    *   `ThemeProvider`: Manages light/dark/custom themes.
     *   `AuthProvider`: Custom provider for Supabase authentication session management.
     *   `Toaster` (from `sonner`): For displaying toast notifications, configured to use brand colors for success/error/neutral.
 *   **`AppRoutes` Component:** Encapsulates `BrowserRouter` and `Routes`.
     *   Renders the `Header` component globally.
     *   Defines application routes: `/`, `/login`, `/analyze-video`, `/library`, `/my-analyses`, `/blog/:slug`, and a catch-all `*` for `NotFound`.
-*   **`ProtectedRoute` Component:** A higher-order component that ensures only authenticated users can access specific routes (e.g., `/analyze-video`, `/library`, `/my-analyses`). It redirects unauthenticated users to `/login`.
+*   **`ProtectedRoute` Component:** A higher-order component that ensures only authenticated users can access specific routes (e.g., `/my-analyses`). It redirects unauthenticated users to `/login`. Note: `/analyze-video` and `/library` are now publicly accessible.
 
 ### 4.2. `Header.tsx`
 *   A React component that renders a consistent header across all pages.
 *   Displays the **SentiVibe wordmark** (`<span className="text-foreground">Senti</span><span className="text-accent">Vibe</span>`) using the `font-heading` (Plus Jakarta Sans) typeface.
-*   Includes navigation links to the `/library` and `/my-analyses` routes, accessible to authenticated users.
+*   **Now includes navigation links to `/analyze-video` and `/library` for all users.**
+*   Includes a link to `/my-analyses` for authenticated users.
 *   Integrates the `ModeToggle` component for theme switching.
 *   Styled with Tailwind CSS for a clean, **Crowd Black** and **Pure White** appearance.
 
 ### 4.3. `Index.tsx` (Landing Page)
-*   The default entry point for unauthenticated users or when navigating to the root.
+*   **The default entry point for all users.**
 *   Features the **SentiVibe wordmark** prominently (`text-5xl font-extrabold tracking-tight`).
 *   Displays the new tagline: "Unlock the true sentiment behind YouTube comments. Analyze, understand, and gain insights into audience reactions with AI-powered sentiment analysis."
-*   Includes a call-to-action button (`<Link to="/analyze-video">Analyze a Video</Link>` or `<Link to="/login">Get Started</Link>`) to direct users to the analysis page or login.
+*   **Includes clear calls-to-action** with buttons to "Analyze a Video" and "Explore the Library," directly guiding users to the core functionalities.
 
 ### 4.4. `Login.tsx` (Authentication Page)
 *   Utilizes the `@supabase/auth-ui-react` component for a pre-built authentication UI.
@@ -105,6 +106,7 @@ The project follows a standard React application structure with specific directo
     *   **`analyzeVideoMutation`:** Uses `useMutation` to call the `youtube-analyzer` Supabase Edge Function. The payload now includes the `customQuestions` array and an optional `forceReanalyze` boolean flag. `onSuccess` updates `analysisResult`.
 *   **UI Elements:**
     *   `Input` for video link submission, `Textarea` for custom questions, `Input` for word count.
+    *   **Includes a prominent disclaimer:** "Important: The video must have at least 50 comments for a proper sentiment analysis."
     *   `Button` to trigger analysis, showing a `Loader2` icon (styled with `text-accent`) when pending.
     *   `Card` components to structure the input form and display results.
     *   `Skeleton` components provide a loading state visual for analysis.
@@ -237,7 +239,8 @@ The project follows a standard React application structure with specific directo
     *   `Authenticated users can update their own blog posts`: `FOR UPDATE TO authenticated USING (auth.uid() = author_id)`
     *   `Authenticated users can delete their own blog posts`: `FOR DELETE TO authenticated USING (auth.uid() = author_id)`
     *   `Public read access for published blog posts`: `FOR SELECT USING (published_at IS NOT NULL)`
-    *   These policies ensure authenticated users manage their own posts, and only published posts are publicly viewable.
+    *   **`Allow anon users to insert blog posts with null author_id`**: `FOR INSERT TO anon WITH CHECK (author_id IS NULL)`
+    *   These policies ensure authenticated users manage their own posts, only published posts are publicly viewable, and unauthenticated users can create public analyses.
 
 ### 5.4. Database Functions & Triggers
 *   **Function:** `public.handle_new_user()` (Existing)
@@ -250,8 +253,8 @@ The project follows a standard React application structure with specific directo
 ### 5.5. Supabase Edge Function (`supabase/functions/youtube-analyzer/index.ts`)
 This Deno-based serverless function is the core backend logic for video analysis and blog post generation, **now enhanced with an intelligent caching mechanism, SEO-focused AI prompting, API key rotation, custom question processing, and staleness-freshness logic. AI prompts have been extensively engineered for high-quality, production-grade responses for sentiment analysis, blog post generation, and custom Q&A.**
 *   **CORS Handling:** Includes `corsHeaders` and handles `OPTIONS` preflight requests.
-*   **Supabase Client Initialization:** Creates a Supabase client within the function, passing the user's `Authorization` header.
-*   **User Authentication:** Verifies the user's session.
+*   **Supabase Client Initialization:** Creates a Supabase client within the function, gracefully handling a potentially missing user `Authorization` header for unauthenticated users.
+*   **User Authentication:** The explicit user authentication check has been removed. The `author_id` for new blog posts will be set to `user?.id` (which can be `null` for unauthenticated users).
 *   **Input Validation:** Checks for `videoLink` and extracts `videoId`. Now also receives `customQuestions` array and an optional `forceReanalyze` boolean flag.
 *   **Analysis Caching & Staleness Logic:**
     *   Upon receiving a `videoLink`, the function first extracts the `videoId`.
@@ -293,9 +296,9 @@ This Deno-based serverless function is responsible for fetching external, up-to-
 *   **Cost Optimization:** This function is called only once per video analysis session from the frontend, reducing repeated Google Search API calls.
 
 ### 5.7. Supabase Edge Function (`supabase/functions/chat-analyzer/index.ts`)
-This Deno-based serverless function handles the conversational AI aspect. **It now includes API key rotation and explicit instructions for Markdown hyperlinks, and incorporates custom Q&A results into its context. AI prompts have been extensively engineered for high-quality, production-grade responses, including a strict information hierarchy, precise word count adherence, and mandatory Markdown hyperlink formatting.**
+This Deno-based serverless function handles the conversational AI aspect. **It now includes API key rotation and explicit instructions for Markdown hyperlinks, and incorporates custom Q&A results into its context. AI prompts have been extensively engineered for high-quality, production-grade responses, including a strict information hierarchy, precise word count adherence, and mandatory Markdown hyperlink formatting. The authentication check has been removed to allow unauthenticated access.**
 *   **CORS Handling:** Includes `corsHeaders` and handles `OPTIONS` preflight requests.
-*   **Supabase Client Initialization & User Authentication:** Verifies the user.
+*   **Supabase Client Initialization & User Authentication:** Creates a Supabase client within the function, gracefully handling a potentially missing user `Authorization` header. The explicit user authentication check has been removed.
 *   **Input:** Receives `userMessage`, `chatMessages` (conversation history), `analysisResult` (full video analysis including top comments, creator name, thumbnail URL, `aiAnalysis` object, and **`customQaResults`**), `externalContext` (pre-fetched Google search results), `desiredWordCount`, and `selectedPersona` from the frontend.
 *   **API Key Retrieval & Rotation:**
     *   Retrieves a list of `LONGCAT_AI_API_KEY`s using the `getApiKeys` helper function.
@@ -314,9 +317,9 @@ This Deno-based serverless function handles the conversational AI aspect. **It n
 *   **Cost Efficiency:** This function no longer makes direct Google Search API calls, relying on the frontend to provide the `externalContext`. **Note:** While the core video analysis is cached, the `fetch-external-context` function is still invoked on each new analysis request from the frontend to ensure the chat AI has the most up-to-date external information.
 
 ### 5.8. Supabase Edge Function (`supabase/functions/library-copilot-analyzer/index.ts`) (Enhanced)
-This Deno-based serverless function handles the AI-powered search within the analysis library **and now acts as an analysis topic recommender. AI prompts have been extensively engineered for high-quality, production-grade responses, including precise matching, clear recommendations, and mandatory Markdown hyperlink formatting.**
+This Deno-based serverless function handles the AI-powered search within the analysis library **and now acts as an analysis topic recommender. AI prompts have been extensively engineered for high-quality, production-grade responses, including precise matching, clear recommendations, and mandatory Markdown hyperlink formatting. The authentication check has been removed to allow unauthenticated access.**
 *   **CORS Handling:** Includes `corsHeaders` and handles `OPTIONS` preflight requests.
-*   **Supabase Client Initialization & User Authentication:** Verifies the user.
+*   **Supabase Client Initialization & User Authentication:** Creates a Supabase client within the function, gracefully handling a potentially missing user `Authorization` header. The explicit user authentication check has been removed.
 *   **Input:** Receives `userQuery` and `blogPostsData` (a simplified list of blog posts) from the frontend.
 *   **API Key Retrieval & Rotation:** Retrieves a list of `LONGCAT_AI_API_KEY`s and iterates through them for API calls.
 *   **`systemPrompt`:** Explicitly instructs the AI to identify relevant blog posts and provide their titles with **Markdown links in the format `[Title of Blog Post](/blog/slug-of-blog-post)`**. **It also now instructs the AI to suggest 1 to 3 new, related analysis topics or video ideas based on the user's query and the existing library content.**
@@ -328,6 +331,7 @@ This Deno-based serverless function handles the AI-powered search within the ana
 *   **`src/globals.css`:**
     *   Defines custom CSS variables for the **Crowd Black** and **Pure White** color palette for both light and dark modes. This ensures consistent theming across the application.
     *   Includes specific variables for **Positive Green**, **Neutral Gray**, **Negative Red**, and **Accent Blue** to be used for sentiment and interactive elements.
+    *   **Now includes color variables for Emerald, Crimson, Yellow, and Cyan themes, each with light and dark variations.**
     *   Applies the `Arimo` font globally to the `body` element.
     *   **New CSS Rule:** Includes `.prose a { text-decoration: underline; }` to ensure all links within Markdown-rendered content are clearly underlined.
 *   **`tailwind.config.ts`:** Configures Tailwind to use `Arimo` as the default `font-sans` family and `Plus Jakarta Sans` for `font-heading`. It also extends the color palette with the new brand colors and sentiment-specific colors.

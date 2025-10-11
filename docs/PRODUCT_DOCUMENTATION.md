@@ -1,7 +1,7 @@
 # SentiVibe Product Documentation
 
 ## 1. Product Overview
-**SentiVibe** is an innovative web application designed to empower users with deep insights into public sentiment surrounding YouTube videos. By leveraging advanced AI, SentiVibe analyzes video comments to extract overall sentiment, emotional tones, key themes, and actionable summary insights. Beyond static reports, it now offers a **context-aware conversational AI** that can answer follow-up questions, drawing from the video analysis, top comments, external up-to-date information, and its own general knowledge. It also features **programmatic SEO**, automatically generating and publishing SEO-optimized blog posts for each video analysis, and organizing them in a searchable **Video Analysis Library**. It's an essential tool for content creators, marketers, researchers, and anyone interested in understanding audience reactions to online video content.
+**SentiVibe** is an innovative web application designed to empower users with deep insights into public sentiment surrounding YouTube videos. By leveraging advanced AI, SentiVibe analyzes video comments to extract overall sentiment, emotional tones, key themes, and actionable summary insights. Beyond static reports, it now offers a **context-aware conversational AI** that can answer follow-up questions, drawing from the video analysis, top comments, external up-to-date information, and its own general knowledge. It also features **programmatic SEO**, automatically generating and publishing SEO-optimized blog posts for each video analysis, and organizing them in a searchable **Video Analysis Library**. It's an essential tool for content creators, marketers, researchers, and anyone interested in understanding audience reactions to online video content. The application now operates with a **public-first approach**, allowing unauthenticated users to access core analysis and library features, with enhanced theming options.
 
 **Mission:** To decode the voice of the crowd—transforming unstructured online reactions into clear, actionable insight.
 **Tagline:** “See what the crowd really feels.”
@@ -12,12 +12,14 @@
 ## 2. Key Features
 
 ### 2.1. Secure User Authentication
-*   **Personalized Experience:** Users can securely sign up and log in to access SentiVibe's features.
-*   **Protected Content:** Analysis tools and reports are protected, ensuring only authenticated users can access them.
-*   **Profile Management (Future-ready)::** A user profile system is in place, ready for future enhancements like saving analysis history or personalized dashboards.
+*   **Public Access:** Core features like video analysis and the analysis library are now accessible to **all users, even without logging in.**
+*   **Personalized Experience:** Users can securely sign up and log in to access personalized features like "My Analyses" history.
+*   **Protected Content:** User-specific analysis history is protected, ensuring only authenticated users can access their own saved reports.
+*   **Profile Management (Future-ready):** A user profile system is in place, ready for future enhancements like personalized dashboards.
 
 ### 2.2. AI-Powered YouTube Video Analysis
 *   **Effortless Input:** Simply paste any public YouTube video link into the application.
+*   **Minimum Comment Requirement:** A clear disclaimer states: "**Important: The video must have at least 50 comments for a proper sentiment analysis.**" This ensures robust and meaningful AI analysis.
 *   **Dynamic Custom AI Questions:** Users can now add multiple custom questions with desired word count limits to be answered by the AI as part of the initial analysis report.
 *   **Intelligent Analysis Caching with Dynamic Q&A and Staleness Logic:** To optimize resource usage and prevent duplicate content, SentiVibe automatically saves each video analysis. If a video has been analyzed before, the system will instantly retrieve and display the existing report and blog post.
     *   **Staleness Check:** Analyses are considered "stale" after a predefined period (e.g., 30 days). If an analysis is stale, or if a user explicitly requests it, a **full re-analysis** will be performed, fetching the latest comments and re-running the AI sentiment analysis to ensure freshness.
@@ -28,7 +30,6 @@
     *   **Video Tags:** To understand the video's categorization and keywords.
     *   **Comments:** Fetches up to 100 comments for analysis.
     *   **Creator Name:** Identifies the YouTube channel/creator.
-*   **Intelligent Comment Filtering:** Requires a minimum of 50 comments to ensure a robust and meaningful AI analysis, preventing skewed results from low engagement videos.
 *   **Weighted Sentiment Analysis:** The AI model is specifically instructed to give **significantly more weight to comments with higher "Likes" counts**. This ensures that the analysis reflects the sentiment of the most popular and influential opinions within the comment section.
 *   **Detailed AI Insights:** The analysis provides:
     *   **Overall Sentiment:** A general classification (e.g., positive, negative, neutral).
@@ -90,26 +91,26 @@
 *   **Intuitive Design:** A clean, minimalist interface built with Shadcn/ui components and Tailwind CSS.
 *   **Mobile-Friendly:** The application is designed to be fully responsive, providing an optimal experience across desktops, tablets, and mobile devices.
 *   **Consistent Branding:** Features a sleek **Crowd Black** and **Pure White** theme with **Positive Green**, **Negative Red**, and **Accent Blue** for emotional cues and interactive elements. The application uses the **Arimo** font for body text and **Plus Jakarta Sans** for headings and the prominent "SentiVibe" word logo, ensuring a professional and unified brand presence.
-*   **Theme Toggle:** Users can switch between light and dark modes using a dedicated theme toggle.
+*   **Theme Toggle:** Users can switch between light, dark, system, and **new Emerald, Crimson, Yellow, and Cyan themes** using a dedicated theme toggle.
 
 ## 3. How to Use SentiVibe
 
-1.  **Access the Application:** Open SentiVibe in your web browser.
-2.  **Sign Up / Log In:** If you're a new user, sign up for an account. Otherwise, log in with your existing credentials.
-3.  **Navigate to Analyze Video:** From the homepage, click the "Analyze a Video" button or navigate to the `/analyze-video` route.
-4.  **Paste YouTube Link:** In the input field, paste the full URL of the YouTube video you wish to analyze.
-5.  **Add Custom Questions (Optional):** Use the "Add Another Question" button to add one or more custom questions. For each question, type your query and specify the desired word count for the AI's answer.
-6.  **Initiate Analysis:** Click the "Analyze Comments & Get Answers" button. If the video has been analyzed before, the report will load almost instantly. If the existing analysis is stale (older than 30 days) or if you navigate from a blog post with a "Refresh Analysis" flag, a full re-analysis will occur. Any new custom questions you've added will be processed and merged with existing community questions. Otherwise, the application will display a loading state while the AI processes the data, fetches initial external context, and generates answers to your custom questions.
-7.  **Review Report & Blog Post:** Once the analysis is complete, a detailed report will appear, including the primary sentiment analysis and the answers to all community questions. You will see a "View Blog Post" button to navigate to the full, SEO-optimized blog post, and an "Original Video" button to view the YouTube video. The `Last Full Analysis` timestamp will indicate when the core sentiment analysis was last performed.
-8.  **Refresh Analysis (Optional):** If you believe the sentiment might have changed or simply want the latest data, click the **"Refresh Analysis" button** on the analysis report page or the blog post detail page to trigger a full re-analysis.
-9.  **Chat with AI:** Click the "Chat with AI" button to open the **pop-up chat dialog**.
-10. **Customize AI Chat (Optional):** Within the chat dialog, use the dropdown to select your preferred **AI Persona** and enter your **Desired Word Count** for the AI's response.
-11. **Engage with AI:** You can now ask questions about the video, its comments, the pre-generated community answers, or related topics. The AI will use all available context and your chosen persona/length preferences to provide informed answers, including clickable Markdown links.
-12. **Download PDF Report:** To save or share the report, click the "Download Report PDF" button. A PDF file will be generated and downloaded to your device, featuring a branded header and including the community Q&A section.
-13. **Explore the Analysis Library:** Navigate to the "Analysis Library" from the header. Here, you can browse all past video analyses, search by video title, creator, or keywords.
-14. **Use Library Copilot:** On both the "Analysis Library" and "My Analyses" pages, click the "Library Copilot" button to open an AI chat that helps you find specific analyses from your collection, providing direct links to the blog posts. **It will also suggest new, related analysis topics or video ideas based on your query and the existing library content.**
-15. **Chat from Library (New!):** From a blog post detail page, click the "Chat with AI" button to seamlessly open the **pop-up chat dialog** with the blog post's context pre-loaded, ready for conversation. You can also use the **"Go to Video Analysis" button** to view the full report first.
-16. **Toggle Theme:** Use the moon/sun icon in the header to switch between light and dark modes.
+1.  **Access the Application:** Open SentiVibe in your web browser. The landing page will guide you to the main features.
+2.  **Analyze a Video:** Click "Analyze a Video" in the header or on the landing page.
+3.  **Paste YouTube Link:** In the input field, paste the full URL of the YouTube video you wish to analyze. Remember: **The video must have at least 50 comments for a proper sentiment analysis.**
+4.  **Add Custom Questions (Optional):** Use the "Add Another Question" button to add one or more custom questions. For each question, type your query and specify the desired word count for the AI's answer.
+5.  **Initiate Analysis:** Click the "Analyze Comments & Get Answers" button. If the video has been analyzed before, the report will load almost instantly. If the existing analysis is stale (older than 30 days) or if you navigate from a blog post with a "Refresh Analysis" flag, a full re-analysis will occur. Any new custom questions you've added will be processed and merged with existing community questions. Otherwise, the application will display a loading state while the AI processes the data, fetches initial external context, and generates answers to your custom questions.
+6.  **Review Report & Blog Post:** Once the analysis is complete, a detailed report will appear, including the primary sentiment analysis and the answers to all community questions. You will see a "View Blog Post" button to navigate to the full, SEO-optimized blog post, and an "Original Video" button to view the YouTube video. The `Last Full Analysis` timestamp will indicate when the core sentiment analysis was last performed.
+7.  **Refresh Analysis (Optional):** If you believe the sentiment might have changed or simply want the latest data, click the **"Refresh Analysis" button** on the analysis report page or the blog post detail page to trigger a full re-analysis.
+8.  **Chat with AI:** Click the "Chat with AI" button to open the **pop-up chat dialog**.
+9.  **Customize AI Chat (Optional):** Within the chat dialog, use the dropdown to select your preferred **AI Persona** and enter your **Desired Word Count** for the AI's response.
+10. **Engage with AI:** You can now ask questions about the video, its comments, the pre-generated community answers, or related topics. The AI will use all available context and your chosen persona/length preferences to provide informed answers, including clickable Markdown links.
+11. **Download PDF Report:** To save or share the report, click the "Download Report PDF" button. A PDF file will be generated and downloaded to your device, featuring a branded header and including the community Q&A section.
+12. **Explore the Analysis Library:** Navigate to the "Analysis Library" from the header or landing page. Here, you can browse all past video analyses, search by video title, creator, or keywords.
+13. **Use Library Copilot:** On both the "Analysis Library" and "My Analyses" pages, click the "Library Copilot" button to open an AI chat that helps you find specific analyses from your collection, providing direct links to the blog posts. **It will also suggest new, related analysis topics or video ideas based on your query and the existing library content.**
+14. **Chat from Library (New!):** From a blog post detail page, click the "Chat with AI" button to seamlessly open the **pop-up chat dialog** with the blog post's context pre-loaded, ready for conversation. You can also use the **"Go to Video Analysis" button** to view the full report first.
+15. **Sign Up / Log In (Optional):** If you wish to save your analysis history, sign up or log in. You can then access your personal analyses via the "My Analyses" link in the header.
+16. **Toggle Theme:** Use the moon/sun icon in the header to switch between light, dark, system, or any of the **new Emerald, Crimson, Yellow, and Cyan themes**.
 
 ## 4. Value Proposition
 SentiVibe provides immense value by:
@@ -124,6 +125,6 @@ SentiVibe provides immense value by:
 *   **Cost-Effective Intelligence:** Streamlined external search ensures you get the necessary up-to-date information without incurring excessive API costs.
 *   **Boosting SEO & Content Strategy:** Automatically generates valuable, SEO-optimized content, expanding your digital footprint and making your insights discoverable to a wider audience through search engines. The searchable library further enhances content discoverability within the app, **ensuring no duplicate blog posts for the same video.** Comprehensive SEO features like dynamic meta tags, structured data, Open Graph tags, and proper alt text ensure maximum visibility and crawlability.
 *   **Seamless Workflow:** The ability to initiate AI chat directly from a saved blog post, now within a consistent pop-up dialog, creates a more integrated and efficient user workflow, allowing for immediate follow-up questions on past analyses. The `LibraryCopilot` further enhances discoverability within a user's own analyses **and now proactively suggests new analysis topics, fostering continuous content exploration.**
-*   **Modern & Intuitive Experience:** A sleek, responsive, and themeable user interface that aligns with modern design principles and your distinct brand identity.
+*   **Modern & Intuitive Experience:** A sleek, responsive, and themeable user interface that aligns with modern design principles and your distinct brand identity, **now with multiple vibrant theme options.**
 
 SentiVibe is continuously evolving, with a strong foundation laid for future enhancements to further enrich your video analysis, conversational AI, and content generation experience.
