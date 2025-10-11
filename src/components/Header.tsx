@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button'; // Keep Button import for other uses if any, or remove if not needed
+import { Button } from '@/components/ui/button';
 import { useAuth } from '@/integrations/supabase/auth';
 import { ModeToggle } from './ModeToggle';
 
@@ -17,27 +17,31 @@ const Header = () => {
       </Link>
       <nav className="flex items-center space-x-4">
         <ul className="flex space-x-4">
+          <li>
+            <Link 
+              to="/analyze-video" 
+              className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 px-4 py-2 hover:bg-accent hover:text-accent-foreground"
+            >
+              Analyze a Video
+            </Link>
+          </li>
+          <li>
+            <Link 
+              to="/library" 
+              className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 px-4 py-2 hover:bg-accent hover:text-accent-foreground"
+            >
+              Analysis Library
+            </Link>
+          </li>
           {session && (
-            <>
-              <li>
-                {/* Apply button styling directly to Link */}
-                <Link 
-                  to="/library" 
-                  className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 px-4 py-2 hover:bg-accent hover:text-accent-foreground"
-                >
-                  Analysis Library
-                </Link>
-              </li>
-              <li>
-                {/* Apply button styling directly to Link */}
-                <Link 
-                  to="/my-analyses" 
-                  className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 px-4 py-2 hover:bg-accent hover:text-accent-foreground"
-                >
-                  My Analyses
-                </Link>
-              </li>
-            </>
+            <li>
+              <Link 
+                to="/my-analyses" 
+                className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 px-4 py-2 hover:bg-accent hover:text-accent-foreground"
+              >
+                My Analyses
+              </Link>
+            </li>
           )}
         </ul>
         <ModeToggle />
