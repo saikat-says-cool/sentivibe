@@ -396,7 +396,7 @@ serve(async (req) => {
             const answerContent = customQaData.choices[0].message.content;
             combinedCustomComparativeQaResults.push({ ...qa, answer: answerContent });
           }
-        }
+          }
       }
     }
 
@@ -466,6 +466,7 @@ serve(async (req) => {
         thumbnail_url: bp.thumbnail_url,
         original_video_link: bp.original_video_link,
         raw_comments_for_chat: bp.ai_analysis_json?.raw_comments_for_chat || [],
+        slug: bp.slug, // Include slug here
       })),
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

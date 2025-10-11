@@ -1,14 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { Loader2, Youtube, GitCompare, PlusCircle, XCircle, MessageSquare } from 'lucide-react';
+import { Loader2, Youtube, GitCompare, PlusCircle, XCircle, MessageSquare, BarChart } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query'; // Import useQueryClient
 import { supabase } from '@/integrations/supabase/client';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom'; // Import useLocation
 import MultiComparisonDataDisplay from '@/components/MultiComparisonDataDisplay'; // Import the new component
 import MultiComparisonChatDialog from '@/components/MultiComparisonChatDialog'; // Import new multi-comparison chat dialog
 
@@ -20,6 +20,7 @@ interface MultiComparisonVideo {
   thumbnail_url: string;
   original_video_link: string;
   raw_comments_for_chat: string[];
+  slug: string; // Added slug
 }
 
 interface CustomComparativeQuestion {
@@ -44,12 +45,25 @@ interface MultiComparisonResult {
 }
 
 const CreateMultiComparison = () => {
+  const location = useLocation();
+  const initialMultiComparison = location.state?.multiComparison as MultiComparisonResult | undefined;
+
   const [videoLinks, setVideoLinks] = useState<string[]>(['', '']); // Start with two empty links
   const [customComparativeQuestions, setCustomComparativeQuestions] = useState<CustomComparativeQuestion[]>([{ question: "", wordCount: 200 }]);
   const [multiComparisonResult, setMultiComparisonResult] = useState<MultiComparisonResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isChatDialogOpen, setIsChatDialogOpen] = useState(false);
   const queryClient = useQueryClient(); // Initialize queryClient
+
+  useEffect(() => {
+    if (initialMultiComparison) {
+      setMultiComparisonResult(initialMultiComparison);
+      setVideoLinks(initialMultiComparison.videos.map(video => video.original_video_link));
+      setCustomComparativeQuestions(initialMultiComparison.custom_comparative_qa_results.length > 0 
+        ? initialMultiComparison.custom_comparative_qa_results 
+        : [{ question: "", wordCount: 200 }]); // Ensure at least one empty question field
+    }
+  }, [initialMultiComparison]);
 
   const createMultiComparisonMutation = useMutation({
     mutationFn: async (payload: { videoLinks: string[]; customComparativeQuestions: CustomComparativeQuestion[] }) => {
@@ -263,14 +277,14 @@ const CreateMultiComparison = () => {
               <div className="flex flex-wrap justify-center items-center gap-4 mb-4">
                 {multiComparisonResult.videos.map((video, index) => (
                   <div key={index} className="flex flex-col items-center text-center w-32">
-                    <a href={video.original_video_link} target="_blank" rel="noopener noreferrer" className="block hover:opacity-80 transition-opacity">
+                    <Link to={`/blog/${video.slug}`} className="block hover:opacity-80 transition-opacity"> {/* Link to individual blog post */}
                       <img
                         src={video.thumbnail_url}
                         alt={`Thumbnail for ${video.title}`}
                         className="w-full h-20 object-cover rounded-md shadow-md aspect-video"
                       />
                       <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{video.title}</p>
-                    </a>
+                    </Link>
                   </div>
                 ))}
               </div>

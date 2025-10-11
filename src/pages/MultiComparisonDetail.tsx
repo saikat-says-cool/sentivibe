@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, ArrowLeft, GitCompare, Youtube, MessageSquare } from 'lucide-react';
+import { Loader2, ArrowLeft, GitCompare, Youtube, MessageSquare, BarChart } from 'lucide-react'; // Added BarChart icon
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -19,6 +19,7 @@ interface MultiComparisonVideo {
   thumbnail_url: string;
   original_video_link: string;
   raw_comments_for_chat: string[];
+  slug: string; // Added slug
 }
 
 interface CustomComparativeQuestion {
@@ -53,7 +54,7 @@ const fetchMultiComparisonBySlug = async (slug: string): Promise<MultiComparison
       multi_comparison_videos (
         video_order,
         blog_post_id,
-        blog_posts (title, thumbnail_url, original_video_link, ai_analysis_json)
+        blog_posts (id, title, thumbnail_url, original_video_link, ai_analysis_json, slug)
       )
     `)
     .eq('slug', slug)
@@ -69,12 +70,13 @@ const fetchMultiComparisonBySlug = async (slug: string): Promise<MultiComparison
     const videos = data.multi_comparison_videos
       .sort((a: any, b: any) => a.video_order - b.video_order)
       .map((mcv: any) => ({
-        blog_post_id: mcv.blog_post_id,
+        blog_post_id: mcv.blog_posts.id, // Ensure blog_post_id is correctly mapped
         video_order: mcv.video_order,
         title: mcv.blog_posts.title,
         thumbnail_url: mcv.blog_posts.thumbnail_url,
         original_video_link: mcv.blog_posts.original_video_link,
         raw_comments_for_chat: mcv.blog_posts.ai_analysis_json?.raw_comments_for_chat || [],
+        slug: mcv.blog_posts.slug, // Include slug here
       }));
     return { ...data, videos };
   }
@@ -248,25 +250,35 @@ const MultiComparisonDetail = () => {
         <Link to="/multi-comparison-library" className="text-blue-500 hover:underline flex items-center w-fit">
           <ArrowLeft className="h-4 w-4 mr-2" /> Back to Comparison Library
         </Link>
-        {formattedMultiComparisonResultForChat && (
-          <Button onClick={() => setIsChatDialogOpen(true)} className="flex items-center gap-2">
-            <MessageSquare className="h-4 w-4" /> Chat with AI
-          </Button>
-        )}
+        <div className="flex flex-wrap gap-2">
+          {multiComparison && (
+            <Button
+              onClick={() => navigate('/create-multi-comparison', { state: { multiComparison: formattedMultiComparisonResultForChat } })}
+              className="flex items-center gap-2"
+            >
+              <BarChart className="h-4 w-4" /> Go to Multi-Comparison Analysis
+            </Button>
+          )}
+          {formattedMultiComparisonResultForChat && (
+            <Button onClick={() => setIsChatDialogOpen(true)} className="flex items-center gap-2">
+              <MessageSquare className="h-4 w-4" /> Chat with AI
+            </Button>
+          )}
+        </div>
       </div>
       <Card className="mb-6">
         <CardHeader>
           <div className="flex flex-wrap justify-center items-center gap-4 mb-4">
             {multiComparison.videos && multiComparison.videos.map((video, index) => (
               <div key={index} className="flex flex-col items-center text-center">
-                <a href={video.original_video_link} target="_blank" rel="noopener noreferrer" className="block hover:opacity-80 transition-opacity">
+                <Link to={`/blog/${video.slug}`} className="block hover:opacity-80 transition-opacity"> {/* Link to individual blog post */}
                   <img
                     src={video.thumbnail_url}
                     alt={`Thumbnail for ${video.title}`}
                     className="w-32 h-20 object-cover rounded-md shadow-md aspect-video"
                   />
                   <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{video.title}</p>
-                </a>
+                </Link>
               </div>
             ))}
           </div>
