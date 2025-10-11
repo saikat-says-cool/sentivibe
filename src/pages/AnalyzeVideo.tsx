@@ -80,6 +80,9 @@ const FREE_PRO_COMMENT_COUNT = 100;
 // Define custom question limits per tier
 const FREE_QA_LIMIT_PER_ANALYSIS = 3;
 
+// Define PDF download limits per tier (mirroring backend for display)
+const FREE_PDF_DOWNLOAD_LIMIT = 1;
+
 const AnalyzeVideo = () => {
   const location = useLocation();
   const initialBlogPost = location.state?.blogPost as BlogPost | undefined;
@@ -97,13 +100,13 @@ const AnalyzeVideo = () => {
   const { user, subscriptionTier, isLoading: isAuthLoading } = useAuth();
 
   // Fetch daily usage for the current user
-  const { data: dailyUsage, isLoading: isUsageLoading } = useQuery<{ analyses_count: number } | null, Error>({
+  const { data: dailyUsage, isLoading: isUsageLoading } = useQuery<{ analyses_count: number, pdf_downloads_count: number } | null, Error>({
     queryKey: ['dailyUsage', user?.id],
     queryFn: async () => {
       if (!user?.id) return null; // Guests don't have daily usage tracked in DB
       const { data, error } = await supabase
         .from('user_daily_usage')
-        .select('analyses_count')
+        .select('analyses_count, pdf_downloads_count')
         .eq('user_id', user.id)
         .eq('date', new Date().toISOString().split('T')[0])
         .single();
@@ -113,22 +116,29 @@ const AnalyzeVideo = () => {
     enabled: !!user?.id && !isAuthLoading, // Only fetch if user is authenticated and auth is loaded
   });
 
-  const currentDailyCount = dailyUsage?.analyses_count || 0;
+  const currentDailyAnalysesCount = dailyUsage?.analyses_count || 0;
+  const currentDailyPdfDownloads = dailyUsage?.pdf_downloads_count || 0;
+
   let maxAnalysesForTier = 0;
   let maxCommentsForTier = FREE_PRO_COMMENT_COUNT; // Default for free/pro
+  let maxPdfDownloadsForTier = Infinity; // Default for Pro
 
   if (subscriptionTier === 'guest') {
     maxAnalysesForTier = GUEST_DAILY_LIMIT;
     maxCommentsForTier = GUEST_COMMENT_COUNT;
+    maxPdfDownloadsForTier = 0; // Guests cannot download PDFs
   } else if (subscriptionTier === 'free') {
     maxAnalysesForTier = FREE_DAILY_LIMIT;
     maxCommentsForTier = FREE_PRO_COMMENT_COUNT;
+    maxPdfDownloadsForTier = FREE_PDF_DOWNLOAD_LIMIT;
   } else if (subscriptionTier === 'pro') {
     maxAnalysesForTier = Infinity; // No limit for Pro
     maxCommentsForTier = FREE_PRO_COMMENT_COUNT;
+    maxPdfDownloadsForTier = Infinity; // No limit for Pro
   }
 
-  const dailyLimitExceeded = subscriptionTier !== 'pro' && currentDailyCount >= maxAnalysesForTier;
+  const dailyAnalysisLimitExceeded = subscriptionTier !== 'pro' && currentDailyAnalysesCount >= maxAnalysesForTier;
+  const dailyPdfDownloadLimitExceeded = subscriptionTier !== 'pro' && currentDailyPdfDownloads >= maxPdfDownloadsForTier;
   const isPageLoading = isAuthLoading || isUsageLoading;
 
   // Q&A specific limits
@@ -207,16 +217,47 @@ const AnalyzeVideo = () => {
     },
   });
 
+  const updatePdfUsageMutation = useMutation({
+    mutationFn: async () => {
+      const { data, error: invokeError } = await supabase.functions.invoke('update-user-usage', {
+        body: { type: 'pdf_download' },
+      });
+      if (invokeError) {
+        console.error("Supabase Function Invoke Error (PDF usage):", invokeError);
+        if (invokeError.message.includes('PDF_DOWNLOAD_ACCESS_DENIED')) {
+          throw new Error(`PDF_DOWNLOAD_ACCESS_DENIED:${invokeError.message}`);
+        }
+        if (invokeError.message.includes('PDF_DOWNLOAD_LIMIT_EXCEEDED')) {
+          throw new Error(`PDF_DOWNLOAD_LIMIT_EXCEEDED:${invokeError.message}`);
+        }
+        throw new Error(invokeError.message || "Failed to update PDF usage.");
+      }
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dailyUsage', user?.id] }); // Invalidate daily usage query
+    },
+    onError: (err: Error) => {
+      if (err.message.startsWith('PDF_DOWNLOAD_ACCESS_DENIED:')) {
+        setError(err.message.replace('PDF_DOWNLOAD_ACCESS_DENIED:', ''));
+      } else if (err.message.startsWith('PDF_DOWNLOAD_LIMIT_EXCEEDED:')) {
+        setError(err.message.replace('PDF_DOWNLOAD_LIMIT_EXCEEDED:', ''));
+      } else {
+        setError(`Error updating PDF usage: ${err.message}`);
+      }
+    },
+  });
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (videoLink.trim() && !dailyLimitExceeded) {
+    if (videoLink.trim() && !dailyAnalysisLimitExceeded) {
       const validQuestions = customQuestions.filter(q => q.question.trim() !== "");
       analyzeVideoMutation.mutate({ videoLink, customQuestions: validQuestions, forceReanalyze: false });
     }
   };
 
   const handleRefreshAnalysis = () => {
-    if (analysisResult?.originalVideoLink && !dailyLimitExceeded) {
+    if (analysisResult?.originalVideoLink && !dailyAnalysisLimitExceeded) {
       analyzeVideoMutation.mutate({ videoLink: analysisResult.originalVideoLink, customQuestions: [], forceReanalyze: true });
     }
   };
@@ -241,8 +282,17 @@ const AnalyzeVideo = () => {
     setCustomQuestions(newQuestions);
   };
 
-  const handleDownloadPdf = () => {
-    if (analysisReportRef.current && analysisResult) {
+  const handleDownloadPdf = async () => {
+    if (analysisReportRef.current && analysisResult && !dailyPdfDownloadLimitExceeded && !isGuest) {
+      // First, attempt to update usage
+      try {
+        await updatePdfUsageMutation.mutateAsync();
+      } catch (err: any) {
+        // Error will be set by onError in updatePdfUsageMutation, just return
+        return;
+      }
+
+      // If usage update is successful (or not applicable for Pro), proceed with PDF generation
       const element = analysisReportRef.current;
       const opt = {
         margin: 1,
@@ -292,7 +342,7 @@ const AnalyzeVideo = () => {
                 onChange={(e) => setVideoLink(e.target.value)}
                 required
                 className="mt-1"
-                disabled={analyzeVideoMutation.isPending || dailyLimitExceeded}
+                disabled={analyzeVideoMutation.isPending || dailyAnalysisLimitExceeded}
               />
             </div>
 
@@ -300,8 +350,8 @@ const AnalyzeVideo = () => {
               <Alert className="mt-4">
                 <AlertTitle>Daily Analysis Limit</AlertTitle>
                 <AlertDescription>
-                  You are on the <span className="font-semibold">{subscriptionTier}</span> tier. You have performed <span className="font-semibold">{currentDailyCount}</span> out of <span className="font-semibold">{maxAnalysesForTier === Infinity ? 'unlimited' : maxAnalysesForTier}</span> analyses today.
-                  {dailyLimitExceeded && (
+                  You are on the <span className="font-semibold">{subscriptionTier}</span> tier. You have performed <span className="font-semibold">{currentDailyAnalysesCount}</span> out of <span className="font-semibold">{maxAnalysesForTier === Infinity ? 'unlimited' : maxAnalysesForTier}</span> analyses today.
+                  {dailyAnalysisLimitExceeded && (
                     <p className="text-red-500 mt-1">You have reached your daily analysis limit. Upgrade to Pro for unlimited analyses!</p>
                   )}
                   <p className="mt-1">Comments fetched per analysis: <span className="font-semibold">{maxCommentsForTier}</span>.</p>
@@ -339,7 +389,7 @@ const AnalyzeVideo = () => {
                     value={qa.question}
                     onChange={(e) => handleQuestionChange(index, 'question', e.target.value)}
                     className="mt-1 min-h-[60px]"
-                    disabled={analyzeVideoMutation.isPending || dailyLimitExceeded || isGuest}
+                    disabled={analyzeVideoMutation.isPending || dailyAnalysisLimitExceeded || isGuest}
                   />
                 </div>
                 <div className="w-24">
@@ -353,7 +403,7 @@ const AnalyzeVideo = () => {
                     value={qa.wordCount}
                     onChange={(e) => handleQuestionChange(index, 'wordCount', e.target.value)}
                     className="mt-1"
-                    disabled={analyzeVideoMutation.isPending || dailyLimitExceeded || isGuest}
+                    disabled={analyzeVideoMutation.isPending || dailyAnalysisLimitExceeded || isGuest}
                   />
                 </div>
                 {customQuestions.length > 1 && (
@@ -362,7 +412,7 @@ const AnalyzeVideo = () => {
                     variant="ghost"
                     size="icon"
                     onClick={() => handleRemoveQuestion(index)}
-                    disabled={analyzeVideoMutation.isPending || dailyLimitExceeded || isGuest}
+                    disabled={analyzeVideoMutation.isPending || dailyAnalysisLimitExceeded || isGuest}
                     className="self-end sm:self-auto"
                   >
                     <XCircle className="h-5 w-5 text-red-500" />
@@ -374,13 +424,13 @@ const AnalyzeVideo = () => {
               type="button"
               variant="outline"
               onClick={handleAddQuestion}
-              disabled={analyzeVideoMutation.isPending || dailyLimitExceeded || !canAddMoreQuestions}
+              disabled={analyzeVideoMutation.isPending || dailyAnalysisLimitExceeded || !canAddMoreQuestions}
               className="w-full flex items-center gap-2"
             >
               <PlusCircle className="h-4 w-4" /> Add Another Question
             </Button>
 
-            <Button type="submit" className="w-full" disabled={analyzeVideoMutation.isPending || dailyLimitExceeded}>
+            <Button type="submit" className="w-full" disabled={analyzeVideoMutation.isPending || dailyAnalysisLimitExceeded}>
               {analyzeVideoMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Analyze Comments & Get Answers
             </Button>
@@ -428,17 +478,37 @@ const AnalyzeVideo = () => {
             <Button
               onClick={handleRefreshAnalysis}
               className="flex items-center gap-2"
-              disabled={analyzeVideoMutation.isPending || dailyLimitExceeded || subscriptionTier === 'guest' || subscriptionTier === 'free'}
+              disabled={analyzeVideoMutation.isPending || dailyAnalysisLimitExceeded || subscriptionTier === 'guest' || subscriptionTier === 'free'}
             >
               {analyzeVideoMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />} Refresh Analysis
             </Button>
             <Button onClick={() => setIsChatDialogOpen(true)} className="flex items-center gap-2">
               <MessageSquare className="h-4 w-4" /> Chat with AI
             </Button>
-            <Button onClick={handleDownloadPdf} className="flex items-center gap-2">
-              <Download className="h-4 w-4" /> Download Report PDF
+            <Button
+              onClick={handleDownloadPdf}
+              className="flex items-center gap-2"
+              disabled={updatePdfUsageMutation.isPending || dailyPdfDownloadLimitExceeded || isGuest}
+            >
+              {updatePdfUsageMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />} Download Report PDF
             </Button>
           </div>
+          {dailyPdfDownloadLimitExceeded && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertTitle>PDF Download Limit Exceeded</AlertTitle>
+              <AlertDescription>
+                You have reached your daily PDF download limit for the {subscriptionTier} tier. You can download {maxPdfDownloadsForTier} PDF per day. Please upgrade to Pro for unlimited downloads.
+              </AlertDescription>
+            </Alert>
+          )}
+          {isGuest && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertTitle>PDF Download Not Available</AlertTitle>
+              <AlertDescription>
+                Guests cannot download PDF reports. Please <Link to="/login" className="underline text-blue-500">log in or sign up</Link> to access this feature.
+              </AlertDescription>
+            </Alert>
+          )}
           <Card ref={analysisReportRef} className="mb-6">
             <CardHeader>
               {analysisResult.videoThumbnailUrl && (
