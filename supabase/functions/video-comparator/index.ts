@@ -130,6 +130,17 @@ serve(async (req) => {
 
         if (youtubeAnalyzerResponse.error) {
           console.error(`Error invoking youtube-analyzer for ${videoId}:`, youtubeAnalyzerResponse.error);
+          // Check if the error is a FunctionsHttpError with a 400 status
+          if (youtubeAnalyzerResponse.error.name === 'FunctionsHttpError' && youtubeAnalyzerResponse.error.context?.status === 400) {
+            try {
+              const errorBody = await youtubeAnalyzerResponse.error.context.json();
+              if (errorBody && errorBody.error) {
+                throw new Error(`Failed to analyze video ${videoId}: ${errorBody.error}`); // Propagate specific error message
+              }
+            } catch (jsonError) {
+              console.error(`Failed to parse youtube-analyzer error response for ${videoId}:`, jsonError);
+            }
+          }
           throw new Error(`Failed to analyze video ${videoId}: ${youtubeAnalyzerResponse.error.message}`);
         }
         // Fetch the newly updated/inserted blog post data

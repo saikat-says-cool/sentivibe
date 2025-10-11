@@ -10,7 +10,7 @@ import remarkGfm from 'remark-gfm';
 import { Skeleton } from '@/components/ui/skeleton';
 import ComparisonDataDisplay from '@/components/ComparisonDataDisplay';
 import ComparisonChatDialog from '@/components/ComparisonChatDialog';
-import { Button } from '@/components/ui/button'; // Import Button component
+import { Button } from '@/components/ui/button';
 
 interface CustomComparativeQuestion {
   question: string;
@@ -42,8 +42,8 @@ interface Comparison {
   custom_comparative_qa_results: CustomComparativeQuestion[];
   video_a_thumbnail_url?: string;
   video_b_thumbnail_url?: string;
-  video_a_raw_comments_for_chat?: string[];
-  video_b_raw_comments_for_chat?: string[];
+  video_a_raw_comments_for_chat?: string[]; // New field
+  video_b_raw_comments_for_chat?: string[]; // New field
   videoA?: BlogPostSummary;
   videoB?: BlogPostSummary;
 }

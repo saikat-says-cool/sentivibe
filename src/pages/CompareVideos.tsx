@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { Loader2, Youtube, GitCompare, PlusCircle, XCircle, MessageSquare } from 'lucide-react'; // Added MessageSquare
+import { Loader2, Youtube, GitCompare, PlusCircle, XCircle, MessageSquare } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
