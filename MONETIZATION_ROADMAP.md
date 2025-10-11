@@ -89,7 +89,7 @@ To successfully integrate a tiered access and usage model into SentiVibe, allowi
     *   **Free Member:** View + submit up to 3 custom questions per video / day (with word count limits).
     *   **Pro Subscriber:** Unlimited custom questions & word-count control.
     *   **Affected Areas:** Frontend (`AnalyzeVideo.tsx`, `BlogPostDetail.tsx`), Backend (`youtube-analyzer` Edge Function - custom question processing and limits), Database (`user_daily_usage`).
-    *   **Status:** Pending
+    *   **Status:** Completed
 
 *   **Checkpoint 2.2: Analysis Caching & Staleness Logic**
     *   **Guest:** Passive (use cached data, no refresh option).

@@ -77,6 +77,9 @@ const FREE_DAILY_LIMIT = 3;
 const GUEST_COMMENT_COUNT = 30;
 const FREE_PRO_COMMENT_COUNT = 100;
 
+// Define custom question limits per tier
+const FREE_QA_LIMIT_PER_ANALYSIS = 3;
+
 const AnalyzeVideo = () => {
   const location = useLocation();
   const initialBlogPost = location.state?.blogPost as BlogPost | undefined;
@@ -127,6 +130,10 @@ const AnalyzeVideo = () => {
 
   const dailyLimitExceeded = subscriptionTier !== 'pro' && currentDailyCount >= maxAnalysesForTier;
   const isPageLoading = isAuthLoading || isUsageLoading;
+
+  // Q&A specific limits
+  const canAddMoreQuestions = subscriptionTier === 'pro' || (subscriptionTier === 'free' && customQuestions.length < FREE_QA_LIMIT_PER_ANALYSIS);
+  const isGuest = subscriptionTier === 'guest';
 
   useEffect(() => {
     if (initialBlogPost) {
@@ -215,7 +222,9 @@ const AnalyzeVideo = () => {
   };
 
   const handleAddQuestion = () => {
-    setCustomQuestions([...customQuestions, { question: "", wordCount: 200 }]);
+    if (canAddMoreQuestions) {
+      setCustomQuestions([...customQuestions, { question: "", wordCount: 200 }]);
+    }
   };
 
   const handleRemoveQuestion = (index: number) => {
@@ -303,6 +312,23 @@ const AnalyzeVideo = () => {
             <Separator />
 
             <h3 className="text-lg font-semibold mb-2">Questions about this video asked by the community</h3>
+            {isGuest && (
+              <Alert className="mt-4">
+                <AlertTitle>Custom Questions Not Available</AlertTitle>
+                <AlertDescription>
+                  Guests cannot submit custom questions. Please <Link to="/login" className="underline text-blue-500">log in or sign up</Link> to access this feature.
+                </AlertDescription>
+              </Alert>
+            )}
+            {subscriptionTier === 'free' && customQuestions.length >= FREE_QA_LIMIT_PER_ANALYSIS && (
+              <Alert className="mt-4">
+                <AlertTitle>Custom Question Limit Reached</AlertTitle>
+                <AlertDescription>
+                  You can submit up to {FREE_QA_LIMIT_PER_ANALYSIS} custom questions per analysis on the Free tier. Upgrade to Pro for unlimited questions!
+                </AlertDescription>
+              </Alert>
+            )}
+
             {customQuestions.map((qa, index) => (
               <div key={index} className="flex flex-col sm:flex-row gap-2 items-end">
                 <div className="flex-1">
@@ -313,7 +339,7 @@ const AnalyzeVideo = () => {
                     value={qa.question}
                     onChange={(e) => handleQuestionChange(index, 'question', e.target.value)}
                     className="mt-1 min-h-[60px]"
-                    disabled={analyzeVideoMutation.isPending || dailyLimitExceeded}
+                    disabled={analyzeVideoMutation.isPending || dailyLimitExceeded || isGuest}
                   />
                 </div>
                 <div className="w-24">
@@ -327,7 +353,7 @@ const AnalyzeVideo = () => {
                     value={qa.wordCount}
                     onChange={(e) => handleQuestionChange(index, 'wordCount', e.target.value)}
                     className="mt-1"
-                    disabled={analyzeVideoMutation.isPending || dailyLimitExceeded}
+                    disabled={analyzeVideoMutation.isPending || dailyLimitExceeded || isGuest}
                   />
                 </div>
                 {customQuestions.length > 1 && (
@@ -336,7 +362,7 @@ const AnalyzeVideo = () => {
                     variant="ghost"
                     size="icon"
                     onClick={() => handleRemoveQuestion(index)}
-                    disabled={analyzeVideoMutation.isPending || dailyLimitExceeded}
+                    disabled={analyzeVideoMutation.isPending || dailyLimitExceeded || isGuest}
                     className="self-end sm:self-auto"
                   >
                     <XCircle className="h-5 w-5 text-red-500" />
@@ -348,7 +374,7 @@ const AnalyzeVideo = () => {
               type="button"
               variant="outline"
               onClick={handleAddQuestion}
-              disabled={analyzeVideoMutation.isPending || dailyLimitExceeded}
+              disabled={analyzeVideoMutation.isPending || dailyLimitExceeded || !canAddMoreQuestions}
               className="w-full flex items-center gap-2"
             >
               <PlusCircle className="h-4 w-4" /> Add Another Question
