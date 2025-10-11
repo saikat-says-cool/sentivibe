@@ -44,6 +44,7 @@ interface BlogPost {
   original_video_link: string;
   ai_analysis_json: StoredAiAnalysisContent | null;
   custom_qa_results?: CustomQuestion[]; // New field
+  last_reanalyzed_at?: string; // New field
 }
 
 const fetchMyBlogPosts = async (userId: string): Promise<BlogPost[]> => {

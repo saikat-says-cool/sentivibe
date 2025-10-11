@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query"; // Import useQueryClient
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Youtube, Download, MessageSquare, Link as LinkIcon, PlusCircle, XCircle, RefreshCw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -73,7 +73,7 @@ const AnalyzeVideo = () => {
   const location = useLocation();
   const initialBlogPost = location.state?.blogPost as BlogPost | undefined;
   const openChatImmediately = location.state?.openChat as boolean | undefined;
-  const forceReanalyzeFromNav = location.state?.forceReanalyze as boolean | undefined; // New flag
+  const forceReanalyzeFromNav = location.state?.forceReanalyze as boolean | undefined;
 
   const [videoLink, setVideoLink] = useState("");
   const [customQuestions, setCustomQuestions] = useState<CustomQuestion[]>([{ question: "", wordCount: 200 }]);
@@ -81,6 +81,7 @@ const AnalyzeVideo = () => {
   const [error, setError] = useState<string | null>(null);
   const [isChatDialogOpen, setIsChatDialogOpen] = useState(false);
   const analysisReportRef = useRef<HTMLDivElement>(null);
+  const queryClient = useQueryClient(); // Initialize queryClient
 
   useEffect(() => {
     if (initialBlogPost) {
@@ -101,16 +102,17 @@ const AnalyzeVideo = () => {
         blogPostSlug: initialBlogPost.slug,
         originalVideoLink: initialBlogPost.original_video_link,
         customQaResults: initialBlogPost.custom_qa_results,
-        lastReanalyzedAt: initialBlogPost.last_reanalyzed_at, // Load this
+        lastReanalyzedAt: initialBlogPost.last_reanalyzed_at,
       };
       setAnalysisResult(loadedAnalysis);
-      setVideoLink(initialBlogPost.original_video_link || ""); // Pre-fill video link
+      setVideoLink(initialBlogPost.original_video_link || "");
 
       if (openChatImmediately) {
         setIsChatDialogOpen(true);
       }
       if (forceReanalyzeFromNav) {
         // Trigger re-analysis if navigated with forceReanalyze flag
+        // The existing analysisResult will be displayed until the new one loads
         analyzeVideoMutation.mutate({ videoLink: initialBlogPost.original_video_link, customQuestions: [], forceReanalyze: true });
       }
     }
@@ -119,11 +121,10 @@ const AnalyzeVideo = () => {
   const analyzeVideoMutation = useMutation({
     mutationFn: async (payload: { videoLink: string; customQuestions: CustomQuestion[]; forceReanalyze?: boolean }) => {
       setError(null);
-      // Only clear analysisResult if it's a fresh analysis or a forced re-analysis
-      if (!analysisResult || payload.forceReanalyze) {
-        setAnalysisResult(null);
-      }
       setIsChatDialogOpen(false);
+
+      // Do NOT set analysisResult to null here. Keep old data visible during refresh.
+      // setAnalysisResult(null); 
 
       const { data, error: invokeError } = await supabase.functions.invoke('youtube-analyzer', {
         body: payload,
@@ -137,10 +138,16 @@ const AnalyzeVideo = () => {
     },
     onSuccess: (data) => {
       setAnalysisResult(data);
+      // Invalidate queries to ensure fresh data is fetched if user navigates back
+      queryClient.invalidateQueries({ queryKey: ['blogPosts'] }); // For VideoAnalysisLibrary
+      queryClient.invalidateQueries({ queryKey: ['myBlogPosts'] }); // For MyAnalyses
+      if (data.blogPostSlug) {
+        queryClient.invalidateQueries({ queryKey: ['blogPost', data.blogPostSlug] }); // For BlogPostDetail
+      }
     },
     onError: (err: Error) => {
       setError(err.message);
-      setAnalysisResult(null);
+      setAnalysisResult(null); // Clear analysis result on error
     },
   });
 
