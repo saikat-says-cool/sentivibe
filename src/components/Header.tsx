@@ -9,6 +9,7 @@ const Header = () => {
 
   const isPaidTier = subscriptionStatus === 'active' && subscriptionPlanId !== 'free';
   const showUpgradeButton = session && !isPaidTier; // Show upgrade if logged in but not paid
+  const showAuthButtons = !session; // Show Sign In/Sign Up if not logged in
 
   return (
     <header className="bg-background border-b border-border p-4 flex items-center justify-between">
@@ -84,6 +85,11 @@ const Header = () => {
             </li>
           </ul>
         </nav>
+        {showAuthButtons && (
+          <Link to="/login">
+            <Button variant="outline" className="ml-4">Sign In / Sign Up</Button>
+          </Link>
+        )}
         {showUpgradeButton && (
           <Link to="/upgrade">
             <Button variant="default" className="ml-4">Upgrade</Button>
