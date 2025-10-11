@@ -166,7 +166,7 @@ To successfully integrate a tiered access and usage model into SentiVibe, allowi
     *   **Free Member:** ✅
     *   **Pro Subscriber:** ✅ + saved preference (future).
     *   **Affected Areas:** Frontend (`ModeToggle.tsx`, `ThemeProvider.tsx`).
-    *   **Status:** Pending
+    *   **Status:** In Progress (Database schema updated)
     *   **Notes:** Saved preference for Pro users would require storing theme choice in `public.profiles`.
 
 *   **Checkpoint 4.2: Support Level**
