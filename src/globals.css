@@ -47,6 +47,10 @@
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Default Light Theme Gradients */
+    --body-gradient-start: var(--background);
+    --body-gradient-end: 210 40% 98%; /* A very light, cool gray-blue */
   }
 
   .dark {
@@ -91,6 +95,10 @@
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Default Dark Theme Gradients */
+    --body-gradient-start: var(--background);
+    --body-gradient-end: 210 20% 10%; /* A very dark, cool gray-blue */
   }
 
   /* Emerald Theme */
@@ -131,6 +139,10 @@
     --sidebar-accent-foreground: 160 10% 15%;
     --sidebar-border: 160 30% 70%;
     --sidebar-ring: 160 70% 30%;
+
+    /* Emerald Light Theme Gradients */
+    --body-gradient-start: var(--background);
+    --body-gradient-end: 160 40% 95%; /* Lighter emerald */
   }
 
   .dark .theme-emerald {
@@ -170,6 +182,10 @@
     --sidebar-accent-foreground: 160 60% 95%;
     --sidebar-border: 160 10% 25%;
     --sidebar-ring: 160 70% 55%;
+
+    /* Emerald Dark Theme Gradients */
+    --body-gradient-start: var(--background);
+    --body-gradient-end: 160 15% 15%; /* Darker emerald */
   }
 
   /* Crimson Theme */
@@ -210,6 +226,10 @@
     --sidebar-accent-foreground: 350 10% 15%;
     --sidebar-border: 350 20% 75%;
     --sidebar-ring: 350 80% 35%;
+
+    /* Crimson Light Theme Gradients */
+    --body-gradient-start: var(--background);
+    --body-gradient-end: 350 30% 95%; /* Lighter crimson */
   }
 
   .dark .theme-crimson {
@@ -249,6 +269,10 @@
     --sidebar-accent-foreground: 0 0% 95%;
     --sidebar-border: 350 10% 25%;
     --sidebar-ring: 350 80% 55%;
+
+    /* Crimson Dark Theme Gradients */
+    --body-gradient-start: var(--background);
+    --body-gradient-end: 350 15% 15%; /* Darker crimson */
   }
 
   /* Yellow Theme */
@@ -289,6 +313,10 @@
     --sidebar-accent-foreground: 48 100% 15%;
     --sidebar-border: 48 50% 75%;
     --sidebar-ring: 48 100% 45%;
+
+    /* Yellow Light Theme Gradients */
+    --body-gradient-start: var(--background);
+    --body-gradient-end: 48 50% 95%; /* Lighter yellow */
   }
 
   .dark .theme-yellow {
@@ -328,6 +356,10 @@
     --sidebar-accent-foreground: 48 100% 95%;
     --sidebar-border: 48 50% 25%;
     --sidebar-ring: 48 100% 65%;
+
+    /* Yellow Dark Theme Gradients */
+    --body-gradient-start: var(--background);
+    --body-gradient-end: 48 30% 15%; /* Darker yellow */
   }
 
   /* Cyan Theme */
@@ -368,6 +400,10 @@
     --sidebar-accent-foreground: 180 100% 15%;
     --sidebar-border: 180 30% 70%;
     --sidebar-ring: 180 100% 25%;
+
+    /* Cyan Light Theme Gradients */
+    --body-gradient-start: var(--background);
+    --body-gradient-end: 180 40% 95%; /* Lighter cyan */
   }
 
   .dark .theme-cyan {
@@ -407,16 +443,14 @@
     --sidebar-accent-foreground: 180 60% 95%;
     --sidebar-border: 180 30% 25%;
     --sidebar-ring: 180 100% 55%;
-  }
-}
 
-@layer base {
-  * {
-    @apply border-border;
+    /* Cyan Dark Theme Gradients */
+    --body-gradient-start: var(--background);
+    --body-gradient-end: 180 30% 15%; /* Darker cyan */
   }
-
+  
   body {
-    @apply bg-background text-foreground font-sans; /* Apply Arimo font */
+    @apply bg-background text-foreground font-sans bg-gradient-to-br from-[var(--body-gradient-start)] to-[var(--body-gradient-end)]; /* Apply Arimo font */
   }
 
   /* Custom rule to underline links within prose content */
