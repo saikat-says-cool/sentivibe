@@ -399,7 +399,7 @@ This Deno-based serverless function is the core backend logic for video analysis
 *   **Longcat AI API Call (Blog Post Generation - if new/re-analysis):** After successful sentiment analysis, a *second* `POST` request is made to Longcat AI for blog post generation.
 *   **Longcat AI API Call (Custom Questions - always if new questions):** If `customQuestions` are provided, the function iterates through each question. For each, it constructs a specific prompt including the full video analysis context and the user's question, instructing the AI to generate an answer of the specified `wordCount`. These answers are collected into `customQaResults`.
 *   **Response:** Returns a `200 OK` response with video details, comments, the AI analysis result, the `blogPostSlug`, the `originalVideoLink`, the `customQaResults`, and the `lastReanalyzedAt` timestamp for frontend display.
-*   **Error Handling:** Includes comprehensive `try-catch` blocks for API calls and database operations.
+*   **Error Handling:** Includes comprehensive `try-catch` blocks.
 
 ### 5.6. Supabase Edge Function (`supabase/functions/multi-video-comparator/index.ts`)
 This Deno-based serverless function is responsible for orchestrating multi-video comparisons, including individual video analysis, comparative AI insights, and blog post generation. **It implements robust staleness/freshness logic for the multi-comparison itself, ensures individual videos are up-to-date, and handles custom comparative questions.**
@@ -528,5 +528,63 @@ Key dependencies include:
 *   `react-markdown`, `remark-gfm`: For rendering Markdown in chat messages and blog posts.
 *   Shadcn/ui components and their Radix UI foundations.
 *   Google Custom Search API (external service).
+
+## 8. Roadmap for Tiered Offering System Implementation
+
+This roadmap outlines the systematic steps required to implement the tiered offering system, distinguishing between a Free Tier and a Paid Tier, as defined in `docs/TIER_OFFERINGS.md`.
+
+### Phase 1: Database Foundation (Supabase)
+
+1.  **Create `public.subscriptions` Table:**
+    *   **Schema:**
+        *   `id`: UUID, Primary Key, references `auth.users(id)` (CASCADE on delete).
+        *   `status`: TEXT, NOT NULL (e.g., 'active', 'inactive', 'trial', 'free').
+        *   `plan_id`: TEXT, NOT NULL (e.g., 'free', 'paid_monthly', 'paid_annual').
+        *   `current_period_end`: TIMESTAMP WITH TIME ZONE (NULL for 'free' plan, otherwise indicates subscription expiry).
+        *   `created_at`: TIMESTAMP WITH TIME ZONE, defaults to `NOW()`.
+        *   `updated_at`: TIMESTAMP WITH TIME ZONE, defaults to `NOW()`.
+    *   **Row Level Security (RLS):** Implement policies to ensure only the user themselves or the system can access/modify their subscription data.
+
+### Phase 2: Backend Enforcement (Supabase Edge Functions)
+
+1.  **Enhance `AuthProvider` (Frontend/Backend Bridge):**
+    *   Modify `src/integrations/supabase/auth.tsx` to fetch the user's subscription status from the new `public.subscriptions` table when a user logs in or their auth state changes. This status will then be available via the `useAuth` hook.
+2.  **Implement Tier Check & Limits in Edge Functions:**
+    *   **Identify Affected Functions:** `youtube-analyzer`, `multi-video-comparator`, `chat-analyzer`, `multi-comparison-chat-analyzer`, `library-copilot-analyzer`, `comparison-library-copilot-analyzer`.
+    *   **Common Logic:** In each of these functions, retrieve the `auth.uid()`. If a user is authenticated, query `public.subscriptions` to determine their `plan_id` and `status`. If unauthenticated, default to 'free' tier.
+    *   **Apply Specific Limits:**
+        *   **`youtube-analyzer` & `multi-video-comparator`:** Enforce daily analysis/comparison limits. Adjust max custom questions and max word count for AI answers based on tier.
+        *   **`chat-analyzer` & `multi-comparison-chat-analyzer`:** Enforce per-session chat message limits. Adjust max word count for AI responses.
+        *   **`library-copilot-analyzer` & `comparison-library-copilot-analyzer`:** Enforce daily query limits.
+    *   **Error Handling:** Return specific error messages (e.g., "Upgrade to Paid Tier to continue") when limits are exceeded.
+
+### Phase 3: Frontend User Experience (React UI)
+
+1.  **Dynamic UI Adjustments based on Tier:**
+    *   **`AnalyzeVideo.tsx` & `CreateMultiComparison.tsx`:**
+        *   Display current usage (e.g., "X/2 analyses remaining today").
+        *   Show upgrade prompts when limits are approached or exceeded.
+        *   Dynamically adjust the number of custom question input fields and their maximum word count based on the user's tier.
+    *   **`VideoChatDialog.tsx`, `ComparisonChatDialog.tsx`, `MultiComparisonChatDialog.tsx`:**
+        *   Display remaining chat messages in the current session.
+        *   Adjust the maximum `desiredWordCount` input based on the tier.
+        *   Show upgrade prompts if chat limits are hit.
+    *   **`LibraryCopilot.tsx` & `ComparisonLibraryCopilot.tsx`:**
+        *   Display remaining daily queries.
+        *   Show upgrade prompts if query limits are hit.
+    *   **`MyAnalyses.tsx` Protection:**
+        *   Modify `MyAnalyses.tsx` to check the user's subscription status. If they are a Free Tier user, display a clear message prompting them to upgrade to access their personal history.
+    *   **PDF Watermarking:**
+        *   Update the PDF generation logic in `AnalyzeVideo.tsx` to apply a "Free Tier - SentiVibe" watermark to PDF reports for Free Tier users.
+    *   **Header/Navigation:**
+        *   Consider adding an "Upgrade" button or link in the header for Free Tier users.
+
+### Phase 4: Monetization Integration (Future)
+
+1.  **Payment Gateway Integration (e.g., Stripe):**
+    *   Set up Stripe products and pricing plans (e.g., monthly, annual).
+    *   Create a dedicated "Upgrade" page on the frontend with a checkout flow.
+    *   Configure Stripe webhooks to listen for subscription events (e.g., `checkout.session.completed`, `customer.subscription.updated`).
+    *   Create a Supabase Edge Function to handle these webhooks, updating the `public.subscriptions` table accordingly (e.g., setting `status` to 'active', `plan_id`, `current_period_end`).
 
 This technical documentation provides a detailed insight into how SentiVibe is constructed and operates internally.
