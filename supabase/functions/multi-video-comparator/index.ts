@@ -36,10 +36,16 @@ function getApiKeys(baseName: string): string[] {
 const STALENESS_THRESHOLD_DAYS = 30;
 
 // Define tier limits for multi-comparisons
-const FREE_TIER_LIMITS = {
+const UNAUTHENTICATED_LIMITS = {
   dailyComparisons: 1,
   maxCustomQuestions: 1,
   maxCustomQuestionWordCount: 100,
+};
+
+const AUTHENTICATED_FREE_TIER_LIMITS = {
+  dailyComparisons: 2,
+  maxCustomQuestions: 2,
+  maxCustomQuestionWordCount: 150,
 };
 
 const PAID_TIER_LIMITS = {
@@ -106,8 +112,7 @@ serve(async (req: Request) => {
     );
 
     const { data: { user } } = await supabaseClient.auth.getUser();
-    let isPaidTier = false;
-    let currentLimits = FREE_TIER_LIMITS;
+    let currentLimits;
     let userSubscriptionId: string | null = null;
 
     const clientIp = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
@@ -123,13 +128,15 @@ serve(async (req: Request) => {
 
       if (subscriptionError && subscriptionError.code !== 'PGRST116') {
         console.error("Error fetching subscription for user:", user.id, subscriptionError);
+        currentLimits = AUTHENTICATED_FREE_TIER_LIMITS; // Fallback
       } else if (subscriptionData && subscriptionData.status === 'active' && subscriptionData.plan_id !== 'free') {
-        isPaidTier = true;
         currentLimits = PAID_TIER_LIMITS;
+      } else {
+        currentLimits = AUTHENTICATED_FREE_TIER_LIMITS;
       }
     } else {
-      // Unauthenticated user: use IP-based tracking for free tier limits
-      userSubscriptionId = null; // Explicitly null for anon users
+      userSubscriptionId = null;
+      currentLimits = UNAUTHENTICATED_LIMITS;
     }
 
     const longcatApiKeys = getApiKeys('LONGCAT_AI_API_KEY'); // Declared here
@@ -334,7 +341,7 @@ serve(async (req: Request) => {
 
         if (count !== null && count >= currentLimits.dailyComparisons) {
           return new Response(JSON.stringify({ 
-            error: `Daily multi-comparison limit (${currentLimits.dailyComparisons}) exceeded. ${isPaidTier ? 'You have reached your paid tier limit.' : 'Upgrade to a paid tier for more comparisons.'}` 
+            error: `Daily multi-comparison limit (${currentLimits.dailyComparisons}) exceeded. ${currentLimits === PAID_TIER_LIMITS ? 'You have reached your paid tier limit.' : 'Upgrade to a paid tier for more comparisons.'}` 
           }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             status: 403,
@@ -370,9 +377,9 @@ serve(async (req: Request) => {
           }
         }
 
-        if (currentComparisonsCount >= FREE_TIER_LIMITS.dailyComparisons) {
+        if (currentComparisonsCount >= UNAUTHENTICATED_LIMITS.dailyComparisons) {
           return new Response(JSON.stringify({ 
-            error: `Daily multi-comparison limit (${FREE_TIER_LIMITS.dailyComparisons}) exceeded for your IP address. Upgrade to a paid tier for more comparisons.` 
+            error: `Daily multi-comparison limit (${UNAUTHENTICATED_LIMITS.dailyComparisons}) exceeded for your IP address. Upgrade to a paid tier for more comparisons.` 
           }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             status: 403,
@@ -405,7 +412,7 @@ serve(async (req: Request) => {
     // --- Enforce Custom Comparative Question Limits ---
     if (customComparativeQuestions && customComparativeQuestions.length > currentLimits.maxCustomQuestions) {
       return new Response(JSON.stringify({ 
-        error: `You can only ask a maximum of ${currentLimits.maxCustomQuestions} custom comparative question(s) per comparison. ${isPaidTier ? '' : 'Upgrade to a paid tier to ask more questions.'}` 
+        error: `You can only ask a maximum of ${currentLimits.maxCustomQuestions} custom comparative question(s) per comparison. ${currentLimits === PAID_TIER_LIMITS ? '' : 'Upgrade to a paid tier to ask more questions.'}` 
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 403,
@@ -416,7 +423,7 @@ serve(async (req: Request) => {
       for (const qa of customComparativeQuestions) {
         if (qa.wordCount > currentLimits.maxCustomQuestionWordCount) {
           return new Response(JSON.stringify({ 
-            error: `Maximum word count for a custom comparative question answer is ${currentLimits.maxCustomQuestionWordCount}. ${isPaidTier ? '' : 'Upgrade to a paid tier for longer answers.'}` 
+            error: `Maximum word count for a custom comparative question answer is ${currentLimits.maxCustomQuestionWordCount}. ${currentLimits === PAID_TIER_LIMITS ? '' : 'Upgrade to a paid tier for longer answers.'}` 
           }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             status: 403,
