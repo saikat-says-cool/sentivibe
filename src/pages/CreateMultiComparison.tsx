@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { Loader2, GitCompare, PlusCircle, XCircle, MessageSquare, RefreshCw } from 'lucide-react';
+import { Loader2, GitCompare, PlusCircle, XCircle, MessageSquare, RefreshCw, Youtube } from 'lucide-react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -476,6 +476,31 @@ const CreateMultiComparison = () => {
                       <div key={index} className="border p-3 rounded-md bg-gray-50 dark:bg-gray-700">
                         <p className="font-medium text-gray-800 dark:text-gray-200 mb-1">Q{index + 1}: {qa.question}</p>
                         <p className="text-gray-700 dark:text-gray-300">A{index + 1}: {qa.answer || "No answer generated."}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* New section for individual video comments in the analysis report */}
+              {multiComparisonResult.videos && multiComparisonResult.videos.length > 0 && (
+                <div className="border-t pt-4 mt-4">
+                  <h3 className="text-lg font-semibold mb-4">Top Comments for Each Video</h3>
+                  <div className="space-y-6">
+                    {multiComparisonResult.videos.map((video, videoIndex) => (
+                      <div key={videoIndex} className="border p-4 rounded-md bg-gray-50 dark:bg-gray-700">
+                        <h4 className="font-semibold text-lg mb-2 flex items-center gap-2">
+                          <Youtube className="h-5 w-5 text-red-500" /> {video.title}
+                        </h4>
+                        {video.raw_comments_for_chat && video.raw_comments_for_chat.length > 0 ? (
+                          <ul className="list-disc list-inside space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                            {video.raw_comments_for_chat.slice(0, 10).map((comment, commentIndex) => (
+                              <li key={commentIndex}>{comment}</li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p className="text-gray-500 dark:text-gray-400 text-sm">No top comments available for this video.</p>
+                        )}
                       </div>
                     ))}
                   </div>
