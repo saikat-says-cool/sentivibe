@@ -4,12 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { Loader2, Youtube, GitCompare, PlusCircle, XCircle } from 'lucide-react';
+import { Loader2, Youtube, GitCompare, PlusCircle, XCircle, MessageSquare } from 'lucide-react'; // Added MessageSquare
 import { useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Link } from 'react-router-dom';
-import ComparisonDataDisplay from '@/components/ComparisonDataDisplay'; // Import the new component
+import ComparisonDataDisplay from '@/components/ComparisonDataDisplay';
+import ComparisonChatDialog from '@/components/ComparisonChatDialog'; // Import new chat dialog
 
 interface CustomComparativeQuestion {
   question: string;
@@ -32,6 +33,8 @@ interface ComparisonResult {
   videoBThumbnailUrl: string;
   videoBTitle: string;
   videoBLink: string;
+  videoARawCommentsForChat: string[]; // New field
+  videoBRawCommentsForChat: string[]; // New field
 }
 
 const CompareVideos = () => {
@@ -40,11 +43,13 @@ const CompareVideos = () => {
   const [customComparativeQuestions, setCustomComparativeQuestions] = useState<CustomComparativeQuestion[]>([{ question: "", wordCount: 200 }]);
   const [comparisonResult, setComparisonResult] = useState<ComparisonResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isChatDialogOpen, setIsChatDialogOpen] = useState(false); // New state for chat dialog
 
   const compareVideosMutation = useMutation({
     mutationFn: async (payload: { videoLinkA: string; videoLinkB: string; customComparativeQuestions: CustomComparativeQuestion[] }) => {
       setError(null);
       setComparisonResult(null);
+      setIsChatDialogOpen(false); // Close chat if open
 
       const { data, error: invokeError } = await supabase.functions.invoke('video-comparator', {
         body: payload,
@@ -208,66 +213,75 @@ const CompareVideos = () => {
       )}
 
       {comparisonResult && (
-        <Card className="mb-6">
-          <CardHeader>
-            <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4">
-              <div className="flex flex-col items-center text-center">
-                <a href={comparisonResult.videoALink} target="_blank" rel="noopener noreferrer" className="block hover:opacity-80 transition-opacity">
-                  <img
-                    src={comparisonResult.videoAThumbnailUrl}
-                    alt={`Thumbnail for ${comparisonResult.videoATitle}`}
-                    className="w-32 h-20 object-cover rounded-md shadow-md aspect-video"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{comparisonResult.videoATitle}</p>
-                </a>
-              </div>
-              <GitCompare className="h-8 w-8 text-gray-400 dark:text-gray-500 flex-shrink-0" />
-              <div className="flex flex-col items-center text-center">
-                <a href={comparisonResult.videoBLink} target="_blank" rel="noopener noreferrer" className="block hover:opacity-80 transition-opacity">
-                  <img
-                    src={comparisonResult.videoBThumbnailUrl}
-                    alt={`Thumbnail for ${comparisonResult.videoBTitle}`}
-                    className="w-32 h-20 object-cover rounded-md shadow-md aspect-video"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{comparisonResult.videoBTitle}</p>
-                </a>
-              </div>
-            </div>
-            <CardTitle className="text-2xl text-center">{comparisonResult.comparisonTitle}</CardTitle>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 text-center">
-              Last Compared: {new Date(comparisonResult.lastComparedAt).toLocaleDateString()}
-            </p>
-          </CardHeader>
-          <CardContent>
-            <p className="text-md text-gray-700 dark:text-gray-300 mt-4 italic">
-              {comparisonResult.comparisonMetaDescription}
-            </p>
-            <div className="mt-4">
-              <h3 className="text-lg font-semibold mb-2">Comparison Overview</h3>
-              {comparisonResult.comparisonData && <ComparisonDataDisplay data={comparisonResult.comparisonData} />}
-            </div>
-
-            {comparisonResult.customComparativeQaResults && comparisonResult.customComparativeQaResults.length > 0 && (
-              <div className="mt-6">
-                <h3 className="text-lg font-semibold mb-2">Comparative Questions & Answers</h3>
-                <div className="space-y-4">
-                  {comparisonResult.customComparativeQaResults.map((qa, index) => (
-                    <div key={index} className="border p-3 rounded-md bg-gray-50 dark:bg-gray-700">
-                      <p className="font-medium text-gray-800 dark:text-gray-200 mb-1">Q{index + 1}: {qa.question}</p>
-                      <p className="text-gray-700 dark:text-gray-300">A{index + 1}: {qa.answer || "No answer generated."}</p>
-                    </div>
-                  ))}
+        <>
+          <div className="flex flex-wrap justify-end gap-2 mb-4">
+            <Button onClick={() => setIsChatDialogOpen(true)} className="flex items-center gap-2">
+              <MessageSquare className="h-4 w-4" /> Chat with AI
+            </Button>
+            <Button asChild>
+              <Link to={`/comparison/${comparisonResult.comparisonSlug}`}>View Full Comparison Blog Post</Link>
+            </Button>
+          </div>
+          <Card className="mb-6">
+            <CardHeader>
+              <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4">
+                <div className="flex flex-col items-center text-center">
+                  <a href={comparisonResult.videoALink} target="_blank" rel="noopener noreferrer" className="block hover:opacity-80 transition-opacity">
+                    <img
+                      src={comparisonResult.videoAThumbnailUrl}
+                      alt={`Thumbnail for ${comparisonResult.videoATitle}`}
+                      className="w-32 h-20 object-cover rounded-md shadow-md aspect-video"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{comparisonResult.videoATitle}</p>
+                  </a>
+                </div>
+                <GitCompare className="h-8 w-8 text-gray-400 dark:text-gray-500 flex-shrink-0" />
+                <div className="flex flex-col items-center text-center">
+                  <a href={comparisonResult.videoBLink} target="_blank" rel="noopener noreferrer" className="block hover:opacity-80 transition-opacity">
+                    <img
+                      src={comparisonResult.videoBThumbnailUrl}
+                      alt={`Thumbnail for ${comparisonResult.videoBTitle}`}
+                      className="w-32 h-20 object-cover rounded-md shadow-md aspect-video"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{comparisonResult.videoBTitle}</p>
+                  </a>
                 </div>
               </div>
-            )}
+              <CardTitle className="text-2xl text-center">{comparisonResult.comparisonTitle}</CardTitle>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 text-center">
+                Last Compared: {new Date(comparisonResult.lastComparedAt).toLocaleDateString()}
+              </p>
+            </CardHeader>
+            <CardContent>
+              <p className="text-md text-gray-700 dark:text-gray-300 mt-4 italic">
+                {comparisonResult.comparisonMetaDescription}
+              </p>
+              <div className="mt-4">
+                <h3 className="text-lg font-semibold mb-2">Comparison Overview</h3>
+                {comparisonResult.comparisonData && <ComparisonDataDisplay data={comparisonResult.comparisonData} />}
+              </div>
 
-            <div className="mt-6">
-              <Button asChild>
-                <Link to={`/comparison/${comparisonResult.comparisonSlug}`}>View Full Comparison Blog Post</Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+              {comparisonResult.customComparativeQaResults && comparisonResult.customComparativeQaResults.length > 0 && (
+                <div className="mt-6">
+                  <h3 className="text-lg font-semibold mb-2">Comparative Questions & Answers</h3>
+                  <div className="space-y-4">
+                    {comparisonResult.customComparativeQaResults.map((qa, index) => (
+                      <div key={index} className="border p-3 rounded-md bg-gray-50 dark:bg-gray-700">
+                        <p className="font-medium text-gray-800 dark:text-gray-200 mb-1">Q{index + 1}: {qa.question}</p>
+                        <p className="text-gray-700 dark:text-gray-300">A{index + 1}: {qa.answer || "No answer generated."}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+          <ComparisonChatDialog
+            isOpen={isChatDialogOpen}
+            onOpenChange={setIsChatDialogOpen}
+            initialComparisonResult={comparisonResult}
+          />
+        </>
       )}
     </div>
   );

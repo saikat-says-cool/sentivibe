@@ -397,8 +397,10 @@ serve(async (req) => {
         last_compared_at: now,
         comparison_data_json: coreComparisonData,
         custom_comparative_qa_results: combinedComparativeQaResults,
-        video_a_thumbnail_url: blogPostA.thumbnail_url, // Save thumbnail A
-        video_b_thumbnail_url: blogPostB.thumbnail_url, // Save thumbnail B
+        video_a_thumbnail_url: blogPostA.thumbnail_url,
+        video_b_thumbnail_url: blogPostB.thumbnail_url,
+        video_a_raw_comments_for_chat: blogPostA.ai_analysis_json?.raw_comments_for_chat || [], // Save raw comments
+        video_b_raw_comments_for_chat: blogPostB.ai_analysis_json?.raw_comments_for_chat || [], // Save raw comments
       });
 
     if (insertError) {
@@ -424,6 +426,9 @@ serve(async (req) => {
       videoBThumbnailUrl: blogPostB.thumbnail_url,
       videoBTitle: blogPostB.title,
       videoBLink: blogPostB.original_video_link,
+      // Include raw comments for chat
+      videoARawCommentsForChat: blogPostA.ai_analysis_json?.raw_comments_for_chat || [],
+      videoBRawCommentsForChat: blogPostB.ai_analysis_json?.raw_comments_for_chat || [],
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,

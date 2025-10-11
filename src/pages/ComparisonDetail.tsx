@@ -1,14 +1,16 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, ArrowLeft, GitCompare, Youtube } from 'lucide-react';
+import { Loader2, ArrowLeft, GitCompare, Youtube, MessageSquare } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Skeleton } from '@/components/ui/skeleton';
 import ComparisonDataDisplay from '@/components/ComparisonDataDisplay';
+import ComparisonChatDialog from '@/components/ComparisonChatDialog';
+import { Button } from '@/components/ui/button'; // Import Button component
 
 interface CustomComparativeQuestion {
   question: string;
@@ -38,6 +40,10 @@ interface Comparison {
   last_compared_at: string;
   comparison_data_json: any;
   custom_comparative_qa_results: CustomComparativeQuestion[];
+  video_a_thumbnail_url?: string;
+  video_b_thumbnail_url?: string;
+  video_a_raw_comments_for_chat?: string[];
+  video_b_raw_comments_for_chat?: string[];
   videoA?: BlogPostSummary;
   videoB?: BlogPostSummary;
 }
@@ -62,6 +68,7 @@ const fetchComparisonBySlug = async (slug: string): Promise<Comparison | null> =
 
 const ComparisonDetail = () => {
   const { slug } = useParams<{ slug: string }>();
+  const [isChatDialogOpen, setIsChatDialogOpen] = useState(false);
 
   const { data: comparison, isLoading, error } = useQuery<Comparison | null, Error>({
     queryKey: ['comparison', slug],
@@ -101,7 +108,7 @@ const ComparisonDetail = () => {
         "@context": "https://schema.org",
         "@graph": [
           {
-            "@type": "Report", // Using Report schema for comparison
+            "@type": "Report",
             "headline": comparison.title,
             "description": comparison.meta_description,
             "datePublished": comparison.created_at,
@@ -195,13 +202,10 @@ const ComparisonDetail = () => {
     );
   }
 
-  // Function to remove the first H1 from markdown content
-  const removeFirstH1 = (markdownContent: string, title: string): string => {
+  const contentWithoutDuplicateTitle = (markdownContent: string, title: string): string => {
     const lines = markdownContent.split('\n');
     if (lines.length > 0 && lines[0].startsWith('#')) {
-      const firstLineTitle = lines[0].substring(1).trim(); // Remove '#' and trim
-      // Check if the first H1 roughly matches the comparison title
-      // Using a simple includes check for robustness against minor AI variations
+      const firstLineTitle = lines[0].substring(1).trim();
       if (title.includes(firstLineTitle) || firstLineTitle.includes(title)) {
         return lines.slice(1).join('\n').trim();
       }
@@ -209,7 +213,19 @@ const ComparisonDetail = () => {
     return markdownContent;
   };
 
-  const contentWithoutDuplicateTitle = removeFirstH1(comparison.content, comparison.title);
+  const formattedComparisonResultForChat = comparison ? {
+    comparisonTitle: comparison.title,
+    comparisonMetaDescription: comparison.meta_description,
+    comparisonKeywords: comparison.keywords || [],
+    comparisonData: comparison.comparison_data_json,
+    customComparativeQaResults: comparison.custom_comparative_qa_results || [],
+    videoATitle: comparison.videoA?.title || 'Video A',
+    videoALink: comparison.videoA?.original_video_link || '#',
+    videoARawCommentsForChat: comparison.video_a_raw_comments_for_chat || [],
+    videoBTitle: comparison.videoB?.title || 'Video B',
+    videoBLink: comparison.videoB?.original_video_link || '#',
+    videoBRawCommentsForChat: comparison.video_b_raw_comments_for_chat || [],
+  } : null;
 
   return (
     <div className="container mx-auto p-4 max-w-3xl">
@@ -217,6 +233,11 @@ const ComparisonDetail = () => {
         <Link to="/comparison-library" className="text-blue-500 hover:underline flex items-center w-fit">
           <ArrowLeft className="h-4 w-4 mr-2" /> Back to Comparison Library
         </Link>
+        {formattedComparisonResultForChat && (
+          <Button onClick={() => setIsChatDialogOpen(true)} className="flex items-center gap-2">
+            <MessageSquare className="h-4 w-4" /> Chat with AI
+          </Button>
+        )}
       </div>
       <Card className="mb-6">
         <CardHeader>
@@ -260,7 +281,7 @@ const ComparisonDetail = () => {
         </CardHeader>
         <CardContent className="prose dark:prose-invert max-w-none">
           <ReactMarkdown remarkPlugins={[remarkGfm]}>
-            {contentWithoutDuplicateTitle}
+            {contentWithoutDuplicateTitle(comparison.content, comparison.title)}
           </ReactMarkdown>
         </CardContent>
         {comparison.keywords && comparison.keywords.length > 0 && (
@@ -295,6 +316,13 @@ const ComparisonDetail = () => {
           </CardContent>
         )}
       </Card>
+      {formattedComparisonResultForChat && (
+        <ComparisonChatDialog
+          isOpen={isChatDialogOpen}
+          onOpenChange={setIsChatDialogOpen}
+          initialComparisonResult={formattedComparisonResultForChat}
+        />
+      )}
     </div>
   );
 };
