@@ -299,7 +299,7 @@ const CreateMultiComparison = () => {
           </div>
           <Card className="mb-6">
             <CardHeader>
-              <div className="flex flex-wrap justify-center items-center gap-4 mb-4">
+              <div className="flex flex-wrap justify-center items-center gap-4 mb-2"> {/* Reduced mb to make space for instruction */}
                 {multiComparisonResult.videos.map((video, index) => (
                   <div key={index} className="flex flex-col items-center text-center w-32">
                     <Link to={`/blog/${video.slug}`} className="block hover:opacity-80 transition-opacity"> {/* Link to individual blog post */}
@@ -313,6 +313,9 @@ const CreateMultiComparison = () => {
                   </div>
                 ))}
               </div>
+              <p className="text-xs text-center text-muted-foreground mb-4">
+                Click on any video thumbnail above to view its individual analysis.
+              </p>
               <CardTitle className="text-2xl text-center">{multiComparisonResult.title}</CardTitle>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 text-center">
                 Last Compared: {new Date(multiComparisonResult.last_compared_at).toLocaleDateString()}
