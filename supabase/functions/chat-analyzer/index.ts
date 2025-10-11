@@ -33,6 +33,9 @@ function getApiKeys(baseName: string): string[] {
   return keys;
 }
 
+// Define chat message limits per tier
+const FREE_CHAT_MESSAGE_LIMIT = 5;
+
 serve(async (req) => {
   // Handle CORS preflight request
   if (req.method === 'OPTIONS') {
@@ -78,7 +81,8 @@ serve(async (req) => {
     }
     // console.log(`User ${user.id} has subscription tier: ${subscriptionTier}`); // For debugging
 
-    const { userMessage, chatMessages, analysisResult, externalContext, desiredWordCount, selectedPersona, customQaResults } = await req.json();
+    const { userMessage, chatMessages, analysisResult, externalContext, desiredWordCount, customQaResults } = await req.json();
+    let { selectedPersona } = await req.json(); // Declare as let to allow reassignment
 
     if (!userMessage || !analysisResult) {
       return new Response(JSON.stringify({ error: 'User message and analysis result are required.' }), {
@@ -86,6 +90,33 @@ serve(async (req) => {
         status: 400,
       });
     }
+
+    // --- Tiered Access and Limits for Chat ---
+    if (subscriptionTier === 'guest') {
+      return new Response(JSON.stringify({ 
+        error: 'Chat with AI is not available for guest users. Please log in or sign up.',
+        code: 'CHAT_ACCESS_DENIED'
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 403, // Forbidden
+      });
+    }
+
+    if (subscriptionTier === 'free') {
+      // Check message limit (including the current message)
+      if (chatMessages.length >= FREE_CHAT_MESSAGE_LIMIT) {
+        return new Response(JSON.stringify({ 
+          error: `You have reached your chat message limit of ${FREE_CHAT_MESSAGE_LIMIT} messages per session on the Free tier. Please upgrade to Pro for unlimited chat.`,
+          code: 'CHAT_MESSAGE_LIMIT_EXCEEDED'
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 403, // Forbidden
+        });
+      }
+      // Restrict persona for free users
+      selectedPersona = 'friendly'; // Override any other selection
+    }
+    // --- End Tiered Access and Limits ---
 
     // --- Longcat AI API Call ---
     const longcatApiKeys = getApiKeys('LONGCAT_AI_API_KEY');
@@ -156,11 +187,12 @@ serve(async (req) => {
     --- Video Analysis Context ---
     Video Title: "${analysisResult.videoTitle}"
     Video Description: "${analysisResult.videoDescription}"
+    Video Creator: "${analysisResult.creatorName}"
     Video Tags: ${analysisResult.videoTags.length > 0 ? analysisResult.videoTags.join(', ') : 'None'}
     Overall Sentiment: ${analysisResult.aiAnalysis.overall_sentiment}
-    Emotional Tones: ${analysisResult.aiAnalysis.emotional_tones.join(', ')}
-    Key Themes: ${analysisResult.aiAnalysis.key_themes.join(', ')}
-    Summary Insights: ${analysisResult.aiAnalysis.summary_insights}
+    Emotional Tones: ${analysisResult.aiAnalysis.emotional_tones?.join(', ') || 'N/A'}
+    Key Themes: ${analysisResult.aiAnalysis.key_themes?.join(', ') || 'N/A'}
+    Summary Insights: ${analysisResult.aiAnalysis.summary_insights || analysisResult.aiAnalysis.simplified_summary || 'No insights available.'}
     Top Comments (by popularity):
     ${analysisResult.comments.slice(0, 10).map((comment: string, index: number) => `${index + 1}. ${comment}`).join('\n')}
     --- End Video Analysis Context ---

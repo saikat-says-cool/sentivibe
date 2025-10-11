@@ -20,12 +20,14 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input"; // Import Input component
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"; // Import Alert components
+import { useAuth } from '@/integrations/supabase/auth'; // Import useAuth
 
 interface AiAnalysisResult {
   overall_sentiment: string;
-  emotional_tones?: string[]; // Made optional
-  key_themes?: string[];      // Made optional
-  summary_insights?: string;  // Made optional
+  emotional_tones?: string[]; // Optional for guest tier
+  key_themes?: string[];      // Optional for guest tier
+  summary_insights?: string;  // Optional for guest tier
   simplified_summary?: string; // Added for guest tier
 }
 
@@ -85,6 +87,9 @@ interface VideoChatDialogProps {
   initialBlogPost?: BlogPost | null;
 }
 
+// Define chat message limits per tier (mirroring backend for display)
+const FREE_CHAT_MESSAGE_LIMIT = 5;
+
 const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
   isOpen,
   onOpenChange,
@@ -96,9 +101,19 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
   const [selectedPersona, setSelectedPersona] = useState<string>("friendly");
   const [currentExternalContext, setCurrentExternalContext] = useState<string | null>(null);
   const [currentAnalysisResult, setCurrentAnalysisResult] = useState<AnalysisResponse | null>(null);
+  const [chatError, setChatError] = useState<string | null>(null);
+
+  const { subscriptionTier, isLoading: isAuthLoading } = useAuth();
+
+  // Determine chat access and limits based on tier
+  const isGuest = subscriptionTier === 'guest';
+  const isFreeTier = subscriptionTier === 'free';
+  const chatMessageCount = chatMessages.filter(msg => msg.sender === 'user').length;
+  const freeTierLimitReached = isFreeTier && chatMessageCount >= FREE_CHAT_MESSAGE_LIMIT;
 
   useEffect(() => {
     if (isOpen) {
+      setChatError(null); // Clear previous errors on open
       let analysisToUse: AnalysisResponse | null = null;
 
       if (initialAnalysisResult) {
@@ -116,7 +131,7 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
             overall_sentiment: initialBlogPost.ai_analysis_json.overall_sentiment || 'N/A',
             emotional_tones: initialBlogPost.ai_analysis_json.emotional_tones || [],
             key_themes: initialBlogPost.ai_analysis_json.key_themes || [],
-            summary_insights: initialBlogPost.ai_analysis_json.summary_insights || 'No insights available.',
+            summary_insights: initialBlogPost.ai_analysis_json.summary_insights || 'No insights available.', // Corrected access
             simplified_summary: initialBlogPost.ai_analysis_json.simplified_summary, // Include simplified summary
           },
           blogPostSlug: initialBlogPost.slug,
@@ -127,7 +142,16 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
       
       setCurrentAnalysisResult(analysisToUse);
 
-      if (analysisToUse) {
+      if (isGuest) {
+        setChatMessages([
+          {
+            id: 'ai-guest-blocked',
+            sender: 'ai',
+            text: "Chat with AI is not available for guest users. Please log in or sign up to access this feature.",
+          },
+        ]);
+        setChatError("Chat with AI is not available for guest users.");
+      } else if (analysisToUse) {
         setChatMessages([
           {
             id: 'ai-initial-loaded',
@@ -150,8 +174,9 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
       setChatMessages([]);
       setCurrentExternalContext(null);
       setCurrentAnalysisResult(null);
+      setChatError(null);
     }
-  }, [isOpen, initialAnalysisResult, initialBlogPost]);
+  }, [isOpen, initialAnalysisResult, initialBlogPost, isGuest, isAuthLoading]);
 
   const fetchExternalContextMutation = useMutation({
     mutationFn: async (query: string) => {
@@ -169,11 +194,14 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
     },
     onError: (err: Error) => {
       console.error("Error fetching external context for chat:", err);
+      setChatError(`Failed to fetch external context: ${err.message}`);
     },
   });
 
   const chatMutation = useMutation({
     mutationFn: async (userMessageText: string) => {
+      setChatError(null); // Clear error on new message attempt
+
       const newUserMessage: Message = {
         id: Date.now().toString(),
         sender: 'user',
@@ -197,7 +225,7 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
       const { data, error: invokeError } = await supabase.functions.invoke('chat-analyzer', {
         body: {
           userMessage: userMessageText,
-          chatMessages: [...chatMessages, newUserMessage],
+          chatMessages: [...chatMessages, newUserMessage], // Pass updated chat history
           analysisResult: currentAnalysisResult,
           externalContext: currentExternalContext,
           desiredWordCount: desiredWordCount, // Pass desired word count
@@ -208,6 +236,12 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
 
       if (invokeError) {
         console.error("Supabase Function Invoke Error:", invokeError);
+        if (invokeError.message.includes('CHAT_ACCESS_DENIED')) {
+          throw new Error(`CHAT_ACCESS_DENIED:${invokeError.message}`);
+        }
+        if (invokeError.message.includes('CHAT_MESSAGE_LIMIT_EXCEEDED')) {
+          throw new Error(`CHAT_MESSAGE_LIMIT_EXCEEDED:${invokeError.message}`);
+        }
         throw new Error(invokeError.message || "Failed to invoke chat function.");
       }
       
@@ -224,23 +258,25 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
     },
     onError: (err: Error) => {
       console.error("Chat Error:", err);
-      setChatMessages((prev) =>
-        prev.map((msg, index) =>
-          index === prev.length - 1 && msg.sender === 'ai' && msg.text === 'Thinking...'
-            ? { ...msg, text: `Error: ${err.message}. Please try again.` }
-            : msg
-        )
-      );
+      if (err.message.startsWith('CHAT_ACCESS_DENIED:')) {
+        setChatError(err.message.replace('CHAT_ACCESS_DENIED:', ''));
+      } else if (err.message.startsWith('CHAT_MESSAGE_LIMIT_EXCEEDED:')) {
+        setChatError(err.message.replace('CHAT_MESSAGE_LIMIT_EXCEEDED:', ''));
+      } else {
+        setChatError(`Error: ${err.message}. Please try again.`);
+      }
+      // Remove the "Thinking..." message if an error occurs
+      setChatMessages((prev) => prev.filter(msg => !(msg.sender === 'ai' && msg.text === 'Thinking...')));
     },
   });
 
   const handleSendMessage = (messageText: string) => {
-    if (messageText.trim() && currentAnalysisResult) {
+    if (messageText.trim() && currentAnalysisResult && !isGuest && !freeTierLimitReached) {
       chatMutation.mutate(messageText);
     }
   };
 
-  const isChatDisabled = !currentAnalysisResult || chatMutation.isPending || fetchExternalContextMutation.isPending;
+  const isChatDisabled = isGuest || freeTierLimitReached || !currentAnalysisResult || chatMutation.isPending || fetchExternalContextMutation.isPending;
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -253,23 +289,42 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
             Ask questions about the video analysis, comments, or related topics.
           </DialogDescription>
         </DialogHeader>
+        {chatError && (
+          <Alert variant="destructive" className="mt-2">
+            <AlertTitle>Chat Error</AlertTitle>
+            <AlertDescription>{chatError}</AlertDescription>
+          </Alert>
+        )}
+        {isFreeTier && !freeTierLimitReached && (
+          <Alert className="mt-2">
+            <AlertTitle>Free Tier Chat Limit</AlertTitle>
+            <AlertDescription>
+              You have {FREE_CHAT_MESSAGE_LIMIT - chatMessageCount} messages remaining in this session. Upgrade to Pro for unlimited chat!
+            </AlertDescription>
+          </Alert>
+        )}
         <div className="flex flex-col sm:flex-row sm:space-x-4 space-y-2 sm:space-y-0 mt-2 sm:mt-0 mb-4">
           <div className="flex items-center space-x-2">
             <Label htmlFor="persona-select" className="text-sm">Persona:</Label>
             <Select
               value={selectedPersona}
               onValueChange={setSelectedPersona}
-              disabled={isChatDisabled}
+              disabled={isChatDisabled || isFreeTier} // Disable for free tier
             >
               <SelectTrigger id="persona-select" className="w-[140px]">
                 <SelectValue placeholder="Select persona" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="friendly">Friendly Assistant</SelectItem>
-                <SelectItem value="therapist">Therapist</SelectItem>
-                <SelectItem value="storyteller">Storyteller</SelectItem>
-                <SelectItem value="motivation">Motivational Coach</SelectItem>
-                <SelectItem value="argumentative">Argumentative</SelectItem>
+                {/* Other personas only for Pro tier */}
+                {!isFreeTier && (
+                  <>
+                    <SelectItem value="therapist">Therapist</SelectItem>
+                    <SelectItem value="storyteller">Storyteller</SelectItem>
+                    <SelectItem value="motivation">Motivational Coach</SelectItem>
+                    <SelectItem value="argumentative">Argumentative</SelectItem>
+                  </>
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -293,6 +348,7 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
             messages={chatMessages}
             onSendMessage={handleSendMessage}
             isLoading={chatMutation.isPending || fetchExternalContextMutation.isPending}
+            disabled={isChatDisabled} // Pass disabled prop to ChatInterface
           />
         </div>
       </DialogContent>

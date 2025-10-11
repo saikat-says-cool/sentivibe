@@ -15,9 +15,10 @@ interface ChatInterfaceProps {
   messages: Message[];
   onSendMessage: (message: string) => void;
   isLoading: boolean;
+  disabled?: boolean; // New prop
 }
 
-const ChatInterface: React.FC<ChatInterfaceProps> = ({ messages, onSendMessage, isLoading }) => {
+const ChatInterface: React.FC<ChatInterfaceProps> = ({ messages, onSendMessage, isLoading, disabled = false }) => {
   const [inputMessage, setInputMessage] = React.useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -31,7 +32,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ messages, onSendMessage, 
 
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
-    if (inputMessage.trim()) {
+    if (inputMessage.trim() && !disabled) { // Check disabled prop
       onSendMessage(inputMessage);
       setInputMessage('');
     }
@@ -75,9 +76,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ messages, onSendMessage, 
           value={inputMessage}
           onChange={(e) => setInputMessage(e.target.value)}
           className="flex-1 mr-2"
-          disabled={isLoading}
+          disabled={isLoading || disabled} // Use the new disabled prop here
         />
-        <Button type="submit" disabled={isLoading}>
+        <Button type="submit" disabled={isLoading || disabled}> {/* Use the new disabled prop here */}
           {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
         </Button>
       </form>

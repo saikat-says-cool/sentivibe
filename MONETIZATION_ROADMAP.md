@@ -103,7 +103,7 @@ To successfully integrate a tiered access and usage model into SentiVibe, allowi
     *   **Free Member:** 5 messages per session (limited personas).
     *   **Pro Subscriber:** Unlimited messages, all personas, priority tokens (future).
     *   **Affected Areas:** Frontend (`VideoChatDialog.tsx`, `ChatInterface.tsx` - message count, persona selection), Backend (`chat-analyzer` Edge Function - message limits, persona access).
-    *   **Status:** Pending
+    *   **Status:** Completed
 
 *   **Checkpoint 2.4: Library Copilot (AI Search)**
     *   **Guest:** No access.
