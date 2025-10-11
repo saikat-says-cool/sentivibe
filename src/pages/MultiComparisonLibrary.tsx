@@ -8,6 +8,7 @@ import { Loader2, Search, GitCompare } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
 import ComparisonLibraryCopilot from '@/components/ComparisonLibraryCopilot'; // Import the copilot
+import { Badge } from '@/components/ui/badge'; // Import Badge component
 
 interface MultiComparisonVideoSummary {
   title: string;
@@ -149,7 +150,7 @@ const MultiComparisonLibrary = () => {
         {filteredComparisons.map((comp) => (
           <Link to={`/multi-comparison/${comp.slug}`} key={comp.id}>
             <Card className="h-full flex flex-col hover:shadow-lg transition-shadow duration-200">
-              <CardHeader className="p-0">
+              <CardHeader className="p-0 relative"> {/* Added relative for absolute positioning of badge */}
                 {comp.overall_thumbnail_url ? (
                   <img
                     src={comp.overall_thumbnail_url}
@@ -157,19 +158,22 @@ const MultiComparisonLibrary = () => {
                     className="w-full h-40 object-cover rounded-t-lg"
                   />
                 ) : (
-                  <div className="flex w-full h-40 rounded-t-lg overflow-hidden">
-                    {comp.videos.slice(0, 2).map((video, index) => (
-                      <img
-                        key={index}
-                        src={video.thumbnail_url}
-                        alt={`Thumbnail for ${video.title}`}
-                        className="w-1/2 h-full object-cover"
-                      />
-                    ))}
-                    {comp.videos.length === 0 && (
-                      <div className="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-                        <GitCompare className="h-12 w-12 text-gray-400 dark:text-gray-500" />
-                      </div>
+                  <div className="w-full h-40 bg-gray-200 dark:bg-gray-700 flex items-center justify-center rounded-t-lg relative">
+                    {comp.videos.length > 0 ? (
+                      <>
+                        <img
+                          src={comp.videos[0].thumbnail_url}
+                          alt={`Thumbnail for ${comp.videos[0].title}`}
+                          className="w-full h-full object-cover rounded-t-lg"
+                        />
+                        {comp.videos.length > 1 && (
+                          <Badge className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded-full">
+                            +{comp.videos.length - 1} more
+                          </Badge>
+                        )}
+                      </>
+                    ) : (
+                      <GitCompare className="h-12 w-12 text-gray-400 dark:text-gray-500" />
                     )}
                   </div>
                 )}
