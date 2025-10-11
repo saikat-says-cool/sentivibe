@@ -5,14 +5,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Loader2, GitCompare, PlusCircle, XCircle, MessageSquare, RefreshCw } from 'lucide-react';
-import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query'; // Added useQuery
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Link, useLocation } from 'react-router-dom';
 import MultiComparisonDataDisplay from '@/components/MultiComparisonDataDisplay';
 import MultiComparisonChatDialog from '@/components/MultiComparisonChatDialog';
 import { useAuth } from '@/integrations/supabase/auth';
-import { Skeleton } from '@/components/ui/skeleton'; // Import Skeleton
+import { Skeleton } from '@/components/ui/skeleton';
 
 // New interfaces for multi-comparison
 interface MultiComparisonVideo {
@@ -47,10 +47,16 @@ interface MultiComparisonResult {
 }
 
 // Define tier limits (matching backend for consistency)
-const FREE_TIER_LIMITS = {
+const UNAUTHENTICATED_LIMITS = {
   dailyComparisons: 1,
   maxCustomQuestions: 1,
   maxCustomQuestionWordCount: 100,
+};
+
+const AUTHENTICATED_FREE_TIER_LIMITS = {
+  dailyComparisons: 2,
+  maxCustomQuestions: 2,
+  maxCustomQuestionWordCount: 150,
 };
 
 const PAID_TIER_LIMITS = {
@@ -85,13 +91,23 @@ const CreateMultiComparison = () => {
   const queryClient = useQueryClient();
 
   const isPaidTier = subscriptionStatus === 'active' && subscriptionPlanId !== 'free';
-  const currentLimits = isPaidTier ? PAID_TIER_LIMITS : FREE_TIER_LIMITS;
+  const isAuthenticatedFreeTier = user && !isPaidTier; // Authenticated but not paid
+  const isUnauthenticated = !user; // Not logged in
+
+  let currentLimits;
+  if (isPaidTier) {
+    currentLimits = PAID_TIER_LIMITS;
+  } else if (isAuthenticatedFreeTier) {
+    currentLimits = AUTHENTICATED_FREE_TIER_LIMITS;
+  } else { // Unauthenticated
+    currentLimits = UNAUTHENTICATED_LIMITS;
+  }
 
   // Fetch anonymous usage if not authenticated
   const { data: anonUsage, refetch: refetchAnonUsage } = useQuery({
     queryKey: ['anonUsageMultiComp'],
     queryFn: fetchAnonUsage,
-    enabled: !user, // Only fetch if user is not logged in
+    enabled: isUnauthenticated, // Only fetch if user is not logged in
     refetchOnWindowFocus: false,
   });
 
@@ -127,10 +143,10 @@ const CreateMultiComparison = () => {
         queryClient.invalidateQueries({ queryKey: ['multiComparison', data.slug] });
       }
       // Refetch anon usage if unauthenticated, otherwise update authenticated count
-      if (!user) {
+      if (isUnauthenticated) {
         refetchAnonUsage();
       } else {
-        setComparisonsToday(prev => prev + 1); // For authenticated users, update local state
+        queryClient.invalidateQueries({ queryKey: ['dailyComparisonsCount', user?.id] });
       }
     },
     onError: (err: Error) => {
@@ -139,40 +155,45 @@ const CreateMultiComparison = () => {
     },
   });
 
-  useEffect(() => {
-    const updateComparisonsToday = async () => {
-      if (user) { // Authenticated user
-        const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-        const { count, error } = await supabase
-          .from('multi_comparisons')
-          .select('id', { count: 'exact', head: true })
-          .gte('created_at', twentyFourHoursAgo)
-          .eq('author_id', user.id); // Filter by authenticated user's ID
+  // Fetch daily comparison count for authenticated users
+  const { data: authenticatedComparisonsCount } = useQuery<number, Error>({
+    queryKey: ['dailyComparisonsCount', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return 0;
+      const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const { count, error } = await supabase
+        .from('multi_comparisons')
+        .select('id', { count: 'exact', head: true })
+        .gte('created_at', twentyFourHoursAgo)
+        .eq('author_id', user.id);
 
-        if (error) {
-          console.error("Error fetching daily comparison count for authenticated user:", error);
-          setComparisonsToday(0);
-        } else {
-          setComparisonsToday(count || 0);
-        }
-      } else { // Unauthenticated user (IP-based)
-        if (anonUsage) {
-          setComparisonsToday(anonUsage.comparisons_count);
-        } else {
-          setComparisonsToday(0);
-        }
+      if (error) {
+        console.error("Error fetching daily comparison count for authenticated user:", error);
+        return 0;
       }
-    };
+      return count || 0;
+    },
+    enabled: !!user && !isUnauthenticated, // Only fetch if user is logged in
+    refetchOnWindowFocus: false,
+  });
 
-    updateComparisonsToday();
-  }, [user, anonUsage, createMultiComparisonMutation.isSuccess]); // Depend on anonUsage and user
+  useEffect(() => {
+    if (isUnauthenticated) {
+      setComparisonsToday(anonUsage?.comparisons_count || 0);
+    } else if (user) {
+      setComparisonsToday(authenticatedComparisonsCount || 0);
+    }
+  }, [isUnauthenticated, user, anonUsage, authenticatedComparisonsCount]);
 
   useEffect(() => {
     if (initialMultiComparison) {
       setMultiComparisonResult(initialMultiComparison);
       setVideoLinks(initialMultiComparison.videos.map(video => video.original_video_link));
       setCustomComparativeQuestions(initialMultiComparison.custom_comparative_qa_results.length > 0 
-        ? initialMultiComparison.custom_comparative_qa_results 
+        ? initialMultiComparison.custom_comparative_qa_results.map(qa => ({
+            question: qa.question,
+            wordCount: Math.min(qa.wordCount, currentLimits.maxCustomQuestionWordCount)
+          })).slice(0, currentLimits.maxCustomQuestions)
         : [{ question: "", wordCount: currentLimits.maxCustomQuestionWordCount }]);
       
       if (forceRecompareFromNav) {
@@ -180,8 +201,11 @@ const CreateMultiComparison = () => {
         const validQuestions = initialMultiComparison.custom_comparative_qa_results.filter(q => q.question.trim() !== "");
         createMultiComparisonMutation.mutate({ videoLinks: validVideoLinks, customComparativeQuestions: validQuestions, forceRecompare: true });
       }
+    } else {
+      // Reset custom questions to default for new comparison, respecting current tier limits
+      setCustomComparativeQuestions([{ question: "", wordCount: currentLimits.maxCustomQuestionWordCount }]);
     }
-  }, [initialMultiComparison, forceRecompareFromNav, currentLimits.maxCustomQuestionWordCount, createMultiComparisonMutation]);
+  }, [initialMultiComparison, forceRecompareFromNav, createMultiComparisonMutation, currentLimits.maxCustomQuestionWordCount, currentLimits.maxCustomQuestions]);
 
   const handleAddVideoLink = () => {
     setVideoLinks([...videoLinks, '']);
