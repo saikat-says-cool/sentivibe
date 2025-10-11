@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query"; // Added useQuery
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Youtube, Download, MessageSquare, Link as LinkIcon, PlusCircle, XCircle, RefreshCw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -82,6 +82,16 @@ const PAID_TIER_LIMITS = {
   maxCustomQuestionWordCount: 500,
 };
 
+// Function to fetch anonymous usage
+const fetchAnonUsage = async () => {
+  const { data, error } = await supabase.functions.invoke('get-anon-usage');
+  if (error) {
+    console.error("Error fetching anon usage:", error);
+    throw new Error(error.message || "Failed to fetch anonymous usage data.");
+  }
+  return data;
+};
+
 const AnalyzeVideo = () => {
   const location = useLocation();
   const initialBlogPost = location.state?.blogPost as BlogPost | undefined;
@@ -102,6 +112,14 @@ const AnalyzeVideo = () => {
   const isPaidTier = subscriptionStatus === 'active' && subscriptionPlanId !== 'free';
   const currentLimits = isPaidTier ? PAID_TIER_LIMITS : FREE_TIER_LIMITS;
 
+  // Fetch anonymous usage if not authenticated
+  const { data: anonUsage, refetch: refetchAnonUsage } = useQuery({
+    queryKey: ['anonUsage'],
+    queryFn: fetchAnonUsage,
+    enabled: !user, // Only fetch if user is not logged in
+    refetchOnWindowFocus: false,
+  });
+
   const analyzeVideoMutation = useMutation({
     mutationFn: async (payload: { videoLink: string; customQuestions: CustomQuestion[]; forceReanalyze?: boolean }) => {
       setError(null);
@@ -113,6 +131,16 @@ const AnalyzeVideo = () => {
 
       if (invokeError) {
         console.error("Supabase Function Invoke Error:", invokeError);
+        // Check if the error is a FunctionsHttpError with a 403 status
+        if (invokeError.name === 'FunctionsHttpError' && invokeError.context?.status === 403) {
+          try {
+            const errorBody = await invokeError.context.json();
+            throw new Error(errorBody.error || "Daily limit exceeded. Please upgrade.");
+          } catch (jsonError) {
+            console.error("Failed to parse 403 error response:", jsonError);
+            throw new Error(invokeError.message || "Daily limit exceeded. Please upgrade.");
+          }
+        }
         throw new Error(invokeError.message || "Failed to invoke analysis function.");
       }
       return data;
@@ -124,7 +152,12 @@ const AnalyzeVideo = () => {
       if (data.blogPostSlug) {
         queryClient.invalidateQueries({ queryKey: ['blogPost', data.blogPostSlug] });
       }
-      setAnalysesToday(prev => prev + 1);
+      // Refetch anon usage if unauthenticated, otherwise update authenticated count
+      if (!user) {
+        refetchAnonUsage();
+      } else {
+        setAnalysesToday(prev => prev + 1); // For authenticated users, update local state
+      }
     },
     onError: (err: Error) => {
       setError(err.message);
@@ -133,24 +166,32 @@ const AnalyzeVideo = () => {
   });
 
   useEffect(() => {
-    const fetchDailyAnalysisCount = async () => {
-      const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-      const { count, error } = await supabase
-        .from('blog_posts')
-        .select('id', { count: 'exact', head: true })
-        .gte('created_at', twentyFourHoursAgo)
-        .or(`author_id.eq.${user?.id || 'null'},author_id.is.null`);
+    const updateAnalysesToday = async () => {
+      if (user) { // Authenticated user
+        const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+        const { count, error } = await supabase
+          .from('blog_posts')
+          .select('id', { count: 'exact', head: true })
+          .gte('created_at', twentyFourHoursAgo)
+          .eq('author_id', user.id); // Filter by authenticated user's ID
 
-      if (error) {
-        console.error("Error fetching daily analysis count:", error);
-        setAnalysesToday(0);
-      } else {
-        setAnalysesToday(count || 0);
+        if (error) {
+          console.error("Error fetching daily analysis count for authenticated user:", error);
+          setAnalysesToday(0);
+        } else {
+          setAnalysesToday(count || 0);
+        }
+      } else { // Unauthenticated user (IP-based)
+        if (anonUsage) {
+          setAnalysesToday(anonUsage.analyses_count);
+        } else {
+          setAnalysesToday(0);
+        }
       }
     };
 
-    fetchDailyAnalysisCount();
-  }, [user, subscriptionStatus, subscriptionPlanId, analyzeVideoMutation.isSuccess]);
+    updateAnalysesToday();
+  }, [user, anonUsage, analyzeVideoMutation.isSuccess]); // Depend on anonUsage and user
 
   useEffect(() => {
     if (initialBlogPost) {
