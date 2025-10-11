@@ -222,6 +222,9 @@ const AnalyzeVideo = () => {
                 className="mt-1"
                 disabled={analyzeVideoMutation.isPending}
               />
+              <p className="text-sm text-muted-foreground mt-2">
+                <span className="font-semibold text-red-500">Important:</span> The video must have at least 50 comments for a proper sentiment analysis.
+              </p>
             </div>
 
             <Separator />
