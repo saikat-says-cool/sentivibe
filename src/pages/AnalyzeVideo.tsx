@@ -20,9 +20,10 @@ import { useAuth } from "@/integrations/supabase/auth";
 
 interface AiAnalysisResult {
   overall_sentiment: string;
-  emotional_tones: string[];
-  key_themes: string[];
-  summary_insights: string;
+  emotional_tones?: string[]; // Optional for guest tier
+  key_themes?: string[];      // Optional for guest tier
+  summary_insights?: string;  // Optional for guest tier
+  simplified_summary?: string; // New: for guest tier
 }
 
 interface CustomQuestion {
@@ -139,9 +140,10 @@ const AnalyzeVideo = () => {
         comments: initialBlogPost.ai_analysis_json?.raw_comments_for_chat || [],
         aiAnalysis: {
           overall_sentiment: initialBlogPost.ai_analysis_json?.overall_sentiment || 'N/A',
-          emotional_tones: initialBlogPost.ai_analysis_json?.emotional_tones || [],
-          key_themes: initialBlogPost.ai_analysis_json?.key_themes || [],
-          summary_insights: initialBlogPost.ai_analysis_json?.summary_insights || 'No insights available.',
+          emotional_tones: initialBlogPost.ai_analysis_json?.emotional_tones,
+          key_themes: initialBlogPost.ai_analysis_json?.key_themes,
+          summary_insights: initialBlogPost.ai_analysis_json?.summary_insights,
+          simplified_summary: initialBlogPost.ai_analysis_json?.simplified_summary,
         },
         blogPostSlug: initialBlogPost.slug,
         originalVideoLink: initialBlogPost.original_video_link,
@@ -461,32 +463,39 @@ const AnalyzeVideo = () => {
                 </Badge>
               </div>
 
-              <div>
-                <h3 className="text-lg font-semibold mb-2">Emotional Tones</h3>
-                <div className="flex flex-wrap gap-2">
-                  {analysisResult.aiAnalysis.emotional_tones.map((tone, index) => (
-                    <Badge key={index} variant="outline">
-                      {tone}
-                    </Badge>
-                  ))}
+              {/* Conditional rendering for Emotional Tones and Key Themes */}
+              {(subscriptionTier === 'free' || subscriptionTier === 'pro') && analysisResult.aiAnalysis.emotional_tones && analysisResult.aiAnalysis.emotional_tones.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Emotional Tones</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {analysisResult.aiAnalysis.emotional_tones.map((tone, index) => (
+                      <Badge key={index} variant="outline">
+                        {tone}
+                      </Badge>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
-              <div>
-                <h3 className="text-lg font-semibold mb-2">Key Themes</h3>
-                <div className="flex flex-wrap gap-2">
-                  {analysisResult.aiAnalysis.key_themes.map((theme, index) => (
-                    <Badge key={index} variant="outline">
-                      {theme}
-                    </Badge>
-                  ))}
+              {(subscriptionTier === 'free' || subscriptionTier === 'pro') && analysisResult.aiAnalysis.key_themes && analysisResult.aiAnalysis.key_themes.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Key Themes</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {analysisResult.aiAnalysis.key_themes.map((theme, index) => (
+                      <Badge key={index} variant="outline">
+                        {theme}
+                      </Badge>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
               <div>
                 <h3 className="text-lg font-semibold mb-2">Summary Insights</h3>
                 <p className="text-gray-700 dark:text-gray-300">
-                  {analysisResult.aiAnalysis.summary_insights}
+                  {subscriptionTier === 'guest'
+                    ? analysisResult.aiAnalysis.simplified_summary || 'No detailed summary available for guest tier.'
+                    : analysisResult.aiAnalysis.summary_insights || 'No detailed summary available.'}
                 </p>
               </div>
 

@@ -76,7 +76,7 @@ To successfully integrate a tiered access and usage model into SentiVibe, allowi
     *   **Free Member:** Full sentiment + emotional tones + key themes.
     *   **Pro Subscriber:** Full analysis + advanced context fusion (future AI prompt enhancements).
     *   **Affected Areas:** Backend (`youtube-analyzer` Edge Function - AI prompt construction), Frontend (`AnalyzeVideo.tsx`, `BlogPostDetail.tsx` - conditional display of details).
-    *   **Status:** In Progress (Backend logic for tiered depth implemented)
+    *   **Status:** Completed
 
 ---
 

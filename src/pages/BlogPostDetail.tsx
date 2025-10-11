@@ -10,12 +10,14 @@ import remarkGfm from 'remark-gfm';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { useAuth } from '@/integrations/supabase/auth'; // Import useAuth
 
 interface AiAnalysisResult {
   overall_sentiment: string;
-  emotional_tones: string[];
-  key_themes: string[];
-  summary_insights: string;
+  emotional_tones?: string[]; // Optional for guest tier
+  key_themes?: string[];      // Optional for guest tier
+  summary_insights?: string;  // Optional for guest tier
+  simplified_summary?: string; // New: for guest tier
 }
 
 interface CustomQuestion {
@@ -67,6 +69,7 @@ const fetchBlogPostBySlug = async (slug: string): Promise<BlogPost | null> => {
 const BlogPostDetail = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
+  const { subscriptionTier, isLoading: isAuthLoading } = useAuth(); // Get subscription tier
   console.log("Current URL slug from useParams:", slug);
 
   const { data: blogPost, isLoading, error } = useQuery<BlogPost | null, Error>({
@@ -185,7 +188,7 @@ const BlogPostDetail = () => {
     }
   }, [blogPost]);
 
-  if (isLoading) {
+  if (isLoading || isAuthLoading) { // Include auth loading in overall loading state
     return (
       <div className="container mx-auto p-4 max-w-3xl">
         <Skeleton className="h-8 w-1/4 mb-6" />
@@ -306,6 +309,33 @@ const BlogPostDetail = () => {
             </div>
           </CardContent>
         )}
+        {/* Conditional rendering for Emotional Tones and Key Themes in BlogPostDetail */}
+        {(subscriptionTier === 'free' || subscriptionTier === 'pro') && blogPost.ai_analysis_json?.emotional_tones && blogPost.ai_analysis_json.emotional_tones.length > 0 && (
+          <CardContent className="border-t pt-4 mt-4">
+            <h3 className="text-lg font-semibold mb-2">Emotional Tones</h3>
+            <div className="flex flex-wrap gap-2">
+              {blogPost.ai_analysis_json.emotional_tones.map((tone, index) => (
+                <Badge key={index} variant="outline">
+                  {tone}
+                </Badge>
+              ))}
+            </div>
+          </CardContent>
+        )}
+
+        {(subscriptionTier === 'free' || subscriptionTier === 'pro') && blogPost.ai_analysis_json?.key_themes && blogPost.ai_analysis_json.key_themes.length > 0 && (
+          <CardContent className="border-t pt-4 mt-4">
+            <h3 className="text-lg font-semibold mb-2">Key Themes</h3>
+            <div className="flex flex-wrap gap-2">
+              {blogPost.ai_analysis_json.key_themes.map((theme, index) => (
+                <Badge key={index} variant="outline">
+                  {theme}
+                </Badge>
+              ))}
+            </div>
+          </CardContent>
+        )}
+
         {blogPost.custom_qa_results && blogPost.custom_qa_results.length > 0 && (
           <CardContent className="border-t pt-4 mt-4">
             <h3 className="text-lg font-semibold mb-2">Questions about this video asked by the community</h3>

@@ -23,9 +23,10 @@ import { Input } from "@/components/ui/input"; // Import Input component
 
 interface AiAnalysisResult {
   overall_sentiment: string;
-  emotional_tones: string[];
-  key_themes: string[];
-  summary_insights: string;
+  emotional_tones?: string[]; // Made optional
+  key_themes?: string[];      // Made optional
+  summary_insights?: string;  // Made optional
+  simplified_summary?: string; // Added for guest tier
 }
 
 interface CustomQuestion {
@@ -116,6 +117,7 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
             emotional_tones: initialBlogPost.ai_analysis_json.emotional_tones || [],
             key_themes: initialBlogPost.ai_analysis_json.key_themes || [],
             summary_insights: initialBlogPost.ai_analysis_json.summary_insights || 'No insights available.',
+            simplified_summary: initialBlogPost.ai_analysis_json.simplified_summary, // Include simplified summary
           },
           blogPostSlug: initialBlogPost.slug,
           originalVideoLink: initialBlogPost.original_video_link,
