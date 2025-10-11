@@ -12,7 +12,7 @@ import { GitCompare } from 'lucide-react';
 import ChatInterface from './ChatInterface';
 import { useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Link } from 'react-router-dom'; // Keep Link for potential future use if AI suggests blog posts
+import { Link } from 'react-router-dom';
 import { useAuth } from '@/integrations/supabase/auth'; // Import useAuth
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"; // Import Alert components
 
