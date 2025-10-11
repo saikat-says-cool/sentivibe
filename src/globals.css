@@ -5,7 +5,7 @@
 @layer base {
   :root {
     --background: 0 0% 100%; /* Pure White */
-    --foreground: 0 0% 3.9%; /* Crowd Black */
+    --foreground: 0 0% 3.9%; /* Crowd Black - already dark enough */
 
     --card: 0 0% 100%; /* Pure White */
     --card-foreground: 0 0% 3.9%; /* Crowd Black */
@@ -20,7 +20,7 @@
     --secondary-foreground: 0 0% 3.9%; /* Crowd Black */
 
     --muted: 220 10% 95%; /* Light Gray */
-    --muted-foreground: 220 10% 40%; /* Medium Gray */
+    --muted-foreground: 220 10% 25%; /* Darker Medium Gray for better readability */
 
     --accent: 217.2 91.2% 59.8%; /* Accent Blue #3B82F6 */
     --accent-foreground: 0 0% 100%; /* Pure White */
@@ -104,7 +104,7 @@
   /* Emerald Theme */
   .theme-emerald {
     --background: 160 60% 98%; /* Very light green */
-    --foreground: 160 10% 10%; /* Dark green */
+    --foreground: 160 10% 5%; /* Darker green for better readability */
 
     --card: 160 60% 100%;
     --card-foreground: 160 10% 10%;
@@ -119,7 +119,7 @@
     --secondary-foreground: 160 10% 10%;
 
     --muted: 160 30% 90%;
-    --muted-foreground: 160 10% 40%;
+    --muted-foreground: 160 10% 25%; /* Darker green-gray for better readability */
 
     --accent: 160 70% 40%; /* Brighter emerald */
     --accent-foreground: 0 0% 100%;
@@ -191,7 +191,7 @@
   /* Crimson Theme */
   .theme-crimson {
     --background: 0 0% 100%;
-    --foreground: 0 0% 10%;
+    --foreground: 0 0% 5%; /* Darker for better readability */
 
     --card: 0 0% 100%;
     --card-foreground: 0 0% 10%;
@@ -206,7 +206,7 @@
     --secondary-foreground: 0 0% 10%;
 
     --muted: 350 20% 95%;
-    --muted-foreground: 350 10% 50%;
+    --muted-foreground: 350 10% 25%; /* Darker red-gray for better readability */
 
     --accent: 350 80% 50%; /* Brighter Crimson */
     --accent-foreground: 0 0% 100%;
@@ -278,7 +278,7 @@
   /* Yellow Theme */
   .theme-yellow {
     --background: 48 100% 98%; /* Very light yellow */
-    --foreground: 48 100% 10%; /* Dark yellow/brown */
+    --foreground: 48 100% 5%; /* Darker yellow/brown for better readability */
 
     --card: 48 100% 100%;
     --card-foreground: 48 100% 10%;
@@ -293,7 +293,7 @@
     --secondary-foreground: 48 100% 10%;
 
     --muted: 48 50% 95%;
-    --muted-foreground: 48 20% 50%;
+    --muted-foreground: 48 20% 25%; /* Darker yellow-gray for better readability */
 
     --accent: 48 100% 60%; /* Brighter Yellow */
     --accent-foreground: 0 0% 10%;
@@ -365,7 +365,7 @@
   /* Cyan Theme */
   .theme-cyan {
     --background: 180 60% 98%; /* Very light cyan */
-    --foreground: 180 100% 10%; /* Dark cyan/teal */
+    --foreground: 180 100% 5%; /* Darker cyan/teal for better readability */
 
     --card: 180 60% 100%;
     --card-foreground: 180 100% 10%;
@@ -380,7 +380,7 @@
     --secondary-foreground: 180 100% 10%;
 
     --muted: 180 30% 90%;
-    --muted-foreground: 180 20% 50%;
+    --muted-foreground: 180 20% 25%; /* Darker cyan-gray for better readability */
 
     --accent: 180 100% 40%; /* Brighter Cyan */
     --accent-foreground: 0 0% 100%;
@@ -404,49 +404,6 @@
     /* Cyan Light Theme Gradients */
     --body-gradient-start: var(--background);
     --body-gradient-end: 180 40% 95%; /* Lighter cyan */
-  }
-
-  .dark .theme-cyan {
-    --background: 180 100% 10%; /* Dark cyan/teal background */
-    --foreground: 180 60% 98%; /* Light cyan foreground */
-
-    --card: 180 100% 15%;
-    --card-foreground: 180 60% 98%;
-
-    --popover: 180 100% 15%;
-    --popover-foreground: 180 60% 98%;
-
-    --primary: 180 100% 60%; /* Lighter Cyan for dark mode */
-    --primary-foreground: 180 100% 10%;
-
-    --secondary: 180 30% 20%;
-    --secondary-foreground: 180 60% 98%;
-
-    --muted: 180 30% 25%;
-    --muted-foreground: 180 20% 60%;
-
-    --accent: 180 100% 70%;
-    --accent-foreground: 180 100% 10%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 180 30% 30%;
-    --input: 180 30% 30%;
-    --ring: 180 100% 60%;
-
-    --sidebar-background: 180 100% 15%;
-    --sidebar-foreground: 180 60% 95%;
-    --sidebar-primary: 180 100% 55%;
-    --sidebar-primary-foreground: 180 100% 10%;
-    --sidebar-accent: 180 30% 20%;
-    --sidebar-accent-foreground: 180 60% 95%;
-    --sidebar-border: 180 30% 25%;
-    --sidebar-ring: 180 100% 55%;
-
-    /* Cyan Dark Theme Gradients */
-    --body-gradient-start: var(--background);
-    --body-gradient-end: 180 30% 15%; /* Darker cyan */
   }
   
   body {
