@@ -33,8 +33,12 @@ function getApiKeys(baseName: string): string[] {
 }
 
 // Define tier limits for library copilot queries
-const FREE_TIER_LIMITS = {
+const UNAUTHENTICATED_LIMITS = {
   dailyQueries: 5,
+};
+
+const AUTHENTICATED_FREE_TIER_LIMITS = {
+  dailyQueries: 10,
 };
 
 const PAID_TIER_LIMITS = {
@@ -62,8 +66,7 @@ serve(async (req: Request) => {
     );
 
     const { data: { user } } = await supabaseClient.auth.getUser();
-    let isPaidTier = false;
-    let currentLimits = FREE_TIER_LIMITS;
+    let currentLimits;
 
     const clientIp = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
     const now = new Date();
@@ -77,10 +80,14 @@ serve(async (req: Request) => {
 
       if (subscriptionError && subscriptionError.code !== 'PGRST116') {
         console.error("Error fetching subscription for user:", user.id, subscriptionError);
+        currentLimits = AUTHENTICATED_FREE_TIER_LIMITS; // Fallback
       } else if (subscriptionData && subscriptionData.status === 'active' && subscriptionData.plan_id !== 'free') {
-        isPaidTier = true;
         currentLimits = PAID_TIER_LIMITS;
+      } else {
+        currentLimits = AUTHENTICATED_FREE_TIER_LIMITS;
       }
+    } else {
+      currentLimits = UNAUTHENTICATED_LIMITS;
     }
 
     // --- Enforce Daily Query Limit ---
@@ -102,7 +109,7 @@ serve(async (req: Request) => {
 
       if (count !== null && count >= currentLimits.dailyQueries) {
         return new Response(JSON.stringify({ 
-          error: `Daily Comparison Library Copilot query limit (${currentLimits.dailyQueries}) exceeded. ${isPaidTier ? 'You have reached your paid tier limit.' : 'Upgrade to a paid tier for more queries.'}` 
+          error: `Daily Comparison Library Copilot query limit (${currentLimits.dailyQueries}) exceeded. ${currentLimits === PAID_TIER_LIMITS ? 'You have reached your paid tier limit.' : 'Upgrade to a paid tier for more queries.'}` 
         }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 403,
@@ -141,9 +148,9 @@ serve(async (req: Request) => {
         }
       }
 
-      if (currentCopilotQueriesCount >= FREE_TIER_LIMITS.dailyQueries) {
+      if (currentCopilotQueriesCount >= UNAUTHENTICATED_LIMITS.dailyQueries) { // Always use UNAUTHENTICATED_LIMITS for anon
         return new Response(JSON.stringify({ 
-          error: `Daily Comparison Library Copilot query limit (${FREE_TIER_LIMITS.dailyQueries}) exceeded for your IP address. Upgrade to a paid tier for more queries.` 
+          error: `Daily Comparison Library Copilot query limit (${UNAUTHENTICATED_LIMITS.dailyQueries}) exceeded for your IP address. Upgrade to a paid tier for more queries.` 
         }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 403,
@@ -203,8 +210,8 @@ serve(async (req: Request) => {
         *   Based on the user's query and the themes present in the provided comparisons, suggest **1 to 3 new, related comparative analysis topics or video pairs** that the user might find valuable to explore. These should be distinct from the existing comparisons but logically connected.
         *   Frame these suggestions as compelling questions or potential comparison titles for analysis.
     3.  **Formatting for Existing Posts:** For each recommended existing comparison blog post, provide its **Title** and a **Markdown hyperlink** to its detail page.
-        *   **Strict Link Format:** The link format **MUST** be \`[Title of Comparison Blog Post](/comparison/slug-of-comparison-blog-post)\`.
-        *   Example: \`[Audience Sentiment: 'Product A Review' vs 'Product B Review'](/comparison/product-a-vs-product-b-sentiment)\`
+        *   **Strict Link Format:** The link format **MUST** be \`[Title of Comparison Blog Post](/multi-comparison/slug-of-comparison-blog-post)\`.
+        *   Example: \`[Audience Sentiment: 'Product A Review' vs 'Product B Review'](/multi-comparison/product-a-vs-product-b-sentiment)\`
     4.  **No Results:** If no relevant existing posts are found, politely and clearly state that no matches were found for the query, but still proceed with comparative analysis topic recommendations.
     5.  **Structure:** Start with existing recommendations (if any), then provide a clear section for "Suggested New Comparative Analysis Topics." Use clear headings or bullet points for readability.
     6.  **Conciseness:** Keep your overall response concise, helpful, and to the point. Avoid conversational filler or overly verbose explanations.
