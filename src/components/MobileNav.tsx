@@ -88,15 +88,7 @@ const MobileNav: React.FC<MobileNavProps> = ({ onLinkClick }) => {
                 </Link>
               </li>
             )}
-            <li>
-              <Link 
-                to="/upgrade" 
-                className="block px-4 py-2 text-lg font-medium hover:bg-accent hover:text-accent-foreground rounded-md"
-                onClick={handleLinkClick}
-              >
-                Pricing & Upgrade
-              </Link>
-            </li>
+            {/* Removed Pricing & Upgrade link */}
             <li>
               <Link 
                 to="/how-it-works" 

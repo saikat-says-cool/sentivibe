@@ -49,7 +49,7 @@ The project follows a standard React application structure with specific directo
         *   `src/hooks/use-mobile.tsx`: Hook for detecting mobile viewport.
         *   `src/hooks/use-toast.ts`: Shadcn/ui toast hook (distinct from `sonner` toasts).
     *   `src/pages/`: Application pages/views.
-        *   `src/pages/Index.tsx`: **Updated landing page, now featuring direct calls to action for analyzing videos, comparing videos, and exploring both analysis and comparison libraries.**
+        *   `src/pages/Index.tsx`: **Updated landing page, now featuring direct calls to action for analyzing videos, comparing videos, and exploring both analysis and comparison libraries, and includes the pricing and upgrade details.**
         *   `src/pages/Login.tsx`: User authentication page, styled to integrate with the new color palette.
         *   `src/pages/AnalyzeVideo.tsx`: **Significantly updated main page for YouTube video analysis, now featuring dynamic custom question input fields with word limits, displaying AI-generated answers, including a 'Refresh Analysis' button and 'Last Full Analysis' timestamp, a disclaimer about the 50-comment minimum, and enforcing tier-based daily analysis limits and custom question limits. Also explicitly lists top 10 comments.**
         *   `src/pages/VideoAnalysisLibrary.tsx`: **Updated page to list and search generated blog posts (video analyses), with updated BlogPost interface, and integrating the enhanced `LibraryCopilot`.**
@@ -60,7 +60,7 @@ The project follows a standard React application structure with specific directo
         *   `src/pages/MultiComparisonDetail.tsx`: **New page to display the full content of a single generated multi-video comparison blog post. Includes links to individual video analyses, a 'Go to Multi-Comparison Analysis' button, a 'Refresh Comparison' button, the 'Last Full Comparison' timestamp, and explicitly lists top 10 comments for each video.**
         *   `src/pages/ComparisonDetail.tsx`: (Legacy, but still present) Page for displaying two-video comparisons.
         *   `src/pages/NotFound.tsx`: 404 error page.
-        *   `src/pages/Upgrade.tsx`: **Updated page detailing the pricing plans and tier benefits.**
+        *   `src/pages/Upgrade.tsx`: (Removed)
         *   `src/pages/Pricing.tsx`: (Removed)
     *   `src/integrations/`: Supabase-related client-side files.
         *   `src/integrations/supabase/client.ts`: Supabase client initialization.
@@ -91,15 +91,15 @@ The project follows a standard React application structure with specific directo
     *   `Toaster` (from `sonner`): For displaying toast notifications, configured to use brand colors for success/error/neutral.
 *   **`AppRoutes` Component:** Encapsulates `BrowserRouter` and `Routes`.
     *   Renders the `Header` component globally.
-    *   Defines application routes: `/`, `/login`, `/analyze-video`, `/library`, `/my-analyses`, `/blog/:slug`, `/create-multi-comparison`, `/multi-comparison-library`, `/multi-comparison/:slug`, `/upgrade`, `/about-us`, `/how-it-works`, and a catch-all `*` for `NotFound`.
+    *   Defines application routes: `/`, `/login`, `/analyze-video`, `/library`, `/my-analyses`, `/blog/:slug`, `/create-multi-comparison`, `/multi-comparison-library`, `/multi-comparison/:slug`, `/about-us`, `/how-it-works`, and a catch-all `*` for `NotFound`.
 *   **`ProtectedRoute` Component:** A higher-order component that ensures only authenticated users can access specific routes (e.g., `/my-analyses`). It redirects unauthenticated users to `/login`. Note: `/analyze-video`, `/library`, `/create-multi-comparison`, and `/multi-comparison-library` are now publicly accessible.
 
 ### 4.2. `Header.tsx`
 *   A React component that renders a consistent header across all pages.
 *   Displays the **SentiVibe wordmark** (`<span className="text-foreground">Senti</span><span className="text-accent">Vibe</span>`) using the `font-heading` (Jura) typeface.
-*   **Now includes navigation links to `/analyze-video`, `/library`, `/create-multi-comparison`, `/multi-comparison-library`, `/upgrade` (for pricing & upgrade), `/how-it-works`, and `/about-us` for all users.**
+*   **Now includes navigation links to `/analyze-video`, `/library`, `/create-multi-comparison`, `/multi-comparison-library`, `/how-it-works`, and `/about-us` for all users.**
 *   Includes a link to `/my-analyses` for authenticated users.
-*   **Conditionally renders an "Upgrade" button for authenticated users who are not on a paid tier.**
+*   **The "Upgrade" button is now removed from the header as pricing is on the landing page.**
 *   Includes a link to `/login` ("Sign In / Sign Up") for unauthenticated users.
 *   Integrates the `ModeToggle` component for theme switching.
 *   Styled with Tailwind CSS for a clean, **Crowd Black** and **Pure White** appearance.
@@ -109,6 +109,7 @@ The project follows a standard React application structure with specific directo
 *   Features the **SentiVibe wordmark** prominently (`text-5xl font-extrabold tracking-tight`).
 *   Displays the new tagline: "Unlock the true sentiment behind YouTube comments. Analyze, understand, and gain insights into audience reactions with AI-powered sentiment analysis."
 *   **Includes clear calls-to-action** with buttons to "Analyze a Video", "Compare Videos", "Explore the Library", and "View Comparisons", directly guiding users to the core functionalities.
+*   **Now includes a dedicated "Pricing & Upgrade Plans" section** detailing the Free and Paid tier benefits with calls to action.
 
 ### 4.4. `Login.tsx` (Authentication Page)
 *   Utilizes the `@supabase/auth-ui-react` component for a pre-built authentication UI.
@@ -129,7 +130,7 @@ The project follows a standard React application structure with specific directo
 *   **UI Elements:**
     *   `Input` for video link submission, `Textarea` for custom questions, `Input` for word count.
     *   **Includes a prominent disclaimer:** "Important: The video must have at least 50 comments for a proper sentiment analysis. Analysis may take up to 30 seconds."
-    *   **Displays current usage:** "Analyses today: X/Y" with a link to `/upgrade` if not on a paid tier.
+    *   **Displays current usage:** "Analyses today: X/Y" with a link to `/login` (for unauthenticated) or a general upgrade message (for authenticated free) if not on a paid tier.
     *   `Button` to trigger analysis, showing a `Loader2` icon (styled with `text-accent`) when pending. **Disabled if `isAnalysisLimitReached`.**
     *   `Card` components to structure the input form and display results.
     *   `Skeleton` components provide a loading state visual for analysis.
@@ -196,7 +197,7 @@ The project follows a standard React application structure with specific directo
 *   **UI Elements:**
     *   Dynamic input fields for `videoLinks` (minimum 2, with add/remove buttons).
     *   Dynamic input fields for `customComparativeQuestions` (with question and word count, and add/remove buttons). **The number of fields and max word count are constrained by `currentLimits`.**
-    *   **Displays current usage:** "Comparisons today: X/Y" with a link to `/upgrade` if not on a paid tier.
+    *   **Displays current usage:** "Comparisons today: X/Y" with a link to `/login` (for unauthenticated) or a general upgrade message (for authenticated free) if not on a paid tier.
     *   `Button` to trigger the comparison, showing a `Loader2` icon when pending. **Disabled if `isComparisonLimitReached`.**
     *   `Alert` component displays any errors, **including tier-based limit exceedance messages.**
     *   **Display of Individual Video Thumbnails:** Shows a row of clickable thumbnails for each video in the comparison, each linking to its respective `BlogPostDetail.tsx` page. A clear instruction "Click on any video thumbnail above to view its individual analysis." is provided.
@@ -308,9 +309,11 @@ The project follows a standard React application structure with specific directo
 *   **Props:** Accepts `data` (an object containing `overall_sentiment_trend`, `common_emotional_tones`, `divergent_emotional_tones`, `common_themes`, `unique_themes`, `summary_insights`, `video_summaries`).
 *   **UI:** Renders the multi-comparison data in a clear, card-based format with badges.
 
-### 4.19. `Upgrade.tsx` (Pricing & Upgrade Page)
-*   **Purpose:** Informs users about the benefits of upgrading to a paid tier, **now also serving as the primary pricing page.**
-*   **UI:** Displays a comparison of features and limits between the Free Tier and Paid Tier, with a call to action to upgrade.
+### 4.19. `Upgrade.tsx` (Removed)
+*   This page has been removed. Its content has been integrated into `Index.tsx`.
+
+### 4.20. `Pricing.tsx` (Removed)
+*   This page has been removed. Its content has been integrated into `Index.tsx`.
 
 ## 5. Supabase Integration Details
 
@@ -586,7 +589,7 @@ This Deno-based serverless function handles the AI-powered search within the mul
     *   **Daily Query Limit:** Checks `public.copilot_queries_log` for authenticated users or `public.anon_usage` for unauthenticated users to enforce daily query limits. Logs queries for authenticated users and increments counts for unauthenticated users.
 *   **Input:** Receives `userQuery` and `comparisonsData` (a simplified list of multi-comparisons) from the frontend.
 *   **API Key Retrieval & Rotation:** Retrieves `LONGCAT_AI_API_KEY`s and handles rate limits.
-*   **`systemPrompt`:** Explicitly instructs the AI to identify relevant comparison blog posts and provide their titles with **Markdown links in the format `[Title of Comparison Blog Post](/multi-comparison/slug-of-comparison-blog-post)`**. **It also instructs the AI to suggest 1 to 3 new, related comparative analysis topics or video pairs based on the user's query and the existing library content.**
+*   **`systemPrompt`:** Explicitly instructs the AI to identify relevant comparison blog posts and provide their titles with **Markdown links in the format `[Title of Comparison Blog Post](/multi-comparison/slug-of-comparison-blog-post)`**. **It also instructs the AI to suggest 1 to 3 new, related comparative analysis topics or video pairs based on your query and the existing library content.**
 *   **Longcat AI API Call:** Sends the formatted comparison data and user query to the Longcat AI API.
 *   **Response:** Returns a `200 OK` response with the AI's `aiResponse` containing the recommendations with clickable Markdown links and new topic suggestions.
 *   **Error Handling:** Includes comprehensive `try-catch` blocks, **returning 403 status for limit exceedances.**

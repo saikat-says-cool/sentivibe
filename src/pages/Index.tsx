@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowRightIcon, GitCompare } from 'lucide-react'; // Import GitCompare icon
+import { ArrowRightIcon, GitCompare, CheckCircle2 } from 'lucide-react'; // Import CheckCircle2 icon
 
 function Index() {
   return (
@@ -83,6 +83,50 @@ function Index() {
             </Link>
           </CardContent>
         </Card>
+      </div>
+
+      {/* New Pricing & Upgrade Section */}
+      <div className="mt-16 w-full max-w-5xl">
+        <h2 className="text-4xl font-bold mb-8 text-foreground">Pricing & Upgrade Plans</h2>
+        <p className="text-lg text-muted-foreground mb-10">
+          Choose the plan that best fits your needs to unlock powerful video insights.
+        </p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-left">
+          <div className="bg-gray-50 dark:bg-gray-800 p-6 rounded-lg shadow-md flex flex-col">
+            <h3 className="text-2xl font-semibold mb-4 text-primary">Free Tier</h3>
+            <p className="text-4xl font-bold mb-6 text-foreground">$0<span className="text-lg font-normal text-muted-foreground">/month</span></p>
+            <ul className="space-y-2 text-gray-700 dark:text-gray-300 flex-grow">
+              <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-500 mr-2" /> 5 Single Video Analyses/day</li>
+              <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-500 mr-2" /> 2 Multi-Video Comparisons/day</li>
+              <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-500 mr-2" /> 10 AI Chat Messages/session</li>
+              <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-500 mr-2" /> 2 Custom Questions (150 words)/analysis</li>
+              <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-500 mr-2" /> Watermarked PDF Reports</li>
+              <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-500 mr-2" /> Ads displayed</li>
+              <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-500 mr-2" /> Access to "My Analyses" History</li>
+            </ul>
+            <Button asChild variant="outline" className="mt-6 w-full">
+              <Link to="/login">Sign Up for Free</Link>
+            </Button>
+          </div>
+
+          <div className="bg-primary text-primary-foreground p-6 rounded-lg shadow-lg flex flex-col">
+            <h3 className="text-2xl font-semibold mb-4">Paid Tier</h3>
+            <p className="text-4xl font-bold mb-6">$XX<span className="text-lg font-normal">/month</span></p>
+            <ul className="space-y-2 flex-grow">
+              <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-200 mr-2" /> 50 Single Video Analyses/day</li>
+              <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-200 mr-2" /> 20 Multi-Video Comparisons/day</li>
+              <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-200 mr-2" /> 100 AI Chat Messages/session</li>
+              <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-200 mr-2" /> 5 Custom Questions (500 words)/analysis</li>
+              <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-200 mr-2" /> Unwatermarked PDF Reports</li>
+              <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-200 mr-2" /> Ad-Free Experience</li>
+              <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-200 mr-2" /> Full Access to "My Analyses" History</li>
+            </ul>
+            <Button asChild variant="secondary" className="mt-6 w-full">
+              <Link to="/checkout">Upgrade Now</Link> {/* Placeholder for actual checkout */}
+            </Button>
+          </div>
+        </div>
       </div>
 
       <p className="text-sm text-muted-foreground mt-12 max-w-2xl">
