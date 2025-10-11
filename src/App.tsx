@@ -5,7 +5,9 @@ import AnalyzeVideo from './pages/AnalyzeVideo';
 import VideoAnalysisLibrary from './pages/VideoAnalysisLibrary';
 import MyAnalyses from './pages/MyAnalyses';
 import BlogPostDetail from './pages/BlogPostDetail';
-import CompareVideos from './pages/CompareVideos'; // Import the new page
+import CompareVideos from './pages/CompareVideos';
+import ComparisonLibrary from './pages/ComparisonLibrary'; // Import new page
+import ComparisonDetail from './pages/ComparisonDetail'; // Import new page
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from './integrations/supabase/auth';
 import { ThemeProvider } from './components/theme-provider';
@@ -31,7 +33,9 @@ function App() {
                   <Route path="/library" element={<VideoAnalysisLibrary />} />
                   <Route path="/my-analyses" element={<MyAnalyses />} />
                   <Route path="/blog/:slug" element={<BlogPostDetail />} />
-                  <Route path="/compare-videos" element={<CompareVideos />} /> {/* New route */}
+                  <Route path="/compare-videos" element={<CompareVideos />} />
+                  <Route path="/comparison-library" element={<ComparisonLibrary />} /> {/* New route */}
+                  <Route path="/comparison/:slug" element={<ComparisonDetail />} /> {/* New route */}
                 </Routes>
               </main>
               <Footer />
