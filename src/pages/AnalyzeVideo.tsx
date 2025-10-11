@@ -231,7 +231,37 @@ const AnalyzeVideo = () => {
         html2canvas: { scale: 2, logging: true, dpi: 192, letterRendering: true },
         jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' as 'portrait' }
       };
-      html2pdf().from(element).set(opt).save();
+
+      // Create a temporary div to render the content with watermark if needed
+      const tempDiv = document.createElement('div');
+      tempDiv.style.position = 'relative'; // Needed for absolute positioning of watermark
+      tempDiv.style.width = element.offsetWidth + 'px'; // Match original width
+      tempDiv.style.height = element.offsetHeight + 'px'; // Match original height
+      tempDiv.innerHTML = element.innerHTML; // Copy content
+
+      if (!isPaidTier) {
+        const watermark = document.createElement('div');
+        watermark.style.position = 'absolute';
+        watermark.style.top = '50%';
+        watermark.style.left = '50%';
+        watermark.style.transform = 'translate(-50%, -50%) rotate(-45deg)';
+        watermark.style.fontSize = '48px';
+        watermark.style.fontWeight = 'bold';
+        watermark.style.color = 'rgba(0, 0, 0, 0.1)'; // Light gray, semi-transparent
+        watermark.style.zIndex = '1000';
+        watermark.style.pointerEvents = 'none'; // Ensure it doesn't interfere with content
+        watermark.style.whiteSpace = 'nowrap';
+        watermark.textContent = 'SentiVibe - Free Tier';
+        tempDiv.appendChild(watermark);
+      }
+
+      // Append to body temporarily for html2pdf to render it
+      document.body.appendChild(tempDiv);
+
+      html2pdf().from(tempDiv).set(opt).save().then(() => {
+        // Remove the temporary div after PDF generation
+        document.body.removeChild(tempDiv);
+      });
     }
   };
 
