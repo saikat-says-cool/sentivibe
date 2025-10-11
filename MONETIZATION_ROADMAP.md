@@ -61,7 +61,7 @@ To successfully integrate a tiered access and usage model into SentiVibe, allowi
     *   **Free Member:** Save & revisit past analyses.
     *   **Pro Subscriber:** Full history + download bundle (future).
     *   **Affected Areas:** Frontend (`MyAnalyses.tsx`, `ProtectedRoute.tsx`), Backend (RLS for `blog_posts` already handles user-specific access).
-    *   **Status:** Pending
+    *   **Status:** Completed
 
 *   **Checkpoint 1.3: Analyze YouTube Video - Basic Limits**
     *   **Guest:** 1 analysis / day (≈ 30 comments sample).
