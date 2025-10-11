@@ -5,12 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Loader2, Youtube, GitCompare, PlusCircle, XCircle, MessageSquare } from 'lucide-react';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query'; // Import useQueryClient
 import { supabase } from '@/integrations/supabase/client';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Link } from 'react-router-dom';
-import ComparisonDataDisplay from '@/components/ComparisonDataDisplay'; // This component will need to be adapted or replaced for multi-video
-import ComparisonChatDialog from '@/components/ComparisonChatDialog'; // This component will need to be adapted or replaced for multi-video
+// ComparisonDataDisplay will need to be adapted or replaced for multi-video, keeping it for now
+import ComparisonDataDisplay from '@/components/ComparisonDataDisplay'; 
+import MultiComparisonChatDialog from '@/components/MultiComparisonChatDialog'; // Import new multi-comparison chat dialog
 
 // New interfaces for multi-comparison
 interface MultiComparisonVideo {
@@ -49,6 +50,7 @@ const CreateMultiComparison = () => {
   const [multiComparisonResult, setMultiComparisonResult] = useState<MultiComparisonResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isChatDialogOpen, setIsChatDialogOpen] = useState(false);
+  const queryClient = useQueryClient(); // Initialize queryClient
 
   const createMultiComparisonMutation = useMutation({
     mutationFn: async (payload: { videoLinks: string[]; customComparativeQuestions: CustomComparativeQuestion[] }) => {
@@ -56,58 +58,20 @@ const CreateMultiComparison = () => {
       setMultiComparisonResult(null);
       setIsChatDialogOpen(false);
 
-      // We will create a new Edge Function for multi-comparison
-      // For now, this will simulate an error or a placeholder call
-      // const { data, error: invokeError } = await supabase.functions.invoke('multi-video-comparator', {
-      //   body: payload,
-      // });
-
-      // if (invokeError) {
-      //   console.error("Supabase Function Invoke Error (multi-video-comparator):", invokeError);
-      //   throw new Error(invokeError.message || "Failed to invoke multi-video comparison function.");
-      // }
-      // return data;
-
-      // Placeholder for now, will be replaced by actual Edge Function call
-      return new Promise<MultiComparisonResult>((resolve, reject) => {
-        setTimeout(() => {
-          if (payload.videoLinks.filter(link => link.trim() !== '').length < 2) {
-            reject(new Error("Please provide at least two video links for multi-comparison."));
-            return;
-          }
-          console.log("Simulating multi-comparison for:", payload.videoLinks);
-          resolve({
-            id: 'mock-multi-comp-id',
-            title: 'Mock Multi-Video Comparison',
-            slug: 'mock-multi-video-comparison',
-            meta_description: 'This is a mock multi-video comparison result.',
-            keywords: ['mock', 'multi-video', 'comparison'],
-            content: '# Mock Multi-Video Comparison\n\nThis is a simulated comparison of multiple videos.',
-            created_at: new Date().toISOString(),
-            last_compared_at: new Date().toISOString(),
-            comparison_data_json: {
-              summary: "This is a simulated summary of insights across multiple videos.",
-              common_themes: ["theme1", "theme2"],
-              unique_aspects: { "video1": ["aspect1"], "video2": ["aspect2"] }
-            },
-            custom_comparative_qa_results: payload.customComparativeQuestions.map(q => ({...q, answer: `Mock answer for: ${q.question}`})),
-            overall_thumbnail_url: 'https://img.youtube.com/vi/dQw4w9WgXcQ/hqdefault.jpg', // Example thumbnail
-            videos: payload.videoLinks.filter(link => link.trim() !== '').map((link, index) => ({
-              blog_post_id: `mock-blog-post-${index}`,
-              video_order: index,
-              title: `Mock Video ${index + 1}`,
-              thumbnail_url: `https://img.youtube.com/vi/dQw4w9WgXcQ/hqdefault.jpg`, // Placeholder
-              original_video_link: link,
-              raw_comments_for_chat: [`Mock comment ${index + 1} from video ${index + 1}`],
-            })),
-          });
-        }, 2000);
+      const { data, error: invokeError } = await supabase.functions.invoke('multi-video-comparator', {
+        body: payload,
       });
+
+      if (invokeError) {
+        console.error("Supabase Function Invoke Error (multi-video-comparator):", invokeError);
+        throw new Error(invokeError.message || "Failed to invoke multi-video comparison function.");
+      }
+      return data;
     },
     onSuccess: (data) => {
       setMultiComparisonResult(data);
-      // Invalidate queries for comparison library
-      // queryClient.invalidateQueries({ queryKey: ['comparisons'] }); // Will be updated to multi_comparisons
+      // Invalidate queries for comparison library to show new comparison
+      queryClient.invalidateQueries({ queryKey: ['multiComparisons'] }); 
     },
     onError: (err: Error) => {
       setError(err.message);
@@ -288,9 +252,11 @@ const CreateMultiComparison = () => {
       {multiComparisonResult && (
         <>
           <div className="flex flex-wrap justify-end gap-2 mb-4">
-            {/* Chat with AI button will be here, once ComparisonChatDialog is adapted */}
+            <Button onClick={() => setIsChatDialogOpen(true)} className="flex items-center gap-2">
+              <MessageSquare className="h-4 w-4" /> Chat with AI
+            </Button>
             <Button asChild>
-              <Link to={`/comparison/${multiComparisonResult.slug}`}>View Full Multi-Comparison Blog Post</Link>
+              <Link to={`/multi-comparison/${multiComparisonResult.slug}`}>View Full Multi-Comparison Blog Post</Link>
             </Button>
           </div>
           <Card className="mb-6">
@@ -320,7 +286,7 @@ const CreateMultiComparison = () => {
               </p>
               <div className="mt-4">
                 <h3 className="text-lg font-semibold mb-2">Comparison Overview</h3>
-                {/* ComparisonDataDisplay will need to be adapted for multi-video or a new component created */}
+                {/* For now, display raw JSON. We'll create a dedicated component later. */}
                 {multiComparisonResult.comparison_data_json && (
                   <pre className="bg-gray-100 dark:bg-gray-700 p-4 rounded-md text-sm overflow-auto">
                     {JSON.stringify(multiComparisonResult.comparison_data_json, null, 2)}
@@ -343,7 +309,11 @@ const CreateMultiComparison = () => {
               )}
             </CardContent>
           </Card>
-          {/* ComparisonChatDialog will be integrated here, once adapted */}
+          <MultiComparisonChatDialog
+            isOpen={isChatDialogOpen}
+            onOpenChange={setIsChatDialogOpen}
+            initialMultiComparisonResult={multiComparisonResult}
+          />
         </>
       )}
     </div>
