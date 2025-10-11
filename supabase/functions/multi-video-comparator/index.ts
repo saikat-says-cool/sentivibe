@@ -64,7 +64,7 @@ async function generateUniqueSlug(supabaseClient: any, baseSlug: string): Promis
   let uniqueSlug = baseSlug;
   let counter = 0;
   while (true) {
-    const { data, error } = await supabaseClient
+    const { data: _data, error } = await supabaseClient // Renamed 'data' to '_data'
       .from('multi_comparisons')
       .select('slug')
       .eq('slug', uniqueSlug)
@@ -86,7 +86,7 @@ async function generateUniqueSlug(supabaseClient: any, baseSlug: string): Promis
   }
 }
 
-serve(async (req) => {
+serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -110,6 +110,9 @@ serve(async (req) => {
     let currentLimits = FREE_TIER_LIMITS;
     let userSubscriptionId: string | null = null;
 
+    const clientIp = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
+    const now = new Date();
+
     if (user) {
       userSubscriptionId = user.id;
       const { data: subscriptionData, error: subscriptionError } = await supabaseClient
@@ -124,9 +127,12 @@ serve(async (req) => {
         isPaidTier = true;
         currentLimits = PAID_TIER_LIMITS;
       }
+    } else {
+      // Unauthenticated user: use IP-based tracking for free tier limits
+      userSubscriptionId = null; // Explicitly null for anon users
     }
 
-    const longcatApiKeys = getApiKeys('LONGCAT_AI_API_KEY');
+    const longcatApiKeys = getApiKeys('LONGCAT_AI_API_KEY'); // Declared here
     const longcatApiUrl = "https://api.longcat.chat/openai/v1/chat/completions"; // Declared here
 
     const { videoLinks, customComparativeQuestions, forceRecompare } = await req.json();
@@ -159,22 +165,15 @@ serve(async (req) => {
     const videoTitles: string[] = [];
     const videoKeywords: string[] = [];
 
-    const now = new Date(); // Declared here
-
     for (const videoLink of videoLinks) {
       const videoIdMatch = videoLink.match(/(?:v=|\/videos\/|embed\/|youtu.be\/|\/v\/|\/e\/|watch\?v=|&v=)([^#&?]{11})/);
       const videoId = videoIdMatch ? videoIdMatch[1] : null;
 
-      const { data: existingBlogPost, error: fetchError } = await supabaseClient
+      const { data: existingBlogPost, error: _fetchError } = await supabaseClient
         .from('blog_posts')
         .select('*')
         .eq('video_id', videoId)
         .single();
-
-      if (fetchError && fetchError.code !== 'PGRST116') {
-        console.error(`Supabase fetch existing blog post error for ${videoId}:`, fetchError);
-        throw new Error(`Failed to check for existing analysis for video ${videoId}`);
-      }
 
       let shouldPerformIndividualReanalysis = false;
       let blogPostData: any;
@@ -317,28 +316,89 @@ serve(async (req) => {
 
     // --- Enforce Daily Comparison Limit (only for new comparisons or forced re-comparisons) ---
     if (shouldRegenerateMultiComparison) {
-      const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
-      let { count, error: countError } = await supabaseClient
-        .from('multi_comparisons')
-        .select('id', { count: 'exact', head: true })
-        .gte('created_at', twentyFourHoursAgo)
-        .or(`author_id.eq.${userSubscriptionId},author_id.is.null`);
+      if (user) { // Authenticated user limit check
+        const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
+        let { count, error: countError } = await supabaseClient
+          .from('multi_comparisons')
+          .select('id', { count: 'exact', head: true })
+          .gte('created_at', twentyFourHoursAgo)
+          .eq('author_id', user.id);
 
-      if (countError) {
-        console.error("Error counting daily multi-comparisons:", countError);
-        return new Response(JSON.stringify({ error: 'Failed to check daily comparison limit.' }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 500,
-        });
-      }
+        if (countError) {
+          console.error("Error counting daily multi-comparisons for authenticated user:", countError);
+          return new Response(JSON.stringify({ error: 'Failed to check daily comparison limit.' }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 500,
+          });
+        }
 
-      if (count !== null && count >= currentLimits.dailyComparisons) {
-        return new Response(JSON.stringify({ 
-          error: `Daily multi-comparison limit (${currentLimits.dailyComparisons}) exceeded. ${isPaidTier ? 'You have reached your paid tier limit.' : 'Upgrade to a paid tier for more comparisons.'}` 
-        }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 403,
-        });
+        if (count !== null && count >= currentLimits.dailyComparisons) {
+          return new Response(JSON.stringify({ 
+            error: `Daily multi-comparison limit (${currentLimits.dailyComparisons}) exceeded. ${isPaidTier ? 'You have reached your paid tier limit.' : 'Upgrade to a paid tier for more comparisons.'}` 
+          }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 403,
+          });
+        }
+      } else { // Unauthenticated user IP-based limit check
+        let { data: anonUsage, error: anonError } = await supabaseClient
+          .from('anon_usage')
+          .select('*')
+          .eq('ip_address', clientIp)
+          .single();
+
+        if (anonError && anonError.code !== 'PGRST116') {
+          console.error("Error fetching anon usage for IP:", clientIp, anonError);
+          return new Response(JSON.stringify({ error: 'Failed to check anonymous usage data.' }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 500,
+          });
+        }
+
+        const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+        let currentComparisonsCount = 0;
+        let lastResetAt = now.toISOString();
+
+        if (anonUsage) {
+          if (new Date(anonUsage.last_reset_at) < twentyFourHoursAgo) {
+            // Reset counts if older than 24 hours
+            currentComparisonsCount = 0;
+            lastResetAt = now.toISOString();
+          } else {
+            currentComparisonsCount = anonUsage.comparisons_count;
+            lastResetAt = anonUsage.last_reset_at;
+          }
+        }
+
+        if (currentComparisonsCount >= FREE_TIER_LIMITS.dailyComparisons) {
+          return new Response(JSON.stringify({ 
+            error: `Daily multi-comparison limit (${FREE_TIER_LIMITS.dailyComparisons}) exceeded for your IP address. Upgrade to a paid tier for more comparisons.` 
+          }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 403,
+          });
+        }
+
+        // Increment count and update anon_usage
+        currentComparisonsCount++;
+        const { error: updateAnonError } = await supabaseClient
+          .from('anon_usage')
+          .upsert({ 
+            ip_address: clientIp, 
+            analyses_count: anonUsage?.analyses_count || 0, // Preserve other counts
+            comparisons_count: currentComparisonsCount, 
+            copilot_queries_count: anonUsage?.copilot_queries_count || 0, // Preserve other counts
+            last_reset_at: lastResetAt,
+            updated_at: now.toISOString(),
+          }, { onConflict: 'ip_address' });
+
+        if (updateAnonError) {
+          console.error("Error updating anon usage for IP:", clientIp, updateAnonError);
+          return new Response(JSON.stringify({ error: 'Failed to update anonymous usage data.' }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 500,
+          });
+        }
       }
     }
 
@@ -392,7 +452,7 @@ serve(async (req) => {
       Key Themes: ${blogPost.ai_analysis_json?.key_themes ? blogPost.ai_analysis_json.key_themes.join(', ') : 'None'}
       Summary Insights: ${blogPost.ai_analysis_json?.summary_insights || 'No insights available.'}
       Top Comments:
-      ${blogPost.ai_analysis_json?.raw_comments_for_chat ? blogPost.ai_analysis_json.raw_comments_for_chat.slice(0, 5).map((c: string, i: number) => `${i + 1}. ${c}`).join('\n') : 'No comments available.'}
+      ${blogPost.ai_analysis_json?.raw_comments_for_chat ? blogPost.ai_analysis_json.raw_comments_for_chat.slice(0, 5).map((c: string, _index: number) => `${_index + 1}. ${c}`).join('\n') : 'No comments available.'}
       --- End Video ${index + 1} Analysis ---
     `;
 
@@ -638,7 +698,7 @@ serve(async (req) => {
           meta_description: generatedMultiComparisonBlogPost.meta_description,
           keywords: generatedMultiComparisonBlogPost.keywords,
           content: generatedMultiComparisonBlogPost.content,
-          author_id: user?.id,
+          author_id: userSubscriptionId, // Use userSubscriptionId (null for anon)
           created_at: currentTimestamp,
           updated_at: currentTimestamp,
           last_compared_at: lastComparedAt,
@@ -699,9 +759,9 @@ serve(async (req) => {
       status: 200,
     });
 
-  } catch (error) {
-    console.error('Edge Function error (multi-video-comparator):', error.message);
-    return new Response(JSON.stringify({ error: error.message }), {
+  } catch (error: unknown) {
+    console.error('Edge Function error (multi-video-comparator):', (error as Error).message);
+    return new Response(JSON.stringify({ error: (error as Error).message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 500,
     });
