@@ -35,11 +35,11 @@ function Index() {
           <CardHeader>
             <CardTitle className="text-3xl font-bold mb-2">Compare Videos</CardTitle>
             <CardDescription className="text-md text-muted-foreground">
-              Compare audience sentiment and insights between two YouTube videos.
+              Compare audience sentiment and insights between two or more YouTube videos.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex-grow flex items-center justify-center">
-            <Link to="/compare-videos">
+            <Link to="/create-multi-comparison">
               <Button size="lg" className="text-lg px-8 py-6">
                 Start Comparing <GitCompare className="ml-2 h-5 w-5" />
               </Button>
