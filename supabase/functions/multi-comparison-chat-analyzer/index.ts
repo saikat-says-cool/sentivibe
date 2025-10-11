@@ -32,6 +32,17 @@ function getApiKeys(baseName: string): string[] {
   return keys;
 }
 
+// Define tier limits for chat
+const FREE_TIER_LIMITS = {
+  chatMessageLimit: 5, // Max AI responses per session
+  maxResponseWordCount: 100,
+};
+
+const PAID_TIER_LIMITS = {
+  chatMessageLimit: 100, // Max AI responses per session
+  maxResponseWordCount: 500,
+};
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -51,6 +62,25 @@ serve(async (req) => {
       }
     );
 
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    let isPaidTier = false;
+    let currentLimits = FREE_TIER_LIMITS;
+
+    if (user) {
+      const { data: subscriptionData, error: subscriptionError } = await supabaseClient
+        .from('subscriptions')
+        .select('status, plan_id')
+        .eq('id', user.id)
+        .single();
+
+      if (subscriptionError && subscriptionError.code !== 'PGRST116') {
+        console.error("Error fetching subscription for user:", user.id, subscriptionError);
+      } else if (subscriptionData && subscriptionData.status === 'active' && subscriptionData.plan_id !== 'free') {
+        isPaidTier = true;
+        currentLimits = PAID_TIER_LIMITS;
+      }
+    }
+
     const { userMessage, chatMessages, multiComparisonResult, externalContext, desiredWordCount, selectedPersona } = await req.json();
 
     if (!userMessage || !multiComparisonResult) {
@@ -59,6 +89,20 @@ serve(async (req) => {
         status: 400,
       });
     }
+
+    // --- Enforce Chat Message Limit ---
+    const aiMessageCount = chatMessages.filter((msg: any) => msg.sender === 'ai').length;
+    if (aiMessageCount >= currentLimits.chatMessageLimit) {
+      return new Response(JSON.stringify({ 
+        error: `Chat message limit (${currentLimits.chatMessageLimit} AI responses) exceeded for this session. ${isPaidTier ? 'You have reached your paid tier limit.' : 'Upgrade to a paid tier for more chat messages.'}` 
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 403,
+      });
+    }
+
+    // --- Enforce Desired Word Count Limit ---
+    const finalDesiredWordCount = Math.min(desiredWordCount, currentLimits.maxResponseWordCount);
 
     // --- Longcat AI API Call ---
     const longcatApiKeys = getApiKeys('LONGCAT_AI_API_KEY');
@@ -69,7 +113,7 @@ serve(async (req) => {
       });
     }
 
-    const maxTokens = Math.ceil(desiredWordCount * 1.5); 
+    const maxTokens = Math.ceil(finalDesiredWordCount * 1.5); 
 
     // Base instructions for all personas, emphasizing completeness
     const baseInstructions = `
@@ -81,7 +125,7 @@ serve(async (req) => {
         *   **Primary:** Prioritize information directly from the 'Multi-Comparison Analysis Context' (including structured comparison data, individual video analyses, and raw comments) for video-specific questions.
         *   **Secondary:** Augment with the 'Recent External Information' for up-to-date or broader context, relating it back to the multi-comparison when relevant.
         *   **Tertiary:** For general, time-independent questions not covered by the above, leverage your own pre-existing knowledge.
-    3.  **Word Count:** Adhere strictly to the user's requested response length (approximately ${desiredWordCount} words). This is a hard constraint. If a comprehensive answer exceeds this, provide the most critical information concisely.
+    3.  **Word Count:** Adhere strictly to the user's requested response length (approximately ${finalDesiredWordCount} words). This is a hard constraint. If a comprehensive answer exceeds this, provide the most critical information concisely.
     4.  **Formatting:**
         *   **Hyperlinks:** Whenever you mention a URL or a resource that can be linked, format it as a **Markdown hyperlink**: \`[Link Text](URL)\`. This is mandatory.
         *   Use bullet points, bolding, and clear paragraph breaks to enhance readability.
