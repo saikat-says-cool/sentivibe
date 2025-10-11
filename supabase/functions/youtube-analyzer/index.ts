@@ -36,6 +36,19 @@ function getApiKeys(baseName: string): string[] {
 // Define staleness threshold (e.g., 30 days)
 const STALENESS_THRESHOLD_DAYS = 30;
 
+// Define tier limits
+const FREE_TIER_LIMITS = {
+  dailyAnalyses: 2,
+  maxCustomQuestions: 1,
+  maxCustomQuestionWordCount: 100,
+};
+
+const PAID_TIER_LIMITS = {
+  dailyAnalyses: 50,
+  maxCustomQuestions: 5,
+  maxCustomQuestionWordCount: 500,
+};
+
 serve(async (req) => {
   // Handle CORS preflight request
   if (req.method === 'OPTIONS') {
@@ -51,14 +64,34 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
       {
         global: {
-          headers: { Authorization: req.headers.get('Authorization') || '' }, // Changed: Handle missing header gracefully
+          headers: { Authorization: req.headers.get('Authorization') || '' },
         },
       }
     );
 
-    // Fetch user session, but do not block if no user is logged in.
-    // The `author_id` will be set to null if no user is authenticated.
     const { data: { user } } = await supabaseClient.auth.getUser();
+    let isPaidTier = false;
+    let currentLimits = FREE_TIER_LIMITS;
+    let userSubscriptionId: string | null = null;
+
+    if (user) {
+      userSubscriptionId = user.id;
+      const { data: subscriptionData, error: subscriptionError } = await supabaseClient
+        .from('subscriptions')
+        .select('status, plan_id')
+        .eq('id', user.id)
+        .single();
+
+      if (subscriptionError && subscriptionError.code !== 'PGRST116') { // PGRST116 means no rows found
+        console.error("Error fetching subscription for user:", user.id, subscriptionError);
+        // Continue as free tier if there's an error fetching subscription
+      } else if (subscriptionData && subscriptionData.status === 'active' && subscriptionData.plan_id !== 'free') {
+        isPaidTier = true;
+        currentLimits = PAID_TIER_LIMITS;
+      }
+    }
+
+    const longcatApiKeys = getApiKeys('LONGCAT_AI_API_KEY'); // Declared here
 
     const { videoLink, customQuestions, forceReanalyze } = await req.json();
     if (!videoLink) {
@@ -79,29 +112,80 @@ serve(async (req) => {
       });
     }
 
-    // Access the Longcat AI API Keys from Supabase Secrets (needed for both new and cached QA)
-    const longcatApiKeys = getApiKeys('LONGCAT_AI_API_KEY');
-    if (longcatApiKeys.length === 0) {
-      return new Response(JSON.stringify({ error: 'Longcat AI API key(s) not configured' }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500,
-      });
-    }
-    const longcatApiUrl = "https://api.longcat.chat/openai/v1/chat/completions";
+    // --- Enforce Daily Analysis Limit (only for new analyses or forced re-analyses) ---
+    // We only count against the limit if it's a new analysis or a forced re-analysis.
+    // If it's a cached, fresh analysis without forceReanalyze, it doesn't count.
+    let isNewAnalysisOrForcedReanalysis = false;
 
-    // --- Caching Logic: Check for existing analysis ---
     const { data: existingBlogPost, error: fetchError } = await supabaseClient
       .from('blog_posts')
       .select('*')
       .eq('video_id', videoId)
       .single();
 
-    if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 means no rows found
-      console.error('Supabase fetch existing blog post error:', fetchError);
-      return new Response(JSON.stringify({ error: 'Failed to check for existing analysis', details: fetchError }), {
+    const now = new Date();
+    let shouldPerformFullReanalysis = false;
+
+    if (existingBlogPost) {
+      const lastReanalyzedDate = new Date(existingBlogPost.last_reanalyzed_at);
+      const daysSinceLastReanalysis = (now.getTime() - lastReanalyzedDate.getTime()) / (1000 * 60 * 60 * 24);
+      
+      if (forceReanalyze || daysSinceLastReanalysis > STALENESS_THRESHOLD_DAYS) {
+        shouldPerformFullReanalysis = true;
+        isNewAnalysisOrForcedReanalysis = true;
+      }
+    } else {
+      shouldPerformFullReanalysis = true;
+      isNewAnalysisOrForcedReanalysis = true;
+    }
+
+    if (isNewAnalysisOrForcedReanalysis) {
+      const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
+      let { count, error: countError } = await supabaseClient
+        .from('blog_posts')
+        .select('id', { count: 'exact', head: true })
+        .gte('created_at', twentyFourHoursAgo)
+        .or(`author_id.eq.${userSubscriptionId},author_id.is.null`); // Count analyses by current user OR unauthenticated analyses
+
+      if (countError) {
+        console.error("Error counting daily analyses:", countError);
+        return new Response(JSON.stringify({ error: 'Failed to check daily analysis limit.' }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500,
+        });
+      }
+
+      if (count !== null && count >= currentLimits.dailyAnalyses) {
+        return new Response(JSON.stringify({ 
+          error: `Daily analysis limit (${currentLimits.dailyAnalyses}) exceeded. ${isPaidTier ? 'You have reached your paid tier limit.' : 'Upgrade to a paid tier for more analyses.'}` 
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 403,
+        });
+      }
+    }
+
+    // --- Enforce Custom Question Limits ---
+    if (customQuestions && customQuestions.length > currentLimits.maxCustomQuestions) {
+      return new Response(JSON.stringify({ 
+        error: `You can only ask a maximum of ${currentLimits.maxCustomQuestions} custom question(s) per analysis. ${isPaidTier ? '' : 'Upgrade to a paid tier to ask more questions.'}` 
+      }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500,
+        status: 403,
       });
+    }
+
+    if (customQuestions) {
+      for (const qa of customQuestions) {
+        if (qa.wordCount > currentLimits.maxCustomQuestionWordCount) {
+          return new Response(JSON.stringify({ 
+            error: `Maximum word count for a custom question answer is ${currentLimits.maxCustomQuestionWordCount}. ${isPaidTier ? '' : 'Upgrade to a paid tier for longer answers.'}` 
+          }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 403,
+          });
+        }
+      }
     }
 
     let videoTitle: string;
@@ -115,39 +199,23 @@ serve(async (req) => {
     let blogPostSlug: string;
     let originalVideoLink: string;
     let combinedQaResults: { question: string; wordCount: number; answer: string }[] = [];
-    let lastReanalyzedAt: string; // To store the timestamp
+    let lastReanalyzedAt: string;
 
-    const now = new Date();
-    let shouldPerformFullReanalysis = false;
-
-    if (existingBlogPost) {
-      const lastReanalyzedDate = new Date(existingBlogPost.last_reanalyzed_at);
-      const daysSinceLastReanalysis = (now.getTime() - lastReanalyzedDate.getTime()) / (1000 * 60 * 60 * 24);
-      
-      if (forceReanalyze || daysSinceLastReanalysis > STALENESS_THRESHOLD_DAYS) {
-        console.log(`Triggering full re-analysis for video ID: ${videoId}. Force: ${forceReanalyze}, Stale: ${daysSinceLastReanalysis > STALENESS_THRESHOLD_DAYS}`);
-        shouldPerformFullReanalysis = true;
-      } else {
-        console.log(`Reusing existing analysis for video ID: ${videoId}. Analysis is fresh.`);
-        videoTitle = existingBlogPost.title;
-        videoDescription = existingBlogPost.meta_description;
-        videoThumbnailUrl = existingBlogPost.thumbnail_url;
-        videoTags = existingBlogPost.keywords || [];
-        creatorName = existingBlogPost.creator_name;
-        allFetchedCommentsText = existingBlogPost.ai_analysis_json?.raw_comments_for_chat || [];
-        aiAnalysis = existingBlogPost.ai_analysis_json;
-        blogPostSlug = existingBlogPost.slug;
-        originalVideoLink = existingBlogPost.original_video_link;
-        combinedQaResults = existingBlogPost.custom_qa_results || [];
-        lastReanalyzedAt = existingBlogPost.last_reanalyzed_at;
-      }
+    if (existingBlogPost && !shouldPerformFullReanalysis) {
+      console.log(`Reusing existing analysis for video ID: ${videoId}. Analysis is fresh.`);
+      videoTitle = existingBlogPost.title;
+      videoDescription = existingBlogPost.meta_description;
+      videoThumbnailUrl = existingBlogPost.thumbnail_url;
+      videoTags = existingBlogPost.keywords || [];
+      creatorName = existingBlogPost.creator_name;
+      allFetchedCommentsText = existingBlogPost.ai_analysis_json?.raw_comments_for_chat || [];
+      aiAnalysis = existingBlogPost.ai_analysis_json;
+      blogPostSlug = existingBlogPost.slug;
+      originalVideoLink = existingBlogPost.original_video_link;
+      combinedQaResults = existingBlogPost.custom_qa_results || [];
+      lastReanalyzedAt = existingBlogPost.last_reanalyzed_at;
     } else {
-      console.log(`No existing analysis found for video ID: ${videoId}. Performing full analysis.`);
-      shouldPerformFullReanalysis = true;
-    }
-
-    if (shouldPerformFullReanalysis) {
-      // --- If no existing analysis or analysis is stale/forced, proceed with new analysis ---
+      console.log(`Performing full analysis for video ID: ${videoId}. Should re-analyze: ${shouldPerformFullReanalysis}`);
 
       // Access the YouTube API Keys from Supabase Secrets
       const youtubeApiKeys = getApiKeys('YOUTUBE_API_KEY');
@@ -164,15 +232,15 @@ serve(async (req) => {
         const videoDetailsApiUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=${currentYoutubeApiKey}`;
         videoDetailsResponse = await fetch(videoDetailsApiUrl);
         if (videoDetailsResponse.ok) {
-          break; // Key worked, proceed
+          break;
         } else if (videoDetailsResponse.status === 403 || videoDetailsResponse.status === 429) {
           const errorData = await videoDetailsResponse.json();
           if (errorData.error?.errors?.[0]?.reason === 'quotaExceeded') {
             console.warn(`YouTube API key ${currentYoutubeApiKey} hit quota limit for video details. Trying next key.`);
-            continue; // Try next key
+            continue;
           }
         }
-        break; // For other errors, or if not quota exceeded, break and report the error
+        break;
       }
 
       if (!videoDetailsResponse || !videoDetailsResponse.ok) {
@@ -190,20 +258,20 @@ serve(async (req) => {
       videoDescription = videoSnippet?.description || 'No description available.';
       videoThumbnailUrl = videoSnippet?.thumbnails?.high?.url || videoSnippet?.thumbnails?.medium?.url || '';
       videoTags = videoSnippet?.tags || [];
-      creatorName = videoSnippet?.channelTitle || 'Unknown Creator'; // Extract creator name
+      creatorName = videoSnippet?.channelTitle || 'Unknown Creator';
 
       // --- Fetch Comments ---
       let youtubeCommentsResponse;
-      for (const currentYoutubeApiKey of youtubeApiKeys) { // Reuse youtubeApiKeys for comments
+      for (const currentYoutubeApiKey of youtubeApiKeys) {
         const youtubeCommentsApiUrl = `https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId=${videoId}&key=${currentYoutubeApiKey}&maxResults=100`;
         youtubeCommentsResponse = await fetch(youtubeCommentsApiUrl);
         if (youtubeCommentsResponse.ok) {
-          break; // Key worked, proceed
+          break;
         } else if (youtubeCommentsResponse.status === 403 || youtubeCommentsResponse.status === 429) {
           const errorData = await youtubeCommentsResponse.json();
           if (errorData.error?.errors?.[0]?.reason === 'quotaExceeded') {
             console.warn(`YouTube API key ${currentYoutubeApiKey} hit quota limit for comments. Trying next key.`);
-            continue; // Try next key
+            continue;
           }
         }
         break;
@@ -226,7 +294,6 @@ serve(async (req) => {
           }))
         : [];
 
-      // Enforce 50-comment minimum
       if (commentsWithLikes.length < 50) {
         return new Response(JSON.stringify({ error: `Video must have at least 50 comments to proceed with analysis. This video has ${commentsWithLikes.length} comments.` }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -234,14 +301,10 @@ serve(async (req) => {
         });
       }
 
-      // Sort comments by likeCount in descending order for consistent processing and display
       commentsWithLikes.sort((a: any, b: any) => b.likeCount - a.likeCount);
-
-      // Prepare comments for AI, including their like counts
       const formattedCommentsForAI = commentsWithLikes.map((comment: any) => `(Likes: ${comment.likeCount}) ${comment.text}`);
-      allFetchedCommentsText = commentsWithLikes.map((comment: any) => comment.text); // Keep all fetched comments text for display
+      allFetchedCommentsText = commentsWithLikes.map((comment: any) => comment.text);
 
-      // Prepare prompt for Longcat AI, instructing it to consider like counts as weights and subtitles as additional context
       let longcatPrompt = `Analyze the following YouTube video content.
       Crucially, when assessing sentiment, emotional tones, and key themes, give **significantly more weight and importance to comments that have a higher 'Likes' counts**. This ensures the analysis reflects the sentiment of the most popular and influential opinions within the comment section.
       
@@ -264,8 +327,16 @@ serve(async (req) => {
 
       longcatPrompt += `\n\nNote: Subtitles were not available for this video. Please base your analysis solely on the comments, video title, description, tags, and creator name.`;
 
+      // Check longcatApiKeys here, as it's needed for the main AI analysis and blog post generation
+      if (longcatApiKeys.length === 0) {
+        return new Response(JSON.stringify({ error: 'Longcat AI API key(s) not configured' }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500,
+        });
+      }
 
       let longcatResponse;
+      const longcatApiUrl = "https://api.longcat.chat/openai/v1/chat/completions";
       for (const currentLongcatApiKey of longcatApiKeys) {
         longcatResponse = await fetch(longcatApiUrl, {
           method: 'POST',
@@ -281,7 +352,7 @@ serve(async (req) => {
             ],
             max_tokens: 1000,
             temperature: 0.7,
-            response_format: { type: "json_object" } // Request JSON output
+            response_format: { type: "json_object" }
           }),
         });
 
@@ -289,7 +360,7 @@ serve(async (req) => {
           break;
         } else if (longcatResponse.status === 429) {
           console.warn(`Longcat AI API key ${currentLongcatApiKey} hit quota limit for analysis. Trying next key.`);
-          continue; // Try next key
+          continue;
         }
         break;
       }
@@ -306,7 +377,6 @@ serve(async (req) => {
       const longcatData = await longcatResponse.json();
       let aiContent = longcatData.choices[0].message.content;
 
-      // Remove markdown code block fences if present
       if (aiContent.startsWith('```json') && aiContent.endsWith('```')) {
         aiContent = aiContent.substring(7, aiContent.length - 3).trim();
       }
@@ -342,7 +412,7 @@ serve(async (req) => {
       Respond in a structured JSON format:
       {
         "title": "SEO Optimized Blog Post Title",
-        "slug": "seo-optimized-blog-post-title", // Example: "my-awesome-blog-post" NOT "/blog/my-awesome-blog-post"
+        "slug": "seo-optimized-blog-post-title",
         "meta_description": "A concise meta description for search engines.",
         "keywords": ["keyword1", "keyword2", "keyword3"],
         "content": "# H1 Title\\n\\nIntroduction...\\n\\n## H2 Section\\n\\nContent...\\n\\n### H3 Sub-section\\n\\nMore content...\\n\\n## Conclusion\\n\\nCall to action..."
@@ -350,7 +420,7 @@ serve(async (req) => {
       `;
 
       let blogPostResponse;
-      for (const currentLongcatApiKey of longcatApiKeys) { // Reuse longcatApiKeys for blog post generation
+      for (const currentLongcatApiKey of longcatApiKeys) {
         blogPostResponse = await fetch(longcatApiUrl, {
           method: 'POST',
           headers: {
@@ -358,12 +428,12 @@ serve(async (req) => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            model: "LongCat-Flash-Chat", // Or a more capable model if available
+            model: "LongCat-Flash-Chat",
             messages: [
               { "role": "system", "content": `You are SentiVibe AI, an expert SEO content strategist and writer. Your task is to generate a high-quality, detailed, and SEO-optimized blog post in Markdown format. This post will be published on the SentiVibe platform to inform content creators and marketers about YouTube audience sentiment. The content must be engaging, insightful, and directly leverage the provided video analysis data. Ensure the output is a valid, well-formed JSON object, strictly adhering to the provided schema, and ready for immediate publication. Avoid generic phrases or fluff; focus on actionable insights and clear, professional language. The blog post should be compelling and provide genuine value to the reader, encouraging them to explore SentiVibe further.` },
               { "role": "user", "content": blogPostPrompt }
             ],
-            max_tokens: 2000, // Increased tokens for a longer blog post
+            max_tokens: 2000,
             temperature: 0.7,
             response_format: { type: "json_object" }
           }),
@@ -395,21 +465,25 @@ serve(async (req) => {
       }
       const generatedBlogPost = JSON.parse(blogPostContent);
 
-      // Log the generated slug for debugging
       console.log("Generated Blog Post Slug:", generatedBlogPost.slug);
       blogPostSlug = generatedBlogPost.slug;
-      originalVideoLink = videoLink; // Store the original video link
-      lastReanalyzedAt = now.toISOString(); // Set current time for new/re-analysis
+      originalVideoLink = videoLink;
+      lastReanalyzedAt = now.toISOString();
 
-      // Initialize combinedQaResults with existing ones if re-analyzing
       if (existingBlogPost) {
         combinedQaResults = existingBlogPost.custom_qa_results || [];
       }
 
-      // --- Process Custom Questions for a NEW or RE-analysis ---
       if (customQuestions && customQuestions.length > 0) {
+        // Also check longcatApiKeys here, as it's needed for custom QA
+        if (longcatApiKeys.length === 0) {
+          return new Response(JSON.stringify({ error: 'Longcat AI API key(s) not configured' }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 500,
+          });
+        }
         for (const qa of customQuestions) {
-          if (qa.question.trim() === "") continue; // Skip empty questions
+          if (qa.question.trim() === "") continue;
 
           const customQuestionPrompt = `Based on the following YouTube video analysis, answer the user's custom question.
           
@@ -447,7 +521,7 @@ serve(async (req) => {
                   { "role": "system", "content": `You are SentiVibe AI, an insightful and precise AI assistant. Your task is to answer specific user questions about a YouTube video analysis. Your answers must be accurate, directly derived from the provided 'Video Analysis Context' and 'Top Comments', and strictly adhere to the requested word count. If the answer cannot be fully derived from the provided context, state this clearly and concisely. Do not speculate or introduce external information unless explicitly instructed. Ensure the answer is comprehensive within the word limit, providing a complete and well-structured response. Format your answers for clarity, using bullet points or bolding where appropriate.` },
                   { "role": "user", "content": customQuestionPrompt }
                 ],
-                max_tokens: Math.ceil(qa.wordCount * 1.5), // Allow some buffer for token count
+                max_tokens: Math.ceil(qa.wordCount * 1.5),
                 temperature: 0.5,
                 stream: false,
               }),
@@ -474,7 +548,6 @@ serve(async (req) => {
         }
       }
 
-      // If existing blog post, update it. Otherwise, insert new.
       if (existingBlogPost) {
         const { error: updateError } = await supabaseClient
           .from('blog_posts')
@@ -492,8 +565,8 @@ serve(async (req) => {
               raw_comments_for_chat: allFetchedCommentsText.slice(0, 10),
             },
             custom_qa_results: combinedQaResults,
-            last_reanalyzed_at: lastReanalyzedAt, // Update this timestamp
-            updated_at: now.toISOString(), // Also update general updated_at
+            last_reanalyzed_at: lastReanalyzedAt,
+            updated_at: now.toISOString(),
           })
           .eq('id', existingBlogPost.id);
 
@@ -505,7 +578,6 @@ serve(async (req) => {
           });
         }
       } else {
-        // Insert the generated blog post into the database, including ai_analysis_json and custom_qa_results
         const { error: insertError } = await supabaseClient
           .from('blog_posts')
           .insert({
@@ -515,17 +587,17 @@ serve(async (req) => {
             meta_description: generatedBlogPost.meta_description,
             keywords: generatedBlogPost.keywords,
             content: generatedBlogPost.content,
-            published_at: now.toISOString(), // Publish immediately
-            author_id: user?.id, // Link to the user who initiated the analysis, or null if unauthenticated
-            creator_name: creatorName, // New column
-            thumbnail_url: videoThumbnailUrl, // New column
-            original_video_link: videoLink, // Store the original video link
-            ai_analysis_json: { // Store the full AI analysis JSON AND top comments for chat context
+            published_at: now.toISOString(),
+            author_id: user?.id,
+            creator_name: creatorName,
+            thumbnail_url: videoThumbnailUrl,
+            original_video_link: videoLink,
+            ai_analysis_json: {
               ...aiAnalysis,
-              raw_comments_for_chat: allFetchedCommentsText.slice(0, 10), // Store top 10 comments
+              raw_comments_for_chat: allFetchedCommentsText.slice(0, 10),
             },
-            custom_qa_results: combinedQaResults, // Store custom QA results
-            last_reanalyzed_at: lastReanalyzedAt, // Set this timestamp for new analysis
+            custom_qa_results: combinedQaResults,
+            last_reanalyzed_at: lastReanalyzedAt,
             updated_at: now.toISOString(),
           });
 
@@ -537,106 +609,22 @@ serve(async (req) => {
           });
         }
       }
-    } else { // Analysis is fresh and no forceReanalyze, only process new custom questions
-      // Initialize combinedQaResults with existing ones
-      combinedQaResults = existingBlogPost.custom_qa_results || [];
-
-      if (customQuestions && customQuestions.length > 0) {
-        for (const qa of customQuestions) {
-          if (qa.question.trim() === "") continue; // Skip empty questions
-
-          const customQuestionPrompt = `Based on the following YouTube video analysis, answer the user's custom question.
-          
-          --- Video Analysis Context ---
-          Video Title: "${videoTitle}"
-          Video Description: "${videoDescription}"
-          Video Creator: "${creatorName}"
-          Video Tags: ${videoTags.length > 0 ? videoTags.join(', ') : 'None'}
-          Overall Sentiment: ${aiAnalysis.overall_sentiment}
-          Emotional Tones: ${aiAnalysis.emotional_tones.join(', ')}
-          Key Themes: ${aiAnalysis.key_themes.join(', ')}
-          Summary Insights: ${aiAnalysis.summary_insights}
-          --- End Video Analysis Context ---
-
-          --- Top Comments (for reference) ---
-          ${allFetchedCommentsText.slice(0, 10).map((comment: string, index: number) => `- ${comment}`).join('\n')}
-          --- End Top Comments ---
-
-          User's Question: "${qa.question}"
-          
-          Please provide an answer that is approximately ${qa.wordCount} words long. Your answer should primarily draw from the 'Video Analysis Context' and 'Top Comments' provided. If the information is not present, indicate that. Ensure the answer is complete and directly addresses the question.
-          `;
-
-          let customQaResponse;
-          for (const currentLongcatApiKey of longcatApiKeys) {
-            customQaResponse = await fetch(longcatApiUrl, {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${currentLongcatApiKey}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                model: "LongCat-Flash-Chat",
-                messages: [
-                  { "role": "system", "content": `You are SentiVibe AI, an insightful and precise AI assistant. Your task is to answer specific user questions about a YouTube video analysis. Your answers must be accurate, directly derived from the provided 'Video Analysis Context' and 'Top Comments', and strictly adhere to the requested word count. If the answer cannot be fully derived from the provided context, state this clearly and concisely. Do not speculate or introduce external information unless explicitly instructed. Ensure the answer is comprehensive within the word limit, providing a complete and well-structured response. Format your answers for clarity, using bullet points or bolding where appropriate.` },
-                  { "role": "user", "content": customQuestionPrompt }
-                ],
-                max_tokens: Math.ceil(qa.wordCount * 1.5), // Allow some buffer for token count
-                temperature: 0.5,
-                stream: false,
-              }),
-            });
-
-            if (customQaResponse.ok) {
-              break;
-            } else if (customQaResponse.status === 429) {
-              console.warn(`Longcat AI API key hit rate limit for custom QA. Trying next key.`);
-              continue;
-            }
-            break;
-          }
-
-          if (!customQaResponse || !customQaResponse.ok) {
-            const errorData = customQaResponse ? await customQaResponse.json() : { message: "No response from Longcat AI for custom question" };
-            console.error('Longcat AI Custom QA API error:', errorData);
-            combinedQaResults.push({ ...qa, answer: `Error generating answer: ${errorData.message || 'Unknown error'}` });
-          } else {
-            const customQaData = await customQaResponse.json();
-            const answerContent = customQaData.choices[0].message.content;
-            combinedQaResults.push({ ...qa, answer: answerContent });
-          }
-        }
-
-        // Update the existing blog post with the new combined custom QA results
-        const { error: updateError } = await supabaseClient
-          .from('blog_posts')
-          .update({ custom_qa_results: combinedQaResults, updated_at: now.toISOString() })
-          .eq('id', existingBlogPost.id);
-
-        if (updateError) {
-          console.error('Supabase Blog Post Update Error for custom QA:', updateError);
-          return new Response(JSON.stringify({ error: 'Failed to update blog post with new custom questions', details: updateError }), {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: 500,
-          });
-        }
-      }
     }
 
     return new Response(JSON.stringify({
       message: `Successfully fetched comments and performed AI analysis for video ID: ${videoId}`,
       videoTitle: videoTitle,
       videoDescription: videoDescription,
-      videoThumbnailUrl: videoThumbnailUrl, // Include thumbnail URL
-      videoTags: videoTags,               // Include video tags
-      creatorName: creatorName,           // Include creator name
-      videoSubtitles: videoSubtitles, // Will be an empty string for now
-      comments: allFetchedCommentsText, // Return all fetched comments for initial display
+      videoThumbnailUrl: videoThumbnailUrl,
+      videoTags: videoTags,
+      creatorName: creatorName,
+      videoSubtitles: videoSubtitles,
+      comments: allFetchedCommentsText,
       aiAnalysis: aiAnalysis,
-      blogPostSlug: blogPostSlug, // Return the slug for linking
-      originalVideoLink: originalVideoLink, // Return the original video link
-      customQaResults: combinedQaResults, // Return custom QA results
-      lastReanalyzedAt: lastReanalyzedAt, // Return the last re-analyzed timestamp
+      blogPostSlug: blogPostSlug,
+      originalVideoLink: originalVideoLink,
+      customQaResults: combinedQaResults,
+      lastReanalyzedAt: lastReanalyzedAt,
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
