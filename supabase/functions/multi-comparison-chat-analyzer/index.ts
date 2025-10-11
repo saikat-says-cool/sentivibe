@@ -33,9 +33,14 @@ function getApiKeys(baseName: string): string[] {
 }
 
 // Define tier limits for chat
-const FREE_TIER_LIMITS = {
+const UNAUTHENTICATED_LIMITS = {
   chatMessageLimit: 5, // Max AI responses per session
   maxResponseWordCount: 100,
+};
+
+const AUTHENTICATED_FREE_TIER_LIMITS = {
+  chatMessageLimit: 10, // Max AI responses per session
+  maxResponseWordCount: 150,
 };
 
 const PAID_TIER_LIMITS = {
@@ -43,7 +48,7 @@ const PAID_TIER_LIMITS = {
   maxResponseWordCount: 500,
 };
 
-serve(async (req) => {
+serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -63,8 +68,7 @@ serve(async (req) => {
     );
 
     const { data: { user } } = await supabaseClient.auth.getUser();
-    let isPaidTier = false;
-    let currentLimits = FREE_TIER_LIMITS;
+    let currentLimits;
 
     if (user) {
       const { data: subscriptionData, error: subscriptionError } = await supabaseClient
@@ -75,10 +79,14 @@ serve(async (req) => {
 
       if (subscriptionError && subscriptionError.code !== 'PGRST116') {
         console.error("Error fetching subscription for user:", user.id, subscriptionError);
+        currentLimits = AUTHENTICATED_FREE_TIER_LIMITS; // Fallback
       } else if (subscriptionData && subscriptionData.status === 'active' && subscriptionData.plan_id !== 'free') {
-        isPaidTier = true;
         currentLimits = PAID_TIER_LIMITS;
+      } else {
+        currentLimits = AUTHENTICATED_FREE_TIER_LIMITS;
       }
+    } else {
+      currentLimits = UNAUTHENTICATED_LIMITS;
     }
 
     const { userMessage, chatMessages, multiComparisonResult, externalContext, desiredWordCount, selectedPersona } = await req.json();
@@ -94,7 +102,7 @@ serve(async (req) => {
     const aiMessageCount = chatMessages.filter((msg: any) => msg.sender === 'ai').length;
     if (aiMessageCount >= currentLimits.chatMessageLimit) {
       return new Response(JSON.stringify({ 
-        error: `Chat message limit (${currentLimits.chatMessageLimit} AI responses) exceeded for this session. ${isPaidTier ? 'You have reached your paid tier limit.' : 'Upgrade to a paid tier for more chat messages.'}` 
+        error: `Chat message limit (${currentLimits.chatMessageLimit} AI responses) exceeded for this session. ${currentLimits === PAID_TIER_LIMITS ? 'You have reached your paid tier limit.' : 'Upgrade to a paid tier for more chat messages.'}` 
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 403,
@@ -198,9 +206,9 @@ serve(async (req) => {
     }));
 
     const messages = [
-      { role: "system", content: baseInstructions + "\n\n" + personaSpecificInstructions + "\n\n" + fullContext },
-      ...conversationHistory,
-      { role: "user", content: userMessage },
+      { role: "system", content: baseInstructions + "\n\n" + personaSpecificInstructions + "\n\n" + fullContext }, // System message with persona and all context
+      ...conversationHistory, // Existing chat history
+      { role: "user", content: userMessage }, // Current user message
     ];
 
     const longcatApiUrl = "https://api.longcat.chat/openai/v1/chat/completions";
@@ -248,9 +256,9 @@ serve(async (req) => {
       status: 200,
     });
 
-  } catch (error) {
-    console.error('Edge Function error (multi-comparison-chat-analyzer):', error.message);
-    return new Response(JSON.stringify({ error: error.message }), {
+  } catch (error: unknown) {
+    console.error('Edge Function error (multi-comparison-chat-analyzer):', (error as Error).message);
+    return new Response(JSON.stringify({ error: (error as Error).message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 500,
     });
