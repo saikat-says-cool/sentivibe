@@ -12,7 +12,7 @@ import MultiComparisonDetail from './pages/MultiComparisonDetail';
 import AboutUs from './pages/AboutUs';
 import HowItWorks from './pages/HowItWorks';
 import Upgrade from './pages/Upgrade';
-// import Pricing from './pages/Pricing'; // Removed import
+import Pricing from './pages/Pricing'; // Added import
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from './integrations/supabase/auth';
 import { ThemeProvider } from './components/theme-provider';
@@ -45,7 +45,7 @@ function App() {
                   <Route path="/about-us" element={<AboutUs />} />
                   <Route path="/how-it-works" element={<HowItWorks />} />
                   <Route path="/upgrade" element={<Upgrade />} />
-                  {/* <Route path="/pricing" element={<Pricing />} /> Removed route */}
+                  <Route path="/pricing" element={<Pricing />} /> {/* Added route */}
                 </Routes>
               </main>
               <Footer />

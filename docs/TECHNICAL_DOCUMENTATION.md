@@ -17,7 +17,7 @@ The application is built using the following technologies:
 *   **Icons:** `lucide-react`
 *   **Utilities:** `clsx`, `tailwind-merge` (`cn` utility)
 *   **Markdown Rendering:** `react-markdown`, `remark-gfm`
-*   **Fonts:** Google Fonts (`Arimo` for body, `Plus Jakarta Sans` for headings)
+*   **Fonts:** Google Fonts (`Jura` for body and headings)
 *   **Toast Notifications:** `sonner`
 
 ## 3. Project Structure
@@ -31,7 +31,7 @@ The project follows a standard React application structure with specific directo
     *   `src/lib/utils.ts`: Utility functions (e.g., `cn` for Tailwind class merging).
     *   `src/utils/toast.ts`: Utility functions for `sonner` toast notifications.
     *   `src/components/`: Reusable UI components.
-        *   `src/components/Header.tsx`: Global application header with the **SentiVibe wordmark**, a **theme toggle**, and **public links to 'Analyze a Video', 'Analysis Library', 'Compare Videos', 'Comparison Library'**. Now includes an "Upgrade" button for authenticated free users.
+        *   `src/components/Header.tsx`: Global application header with the **SentiVibe wordmark**, a **theme toggle**, and **public links to 'Analyze a Video', 'Analysis Library', 'Compare Videos', 'Comparison Library'**. Now includes an "Upgrade" button for authenticated free users and a "Pricing" link.
         *   `src/components/ModeToggle.tsx`: Component for switching between themes.
         *   `src/components/ChatInterface.tsx`: Generic chat UI component, now with `disabled` prop for tier limits.
         *   `src/components/ProtectedRoute.tsx`: Component for protecting routes (now less critical due to public-first strategy, but still present for `MyAnalyses`).
@@ -61,7 +61,7 @@ The project follows a standard React application structure with specific directo
         *   `src/pages/ComparisonDetail.tsx`: (Legacy, but still present) Page for displaying two-video comparisons.
         *   `src/pages/NotFound.tsx`: 404 error page.
         *   `src/pages/Upgrade.tsx`: Page detailing the benefits of upgrading to a paid tier.
-        *   `src/pages/Pricing.tsx`: (Removed)
+        *   `src/pages/Pricing.tsx`: **New page detailing the pricing plans and tier benefits.**
     *   `src/integrations/`: Supabase-related client-side files.
         *   `src/integrations/supabase/client.ts`: Supabase client initialization.
         *   `src/integrations/supabase/auth.tsx`: **Updated AuthProvider to fetch and expose `subscriptionStatus` and `subscriptionPlanId` via the `useAuth` hook.**
@@ -73,12 +73,12 @@ The project follows a standard React application structure with specific directo
             *   `supabase/functions/library-copilot-analyzer/index.ts`: **Enhanced Edge Function for handling AI chat for the Library Copilot, now performing semantic search, proactively recommending new analysis topics, and enforcing tier-based daily query limits. AI prompts have been extensively engineered for high-quality, production-grade responses, including precise matching, clear recommendations, and mandatory Markdown hyperlink formatting. The authentication check has been removed to allow unauthenticated access.**
             *   `supabase/functions/video-comparator/index.ts`: (Legacy, but still present) Edge Function for two-video comparisons.
             *   `supabase/functions/comparison-chat-analyzer/index.ts`: **New Edge Function for handling AI chat conversations for two-video comparisons, now enforcing tier-based chat message limits and max response word count.**
-            *   `supabase/functions/multi-video-comparator/index.ts`: **New Edge Function for multi-video comparisons, implementing robust staleness/freshness logic, orchestrating individual video analysis refreshes, generating comparative insights, handling custom comparative questions, and enforcing tier-based daily comparison limits and custom comparative question limits. It also ensures individual blog post IDs and slugs are returned.**
+            *   `supabase/functions/multi-video-comparator/index.ts`: **New Edge Function for multi-video comparisons, implementing robust staleness/freshness logic, orchestrating individual video analysis refreshes, generating comparative insights, handling custom comparative questions, and enforcing tier-based daily comparison limits and custom comparative question limits.**
             *   `supabase/functions/multi-comparison-chat-analyzer/index.ts`: **New Edge Function for handling AI chat conversations for multi-video comparisons, now enforcing tier-based chat message limits and max response word count.**
             *   `supabase/functions/comparison-library-copilot-analyzer/index.ts`: **New Edge Function for handling AI chat for the Comparison Library Copilot, performing semantic search, recommending new comparative analysis topics, and enforcing tier-based daily query limits.**
             *   `supabase/functions/get-anon-usage/index.ts`: **New Edge Function to retrieve anonymous user usage data for IP-based rate limiting.**
         *   `supabase/migrations/`: Database migration files.
-*   `tailwind.config.ts`: Tailwind CSS configuration, including custom fonts (`Arimo`, `Plus Jakarta Sans`) and the new brand color palette.
+*   `tailwind.config.ts`: Tailwind CSS configuration, including custom fonts (`Jura`) and the new brand color palette.
 *   `.env`: Environment variables (e.g., Supabase URLs, API keys).
 
 ## 4. Core Application Flow & Components
@@ -91,13 +91,13 @@ The project follows a standard React application structure with specific directo
     *   `Toaster` (from `sonner`): For displaying toast notifications, configured to use brand colors for success/error/neutral.
 *   **`AppRoutes` Component:** Encapsulates `BrowserRouter` and `Routes`.
     *   Renders the `Header` component globally.
-    *   Defines application routes: `/`, `/login`, `/analyze-video`, `/library`, `/my-analyses`, `/blog/:slug`, `/create-multi-comparison`, `/multi-comparison-library`, `/multi-comparison/:slug`, `/upgrade`, `/about-us`, `/how-it-works`, and a catch-all `*` for `NotFound`.
+    *   Defines application routes: `/`, `/login`, `/analyze-video`, `/library`, `/my-analyses`, `/blog/:slug`, `/create-multi-comparison`, `/multi-comparison-library`, `/multi-comparison/:slug`, `/upgrade`, `/pricing`, `/about-us`, `/how-it-works`, and a catch-all `*` for `NotFound`.
 *   **`ProtectedRoute` Component:** A higher-order component that ensures only authenticated users can access specific routes (e.g., `/my-analyses`). It redirects unauthenticated users to `/login`. Note: `/analyze-video`, `/library`, `/create-multi-comparison`, and `/multi-comparison-library` are now publicly accessible.
 
 ### 4.2. `Header.tsx`
 *   A React component that renders a consistent header across all pages.
-*   Displays the **SentiVibe wordmark** (`<span className="text-foreground">Senti</span><span className="text-accent">Vibe</span>`) using the `font-heading` (Plus Jakarta Sans) typeface.
-*   **Now includes navigation links to `/analyze-video`, `/library`, `/create-multi-comparison`, `/multi-comparison-library`, `/how-it-works`, and `/about-us` for all users.**
+*   Displays the **SentiVibe wordmark** (`<span className="text-foreground">Senti</span><span className="text-accent">Vibe</span>`) using the `font-heading` (Jura) typeface.
+*   **Now includes navigation links to `/analyze-video`, `/library`, `/create-multi-comparison`, `/multi-comparison-library`, `/pricing`, `/how-it-works`, and `/about-us` for all users.**
 *   Includes a link to `/my-analyses` for authenticated users.
 *   **Conditionally renders an "Upgrade" button for authenticated users who are not on a paid tier.**
 *   Includes a link to `/login` ("Sign In / Sign Up") for unauthenticated users.
@@ -311,6 +311,10 @@ The project follows a standard React application structure with specific directo
 ### 4.19. `Upgrade.tsx` (Upgrade Page)
 *   **Purpose:** Informs users about the benefits of upgrading to a paid tier.
 *   **UI:** Displays a comparison of features and limits between the Free Tier and Paid Tier, with a call to action to upgrade.
+
+### 4.20. `Pricing.tsx` (Pricing Page)
+*   **Purpose:** Provides a detailed overview of the different subscription tiers, their features, and pricing.
+*   **UI:** Displays a clear comparison of the Free Tier and Paid Tier, highlighting benefits and including calls to action for signing up or upgrading.
 
 ## 5. Supabase Integration Details
 
@@ -607,10 +611,10 @@ This Deno-based serverless function is used by the frontend to retrieve the curr
     *   Defines custom CSS variables for the **Crowd Black** and **Pure White** color palette for dark mode. This ensures consistent theming across the application.
     *   Includes specific variables for **Positive Green**, **Neutral Gray**, **Negative Red**, and **Accent Blue** to be used for sentiment and interactive elements.
     *   **Now includes color variables for Emerald, Crimson, Yellow, Cyan, Deep Blue, Forest Green, and Purple Haze themes.**
-    *   Applies the `Arimo` font globally to the `body` element.
+    *   Applies the `Jura` font globally to the `body` element.
     *   **New CSS Rule:** Includes `.prose a { text-decoration: underline; }` to ensure all links within Markdown-rendered content are clearly underlined.
-*   **`tailwind.config.ts`:** Configures Tailwind to use `Arimo` as the default `font-sans` family and `Plus Jakarta Sans` for `font-heading`. It also extends the color palette with the new brand colors and sentiment-specific colors.
-*   **Branding:** The application features a distinct "SentiVibe" word logo with `text-3xl font-extrabold tracking-tight` styling in the header and `text-5xl font-extrabold tracking-tight` on the landing page, using the `font-heading` (Plus Jakarta Sans) typeface. The "Vibe" part of the logo is highlighted with the `text-accent` color.
+*   **`tailwind.config.ts`:** Configures Tailwind to use `Jura` as the default `font-sans` family and `font-heading`. It also extends the color palette with the new brand colors and sentiment-specific colors.
+*   **Branding:** The application features a distinct "SentiVibe" word logo with `text-3xl font-extrabold tracking-tight` styling in the header and `text-5xl font-extrabold tracking-tight` on the landing page, using the `font-heading` (Jura) typeface. The "Vibe" part of the logo is highlighted with the `text-accent` color.
 
 ## 7. Dependencies
 Key dependencies include:
