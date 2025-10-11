@@ -35,6 +35,17 @@ function getApiKeys(baseName: string): string[] {
 // Define staleness threshold (e.g., 30 days)
 const STALENESS_THRESHOLD_DAYS = 30;
 
+// Helper function to strip markdown code block fences
+function stripMarkdownFences(content: string): string {
+  if (content.startsWith('```json') && content.endsWith('```')) {
+    return content.substring(7, content.length - 3).trim();
+  }
+  if (content.startsWith('```') && content.endsWith('```')) {
+    return content.substring(3, content.length - 3).trim();
+  }
+  return content;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -250,7 +261,8 @@ serve(async (req) => {
       console.error('Longcat AI Core Comparison API returned unexpected structure:', longcatDataCore);
       throw new Error('Longcat AI Core Comparison API returned an empty or malformed response.');
     }
-    const coreComparisonData = JSON.parse(longcatDataCore.choices[0].message.content);
+    const coreComparisonContent = stripMarkdownFences(longcatDataCore.choices[0].message.content);
+    const coreComparisonData = JSON.parse(coreComparisonContent);
 
     // --- AI Call for Comparative Blog Post Generation ---
     const blogPostComparisonPrompt = `
@@ -310,7 +322,8 @@ serve(async (req) => {
       console.error('Longcat AI Comparison Blog Post API returned unexpected structure:', longcatDataBlogPost);
       throw new Error('Longcat AI Comparison Blog Post API returned an empty or malformed response.');
     }
-    const generatedComparisonBlogPost = JSON.parse(longcatDataBlogPost.choices[0].message.content);
+    const generatedComparisonBlogPostContent = stripMarkdownFences(longcatDataBlogPost.choices[0].message.content);
+    const generatedComparisonBlogPost = JSON.parse(generatedComparisonBlogPostContent);
 
     // --- Process Custom Comparative Questions ---
     let combinedComparativeQaResults: { question: string; wordCount: number; answer: string }[] = [];
