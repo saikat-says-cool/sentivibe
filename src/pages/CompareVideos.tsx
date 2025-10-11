@@ -216,7 +216,7 @@ const CompareVideos = () => {
                   <img
                     src={comparisonResult.videoAThumbnailUrl}
                     alt={`Thumbnail for ${comparisonResult.videoATitle}`}
-                    className="w-32 h-20 object-cover rounded-md shadow-md"
+                    className="w-32 h-20 object-cover rounded-md shadow-md aspect-video"
                   />
                   <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{comparisonResult.videoATitle}</p>
                 </a>
@@ -227,7 +227,7 @@ const CompareVideos = () => {
                   <img
                     src={comparisonResult.videoBThumbnailUrl}
                     alt={`Thumbnail for ${comparisonResult.videoBTitle}`}
-                    className="w-32 h-20 object-cover rounded-md shadow-md"
+                    className="w-32 h-20 object-cover rounded-md shadow-md aspect-video"
                   />
                   <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{comparisonResult.videoBTitle}</p>
                 </a>

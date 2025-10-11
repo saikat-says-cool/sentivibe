@@ -342,7 +342,7 @@ const AnalyzeVideo = () => {
                 <img
                   src={analysisResult.videoThumbnailUrl}
                   alt={analysisResult.videoTitle}
-                  className="w-full h-auto rounded-md mb-4"
+                  className="w-full h-auto rounded-md mb-4 aspect-video object-cover"
                 />
               )}
               <CardTitle className="text-2xl">{analysisResult.videoTitle}</CardTitle>

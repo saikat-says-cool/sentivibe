@@ -211,7 +211,7 @@ const ComparisonDetail = () => {
                   <img
                     src={comparison.videoA.thumbnail_url}
                     alt={`Thumbnail for ${comparison.videoA.title}`}
-                    className="w-32 h-20 object-cover rounded-md shadow-md"
+                    className="w-32 h-20 object-cover rounded-md shadow-md aspect-video"
                   />
                   <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{comparison.videoA.title}</p>
                 </a>
@@ -224,7 +224,7 @@ const ComparisonDetail = () => {
                   <img
                     src={comparison.videoB.thumbnail_url}
                     alt={`Thumbnail for ${comparison.videoB.title}`}
-                    className="w-32 h-20 object-cover rounded-md shadow-md"
+                    className="w-32 h-20 object-cover rounded-md shadow-md aspect-video"
                   />
                   <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{comparison.videoB.title}</p>
                 </a>

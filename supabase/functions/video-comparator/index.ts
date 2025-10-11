@@ -397,6 +397,8 @@ serve(async (req) => {
         last_compared_at: now,
         comparison_data_json: coreComparisonData,
         custom_comparative_qa_results: combinedComparativeQaResults,
+        video_a_thumbnail_url: blogPostA.thumbnail_url, // Save thumbnail A
+        video_b_thumbnail_url: blogPostB.thumbnail_url, // Save thumbnail B
       });
 
     if (insertError) {

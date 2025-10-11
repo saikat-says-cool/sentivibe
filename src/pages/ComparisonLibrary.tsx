@@ -29,6 +29,8 @@ interface Comparison {
   last_compared_at: string;
   comparison_data_json: any;
   custom_comparative_qa_results: CustomComparativeQuestion[];
+  video_a_thumbnail_url?: string; // New field
+  video_b_thumbnail_url?: string; // New field
 }
 
 const fetchComparisons = async (): Promise<Comparison[]> => {
@@ -116,9 +118,24 @@ const ComparisonLibrary = () => {
           <Link to={`/comparison/${comp.slug}`} key={comp.id}>
             <Card className="h-full flex flex-col hover:shadow-lg transition-shadow duration-200">
               <CardHeader className="p-0">
-                <div className="w-full h-40 bg-gray-200 dark:bg-gray-700 flex items-center justify-center rounded-t-lg">
-                  <GitCompare className="h-12 w-12 text-gray-400 dark:text-gray-500" />
-                </div>
+                {comp.video_a_thumbnail_url && comp.video_b_thumbnail_url ? (
+                  <div className="flex w-full h-40 rounded-t-lg overflow-hidden">
+                    <img
+                      src={comp.video_a_thumbnail_url}
+                      alt={`Thumbnail for Video A in ${comp.title}`}
+                      className="w-1/2 h-full object-cover"
+                    />
+                    <img
+                      src={comp.video_b_thumbnail_url}
+                      alt={`Thumbnail for Video B in ${comp.title}`}
+                      className="w-1/2 h-full object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className="w-full h-40 bg-gray-200 dark:bg-gray-700 flex items-center justify-center rounded-t-lg">
+                    <GitCompare className="h-12 w-12 text-gray-400 dark:text-gray-500" />
+                  </div>
+                )}
               </CardHeader>
               <CardContent className="p-4 flex-grow">
                 <CardTitle className="text-lg font-semibold mb-2 line-clamp-2">{comp.title}</CardTitle>

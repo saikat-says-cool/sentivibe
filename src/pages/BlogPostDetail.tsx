@@ -146,7 +146,7 @@ const BlogPostDetail = () => {
             "name": "SentiVibe - YouTube Comment Sentiment Analyzer",
             "applicationCategory": "AI Tool",
             "operatingSystem": "Web",
-            "url": `${window.location.origin}`, // Link to the main application
+            "url": `${window.location.origin}`,
             "description": "AI tool to analyze YouTube comments for sentiment and insights.",
             "offers": {
               "@type": "Offer",
@@ -255,7 +255,7 @@ const BlogPostDetail = () => {
             <img
               src={blogPost.thumbnail_url}
               alt={`Thumbnail for ${blogPost.title}`}
-              className="w-full h-auto rounded-md mb-4"
+              className="w-full h-auto rounded-md mb-4 aspect-video object-cover"
             />
           )}
           <CardTitle className="text-3xl font-bold mb-2">{blogPost.title}</CardTitle>
