@@ -117,7 +117,7 @@ To successfully integrate a tiered access and usage model into SentiVibe, allowi
     *   **Free Member:** Included (1 context fetch per analysis).
     *   **Pro Subscriber:** Enhanced context fetch + depth modes (future AI prompt enhancements).
     *   **Affected Areas:** Backend (`fetch-external-context` Edge Function - access control, potential for advanced modes).
-    *   **Status:** Pending
+    *   **Status:** Completed
 
 *   **Checkpoint 2.6: PDF Export**
     *   **Guest:** No access.

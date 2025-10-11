@@ -78,6 +78,18 @@ serve(async (req) => {
     }
     // console.log(`User ${user.id} has subscription tier: ${subscriptionTier}`); // For debugging
 
+    // --- Tiered Access for External Context Search ---
+    if (subscriptionTier === 'guest') {
+      return new Response(JSON.stringify({ 
+        error: 'External context search is not available for guest users. Please log in or sign up.',
+        code: 'EXTERNAL_CONTEXT_ACCESS_DENIED'
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 403, // Forbidden
+      });
+    }
+    // --- End Tiered Access ---
+
     const { query } = await req.json();
 
     if (!query) {
