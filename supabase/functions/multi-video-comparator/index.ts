@@ -420,7 +420,7 @@ serve(async (req) => {
         last_compared_at: now,
         comparison_data_json: coreMultiComparisonData,
         custom_comparative_qa_results: combinedCustomComparativeQaResults,
-        overall_thumbnail_url: analyzedBlogPosts[0]?.thumbnail_url || null, // Use first video's thumbnail as overall
+        overall_thumbnail_url: null, // Set to null to allow frontend to use its multi-thumbnail logic
       })
       .select()
       .single();
@@ -458,7 +458,7 @@ serve(async (req) => {
       last_compared_at: newMultiComparison.last_compared_at,
       comparison_data_json: newMultiComparison.comparison_data_json,
       custom_comparative_qa_results: newMultiComparison.custom_comparative_qa_results,
-      overall_thumbnail_url: newMultiComparison.overall_thumbnail_url,
+      overall_thumbnail_url: newMultiComparison.overall_thumbnail_url, // Will be null
       videos: analyzedBlogPosts.map((bp, index) => ({
         blog_post_id: bp.id,
         video_order: index,
