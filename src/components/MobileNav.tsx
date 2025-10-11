@@ -25,10 +25,9 @@ const MobileNav: React.FC<MobileNavProps> = ({ onLinkClick }) => {
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
         <Button variant="ghost" size="icon" className="md:hidden">
-          <span className="flex items-center justify-center"> {/* Added wrapper span */}
-            <Menu className="h-6 w-6" />
-            <span className="sr-only">Toggle navigation menu</span>
-          </span>
+          {/* Removed the extra <span> wrapper. Button should handle its children directly. */}
+          <Menu className="h-6 w-6" />
+          <span className="sr-only">Toggle navigation menu</span>
         </Button>
       </SheetTrigger>
       <SheetContent side="left" className="w-[250px] sm:w-[300px] flex flex-col">
