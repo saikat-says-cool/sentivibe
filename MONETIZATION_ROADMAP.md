@@ -29,7 +29,7 @@ To successfully integrate a tiered access and usage model into SentiVibe, allowi
 *   **Checkpoint 0.1: Database Schema Update for User Tier**
     *   **Description:** Add a `subscription_tier` column (e.g., `TEXT` or `ENUM`) to the `public.profiles` table to store the user's current tier (`guest`, `free`, `pro`). Default to `free` for new signed-up users.
     *   **Affected Areas:** Database (`public.profiles`), Supabase Migrations.
-    *   **Status:** Pending
+    *   **Status:** Completed
     *   **Notes:** `guest` status is implicit for unauthenticated users; `free` and `pro` will be explicit.
 
 *   **Checkpoint 0.2: AuthProvider to Expose User Tier**
