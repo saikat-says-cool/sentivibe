@@ -321,28 +321,49 @@ serve(async (req) => {
       const formattedCommentsForAI = commentsWithLikes.map((comment: any) => `(Likes: ${comment.likeCount}) ${comment.text}`);
       allFetchedCommentsText = commentsWithLikes.map((comment: any) => comment.text); // Keep all fetched comments text for display
 
-      // Prepare prompt for Longcat AI, instructing it to consider like counts as weights and subtitles as additional context
-      let longcatPrompt = `Analyze the following YouTube video content. When determining the overall sentiment, emotional tones, key themes, and summary insights, please give significantly more weight and importance to comments that have a higher 'Likes' count. This should reflect a weighted average sentiment where more popular comments have a greater influence on the final analysis.
-      
-      Video Title: "${videoTitle}"
-      Video Description: "${videoDescription}"
-      Video Creator: "${creatorName}"
-      Video Tags: ${videoTags.length > 0 ? videoTags.join(', ') : 'None'}
+      // --- Tiered AI Analysis Prompt ---
+      let aiAnalysisPromptContent: string;
+      let aiAnalysisSystemPrompt: string;
 
-      Respond in a structured JSON format.
+      if (subscriptionTier === 'guest') {
+        aiAnalysisSystemPrompt = "You are an expert sentiment analysis AI. Your task is to analyze a YouTube video's comments, providing a concise overall sentiment and a simplified summary. Prioritize popular comments and use video title, description, tags, and creator name for broader context. Respond in a structured JSON format.";
+        aiAnalysisPromptContent = `Analyze the following YouTube video content. When determining the overall sentiment and simplified summary, please give significantly more weight and importance to comments that have a higher 'Likes' count. This should reflect a weighted average sentiment where more popular comments have a greater influence on the final analysis.
+        
+        Video Title: "${videoTitle}"
+        Video Description: "${videoDescription}"
+        Video Creator: "${creatorName}"
+        Video Tags: ${videoTags.length > 0 ? videoTags.join(', ') : 'None'}
 
-      Example JSON format:
-      {
-        "overall_sentiment": "positive",
-        "emotional_tones": ["joy", "excitement"],
-        "key_themes": ["product review", "user experience"],
-        "summary_insights": "The comments are overwhelmingly positive, highlighting the product's ease of use and innovative features, with popular comments strongly influencing this assessment. The video's content, as described in the subtitles, aligns with these sentiments."
+        Respond in a structured JSON format.
+
+        Example JSON format:
+        {
+          "overall_sentiment": "positive",
+          "simplified_summary": "The comments generally express positive feelings about the video, with popular comments highlighting its positive aspects."
+        }
+
+        YouTube Comments:\n\n${formattedCommentsForAI.join('\n')}`;
+      } else { // 'free' or 'pro'
+        aiAnalysisSystemPrompt = "You are an expert sentiment analysis AI. Your task is to analyze a YouTube video's comments, providing a concise summary of sentiment, emotional tone, key themes, and overall insights. Prioritize popular comments and use video title, description, tags, and creator name for broader context. Respond in a structured JSON format.";
+        aiAnalysisPromptContent = `Analyze the following YouTube video content. When determining the overall sentiment, emotional tones, key themes, and summary insights, please give significantly more weight and importance to comments that have a higher 'Likes' count. This should reflect a weighted average sentiment where more popular comments have a greater influence on the final analysis.
+        
+        Video Title: "${videoTitle}"
+        Video Description: "${videoDescription}"
+        Video Creator: "${creatorName}"
+        Video Tags: ${videoTags.length > 0 ? videoTags.join(', ') : 'None'}
+
+        Respond in a structured JSON format.
+
+        Example JSON format:
+        {
+          "overall_sentiment": "positive",
+          "emotional_tones": ["joy", "excitement"],
+          "key_themes": ["product review", "user experience"],
+          "summary_insights": "The comments are overwhelmingly positive, highlighting the product's ease of use and innovative features, with popular comments strongly influencing this assessment. The video's content, as described in the subtitles, aligns with these sentiments."
+        }
+
+        YouTube Comments:\n\n${formattedCommentsForAI.join('\n')}`;
       }
-
-      YouTube Comments:\n\n${formattedCommentsForAI.join('\n')}`;
-
-      longcatPrompt += `\n\nNote: Subtitles were not available for this video. Please base your analysis solely on the comments, video title, description, tags, and creator name.`;
-
 
       let longcatResponse;
       for (const currentLongcatApiKey of longcatApiKeys) {
@@ -355,8 +376,8 @@ serve(async (req) => {
           body: JSON.stringify({
             model: "LongCat-Flash-Chat",
             messages: [
-              { "role": "system", "content": "You are an expert sentiment analysis AI. Your task is to analyze a YouTube video's comments, providing a concise summary of sentiment, emotional tone, key themes, and overall insights. Prioritize popular comments and use video title, description, tags, and creator name for broader context. Respond in a structured JSON format." },
-              { "role": "user", "content": longcatPrompt }
+              { "role": "system", "content": aiAnalysisSystemPrompt },
+              { "role": "user", "content": aiAnalysisPromptContent }
             ],
             max_tokens: 1000,
             temperature: 0.7,
@@ -393,6 +414,20 @@ serve(async (req) => {
       aiAnalysis = JSON.parse(aiContent);
 
       // --- Generate SEO-optimized blog post ---
+      let blogPostSummary: string;
+      let blogPostEmotionalTones: string;
+      let blogPostKeyThemes: string;
+
+      if (subscriptionTier === 'guest') {
+        blogPostSummary = aiAnalysis.simplified_summary || "No detailed summary available for this tier.";
+        blogPostEmotionalTones = "No detailed emotional tones available for this tier.";
+        blogPostKeyThemes = "No detailed key themes available for this tier.";
+      } else {
+        blogPostSummary = aiAnalysis.summary_insights || "No detailed summary available.";
+        blogPostEmotionalTones = aiAnalysis.emotional_tones?.join(', ') || "No detailed emotional tones available.";
+        blogPostKeyThemes = aiAnalysis.key_themes?.join(', ') || "No detailed key themes available.";
+      }
+
       const blogPostPrompt = `Based on the following YouTube video analysis, generate a comprehensive, SEO-optimized blog post.
       
       Video Title: "${videoTitle}"
@@ -400,9 +435,9 @@ serve(async (req) => {
       Video Creator: "${creatorName}"
       Video Tags: ${videoTags.length > 0 ? videoTags.join(', ') : 'None'}
       Overall Sentiment: ${aiAnalysis.overall_sentiment}
-      Emotional Tones: ${aiAnalysis.emotional_tones.join(', ')}
-      Key Themes: ${aiAnalysis.key_themes.join(', ')}
-      Summary Insights: ${aiAnalysis.summary_insights}
+      Emotional Tones: ${blogPostEmotionalTones}
+      Key Themes: ${blogPostKeyThemes}
+      Summary Insights: ${blogPostSummary}
       Top Comments (for reference, do not list all):
       ${allFetchedCommentsText.slice(0, 5).map((comment: string, index: number) => `- ${comment}`).join('\n')}
 
@@ -496,9 +531,9 @@ serve(async (req) => {
           Video Creator: "${creatorName}"
           Video Tags: ${videoTags.length > 0 ? videoTags.join(', ') : 'None'}
           Overall Sentiment: ${aiAnalysis.overall_sentiment}
-          Emotional Tones: ${aiAnalysis.emotional_tones.join(', ')}
-          Key Themes: ${aiAnalysis.key_themes.join(', ')}
-          Summary Insights: ${aiAnalysis.summary_insights}
+          Emotional Tones: ${blogPostEmotionalTones}
+          Key Themes: ${blogPostKeyThemes}
+          Summary Insights: ${blogPostSummary}
           Top Comments (for reference):
           ${allFetchedCommentsText.slice(0, 10).map((comment: string, index: number) => `- ${comment}`).join('\n')}
 
@@ -619,16 +654,31 @@ serve(async (req) => {
         for (const qa of customQuestions) {
           if (qa.question.trim() === "") continue; // Skip empty questions
 
+          // --- Tiered AI Analysis Prompt for Custom Questions (using existing analysis data) ---
+          let existingBlogSummary: string;
+          let existingBlogEmotionalTones: string;
+          let existingBlogKeyThemes: string;
+
+          if (subscriptionTier === 'guest') {
+            existingBlogSummary = existingBlogPost.ai_analysis_json?.simplified_summary || "No detailed summary available for this tier.";
+            existingBlogEmotionalTones = "No detailed emotional tones available for this tier.";
+            existingBlogKeyThemes = "No detailed key themes available for this tier.";
+          } else {
+            existingBlogSummary = existingBlogPost.ai_analysis_json?.summary_insights || "No detailed summary available.";
+            existingBlogEmotionalTones = existingBlogPost.ai_analysis_json?.emotional_tones?.join(', ') || "No detailed emotional tones available.";
+            existingBlogKeyThemes = existingBlogPost.ai_analysis_json?.key_themes?.join(', ') || "No detailed key themes available.";
+          }
+
           const customQuestionPrompt = `Based on the following YouTube video analysis, answer the user's custom question.
           
           Video Title: "${videoTitle}"
           Video Description: "${videoDescription}"
           Video Creator: "${creatorName}"
           Video Tags: ${videoTags.length > 0 ? videoTags.join(', ') : 'None'}
-          Overall Sentiment: ${aiAnalysis.overall_sentiment}
-          Emotional Tones: ${aiAnalysis.emotional_tones.join(', ')}
-          Key Themes: ${aiAnalysis.key_themes.join(', ')}
-          Summary Insights: ${aiAnalysis.summary_insights}
+          Overall Sentiment: ${existingBlogPost.ai_analysis_json?.overall_sentiment}
+          Emotional Tones: ${existingBlogEmotionalTones}
+          Key Themes: ${existingBlogKeyThemes}
+          Summary Insights: ${existingBlogSummary}
           Top Comments (for reference):
           ${allFetchedCommentsText.slice(0, 10).map((comment: string, index: number) => `- ${comment}`).join('\n')}
 
