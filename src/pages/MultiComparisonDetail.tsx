@@ -214,7 +214,7 @@ const MultiComparisonDetail = () => {
       <div className="container mx-auto p-4 max-w-3xl text-center text-gray-500 dark:text-gray-400">
         <h2 className="text-2xl font-bold mb-4">Multi-Comparison Not Found</h2>
         <p>The multi-comparison you are looking for does not exist or has been removed.</p>
-        <Link to="/comparison-library" className="text-blue-500 hover:underline mt-4 flex items-center justify-center">
+        <Link to="/multi-comparison-library" className="text-blue-500 hover:underline mt-4 flex items-center justify-center">
           <ArrowLeft className="h-4 w-4 mr-2" /> Back to Comparison Library
         </Link>
       </div>
@@ -312,6 +312,31 @@ const MultiComparisonDetail = () => {
                 <div key={index} className="border p-3 rounded-md bg-gray-50 dark:bg-gray-700">
                   <p className="font-medium text-gray-800 dark:text-gray-200 mb-1">Q{index + 1}: {qa.question}</p>
                   <p className="text-gray-700 dark:text-gray-300">A{index + 1}: {qa.answer || "No answer generated."}</p>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        )}
+
+        {/* New section for individual video comments */}
+        {multiComparison.videos && multiComparison.videos.length > 0 && (
+          <CardContent className="border-t pt-4 mt-4">
+            <h3 className="text-lg font-semibold mb-4">Top Comments for Each Video</h3>
+            <div className="space-y-6">
+              {multiComparison.videos.map((video, videoIndex) => (
+                <div key={videoIndex} className="border p-4 rounded-md bg-gray-50 dark:bg-gray-700">
+                  <h4 className="font-semibold text-lg mb-2 flex items-center gap-2">
+                    <Youtube className="h-5 w-5 text-red-500" /> {video.title}
+                  </h4>
+                  {video.raw_comments_for_chat && video.raw_comments_for_chat.length > 0 ? (
+                    <ul className="list-disc list-inside space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                      {video.raw_comments_for_chat.slice(0, 10).map((comment, commentIndex) => (
+                        <li key={commentIndex}>{comment}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-gray-500 dark:text-gray-400 text-sm">No top comments available for this video.</p>
+                  )}
                 </div>
               ))}
             </div>
