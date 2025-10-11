@@ -38,7 +38,7 @@ The project follows a standard React application structure with specific directo
         *   `src/components/Footer.tsx`: Application footer, now including the **brand ethics disclosure**.
         *   `src/components/theme-provider.tsx`: Theme context provider.
         *   `src/components/VideoChatDialog.tsx`: **Updated component for the centralized AI chat pop-up, now passing custom Q&A results as context and allowing precise word count control.**
-        *   `src/components/LibraryCopilot.tsx`: AI assistant for searching the analysis library.
+        *   `src/components/LibraryCopilot.tsx`: **Enhanced AI assistant for searching the analysis library and recommending new analysis topics.**
         *   `src/components/ui/`: Shadcn/ui components (e.g., Button, Card, Input, Badge, Alert, Skeleton, Collapsible).
     *   `src/hooks/`: Custom React hooks.
         *   `src/hooks/use-mobile.tsx`: Hook for detecting mobile viewport.
@@ -47,8 +47,8 @@ The project follows a standard React application structure with specific directo
         *   `src/pages/Index.tsx`: Landing page, updated with new tagline and wordmark styling.
         *   `src/pages/Login.tsx`: User authentication page, styled to integrate with the new color palette.
         *   `src/pages/AnalyzeVideo.tsx`: **Significantly updated main page for YouTube video analysis, now featuring dynamic custom question input fields with word limits, displaying AI-generated answers, and including a 'Refresh Analysis' button and 'Last Full Analysis' timestamp.**
-        *   `src/pages/VideoAnalysisLibrary.tsx`: **Updated page to list and search generated blog posts (video analyses), with updated BlogPost interface.**
-        *   `src/pages/MyAnalyses.tsx`: **Updated page to list a user's own analyses, now integrating `LibraryCopilot` and with updated BlogPost interface.**
+        *   `src/pages/VideoAnalysisLibrary.tsx`: **Updated page to list and search generated blog posts (video analyses), with updated BlogPost interface, and integrating the enhanced `LibraryCopilot`.**
+        *   `src/pages/MyAnalyses.tsx`: **Updated page to list a user's own analyses, now integrating the enhanced `LibraryCopilot` and with updated BlogPost interface.**
         *   `src/pages/BlogPostDetail.tsx`: **Updated page to display the full content of a single generated blog post, including the new custom Q&A section, a 'Go to Video Analysis' button, a 'Refresh Analysis' button, and the 'Last Full Analysis' timestamp.**
         *   `src/pages/NotFound.tsx`: 404 error page.
     *   `src/integrations/supabase/`: Supabase-specific integration files.
@@ -56,10 +56,10 @@ The project follows a standard React application structure with specific directo
         *   `src/integrations/supabase/auth.tsx`: React Context Provider and hook for managing Supabase user sessions.
 *   `supabase/`: Supabase-related backend files.
     *   `supabase/functions/`: Supabase Edge Functions.
-        *   `supabase/functions/youtube-analyzer/index.ts`: **Significantly updated Edge Function for video analysis, now implementing staleness-freshness logic, processing custom questions, making additional AI calls for answers, and storing these Q&A results in the database, even for cached videos. It also handles a `forceReanalyze` flag.**
+        *   `supabase/functions/youtube-analyzer/index.ts`: **Significantly updated Edge Function for video analysis, now implementing staleness-freshness logic, processing custom questions, making additional AI calls for answers, and storing these Q&A results in the database, even for cached videos. It also handles a `forceReanalyze` flag. AI prompts have been extensively engineered for high-quality, production-grade responses for sentiment analysis, blog post generation, and custom Q&A.**
         *   `supabase/functions/fetch-external-context/index.ts`: Edge Function for performing a one-time Google Custom Search.
-        *   `supabase/functions/chat-analyzer/index.ts`: **Updated Edge Function for handling AI chat conversations, now incorporating custom Q&A results into the AI's context and using a desired word count for response length.**
-        *   `supabase/functions/library-copilot-analyzer/index.ts`: Edge Function for handling AI chat for the Library Copilot.
+        *   `supabase/functions/chat-analyzer/index.ts`: **Updated Edge Function for handling AI chat conversations, now incorporating custom Q&A results into the AI's context and using a desired word count for response length. AI prompts have been extensively engineered for high-quality, production-grade responses, including a strict information hierarchy, precise word count adherence, and mandatory Markdown hyperlink formatting.**
+        *   `supabase/functions/library-copilot-analyzer/index.ts`: **Enhanced Edge Function for handling AI chat for the Library Copilot, now performing semantic search and proactively recommending new analysis topics. AI prompts have been extensively engineered for high-quality, production-grade responses, including precise matching, clear recommendations, and mandatory Markdown hyperlink formatting.**
     *   `supabase/migrations/`: Database migration files.
 *   `tailwind.config.ts`: Tailwind CSS configuration, including custom fonts (`Arimo`, `Plus Jakarta Sans`) and the new brand color palette.
 *   `.env`: Environment variables (e.g., Supabase URLs, API keys).
@@ -118,7 +118,7 @@ The project follows a standard React application structure with specific directo
     *   **Community Q&A Display:** A new section displays the AI-generated answers for all community questions.
     *   **`Last Full Analysis` Timestamp:** Displays the `lastReanalyzedAt` date to indicate the freshness of the core sentiment analysis.
 *   **PDF Download:** Integrates `html2pdf.js` to convert the analysis results `Card` into a downloadable PDF. The PDF generation now includes a custom header with the SentiVibe logo and tagline, and the community Q&A section.
-*   **`VideoChatDialog` Integration:** Renders the `VideoChatDialog` component, passing `isChatDialogOpen`, `setIsChatDialogOpen`, and `analysisResult` (which now includes `customQaResults`) as props.
+*   **`VideoChatDialog` Integration:** Renders the `VideoChatDialog` component, passing `isChatDialogOpen`, `onOpenChange`, and `initialAnalysisResult` (which now includes `customQaResults`) as props.
 
 ### 4.6. `VideoAnalysisLibrary.tsx`
 *   **Purpose:** Displays a list of all generated blog posts (video analyses) from the Supabase database.
@@ -131,7 +131,7 @@ The project follows a standard React application structure with specific directo
     *   `Skeleton` components provide loading state visuals.
     *   Handles cases where no posts are found or an error occurs during fetching.
     *   **SEO:** `img` tags for thumbnails include descriptive `alt` attributes.
-    *   **`LibraryCopilot` Integration:** Renders the `LibraryCopilot` component, passing the fetched `blogPosts` for AI-powered search.
+    *   **`LibraryCopilot` Integration:** Renders the **enhanced** `LibraryCopilot` component, passing the fetched `blogPosts` for AI-powered search and topic recommendations.
 
 ### 4.7. `BlogPostDetail.tsx`
 *   **Purpose:** Displays the full content of a single, SEO-optimized blog post.
@@ -155,7 +155,7 @@ The project follows a standard React application structure with specific directo
     *   Includes an "Original Video" `<a>` tag linking to `blogPost.original_video_link`.
     *   `Skeleton` components provide loading state visuals.
     *   Handles cases where the blog post is not found or an error occurs.
-*   **`VideoChatDialog` Integration:** Renders the `VideoChatDialog` component, passing `isChatDialogOpen`, `setIsChatDialogOpen`, and `blogPost` as props.
+*   **`VideoChatDialog` Integration:** Renders the `VideoChatDialog` component, passing `isChatDialogOpen`, `onOpenChange`, and `blogPost` as props.
 
 ### 4.8. `ChatInterface.tsx` (Generic Chat UI)
 *   A reusable component designed to display a list of messages and provide an input field for sending new messages.
@@ -175,11 +175,11 @@ The project follows a standard React application structure with specific directo
 *   **AI Controls:** Provides a `Select` component for users to choose `selectedPersona` and an `Input` for `desiredWordCount`, which are passed to the `chat-analyzer` Edge Function.
 *   **UI:** Renders the `ChatInterface` component within the dialog.
 
-### 4.10. `LibraryCopilot.tsx` (Existing Component, now more widely used)
-*   **Purpose:** Provides an AI assistant within the analysis library pages to help users find specific video analyses.
+### 4.10. `LibraryCopilot.tsx` (Enhanced Component)
+*   **Purpose:** Provides an AI assistant within the analysis library pages to help users find specific video analyses **and recommend new analysis topics.**
 *   **Props:** Accepts `blogPosts` (an array of `BlogPost` objects) from the parent page.
 *   **Internal State:** Manages `isOpen` (for the dialog) and `chatMessages`.
-*   **Chat Mutation:** Uses `copilotChatMutation` to invoke the `library-copilot-analyzer` Edge Function, passing the user's query and a simplified list of `blogPostsData`.
+*   **Chat Mutation:** Uses `copilotChatMutation` to invoke the **enhanced** `library-copilot-analyzer` Edge Function, passing the user's query and a simplified list of `blogPostsData`.
 *   **Markdown Links:** The AI is instructed to respond with clickable Markdown links (`[Title](/blog/slug)`) to relevant blog posts.
 
 ### 4.11. `MyAnalyses.tsx` (New Page)
@@ -187,7 +187,7 @@ The project follows a standard React application structure with specific directo
 *   **Data Fetching:** Uses `useQuery` to fetch `blog_posts` where `author_id` matches the current user's ID, ordered by `created_at`. The `BlogPost` interface has been updated to include `custom_qa_results` and `last_reanalyzed_at`.
 *   **Search Functionality:** Similar client-side search as `VideoAnalysisLibrary.tsx`.
 *   **UI Elements:** Displays user-specific analyses in `Card` components, linked to `BlogPostDetail.tsx`.
-*   **`LibraryCopilot` Integration:** Renders the `LibraryCopilot` component, passing the user's `blogPosts` for AI-powered search within their personal history.
+*   **`LibraryCopilot` Integration:** Renders the **enhanced** `LibraryCopilot` component, passing the user's `blogPosts` for AI-powered search and topic recommendations within their personal history.
 
 ## 5. Supabase Integration Details
 
@@ -248,7 +248,7 @@ The project follows a standard React application structure with specific directo
     *   Automatically calls `handle_new_user` whenever a new user is inserted into `auth.users`, ensuring a profile is created for every new signup.
 
 ### 5.5. Supabase Edge Function (`supabase/functions/youtube-analyzer/index.ts`)
-This Deno-based serverless function is the core backend logic for video analysis and blog post generation, **now enhanced with an intelligent caching mechanism, SEO-focused AI prompting, API key rotation, custom question processing, and staleness-freshness logic.**
+This Deno-based serverless function is the core backend logic for video analysis and blog post generation, **now enhanced with an intelligent caching mechanism, SEO-focused AI prompting, API key rotation, custom question processing, and staleness-freshness logic. AI prompts have been extensively engineered for high-quality, production-grade responses for sentiment analysis, blog post generation, and custom Q&A.**
 *   **CORS Handling:** Includes `corsHeaders` and handles `OPTIONS` preflight requests.
 *   **Supabase Client Initialization:** Creates a Supabase client within the function, passing the user's `Authorization` header.
 *   **User Authentication:** Verifies the user's session.
@@ -293,7 +293,7 @@ This Deno-based serverless function is responsible for fetching external, up-to-
 *   **Cost Optimization:** This function is called only once per video analysis session from the frontend, reducing repeated Google Search API calls.
 
 ### 5.7. Supabase Edge Function (`supabase/functions/chat-analyzer/index.ts`)
-This Deno-based serverless function handles the conversational AI aspect. **It now includes API key rotation and explicit instructions for Markdown hyperlinks, and incorporates custom Q&A results into its context.**
+This Deno-based serverless function handles the conversational AI aspect. **It now includes API key rotation and explicit instructions for Markdown hyperlinks, and incorporates custom Q&A results into its context. AI prompts have been extensively engineered for high-quality, production-grade responses, including a strict information hierarchy, precise word count adherence, and mandatory Markdown hyperlink formatting.**
 *   **CORS Handling:** Includes `corsHeaders` and handles `OPTIONS` preflight requests.
 *   **Supabase Client Initialization & User Authentication:** Verifies the user.
 *   **Input:** Receives `userMessage`, `chatMessages` (conversation history), `analysisResult` (full video analysis including top comments, creator name, thumbnail URL, `aiAnalysis` object, and **`customQaResults`**), `externalContext` (pre-fetched Google search results), `desiredWordCount`, and `selectedPersona` from the frontend.
@@ -313,15 +313,15 @@ This Deno-based serverless function handles the conversational AI aspect. **It n
 *   **Response:** Returns a `200 OK` response with the AI's `aiResponse`.
 *   **Cost Efficiency:** This function no longer makes direct Google Search API calls, relying on the frontend to provide the `externalContext`. **Note:** While the core video analysis is cached, the `fetch-external-context` function is still invoked on each new analysis request from the frontend to ensure the chat AI has the most up-to-date external information.
 
-### 5.8. Supabase Edge Function (`supabase/functions/library-copilot-analyzer/index.ts`) (New/Updated)
-This Deno-based serverless function handles the AI-powered search within the analysis library. **It now includes explicit instructions for Markdown hyperlinks.**
+### 5.8. Supabase Edge Function (`supabase/functions/library-copilot-analyzer/index.ts`) (Enhanced)
+This Deno-based serverless function handles the AI-powered search within the analysis library **and now acts as an analysis topic recommender. AI prompts have been extensively engineered for high-quality, production-grade responses, including precise matching, clear recommendations, and mandatory Markdown hyperlink formatting.**
 *   **CORS Handling:** Includes `corsHeaders` and handles `OPTIONS` preflight requests.
 *   **Supabase Client Initialization & User Authentication:** Verifies the user.
 *   **Input:** Receives `userQuery` and `blogPostsData` (a simplified list of blog posts) from the frontend.
 *   **API Key Retrieval & Rotation:** Retrieves a list of `LONGCAT_AI_API_KEY`s and iterates through them for API calls.
-*   **`systemPrompt`:** Explicitly instructs the AI to identify relevant blog posts and provide their titles with **Markdown links in the format `[Title of Blog Post](/blog/slug-of-blog-post)`**.
+*   **`systemPrompt`:** Explicitly instructs the AI to identify relevant blog posts and provide their titles with **Markdown links in the format `[Title of Blog Post](/blog/slug-of-blog-post)`**. **It also now instructs the AI to suggest 1 to 3 new, related analysis topics or video ideas based on the user's query and the existing library content.**
 *   **Longcat AI API Call:** Sends the formatted blog post data and user query to the Longcat AI API.
-*   **Response:** Returns a `200 OK` response with the AI's `aiResponse` containing the recommendations with clickable Markdown links.
+*   **Response:** Returns a `200 OK` response with the AI's `aiResponse` containing the recommendations with clickable Markdown links and new topic suggestions.
 
 ## 6. Styling and Branding
 *   **Tailwind CSS:** Used extensively for all styling, providing a utility-first approach.
