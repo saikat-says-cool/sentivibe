@@ -329,6 +329,16 @@ const BlogPostDetail = () => {
             </div>
           </CardContent>
         )}
+        {blogPost.ai_analysis_json?.raw_comments_for_chat && blogPost.ai_analysis_json.raw_comments_for_chat.length > 0 && (
+          <CardContent className="border-t pt-4 mt-4">
+            <h3 className="text-lg font-semibold mb-2">Raw Comments (First 10, by popularity)</h3>
+            <ul className="list-disc list-inside space-y-1 text-sm text-gray-600 dark:text-gray-400">
+              {blogPost.ai_analysis_json.raw_comments_for_chat.slice(0, 10).map((comment, index) => (
+                <li key={index}>{comment}</li>
+              ))}
+            </ul>
+          </CardContent>
+        )}
       </Card>
     </div>
   );
