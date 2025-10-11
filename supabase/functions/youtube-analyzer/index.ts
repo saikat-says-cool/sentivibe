@@ -37,10 +37,16 @@ function getApiKeys(baseName: string): string[] {
 const STALENESS_THRESHOLD_DAYS = 30;
 
 // Define tier limits
-const FREE_TIER_LIMITS = {
+const UNAUTHENTICATED_LIMITS = {
   dailyAnalyses: 2,
   maxCustomQuestions: 1,
   maxCustomQuestionWordCount: 100,
+};
+
+const AUTHENTICATED_FREE_TIER_LIMITS = {
+  dailyAnalyses: 5,
+  maxCustomQuestions: 2,
+  maxCustomQuestionWordCount: 150,
 };
 
 const PAID_TIER_LIMITS = {
@@ -70,8 +76,7 @@ serve(async (req: Request) => {
     );
 
     const { data: { user } } = await supabaseClient.auth.getUser();
-    let isPaidTier = false;
-    let currentLimits = FREE_TIER_LIMITS;
+    let currentLimits;
     let userSubscriptionId: string | null = null; // Will be user.id for authenticated, null for anon
 
     const clientIp = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
@@ -87,14 +92,18 @@ serve(async (req: Request) => {
 
       if (subscriptionError && subscriptionError.code !== 'PGRST116') { // PGRST116 means no rows found
         console.error("Error fetching subscription for user:", user.id, subscriptionError);
-        // Continue as free tier if there's an error fetching subscription
+        // Fallback to authenticated free tier if there's an error fetching subscription
+        currentLimits = AUTHENTICATED_FREE_TIER_LIMITS;
       } else if (subscriptionData && subscriptionData.status === 'active' && subscriptionData.plan_id !== 'free') {
-        isPaidTier = true;
         currentLimits = PAID_TIER_LIMITS;
+      } else {
+        // User is authenticated but has a 'free' plan or no active paid subscription
+        currentLimits = AUTHENTICATED_FREE_TIER_LIMITS;
       }
     } else {
-      // Unauthenticated user: use IP-based tracking for free tier limits
+      // Unauthenticated user
       userSubscriptionId = null; // Explicitly null for anon users
+      currentLimits = UNAUTHENTICATED_LIMITS;
     }
 
     const longcatApiKeys = getApiKeys('LONGCAT_AI_API_KEY'); // Declared here
@@ -138,6 +147,9 @@ serve(async (req: Request) => {
       if (forceReanalyze || daysSinceLastReanalysis > STALENESS_THRESHOLD_DAYS) {
         shouldPerformFullReanalysis = true;
         isNewAnalysisOrForcedReanalysis = true;
+      } else {
+        // If it's a fresh analysis, but new custom questions are added, it's not a full re-analysis
+        // but we still need to process the new questions. This is handled later.
       }
     } else {
       shouldPerformFullReanalysis = true;
@@ -163,7 +175,7 @@ serve(async (req: Request) => {
 
         if (count !== null && count >= currentLimits.dailyAnalyses) {
           return new Response(JSON.stringify({ 
-            error: `Daily analysis limit (${currentLimits.dailyAnalyses}) exceeded. ${isPaidTier ? 'You have reached your paid tier limit.' : 'Upgrade to a paid tier for more analyses.'}` 
+            error: `Daily analysis limit (${currentLimits.dailyAnalyses}) exceeded. ${currentLimits === PAID_TIER_LIMITS ? 'You have reached your paid tier limit.' : 'Upgrade to a paid tier for more analyses.'}` 
           }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             status: 403,
@@ -199,9 +211,9 @@ serve(async (req: Request) => {
           }
         }
 
-        if (currentAnalysesCount >= FREE_TIER_LIMITS.dailyAnalyses) {
+        if (currentAnalysesCount >= UNAUTHENTICATED_LIMITS.dailyAnalyses) { // Always use UNAUTHENTICATED_LIMITS for anon
           return new Response(JSON.stringify({ 
-            error: `Daily analysis limit (${FREE_TIER_LIMITS.dailyAnalyses}) exceeded for your IP address. Upgrade to a paid tier for more analyses.` 
+            error: `Daily analysis limit (${UNAUTHENTICATED_LIMITS.dailyAnalyses}) exceeded for your IP address. Upgrade to a paid tier for more analyses.` 
           }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             status: 403,
@@ -234,7 +246,7 @@ serve(async (req: Request) => {
     // --- Enforce Custom Question Limits ---
     if (customQuestions && customQuestions.length > currentLimits.maxCustomQuestions) {
       return new Response(JSON.stringify({ 
-        error: `You can only ask a maximum of ${currentLimits.maxCustomQuestions} custom question(s) per analysis. ${isPaidTier ? '' : 'Upgrade to a paid tier to ask more questions.'}` 
+        error: `You can only ask a maximum of ${currentLimits.maxCustomQuestions} custom question(s) per analysis. ${currentLimits === PAID_TIER_LIMITS ? '' : 'Upgrade to a paid tier to ask more questions.'}` 
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 403,
@@ -245,7 +257,7 @@ serve(async (req: Request) => {
       for (const qa of customQuestions) {
         if (qa.wordCount > currentLimits.maxCustomQuestionWordCount) {
           return new Response(JSON.stringify({ 
-            error: `Maximum word count for a custom question answer is ${currentLimits.maxCustomQuestionWordCount}. ${isPaidTier ? '' : 'Upgrade to a paid tier for longer answers.'}` 
+            error: `Maximum word count for a custom question answer is ${currentLimits.maxCustomQuestionWordCount}. ${currentLimits === PAID_TIER_LIMITS ? '' : 'Upgrade to a paid tier for longer answers.'}` 
           }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             status: 403,
