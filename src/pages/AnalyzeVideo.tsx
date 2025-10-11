@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { useMutation, useQueryClient } from "@tanstack/react-query"; // Import useQueryClient
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Youtube, Download, MessageSquare, Link as LinkIcon, PlusCircle, XCircle, RefreshCw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +16,7 @@ import html2pdf from 'html2pdf.js';
 import { Textarea } from "@/components/ui/textarea";
 import { Link, useLocation } from "react-router-dom";
 import VideoChatDialog from "@/components/VideoChatDialog";
+import { useAuth } from '@/integrations/supabase/auth';
 
 interface AiAnalysisResult {
   overall_sentiment: string;
@@ -27,7 +28,7 @@ interface AiAnalysisResult {
 interface CustomQuestion {
   question: string;
   wordCount: number;
-  answer?: string; // AI-generated answer
+  answer?: string;
 }
 
 interface StoredAiAnalysisContent extends AiAnalysisResult {
@@ -50,8 +51,8 @@ interface BlogPost {
   created_at: string;
   updated_at: string;
   ai_analysis_json: StoredAiAnalysisContent | null;
-  custom_qa_results?: CustomQuestion[]; // New field
-  last_reanalyzed_at?: string; // New field
+  custom_qa_results?: CustomQuestion[];
+  last_reanalyzed_at?: string;
 }
 
 interface AnalysisResponse {
@@ -65,9 +66,21 @@ interface AnalysisResponse {
   aiAnalysis: AiAnalysisResult;
   blogPostSlug?: string;
   originalVideoLink?: string;
-  customQaResults?: CustomQuestion[]; // New field
-  lastReanalyzedAt?: string; // New field
+  customQaResults?: CustomQuestion[];
+  lastReanalyzedAt?: string;
 }
+
+const FREE_TIER_LIMITS = {
+  dailyAnalyses: 2,
+  maxCustomQuestions: 1,
+  maxCustomQuestionWordCount: 100,
+};
+
+const PAID_TIER_LIMITS = {
+  dailyAnalyses: 50,
+  maxCustomQuestions: 5,
+  maxCustomQuestionWordCount: 500,
+};
 
 const AnalyzeVideo = () => {
   const location = useLocation();
@@ -75,13 +88,69 @@ const AnalyzeVideo = () => {
   const openChatImmediately = location.state?.openChat as boolean | undefined;
   const forceReanalyzeFromNav = location.state?.forceReanalyze as boolean | undefined;
 
+  const { user, subscriptionStatus, subscriptionPlanId } = useAuth();
+
   const [videoLink, setVideoLink] = useState("");
   const [customQuestions, setCustomQuestions] = useState<CustomQuestion[]>([{ question: "", wordCount: 200 }]);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isChatDialogOpen, setIsChatDialogOpen] = useState(false);
+  const [analysesToday, setAnalysesToday] = useState<number>(0);
   const analysisReportRef = useRef<HTMLDivElement>(null);
-  const queryClient = useQueryClient(); // Initialize queryClient
+  const queryClient = useQueryClient();
+
+  const isPaidTier = subscriptionStatus === 'active' && subscriptionPlanId !== 'free';
+  const currentLimits = isPaidTier ? PAID_TIER_LIMITS : FREE_TIER_LIMITS;
+
+  const analyzeVideoMutation = useMutation({
+    mutationFn: async (payload: { videoLink: string; customQuestions: CustomQuestion[]; forceReanalyze?: boolean }) => {
+      setError(null);
+      setIsChatDialogOpen(false);
+
+      const { data, error: invokeError } = await supabase.functions.invoke('youtube-analyzer', {
+        body: payload,
+      });
+
+      if (invokeError) {
+        console.error("Supabase Function Invoke Error:", invokeError);
+        throw new Error(invokeError.message || "Failed to invoke analysis function.");
+      }
+      return data;
+    },
+    onSuccess: (data) => {
+      setAnalysisResult(data);
+      queryClient.invalidateQueries({ queryKey: ['blogPosts'] });
+      queryClient.invalidateQueries({ queryKey: ['myBlogPosts'] });
+      if (data.blogPostSlug) {
+        queryClient.invalidateQueries({ queryKey: ['blogPost', data.blogPostSlug] });
+      }
+      setAnalysesToday(prev => prev + 1);
+    },
+    onError: (err: Error) => {
+      setError(err.message);
+      setAnalysisResult(null);
+    },
+  });
+
+  useEffect(() => {
+    const fetchDailyAnalysisCount = async () => {
+      const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const { count, error } = await supabase
+        .from('blog_posts')
+        .select('id', { count: 'exact', head: true })
+        .gte('created_at', twentyFourHoursAgo)
+        .or(`author_id.eq.${user?.id || 'null'},author_id.is.null`);
+
+      if (error) {
+        console.error("Error fetching daily analysis count:", error);
+        setAnalysesToday(0);
+      } else {
+        setAnalysesToday(count || 0);
+      }
+    };
+
+    fetchDailyAnalysisCount();
+  }, [user, subscriptionStatus, subscriptionPlanId, analyzeVideoMutation.isSuccess]);
 
   useEffect(() => {
     if (initialBlogPost) {
@@ -111,45 +180,10 @@ const AnalyzeVideo = () => {
         setIsChatDialogOpen(true);
       }
       if (forceReanalyzeFromNav) {
-        // Trigger re-analysis if navigated with forceReanalyze flag
-        // The existing analysisResult will be displayed until the new one loads
         analyzeVideoMutation.mutate({ videoLink: initialBlogPost.original_video_link, customQuestions: [], forceReanalyze: true });
       }
     }
-  }, [initialBlogPost, openChatImmediately, forceReanalyzeFromNav]);
-
-  const analyzeVideoMutation = useMutation({
-    mutationFn: async (payload: { videoLink: string; customQuestions: CustomQuestion[]; forceReanalyze?: boolean }) => {
-      setError(null);
-      setIsChatDialogOpen(false);
-
-      // Do NOT set analysisResult to null here. Keep old data visible during refresh.
-      // setAnalysisResult(null); 
-
-      const { data, error: invokeError } = await supabase.functions.invoke('youtube-analyzer', {
-        body: payload,
-      });
-
-      if (invokeError) {
-        console.error("Supabase Function Invoke Error:", invokeError);
-        throw new Error(invokeError.message || "Failed to invoke analysis function.");
-      }
-      return data;
-    },
-    onSuccess: (data) => {
-      setAnalysisResult(data);
-      // Invalidate queries to ensure fresh data is fetched if user navigates back
-      queryClient.invalidateQueries({ queryKey: ['blogPosts'] }); // For VideoAnalysisLibrary
-      queryClient.invalidateQueries({ queryKey: ['myBlogPosts'] }); // For MyAnalyses
-      if (data.blogPostSlug) {
-        queryClient.invalidateQueries({ queryKey: ['blogPost', data.blogPostSlug] }); // For BlogPostDetail
-      }
-    },
-    onError: (err: Error) => {
-      setError(err.message);
-      setAnalysisResult(null); // Clear analysis result on error
-    },
-  });
+  }, [initialBlogPost, openChatImmediately, forceReanalyzeFromNav, analyzeVideoMutation]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -161,14 +195,16 @@ const AnalyzeVideo = () => {
 
   const handleRefreshAnalysis = () => {
     if (analysisResult?.originalVideoLink) {
-      // When refreshing, we don't pass custom questions from the form,
-      // as the Edge Function will merge existing ones.
       analyzeVideoMutation.mutate({ videoLink: analysisResult.originalVideoLink, customQuestions: [], forceReanalyze: true });
     }
   };
 
   const handleAddQuestion = () => {
-    setCustomQuestions([...customQuestions, { question: "", wordCount: 200 }]);
+    if (customQuestions.length < currentLimits.maxCustomQuestions) {
+      setCustomQuestions([...customQuestions, { question: "", wordCount: currentLimits.maxCustomQuestionWordCount }]);
+    } else {
+      setError(`You can only add a maximum of ${currentLimits.maxCustomQuestions} custom question(s) on your current plan.`);
+    }
   };
 
   const handleRemoveQuestion = (index: number) => {
@@ -177,9 +213,8 @@ const AnalyzeVideo = () => {
 
   const handleQuestionChange = (index: number, field: keyof CustomQuestion, value: string | number) => {
     const newQuestions = [...customQuestions];
-    // Ensure wordCount is a number
     if (field === 'wordCount') {
-      newQuestions[index][field] = Number(value);
+      newQuestions[index][field] = Math.min(Number(value), currentLimits.maxCustomQuestionWordCount);
     } else {
       newQuestions[index][field] = value as string;
     }
@@ -199,6 +234,8 @@ const AnalyzeVideo = () => {
       html2pdf().from(element).set(opt).save();
     }
   };
+
+  const isAnalysisLimitReached = analysesToday >= currentLimits.dailyAnalyses;
 
   return (
     <div className="container mx-auto p-4 max-w-3xl">
@@ -220,10 +257,18 @@ const AnalyzeVideo = () => {
                 onChange={(e) => setVideoLink(e.target.value)}
                 required
                 className="mt-1"
-                disabled={analyzeVideoMutation.isPending}
+                disabled={analyzeVideoMutation.isPending || isAnalysisLimitReached}
               />
               <p className="text-sm text-muted-foreground mt-2">
                 <span className="font-semibold text-red-500">Important:</span> The video must have at least 50 comments for a proper sentiment analysis. Analysis may take up to 30 seconds.
+              </p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Analyses today: {analysesToday}/{currentLimits.dailyAnalyses}
+                {!isPaidTier && (
+                  <span className="ml-2 text-blue-500">
+                    <Link to="/upgrade" className="underline">Upgrade to a paid tier</Link> for more analyses.
+                  </span>
+                )}
               </p>
             </div>
 
@@ -240,7 +285,7 @@ const AnalyzeVideo = () => {
                     value={qa.question}
                     onChange={(e) => handleQuestionChange(index, 'question', e.target.value)}
                     className="mt-1 min-h-[60px]"
-                    disabled={analyzeVideoMutation.isPending}
+                    disabled={analyzeVideoMutation.isPending || isAnalysisLimitReached}
                   />
                 </div>
                 <div className="w-24">
@@ -249,12 +294,12 @@ const AnalyzeVideo = () => {
                     id={`wordCount-${index}`}
                     type="number"
                     min="50"
-                    max="1000"
+                    max={currentLimits.maxCustomQuestionWordCount}
                     step="50"
                     value={qa.wordCount}
                     onChange={(e) => handleQuestionChange(index, 'wordCount', e.target.value)}
                     className="mt-1"
-                    disabled={analyzeVideoMutation.isPending}
+                    disabled={analyzeVideoMutation.isPending || isAnalysisLimitReached}
                   />
                 </div>
                 {customQuestions.length > 1 && (
@@ -263,7 +308,7 @@ const AnalyzeVideo = () => {
                     variant="ghost"
                     size="icon"
                     onClick={() => handleRemoveQuestion(index)}
-                    disabled={analyzeVideoMutation.isPending}
+                    disabled={analyzeVideoMutation.isPending || isAnalysisLimitReached}
                     className="self-end sm:self-auto"
                   >
                     <XCircle className="h-5 w-5 text-red-500" />
@@ -275,16 +320,29 @@ const AnalyzeVideo = () => {
               type="button"
               variant="outline"
               onClick={handleAddQuestion}
-              disabled={analyzeVideoMutation.isPending}
+              disabled={analyzeVideoMutation.isPending || isAnalysisLimitReached || customQuestions.length >= currentLimits.maxCustomQuestions}
               className="w-full flex items-center gap-2"
             >
               <PlusCircle className="h-4 w-4" /> Add Another Question
             </Button>
+            {!isPaidTier && customQuestions.length >= currentLimits.maxCustomQuestions && (
+              <p className="text-sm text-red-500 mt-1">
+                You can only ask {currentLimits.maxCustomQuestions} custom question(s) on the free tier. <Link to="/upgrade" className="underline">Upgrade</Link> to ask more.
+              </p>
+            )}
 
-            <Button type="submit" className="w-full" disabled={analyzeVideoMutation.isPending}>
+            <Button type="submit" className="w-full" disabled={analyzeVideoMutation.isPending || isAnalysisLimitReached}>
               {analyzeVideoMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Analyze Comments & Get Answers
             </Button>
+            {isAnalysisLimitReached && (
+              <Alert variant="destructive" className="mt-4">
+                <AlertTitle>Daily Limit Reached</AlertTitle>
+                <AlertDescription>
+                  You have reached your daily limit of {currentLimits.dailyAnalyses} analyses. Please try again tomorrow or <Link to="/upgrade" className="underline">upgrade to a paid tier</Link> for more analyses.
+                </AlertDescription>
+              </Alert>
+            )}
           </form>
         </CardContent>
       </Card>
