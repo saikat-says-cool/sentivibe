@@ -61,9 +61,14 @@ interface MultiComparisonChatDialogProps {
 }
 
 // Define tier limits for chat (matching backend for consistency)
-const FREE_TIER_LIMITS = {
+const UNAUTHENTICATED_LIMITS = {
   chatMessageLimit: 5, // Max AI responses per session
   maxResponseWordCount: 100,
+};
+
+const AUTHENTICATED_FREE_TIER_LIMITS = {
+  chatMessageLimit: 10, // Max AI responses per session
+  maxResponseWordCount: 150,
 };
 
 const PAID_TIER_LIMITS = {
@@ -76,7 +81,7 @@ const MultiComparisonChatDialog: React.FC<MultiComparisonChatDialogProps> = ({
   onOpenChange,
   initialMultiComparisonResult,
 }) => {
-  const { subscriptionStatus, subscriptionPlanId } = useAuth(); // Get auth and subscription info
+  const { user, subscriptionStatus, subscriptionPlanId } = useAuth(); // Get auth and subscription info
 
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
   const [desiredWordCount, setDesiredWordCount] = useState<number>(300);
@@ -85,7 +90,19 @@ const MultiComparisonChatDialog: React.FC<MultiComparisonChatDialogProps> = ({
   const [error, setError] = useState<string | null>(null); // Define error state
 
   const isPaidTier = subscriptionStatus === 'active' && subscriptionPlanId !== 'free';
-  const currentLimits = isPaidTier ? PAID_TIER_LIMITS : FREE_TIER_LIMITS;
+  const isAuthenticatedFreeTier = user && !isPaidTier; // Authenticated but not paid
+  const isUnauthenticated = !user; // Not logged in
+
+  let currentLimits;
+  if (isPaidTier) {
+    currentLimits = PAID_TIER_LIMITS;
+  } else if (isAuthenticatedFreeTier) {
+    currentLimits = AUTHENTICATED_FREE_TIER_LIMITS;
+  } else if (isUnauthenticated) { // Explicitly use isUnauthenticated
+    currentLimits = UNAUTHENTICATED_LIMITS;
+  } else { // Fallback, though should not be reached if auth logic is sound
+    currentLimits = UNAUTHENTICATED_LIMITS; // Default to most restrictive
+  }
 
   useEffect(() => {
     if (isOpen) {
@@ -117,7 +134,7 @@ const MultiComparisonChatDialog: React.FC<MultiComparisonChatDialogProps> = ({
       setCurrentExternalContext(null);
       setError(null); // Clear error when dialog closes
     }
-  }, [isOpen, initialMultiComparisonResult, currentLimits.maxResponseWordCount]);
+  }, [isOpen, initialMultiComparisonResult, currentLimits.maxResponseWordCount, user, subscriptionStatus, subscriptionPlanId]); // Add currentLimits to dependencies
 
   const fetchExternalContextMutation = useMutation({
     mutationFn: async (query: string) => {
