@@ -35,7 +35,7 @@ To successfully integrate a tiered access and usage model into SentiVibe, allowi
 *   **Checkpoint 0.2: AuthProvider to Expose User Tier**
     *   **Description:** Modify `src/integrations/supabase/auth.tsx` to fetch and expose the `subscription_tier` from the `public.profiles` table as part of the `useAuth` hook. This will make the tier available globally in the frontend.
     *   **Affected Areas:** Frontend (`src/integrations/supabase/auth.tsx`).
-    *   **Status:** Pending
+    *   **Status:** Completed
 
 *   **Checkpoint 0.3: Edge Function User Tier Retrieval**
     *   **Description:** Update all relevant Supabase Edge Functions (`youtube-analyzer`, `chat-analyzer`, `library-copilot-analyzer`, `fetch-external-context`) to retrieve the calling user's `subscription_tier` from the database or JWT claims.
