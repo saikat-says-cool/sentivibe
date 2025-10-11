@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, ArrowLeft, GitCompare, Youtube, MessageSquare, BarChart } from 'lucide-react'; // Added BarChart icon
+import { Loader2, ArrowLeft, GitCompare, Youtube, MessageSquare, BarChart, RefreshCw } from 'lucide-react'; // Added RefreshCw icon
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -259,6 +259,12 @@ const MultiComparisonDetail = () => {
               <BarChart className="h-4 w-4" /> Go to Multi-Comparison Analysis
             </Button>
           )}
+          <Button
+            onClick={() => navigate('/create-multi-comparison', { state: { multiComparison: formattedMultiComparisonResultForChat, forceRecompare: true } })}
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className="h-4 w-4" /> Refresh Comparison
+          </Button>
           {formattedMultiComparisonResultForChat && (
             <Button onClick={() => setIsChatDialogOpen(true)} className="flex items-center gap-2">
               <MessageSquare className="h-4 w-4" /> Chat with AI
@@ -289,6 +295,11 @@ const MultiComparisonDetail = () => {
               <span> (Last updated: {new Date(multiComparison.updated_at).toLocaleDateString()})</span>
             )}
           </p>
+          {multiComparison.last_compared_at && (
+            <p className="text-xs text-gray-500 dark:text-gray-500 mt-2 text-center">
+              Last Full Comparison: {new Date(multiComparison.last_compared_at).toLocaleDateString()}
+            </p>
+          )}
           <p className="text-md text-gray-700 dark:text-gray-300 mt-4 italic text-center">
             {multiComparison.meta_description}
           </p>

@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { Loader2, Youtube, GitCompare, PlusCircle, XCircle, MessageSquare, BarChart } from 'lucide-react';
+import { Loader2, Youtube, GitCompare, PlusCircle, XCircle, MessageSquare, BarChart, RefreshCw } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query'; // Import useQueryClient
 import { supabase } from '@/integrations/supabase/client';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -47,6 +47,7 @@ interface MultiComparisonResult {
 const CreateMultiComparison = () => {
   const location = useLocation();
   const initialMultiComparison = location.state?.multiComparison as MultiComparisonResult | undefined;
+  const forceRecompareFromNav = location.state?.forceRecompare as boolean | undefined;
 
   const [videoLinks, setVideoLinks] = useState<string[]>(['', '']); // Start with two empty links
   const [customComparativeQuestions, setCustomComparativeQuestions] = useState<CustomComparativeQuestion[]>([{ question: "", wordCount: 200 }]);
@@ -62,13 +63,22 @@ const CreateMultiComparison = () => {
       setCustomComparativeQuestions(initialMultiComparison.custom_comparative_qa_results.length > 0 
         ? initialMultiComparison.custom_comparative_qa_results 
         : [{ question: "", wordCount: 200 }]); // Ensure at least one empty question field
+      
+      if (forceRecompareFromNav) {
+        // Trigger re-comparison if navigated with forceRecompare flag
+        // The existing multiComparisonResult will be displayed until the new one loads
+        const validVideoLinks = initialMultiComparison.videos.map(video => video.original_video_link);
+        const validQuestions = initialMultiComparison.custom_comparative_qa_results.filter(q => q.question.trim() !== "");
+        createMultiComparisonMutation.mutate({ videoLinks: validVideoLinks, customComparativeQuestions: validQuestions, forceRecompare: true });
+      }
     }
-  }, [initialMultiComparison]);
+  }, [initialMultiComparison, forceRecompareFromNav]);
 
   const createMultiComparisonMutation = useMutation({
-    mutationFn: async (payload: { videoLinks: string[]; customComparativeQuestions: CustomComparativeQuestion[] }) => {
+    mutationFn: async (payload: { videoLinks: string[]; customComparativeQuestions: CustomComparativeQuestion[]; forceRecompare?: boolean }) => {
       setError(null);
-      setMultiComparisonResult(null);
+      // Do NOT set multiComparisonResult to null here. Keep old data visible during refresh.
+      // setMultiComparisonResult(null); 
       setIsChatDialogOpen(false);
 
       const { data, error: invokeError } = await supabase.functions.invoke('multi-video-comparator', {
@@ -85,9 +95,13 @@ const CreateMultiComparison = () => {
       setMultiComparisonResult(data);
       // Invalidate queries for comparison library to show new comparison
       queryClient.invalidateQueries({ queryKey: ['multiComparisons'] }); 
+      if (data.slug) {
+        queryClient.invalidateQueries({ queryKey: ['multiComparison', data.slug] });
+      }
     },
     onError: (err: Error) => {
       setError(err.message);
+      setMultiComparisonResult(null); // Clear comparison result on error
     },
   });
 
@@ -131,7 +145,15 @@ const CreateMultiComparison = () => {
       return;
     }
     const validQuestions = customComparativeQuestions.filter(q => q.question.trim() !== "");
-    createMultiComparisonMutation.mutate({ videoLinks: validVideoLinks, customComparativeQuestions: validQuestions });
+    createMultiComparisonMutation.mutate({ videoLinks: validVideoLinks, customComparativeQuestions: validQuestions, forceRecompare: false });
+  };
+
+  const handleRefreshComparison = () => {
+    if (multiComparisonResult?.videos) {
+      const validVideoLinks = multiComparisonResult.videos.map(video => video.original_video_link);
+      const validQuestions = multiComparisonResult.custom_comparative_qa_results.filter(q => q.question.trim() !== "");
+      createMultiComparisonMutation.mutate({ videoLinks: validVideoLinks, customComparativeQuestions: validQuestions, forceRecompare: true });
+    }
   };
 
   return (
@@ -265,6 +287,9 @@ const CreateMultiComparison = () => {
       {multiComparisonResult && (
         <>
           <div className="flex flex-wrap justify-end gap-2 mb-4">
+            <Button onClick={handleRefreshComparison} className="flex items-center gap-2" disabled={createMultiComparisonMutation.isPending}>
+              {createMultiComparisonMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />} Refresh Comparison
+            </Button>
             <Button onClick={() => setIsChatDialogOpen(true)} className="flex items-center gap-2">
               <MessageSquare className="h-4 w-4" /> Chat with AI
             </Button>
