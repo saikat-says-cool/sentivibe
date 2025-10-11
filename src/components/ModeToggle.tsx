@@ -8,9 +8,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useTheme } from "@/components/theme-provider";
+import { useAuth } from "@/integrations/supabase/auth"; // Import useAuth
 
 export function ModeToggle() {
-  const { setTheme } = useTheme();
+  const { setTheme, availableThemes } = useTheme();
+  const { subscriptionTier } = useAuth();
+
+  const isProUser = subscriptionTier === 'pro';
 
   return (
     <DropdownMenu>
@@ -22,15 +26,14 @@ export function ModeToggle() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => setTheme("light")}>
-          Light
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("dark")}>
-          Dark
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("system")}>
-          System
-        </DropdownMenuItem>
+        {availableThemes.map((themeOption) => (
+          <DropdownMenuItem key={themeOption} onClick={() => setTheme(themeOption)}>
+            {themeOption.charAt(0).toUpperCase() + themeOption.slice(1)}
+            {!isProUser && themeOption !== 'light' && themeOption !== 'dark' && themeOption !== 'system' && (
+              <span className="ml-2 text-xs text-muted-foreground">(Pro)</span>
+            )}
+          </DropdownMenuItem>
+        ))}
       </DropdownMenuContent>
     </DropdownMenu>
   );
