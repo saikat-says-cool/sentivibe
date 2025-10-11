@@ -9,8 +9,9 @@ import CreateMultiComparison from './pages/CreateMultiComparison';
 import MultiComparisonLibrary from './pages/MultiComparisonLibrary';
 import ComparisonDetail from './pages/ComparisonDetail';
 import MultiComparisonDetail from './pages/MultiComparisonDetail';
-import AboutUs from './pages/AboutUs'; // New import
-import HowItWorks from './pages/HowItWorks'; // New import
+import AboutUs from './pages/AboutUs';
+import HowItWorks from './pages/HowItWorks';
+import Upgrade from './pages/Upgrade'; // New import
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from './integrations/supabase/auth';
 import { ThemeProvider } from './components/theme-provider';
@@ -40,8 +41,9 @@ function App() {
                   <Route path="/multi-comparison-library" element={<MultiComparisonLibrary />} />
                   <Route path="/comparison/:slug" element={<ComparisonDetail />} />
                   <Route path="/multi-comparison/:slug" element={<MultiComparisonDetail />} />
-                  <Route path="/about-us" element={<AboutUs />} /> {/* New route */}
-                  <Route path="/how-it-works" element={<HowItWorks />} /> {/* New route */}
+                  <Route path="/about-us" element={<AboutUs />} />
+                  <Route path="/how-it-works" element={<HowItWorks />} />
+                  <Route path="/upgrade" element={<Upgrade />} /> {/* New route */}
                 </Routes>
               </main>
               <Footer />

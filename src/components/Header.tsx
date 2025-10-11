@@ -3,15 +3,18 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/integrations/supabase/auth';
 import { ModeToggle } from './ModeToggle';
-import MobileNav from './MobileNav'; // Import the new MobileNav component
+import MobileNav from './MobileNav';
 
 const Header = () => {
-  const { session } = useAuth();
+  const { session, subscriptionStatus, subscriptionPlanId } = useAuth(); // Get subscription info
+
+  const isPaidTier = subscriptionStatus === 'active' && subscriptionPlanId !== 'free';
+  const showUpgradeButton = session && !isPaidTier; // Show upgrade if logged in but not paid
 
   return (
     <header className="bg-background border-b border-border p-4 flex items-center justify-between">
       <div className="flex items-center space-x-4">
-        <MobileNav /> {/* Mobile navigation for small screens */}
+        <MobileNav />
         <Link to="/" className="flex items-center space-x-2">
           <h1 className="text-3xl font-extrabold tracking-tight text-foreground font-heading">
             <span className="text-foreground">Senti</span>
@@ -19,8 +22,8 @@ const Header = () => {
           </h1>
         </Link>
       </div>
-      <div className="flex items-center space-x-4"> {/* Wrapper for desktop nav and ModeToggle */}
-        <nav className="hidden md:flex items-center space-x-4"> {/* Desktop navigation for medium and larger screens */}
+      <div className="flex items-center space-x-4">
+        <nav className="hidden md:flex items-center space-x-4">
           <ul className="flex space-x-4">
             <li>
               <Link 
@@ -82,7 +85,12 @@ const Header = () => {
             </li>
           </ul>
         </nav>
-        <ModeToggle /> {/* ModeToggle is now a direct child of the flex container */}
+        {showUpgradeButton && (
+          <Link to="/upgrade">
+            <Button variant="default" className="ml-4">Upgrade</Button>
+          </Link>
+        )}
+        <ModeToggle />
       </div>
     </header>
   );
