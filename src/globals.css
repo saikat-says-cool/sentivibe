@@ -92,6 +92,85 @@
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
+
+  /* Emerald Theme */
+  .theme-emerald {
+    --background: 160 60% 98%; /* Very light green */
+    --foreground: 160 10% 10%; /* Dark green */
+
+    --card: 160 60% 100%;
+    --card-foreground: 160 10% 10%;
+
+    --popover: 160 60% 100%;
+    --popover-foreground: 160 10% 10%;
+
+    --primary: 160 70% 30%; /* Deep emerald green */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 160 30% 85%; /* Lighter green */
+    --secondary-foreground: 160 10% 10%;
+
+    --muted: 160 30% 90%;
+    --muted-foreground: 160 10% 40%;
+
+    --accent: 160 70% 40%; /* Brighter emerald */
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 160 30% 75%;
+    --input: 160 30% 75%;
+    --ring: 160 70% 30%;
+
+    --sidebar-background: 160 60% 95%;
+    --sidebar-foreground: 160 10% 15%;
+    --sidebar-primary: 160 70% 25%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 160 30% 80%;
+    --sidebar-accent-foreground: 160 10% 15%;
+    --sidebar-border: 160 30% 70%;
+    --sidebar-ring: 160 70% 30%;
+  }
+
+  .dark .theme-emerald {
+    --background: 160 10% 10%; /* Dark green background */
+    --foreground: 160 60% 98%; /* Light green foreground */
+
+    --card: 160 10% 15%;
+    --card-foreground: 160 60% 98%;
+
+    --popover: 160 10% 15%;
+    --popover-foreground: 160 60% 98%;
+
+    --primary: 160 70% 60%; /* Lighter emerald for dark mode primary */
+    --primary-foreground: 160 10% 10%;
+
+    --secondary: 160 10% 20%;
+    --secondary-foreground: 160 60% 98%;
+
+    --muted: 160 10% 25%;
+    --muted-foreground: 160 10% 60%;
+
+    --accent: 160 70% 50%;
+    --accent-foreground: 160 10% 10%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 160 10% 30%;
+    --input: 160 10% 30%;
+    --ring: 160 70% 60%;
+
+    --sidebar-background: 160 10% 15%;
+    --sidebar-foreground: 160 60% 95%;
+    --sidebar-primary: 160 70% 55%;
+    --sidebar-primary-foreground: 160 10% 10%;
+    --sidebar-accent: 160 10% 20%;
+    --sidebar-accent-foreground: 160 60% 95%;
+    --sidebar-border: 160 10% 25%;
+    --sidebar-ring: 160 70% 55%;
+  }
 }
 
 @layer base {

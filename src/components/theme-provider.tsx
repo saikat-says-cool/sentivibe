@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from "react";
 
-type Theme = "dark" | "light" | "system";
+type Theme = "dark" | "light" | "system" | "emerald"; // Added 'emerald'
 
 interface ThemeProviderProps {
   children: ReactNode;
@@ -33,18 +33,20 @@ export function ThemeProvider({
   useEffect(() => {
     const root = window.document.documentElement;
 
-    root.classList.remove("light", "dark");
+    // Remove all known theme-related classes
+    root.classList.remove("light", "dark", "theme-emerald");
+
+    const systemMode = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 
     if (theme === "system") {
-      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
-        ? "dark"
-        : "light";
-
-      root.classList.add(systemTheme);
-      return;
+      root.classList.add(systemMode);
+    } else if (theme === "light" || theme === "dark") {
+      root.classList.add(theme);
+    } else { // Custom theme like "emerald"
+      // Apply the base light/dark class first, then the custom theme class
+      root.classList.add(systemMode); // This ensures .dark .theme-emerald styles apply correctly
+      root.classList.add(`theme-${theme}`);
     }
-
-    root.classList.add(theme);
   }, [theme]);
 
   const setTheme = (theme: Theme) => {
