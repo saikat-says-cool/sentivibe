@@ -25,7 +25,6 @@ const MobileNav: React.FC<MobileNavProps> = ({ onLinkClick }) => {
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
         <Button variant="ghost" size="icon" className="md:hidden">
-          {/* Removed the extra <span> wrapper. Button should handle its children directly. */}
           <Menu className="h-6 w-6" />
           <span className="sr-only">Toggle navigation menu</span>
         </Button>
@@ -86,15 +85,6 @@ const MobileNav: React.FC<MobileNavProps> = ({ onLinkClick }) => {
                 </Link>
               </li>
             )}
-            <li>
-              <Link 
-                to="/pricing" 
-                className="block px-4 py-2 text-lg font-medium hover:bg-accent hover:text-accent-foreground rounded-md"
-                onClick={handleLinkClick}
-              >
-                Pricing
-              </Link>
-            </li>
             <li>
               <Link 
                 to="/how-it-works" 
