@@ -6,9 +6,11 @@ import VideoAnalysisLibrary from './pages/VideoAnalysisLibrary';
 import MyAnalyses from './pages/MyAnalyses';
 import BlogPostDetail from './pages/BlogPostDetail';
 import CreateMultiComparison from './pages/CreateMultiComparison';
-import MultiComparisonLibrary from './pages/MultiComparisonLibrary'; // Renamed from ComparisonLibrary
+import MultiComparisonLibrary from './pages/MultiComparisonLibrary';
 import ComparisonDetail from './pages/ComparisonDetail';
 import MultiComparisonDetail from './pages/MultiComparisonDetail';
+import AboutUs from './pages/AboutUs'; // New import
+import HowItWorks from './pages/HowItWorks'; // New import
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from './integrations/supabase/auth';
 import { ThemeProvider } from './components/theme-provider';
@@ -35,9 +37,11 @@ function App() {
                   <Route path="/my-analyses" element={<MyAnalyses />} />
                   <Route path="/blog/:slug" element={<BlogPostDetail />} />
                   <Route path="/create-multi-comparison" element={<CreateMultiComparison />} />
-                  <Route path="/multi-comparison-library" element={<MultiComparisonLibrary />} /> {/* Updated route */}
+                  <Route path="/multi-comparison-library" element={<MultiComparisonLibrary />} />
                   <Route path="/comparison/:slug" element={<ComparisonDetail />} />
                   <Route path="/multi-comparison/:slug" element={<MultiComparisonDetail />} />
+                  <Route path="/about-us" element={<AboutUs />} /> {/* New route */}
+                  <Route path="/how-it-works" element={<HowItWorks />} /> {/* New route */}
                 </Routes>
               </main>
               <Footer />
