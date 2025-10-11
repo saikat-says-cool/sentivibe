@@ -293,7 +293,7 @@ serve(async (req) => {
         if (longcatResponse.ok) {
           break;
         } else if (longcatResponse.status === 429) {
-          console.warn(`Longcat AI API key hit rate limit for analysis. Trying next key.`);
+          console.warn(`Longcat AI API key ${currentLongcatApiKey} hit quota limit for analysis. Trying next key.`);
           continue;
         }
         break;
