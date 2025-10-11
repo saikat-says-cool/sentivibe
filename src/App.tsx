@@ -5,7 +5,7 @@ import AnalyzeVideo from './pages/AnalyzeVideo';
 import VideoAnalysisLibrary from './pages/VideoAnalysisLibrary';
 import MyAnalyses from './pages/MyAnalyses';
 import BlogPostDetail from './pages/BlogPostDetail';
-import AccountCenter from './pages/AccountCenter'; // New import
+import AccountCenter from './pages/AccountCenter';
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from './integrations/supabase/auth';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -18,8 +18,8 @@ const queryClient = new QueryClient();
 
 function App() {
   return (
-    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-      <AuthProvider>
+    <AuthProvider> {/* AuthProvider is now the outermost context */}
+      <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
         <QueryClientProvider client={queryClient}>
           <Router>
             <div className="flex flex-col min-h-screen">
@@ -53,7 +53,7 @@ function App() {
                     }
                   />
                   <Route
-                    path="/account" // New protected route
+                    path="/account"
                     element={
                       <ProtectedRoute>
                         <AccountCenter />
@@ -68,8 +68,8 @@ function App() {
             </div>
           </Router>
         </QueryClientProvider>
-      </AuthProvider>
-    </ThemeProvider>
+      </ThemeProvider>
+    </AuthProvider>
   );
 }
 
