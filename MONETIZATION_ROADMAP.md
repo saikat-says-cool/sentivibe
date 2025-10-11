@@ -53,8 +53,8 @@ To successfully integrate a tiered access and usage model into SentiVibe, allowi
     *   **Free Member:** Full access (ad-supported).
     *   **Pro Subscriber:** Full access (ad-free or minimal ads).
     *   **Affected Areas:** Frontend (`VideoAnalysisLibrary.tsx`, `BlogPostDetail.tsx`), Ad integration (future).
-    *   **Status:** Pending
-    *   **Notes:** Initial implementation will focus on access; ad integration is a separate task.
+    *   **Status:** Completed
+    *   **Notes:** Initial implementation will focus on access; ad integration is a separate task. The existing RLS policy for `blog_posts` and unprotected routes already provide public read access.
 
 *   **Checkpoint 1.2: My Analyses Dashboard Access**
     *   **Guest:** No access (redirect to login/signup).
