@@ -33,6 +33,17 @@ function getApiKeys(baseName: string): string[] {
   return keys;
 }
 
+// Define tier limits for chat
+const FREE_TIER_LIMITS = {
+  chatMessageLimit: 5, // Max AI responses per session
+  maxResponseWordCount: 100,
+};
+
+const PAID_TIER_LIMITS = {
+  chatMessageLimit: 100, // Max AI responses per session
+  maxResponseWordCount: 500,
+};
+
 serve(async (req) => {
   // Handle CORS preflight request
   if (req.method === 'OPTIONS') {
@@ -48,19 +59,29 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
       {
         global: {
-          headers: { Authorization: req.headers.get('Authorization') || '' }, // Changed: Handle missing header gracefully
+          headers: { Authorization: req.headers.get('Authorization') || '' },
         },
       }
     );
 
-    // No longer blocking unauthenticated users for chat
-    // const { data: { user } } = await supabaseClient.auth.getUser();
-    // if (!user) {
-    //   return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-    //     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    //     status: 401,
-    //   });
-    // }
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    let isPaidTier = false;
+    let currentLimits = FREE_TIER_LIMITS;
+
+    if (user) {
+      const { data: subscriptionData, error: subscriptionError } = await supabaseClient
+        .from('subscriptions')
+        .select('status, plan_id')
+        .eq('id', user.id)
+        .single();
+
+      if (subscriptionError && subscriptionError.code !== 'PGRST116') {
+        console.error("Error fetching subscription for user:", user.id, subscriptionError);
+      } else if (subscriptionData && subscriptionData.status === 'active' && subscriptionData.plan_id !== 'free') {
+        isPaidTier = true;
+        currentLimits = PAID_TIER_LIMITS;
+      }
+    }
 
     const { userMessage, chatMessages, analysisResult, externalContext, desiredWordCount, selectedPersona, customQaResults } = await req.json();
 
@@ -71,6 +92,22 @@ serve(async (req) => {
       });
     }
 
+    // --- Enforce Chat Message Limit ---
+    // The chatMessages array includes both user and AI messages.
+    // We count AI messages to enforce the limit.
+    const aiMessageCount = chatMessages.filter((msg: any) => msg.sender === 'ai').length;
+    if (aiMessageCount >= currentLimits.chatMessageLimit) {
+      return new Response(JSON.stringify({ 
+        error: `Chat message limit (${currentLimits.chatMessageLimit} AI responses) exceeded for this session. ${isPaidTier ? 'You have reached your paid tier limit.' : 'Upgrade to a paid tier for more chat messages.'}` 
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 403,
+      });
+    }
+
+    // --- Enforce Desired Word Count Limit ---
+    const finalDesiredWordCount = Math.min(desiredWordCount, currentLimits.maxResponseWordCount);
+
     // --- Longcat AI API Call ---
     const longcatApiKeys = getApiKeys('LONGCAT_AI_API_KEY');
     if (longcatApiKeys.length === 0) {
@@ -80,11 +117,9 @@ serve(async (req) => {
       });
     }
 
-    // Determine max_tokens based on desiredWordCount
-    // A common heuristic is 1 token per 0.75 words, so 1.33 tokens per word.
-    // We'll add a buffer to ensure the AI has enough space.
-    const maxTokens = Math.ceil(desiredWordCount * 1.5); 
-    const wordCountInstruction = `Keep your response to approximately ${desiredWordCount} words.`;
+    // Determine max_tokens based on finalDesiredWordCount
+    const maxTokens = Math.ceil(finalDesiredWordCount * 1.5); 
+    const wordCountInstruction = `Keep your response to approximately ${finalDesiredWordCount} words.`;
 
     // Base instructions for all personas, emphasizing completeness
     const baseInstructions = `
@@ -96,7 +131,7 @@ serve(async (req) => {
         *   **Primary:** Prioritize information directly from the 'Video Analysis Context' (including sentiment, themes, summary, and raw comments) for video-specific questions.
         *   **Secondary:** Augment with the 'Recent External Information' for up-to-date or broader context, relating it back to the video's topic when relevant.
         *   **Tertiary:** For general, time-independent questions not covered by the above, leverage your own pre-existing knowledge.
-    3.  **Word Count:** Adhere strictly to the user's requested response length (approximately ${desiredWordCount} words). This is a hard constraint. If a comprehensive answer exceeds this, provide the most critical information concisely.
+    3.  **Word Count:** Adhere strictly to the user's requested response length (approximately ${finalDesiredWordCount} words). This is a hard constraint. If a comprehensive answer exceeds this, provide the most critical information concisely.
     4.  **Formatting:**
         *   **Hyperlinks:** Whenever you mention a URL or a resource that can be linked, format it as a **Markdown hyperlink**: \`[Link Text](URL)\`. This is mandatory.
         *   Use bullet points, bolding, and clear paragraph breaks to enhance readability.
