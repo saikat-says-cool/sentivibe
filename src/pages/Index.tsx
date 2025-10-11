@@ -1,14 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/integrations/supabase/auth";
-import AdBanner from "@/components/AdBanner"; // Import AdBanner
 
 function Index() {
   const { session } = useAuth();
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] text-center px-4 py-8">
-      <AdBanner location="top" /> {/* Top ad banner */}
       <h1 className="text-5xl font-extrabold tracking-tight mb-6 text-gray-900 dark:text-gray-50">
         SentiVibe
       </h1>
@@ -26,7 +24,6 @@ function Index() {
           </Button>
         )}
       </div>
-      <AdBanner location="bottom" /> {/* Bottom ad banner */}
     </div>
   );
 }

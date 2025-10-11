@@ -1,17 +1,17 @@
 import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/integrations/supabase/auth'; // Changed from useSession
+import { useAuth } from '@/integrations/supabase/auth';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
-  const { session, isLoading } = useAuth(); // Changed from useSession
+  const { session, isLoading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
     if (session) {
-      navigate('/'); // Redirect to home if already logged in
+      navigate('/');
     }
   }, [session, navigate]);
 
@@ -27,7 +27,7 @@ const Login = () => {
         </h2>
         <Auth
           supabaseClient={supabase}
-          providers={[]} // No third-party providers for now, can be added later
+          providers={[]}
           appearance={{
             theme: ThemeSupa,
             variables: {
@@ -39,7 +39,7 @@ const Login = () => {
               },
             },
           }}
-          theme="light" // Using light theme, can be dynamic later
+          theme="light"
           redirectTo={window.location.origin + '/'}
         />
       </div>

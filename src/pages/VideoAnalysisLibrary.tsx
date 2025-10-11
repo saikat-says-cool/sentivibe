@@ -7,19 +7,12 @@ import { Button } from '@/components/ui/button';
 import { Loader2, Search, Youtube } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
-import LibraryCopilot from '@/components/LibraryCopilot';
 
 interface AiAnalysisResult {
   overall_sentiment: string;
   emotional_tones: string[];
   key_themes: string[];
   summary_insights: string;
-}
-
-interface CustomQuestion {
-  question: string;
-  wordCount: number;
-  answer?: string;
 }
 
 interface StoredAiAnalysisContent extends AiAnalysisResult {
@@ -35,15 +28,13 @@ interface BlogPost {
   keywords: string[];
   content: string;
   published_at: string;
-  author_id: string; // New field
+  author_id: string;
   creator_name: string;
   thumbnail_url: string;
   created_at: string;
   updated_at: string;
   original_video_link: string;
   ai_analysis_json: StoredAiAnalysisContent | null;
-  custom_qa_results?: CustomQuestion[]; // New field
-  last_reanalyzed_at?: string; // New field
 }
 
 const fetchBlogPosts = async (): Promise<BlogPost[]> => {
@@ -110,7 +101,7 @@ const VideoAnalysisLibrary = () => {
   return (
     <div className="container mx-auto p-4 max-w-4xl">
       <h1 className="text-3xl font-bold mb-6">Analysis Library</h1>
-      <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-2 mb-6">
+      <div className="flex items-center space-x-2 mb-6">
         <Input
           type="text"
           placeholder="Search by title, creator, or keywords..."
@@ -118,12 +109,9 @@ const VideoAnalysisLibrary = () => {
           onChange={(e) => setSearchTerm(e.target.value)}
           className="flex-1"
         />
-        <Button variant="outline" size="icon" className="sm:hidden">
+        <Button variant="outline" size="icon">
           <Search className="h-4 w-4" />
         </Button>
-        {blogPosts && blogPosts.length > 0 && (
-          <LibraryCopilot blogPosts={blogPosts} />
-        )}
       </div>
 
       {filteredPosts.length === 0 && (
