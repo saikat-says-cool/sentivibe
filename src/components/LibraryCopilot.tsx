@@ -122,7 +122,7 @@ const LibraryCopilot: React.FC<LibraryCopilotProps> = ({ blogPosts }) => {
           <MessageSquarePlus className="h-4 w-4" /> Library Copilot
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px] h-[80vh] flex flex-col">
+      <DialogContent className="flex h-full max-h-[90vh] w-full max-w-full flex-col sm:max-w-[90vw] md:max-w-[80vw] lg:max-w-[1000px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <MessageSquarePlus className="h-6 w-6 text-accent" /> SentiVibe Library Copilot

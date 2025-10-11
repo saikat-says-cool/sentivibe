@@ -180,7 +180,7 @@ const ComparisonChatDialog: React.FC<ComparisonChatDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] h-[80vh] flex flex-col">
+      <DialogContent className="flex h-full max-h-[90vh] w-full max-w-full flex-col sm:max-w-[90vw] md:max-w-[80vw] lg:max-w-[1000px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <MessageSquare className="h-6 w-6 text-blue-500" /> Chat about: {initialComparisonResult?.comparisonTitle || "Video Comparison"}
