@@ -70,6 +70,7 @@ interface AnalysisResponse {
 const AnalyzeVideo = () => {
   const location = useLocation();
   const initialBlogPost = location.state?.blogPost as BlogPost | undefined;
+  const openChatImmediately = location.state?.openChat as boolean | undefined; // New flag
 
   const [videoLink, setVideoLink] = useState("");
   const [customQuestions, setCustomQuestions] = useState<CustomQuestion[]>([{ question: "", wordCount: 200 }]);
@@ -99,9 +100,12 @@ const AnalyzeVideo = () => {
         customQaResults: initialBlogPost.custom_qa_results, // Load custom QA results
       };
       setAnalysisResult(loadedAnalysis);
-      setIsChatDialogOpen(true);
+      // Conditionally open chat dialog based on the flag
+      if (openChatImmediately) {
+        setIsChatDialogOpen(true);
+      }
     }
-  }, [initialBlogPost]);
+  }, [initialBlogPost, openChatImmediately]);
 
   const analyzeVideoMutation = useMutation({
     mutationFn: async (payload: { videoLink: string; customQuestions: CustomQuestion[] }) => {

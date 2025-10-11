@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, ArrowLeft, Youtube, MessageSquare } from 'lucide-react';
+import { Loader2, ArrowLeft, Youtube, MessageSquare, BarChart } from 'lucide-react'; // Added BarChart icon
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -228,8 +228,14 @@ const BlogPostDetail = () => {
           <Button asChild>
             <Link to="/analyze-video">Analyze a New Video</Link>
           </Button>
-          <Button 
-            onClick={() => navigate('/analyze-video', { state: { blogPost: blogPost } })} 
+          <Button
+            onClick={() => navigate('/analyze-video', { state: { blogPost: blogPost, openChat: false } })}
+            className="flex items-center gap-2"
+          >
+            <BarChart className="h-4 w-4" /> Go to Video Analysis
+          </Button>
+          <Button
+            onClick={() => navigate('/analyze-video', { state: { blogPost: blogPost, openChat: true } })}
             className="flex items-center gap-2"
           >
             <MessageSquare className="h-4 w-4" /> Chat with AI
@@ -256,10 +262,10 @@ const BlogPostDetail = () => {
             )}
           </p>
           {blogPost.original_video_link && (
-            <a 
-              href={blogPost.original_video_link} 
-              target="_blank" 
-              rel="noopener noreferrer" 
+            <a
+              href={blogPost.original_video_link}
+              target="_blank"
+              rel="noopener noreferrer"
               className="text-blue-500 hover:underline flex items-center mt-2 w-fit"
             >
               <Youtube className="h-4 w-4 mr-2" /> View Original Video
