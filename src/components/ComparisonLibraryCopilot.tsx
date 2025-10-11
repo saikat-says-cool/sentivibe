@@ -10,7 +10,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { GitCompare } from 'lucide-react';
 import ChatInterface from './ChatInterface';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query'; // Added useQuery
 import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/integrations/supabase/auth'; // Import useAuth
@@ -38,8 +38,12 @@ interface ComparisonLibraryCopilotProps {
 }
 
 // Define tier limits for library copilot queries (matching backend for consistency)
-const FREE_TIER_LIMITS = {
+const UNAUTHENTICATED_LIMITS = {
   dailyQueries: 5,
+};
+
+const AUTHENTICATED_FREE_TIER_LIMITS = {
+  dailyQueries: 10,
 };
 
 const PAID_TIER_LIMITS = {
@@ -65,38 +69,54 @@ const ComparisonLibraryCopilot: React.FC<ComparisonLibraryCopilotProps> = ({ com
   const [error, setError] = useState<string | null>(null);
 
   const isPaidTier = subscriptionStatus === 'active' && subscriptionPlanId !== 'free';
-  const currentLimits = isPaidTier ? PAID_TIER_LIMITS : FREE_TIER_LIMITS;
+  const isAuthenticatedFreeTier = user && !isPaidTier; // Authenticated but not paid
+  const isUnauthenticated = !user; // Not logged in
+
+  let currentLimits;
+  if (isPaidTier) {
+    currentLimits = PAID_TIER_LIMITS;
+  } else if (isAuthenticatedFreeTier) {
+    currentLimits = AUTHENTICATED_FREE_TIER_LIMITS;
+  } else { // Unauthenticated
+    currentLimits = UNAUTHENTICATED_LIMITS;
+  }
 
   // Fetch anonymous usage if not authenticated
   const { data: anonUsage, refetch: refetchAnonUsage } = useQuery({
     queryKey: ['anonUsageComparisonCopilot'],
     queryFn: fetchAnonUsage,
-    enabled: !user, // Only fetch if user is not logged in
+    enabled: isUnauthenticated, // Only fetch if user is not logged in
+    refetchOnWindowFocus: false,
+  });
+
+  // Fetch daily copilot query count for authenticated users
+  const { data: authenticatedCopilotQueriesCount } = useQuery<number, Error>({
+    queryKey: ['dailyCopilotQueriesCount', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return 0;
+      const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const { count, error } = await supabase
+        .from('copilot_queries_log')
+        .select('id', { count: 'exact', head: true })
+        .gte('created_at', twentyFourHoursAgo)
+        .eq('user_id', user.id);
+
+      if (error) {
+        console.error("Error fetching daily copilot query count for authenticated user:", error);
+        return 0;
+      }
+      return count || 0;
+    },
+    enabled: !!user && !isUnauthenticated, // Only fetch if user is logged in
     refetchOnWindowFocus: false,
   });
 
   useEffect(() => {
     const updateQueriesToday = async () => {
-      if (user) { // Authenticated user
-        const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-        const { count, error } = await supabase
-          .from('copilot_queries_log')
-          .select('id', { count: 'exact', head: true })
-          .gte('created_at', twentyFourHoursAgo)
-          .eq('user_id', user.id);
-
-        if (error) {
-          console.error("Error fetching daily copilot query count for authenticated user:", error);
-          setQueriesToday(0);
-        } else {
-          setQueriesToday(count || 0);
-        }
-      } else { // Unauthenticated user (IP-based)
-        if (anonUsage) {
-          setQueriesToday(anonUsage.copilot_queries_count);
-        } else {
-          setQueriesToday(0);
-        }
+      if (isUnauthenticated) {
+        setQueriesToday(anonUsage?.copilot_queries_count || 0);
+      } else if (user) {
+        setQueriesToday(authenticatedCopilotQueriesCount || 0);
       }
     };
 
@@ -114,7 +134,7 @@ const ComparisonLibraryCopilot: React.FC<ComparisonLibraryCopilotProps> = ({ com
       setChatMessages([]);
       setError(null); // Clear error when dialog closes
     }
-  }, [isOpen, user, anonUsage]); // Depend on user and anonUsage
+  }, [isOpen, user, anonUsage, isUnauthenticated, authenticatedCopilotQueriesCount]); // Depend on user, anonUsage, isUnauthenticated, and authenticatedCopilotQueriesCount
 
   const copilotChatMutation = useMutation({
     mutationFn: async (userQuery: string) => {
@@ -178,7 +198,7 @@ const ComparisonLibraryCopilot: React.FC<ComparisonLibraryCopilotProps> = ({ com
         )
       );
       // Update queriesToday after a successful query
-      if (!user) {
+      if (isUnauthenticated) {
         refetchAnonUsage(); // Refetch anon usage to get updated count
       } else {
         setQueriesToday(prev => prev + 1); // For authenticated users, update local state
@@ -219,7 +239,7 @@ const ComparisonLibraryCopilot: React.FC<ComparisonLibraryCopilotProps> = ({ com
             <GitCompare className="h-6 w-6 text-accent" /> SentiVibe Comparison Copilot
           </DialogTitle>
           <DialogDescription>
-            Ask me to help you find specific video comparisons or suggest new topics.
+            Ask me to help you find specific video comparisons from your library or suggest new topics.
           </DialogDescription>
         </DialogHeader>
         {error && (
