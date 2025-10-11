@@ -19,8 +19,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['Arimo', 'sans-serif'],
-        heading: ['"Plus Jakarta Sans"', 'sans-serif'], // Added Plus Jakarta Sans for headings
+        sans: ['Jura', 'sans-serif'], // Changed to Jura
+        heading: ['Jura', 'sans-serif'], // Changed to Jura
       },
       colors: {
         border: "hsl(var(--border))",
