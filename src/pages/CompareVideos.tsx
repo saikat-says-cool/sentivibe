@@ -9,6 +9,7 @@ import { useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Link } from 'react-router-dom';
+import ComparisonDataDisplay from '@/components/ComparisonDataDisplay'; // Import the new component
 
 interface CustomComparativeQuestion {
   question: string;
@@ -214,10 +215,7 @@ const CompareVideos = () => {
             </p>
             <div className="mt-4">
               <h3 className="text-lg font-semibold mb-2">Comparison Overview</h3>
-              {/* Render comparisonData here once available */}
-              <pre className="bg-gray-100 dark:bg-gray-700 p-3 rounded-md text-sm overflow-auto">
-                {JSON.stringify(comparisonResult.comparisonData, null, 2)}
-              </pre>
+              {comparisonResult.comparisonData && <ComparisonDataDisplay data={comparisonResult.comparisonData} />}
             </div>
 
             {comparisonResult.customComparativeQaResults && comparisonResult.customComparativeQaResults.length > 0 && (

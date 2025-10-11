@@ -8,6 +8,7 @@ import { Loader2, ArrowLeft, GitCompare } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Skeleton } from '@/components/ui/skeleton';
+import ComparisonDataDisplay from '@/components/ComparisonDataDisplay'; // Import the new component
 
 interface CustomComparativeQuestion {
   question: string;
@@ -221,9 +222,7 @@ const ComparisonDetail = () => {
         {comparison.comparison_data_json && (
           <CardContent className="border-t pt-4 mt-4">
             <h3 className="text-lg font-semibold mb-2">Structured Comparison Data</h3>
-            <pre className="bg-gray-100 dark:bg-gray-700 p-3 rounded-md text-sm overflow-auto">
-              {JSON.stringify(comparison.comparison_data_json, null, 2)}
-            </pre>
+            <ComparisonDataDisplay data={comparison.comparison_data_json} />
           </CardContent>
         )}
         {comparison.custom_comparative_qa_results && comparison.custom_comparative_qa_results.length > 0 && (
