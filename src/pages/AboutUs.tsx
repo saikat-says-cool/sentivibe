@@ -10,16 +10,16 @@ const AboutUs = () => {
         </CardHeader>
         <CardContent className="prose dark:prose-invert max-w-none text-center">
           <p className="text-lg text-muted-foreground mb-4">
-            SentiVibe is dedicated to decoding the voice of the crowd, transforming unstructured online reactions into clear, actionable insights.
+            At SentiVibe, our mission is to decode the voice of the crowd, transforming unstructured online reactions into clear, actionable insights. We believe in empowering content creators, marketers, and researchers with the tools they need to truly understand their audience.
           </p>
           <p>
-            Our mission is to empower content creators, marketers, and researchers with AI-powered tools to understand audience sentiment, emotional tones, and key themes from YouTube video comments. We believe in providing factual, transparent, and modern insights to help you connect with your audience on a deeper level.
+            Founded on principles of **insightful, factual, transparent, modern, and minimal** AI, SentiVibe goes beyond surface-level analysis. We leverage advanced artificial intelligence to meticulously analyze YouTube video comments, extracting crucial data on overall sentiment, emotional tones, and key discussion themes.
           </p>
           <p>
-            With SentiVibe, you can analyze individual videos, compare multiple videos, generate SEO-optimized blog posts, and chat with our AI copilot to explore your data. We're constantly evolving to bring you the most insightful and user-friendly experience.
+            From single video analyses to comprehensive multi-video comparisons, our platform provides detailed reports, generates SEO-optimized blog posts, and offers an interactive, context-aware AI chat. We're committed to continuous innovation, ensuring you always have access to the freshest, most relevant audience insights.
           </p>
           <p className="mt-6 text-sm text-gray-500">
-            Thank you for being a part of the SentiVibe journey!
+            Thank you for choosing SentiVibe to help you see what the crowd really feels.
           </p>
         </CardContent>
       </Card>

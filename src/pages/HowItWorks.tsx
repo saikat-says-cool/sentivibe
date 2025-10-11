@@ -11,7 +11,7 @@ const HowItWorks = () => {
         </CardHeader>
         <CardContent className="prose dark:prose-invert max-w-none">
           <p className="text-lg text-muted-foreground mb-6 text-center">
-            SentiVibe leverages advanced AI to provide deep insights into YouTube video comments. Here's a quick guide:
+            SentiVibe leverages advanced AI to provide deep insights into YouTube video comments. Here's a quick guide to our powerful features:
           </p>
 
           <div className="space-y-8">
@@ -20,13 +20,13 @@ const HowItWorks = () => {
                 <Youtube className="h-6 w-6" />
               </div>
               <div>
-                <h2 className="text-xl font-semibold mb-1">1. Analyze a Video</h2>
+                <h2 className="text-xl font-semibold mb-1">1. Analyze a Single Video</h2>
                 <p>
-                  Paste any public YouTube video link into our analyzer. Our AI will fetch the video details and up to 100 comments.
-                  <span className="font-semibold text-red-500"> Note: Videos must have at least 50 comments for a proper analysis.</span>
+                  Simply paste any public YouTube video link into our analyzer. Our AI will intelligently fetch video details, up to 100 comments, and apply a weighted sentiment analysis, prioritizing comments with higher likes.
+                  <span className="font-semibold text-red-500"> Note: Videos must have at least 50 comments for a robust analysis.</span>
                 </p>
                 <p className="mt-2">
-                  You can also add custom questions with desired word counts, and our AI will generate answers based on the video's content and comments.
+                  Enhance your insights by adding custom questions with desired word counts. Our AI will generate precise answers, which are then integrated into your report and saved for the community. We also employ smart caching and staleness logic to ensure your analyses are always fresh and efficient.
                 </p>
               </div>
             </div>
@@ -38,10 +38,10 @@ const HowItWorks = () => {
               <div>
                 <h2 className="text-xl font-semibold mb-1">2. Compare Multiple Videos</h2>
                 <p>
-                  Input two or more YouTube video links to perform a comparative sentiment analysis. Our AI will highlight commonalities, unique aspects, and overall sentiment trends across your selected videos.
+                  Gain a competitive edge by comparing audience sentiment and engagement across two or more YouTube videos. Our AI identifies commonalities, highlights unique aspects, and reveals overall sentiment trends across your selected content.
                 </p>
                 <p className="mt-2">
-                  Add custom comparative questions to get specific insights into how different videos resonate with their audiences.
+                  Submit custom comparative questions to delve deeper into specific aspects of the videos. SentiVibe intelligently caches comparisons and refreshes stale data, ensuring your multi-video insights are always current and relevant.
                 </p>
               </div>
             </div>
@@ -51,12 +51,12 @@ const HowItWorks = () => {
                 <FileText className="h-6 w-6" />
               </div>
               <div>
-                <h2 className="text-xl font-semibold mb-1">3. Get Detailed Reports & Blog Posts</h2>
+                <h2 className="text-xl font-semibold mb-1">3. Get Detailed Reports & SEO-Optimized Blog Posts</h2>
                 <p>
-                  Receive a comprehensive report with overall sentiment, emotional tones, key themes, and summary insights. For every analysis or comparison, an SEO-optimized blog post is automatically generated and published to our library.
+                  Receive a comprehensive, structured report detailing overall sentiment, emotional tones, key themes, and actionable summary insights. For every analysis or comparison, SentiVibe automatically generates and publishes an SEO-optimized blog post to our public library.
                 </p>
                 <p className="mt-2">
-                  Reports include answers to your custom questions and the top 10 most popular comments. You can also download your report as a professional PDF.
+                  Reports include all AI-generated answers to your custom questions and the top 10 most popular comments. You can also download your complete report as a professional, branded PDF for easy sharing and archiving.
                 </p>
               </div>
             </div>
@@ -66,9 +66,12 @@ const HowItWorks = () => {
                 <MessageSquare className="h-6 w-6" />
               </div>
               <div>
-                <h2 className="text-xl font-semibold mb-1">4. Chat with AI</h2>
+                <h2 className="text-xl font-semibold mb-1">4. Chat with Our Context-Aware AI</h2>
                 <p>
-                  Engage in a context-aware conversation with our AI about any video analysis or comparison. Ask follow-up questions, explore specific topics, and even choose an AI persona and desired response word count.
+                  Engage in dynamic, context-aware conversations with our AI about any video analysis or comparison. Ask follow-up questions, explore specific topics, and even customize the AI's persona and desired response word count.
+                </p>
+                <p className="mt-2">
+                  Our AI synthesizes information from the video analysis, top comments, pre-generated community Q&A, and up-to-date external search results to provide comprehensive and insightful answers, complete with clickable Markdown links.
                 </p>
               </div>
             </div>
@@ -78,16 +81,19 @@ const HowItWorks = () => {
                 <Search className="h-6 w-6" />
               </div>
               <div>
-                <h2 className="text-xl font-semibold mb-1">5. Explore Libraries & Use Copilots</h2>
+                <h2 className="text-xl font-semibold mb-1">5. Explore Libraries & Use AI Copilots</h2>
                 <p>
-                  Browse our Analysis Library and Comparison Library for past reports. Use our AI Copilots to semantically search your analyses and get recommendations for new analysis topics.
+                  Browse our dedicated Analysis Library and Comparison Library for all past reports. Utilize our intelligent AI Copilots to semantically search your analyses and get proactive recommendations for new, related analysis topics or video ideas.
+                </p>
+                <p className="mt-2">
+                  These copilots provide direct, clickable links to relevant blog posts, streamlining your research and content discovery process.
                 </p>
               </div>
             </div>
           </div>
 
           <p className="mt-8 text-center text-sm text-gray-500">
-            SentiVibe makes understanding your audience easier and more efficient than ever before.
+            SentiVibe makes understanding your audience easier and more efficient than ever before, empowering you with data-driven decisions.
           </p>
         </CardContent>
       </Card>
