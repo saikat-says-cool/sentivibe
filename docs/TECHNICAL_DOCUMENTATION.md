@@ -31,7 +31,7 @@ The project follows a standard React application structure with specific directo
     *   `src/lib/utils.ts`: Utility functions (e.g., `cn` for Tailwind class merging).
     *   `src/utils/toast.ts`: Utility functions for `sonner` toast notifications.
     *   `src/components/`: Reusable UI components.
-        *   `src/components/Header.tsx`: Global application header with the **SentiVibe wordmark**, a **theme toggle**, and **public links to 'Analyze a Video', 'Analysis Library', 'Compare Videos', 'Comparison Library'**. Now includes an "Upgrade" button for authenticated free users and a "Pricing" link.
+        *   `src/components/Header.tsx`: Global application header with the **SentiVibe wordmark**, a **theme toggle**, and **public links to 'Analyze a Video', 'Analysis Library', 'Compare Videos', 'Comparison Library'**. Now includes an "Upgrade" button for authenticated free users and a "Pricing & Upgrade" link.
         *   `src/components/ModeToggle.tsx`: Component for switching between themes.
         *   `src/components/ChatInterface.tsx`: Generic chat UI component, now with `disabled` prop for tier limits.
         *   `src/components/ProtectedRoute.tsx`: Component for protecting routes (now less critical due to public-first strategy, but still present for `MyAnalyses`).
@@ -60,8 +60,8 @@ The project follows a standard React application structure with specific directo
         *   `src/pages/MultiComparisonDetail.tsx`: **New page to display the full content of a single generated multi-video comparison blog post. Includes links to individual video analyses, a 'Go to Multi-Comparison Analysis' button, a 'Refresh Comparison' button, the 'Last Full Comparison' timestamp, and explicitly lists top 10 comments for each video.**
         *   `src/pages/ComparisonDetail.tsx`: (Legacy, but still present) Page for displaying two-video comparisons.
         *   `src/pages/NotFound.tsx`: 404 error page.
-        *   `src/pages/Upgrade.tsx`: Page detailing the benefits of upgrading to a paid tier.
-        *   `src/pages/Pricing.tsx`: **New page detailing the pricing plans and tier benefits.**
+        *   `src/pages/Upgrade.tsx`: **Updated page detailing the pricing plans and tier benefits.**
+        *   `src/pages/Pricing.tsx`: (Removed)
     *   `src/integrations/`: Supabase-related client-side files.
         *   `src/integrations/supabase/client.ts`: Supabase client initialization.
         *   `src/integrations/supabase/auth.tsx`: **Updated AuthProvider to fetch and expose `subscriptionStatus` and `subscriptionPlanId` via the `useAuth` hook.**
@@ -91,13 +91,13 @@ The project follows a standard React application structure with specific directo
     *   `Toaster` (from `sonner`): For displaying toast notifications, configured to use brand colors for success/error/neutral.
 *   **`AppRoutes` Component:** Encapsulates `BrowserRouter` and `Routes`.
     *   Renders the `Header` component globally.
-    *   Defines application routes: `/`, `/login`, `/analyze-video`, `/library`, `/my-analyses`, `/blog/:slug`, `/create-multi-comparison`, `/multi-comparison-library`, `/multi-comparison/:slug`, `/upgrade`, `/pricing`, `/about-us`, `/how-it-works`, and a catch-all `*` for `NotFound`.
+    *   Defines application routes: `/`, `/login`, `/analyze-video`, `/library`, `/my-analyses`, `/blog/:slug`, `/create-multi-comparison`, `/multi-comparison-library`, `/multi-comparison/:slug`, `/upgrade`, `/about-us`, `/how-it-works`, and a catch-all `*` for `NotFound`.
 *   **`ProtectedRoute` Component:** A higher-order component that ensures only authenticated users can access specific routes (e.g., `/my-analyses`). It redirects unauthenticated users to `/login`. Note: `/analyze-video`, `/library`, `/create-multi-comparison`, and `/multi-comparison-library` are now publicly accessible.
 
 ### 4.2. `Header.tsx`
 *   A React component that renders a consistent header across all pages.
 *   Displays the **SentiVibe wordmark** (`<span className="text-foreground">Senti</span><span className="text-accent">Vibe</span>`) using the `font-heading` (Jura) typeface.
-*   **Now includes navigation links to `/analyze-video`, `/library`, `/create-multi-comparison`, `/multi-comparison-library`, `/pricing`, `/how-it-works`, and `/about-us` for all users.**
+*   **Now includes navigation links to `/analyze-video`, `/library`, `/create-multi-comparison`, `/multi-comparison-library`, `/upgrade` (for pricing & upgrade), `/how-it-works`, and `/about-us` for all users.**
 *   Includes a link to `/my-analyses` for authenticated users.
 *   **Conditionally renders an "Upgrade" button for authenticated users who are not on a paid tier.**
 *   Includes a link to `/login` ("Sign In / Sign Up") for unauthenticated users.
@@ -273,7 +273,7 @@ The project follows a standard React application structure with specific directo
 *   **Context Initialization:** On dialog open, it sets `initialMultiComparisonResult` and fetches external context based on the comparison title.
 *   **External Context Fetching:** Uses `fetchExternalContextMutation` to get external information.
 *   **Chat Mutation:** Uses `chatMutation` (calling `multi-comparison-chat-analyzer` Edge Function) to send user messages and receive AI responses. The `multiComparisonResult` (including `custom_comparative_qa_results` and `raw_comments_for_chat` for each video) is passed as context. **Enforces tier-based chat message limits and max response word count.**
-*   **AI Controls:** Provides `Select` for `selectedPersona` and `Input` for `desiredWordCount`. **The `max` attribute of the `Input` is dynamically set by `currentLimits.maxResponseWordCount`.**
+*   **AI Controls:** Provides `Select` for `selectedPersona` and `Input` for `desiredWord Count`. **The `max` attribute of the `Input` is dynamically set by `currentLimits.maxResponseWordCount`.**
 *   **UI:** Renders the `ChatInterface` component. **Displays remaining AI responses and upgrade prompts if limits are reached.**
 
 ### 4.15. `LibraryCopilot.tsx` (Single Video Library Copilot)
@@ -308,13 +308,9 @@ The project follows a standard React application structure with specific directo
 *   **Props:** Accepts `data` (an object containing `overall_sentiment_trend`, `common_emotional_tones`, `divergent_emotional_tones`, `common_themes`, `unique_themes`, `summary_insights`, `video_summaries`).
 *   **UI:** Renders the multi-comparison data in a clear, card-based format with badges.
 
-### 4.19. `Upgrade.tsx` (Upgrade Page)
-*   **Purpose:** Informs users about the benefits of upgrading to a paid tier.
+### 4.19. `Upgrade.tsx` (Pricing & Upgrade Page)
+*   **Purpose:** Informs users about the benefits of upgrading to a paid tier, **now also serving as the primary pricing page.**
 *   **UI:** Displays a comparison of features and limits between the Free Tier and Paid Tier, with a call to action to upgrade.
-
-### 4.20. `Pricing.tsx` (Pricing Page)
-*   **Purpose:** Provides a detailed overview of the different subscription tiers, their features, and pricing.
-*   **UI:** Displays a clear comparison of the Free Tier and Paid Tier, highlighting benefits and including calls to action for signing up or upgrading.
 
 ## 5. Supabase Integration Details
 
