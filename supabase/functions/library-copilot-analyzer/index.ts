@@ -42,7 +42,7 @@ const PAID_TIER_LIMITS = {
   dailyQueries: 100,
 };
 
-serve(async (req) => {
+serve(async (req: Request) => {
   // Handle CORS preflight request
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -65,10 +65,11 @@ serve(async (req) => {
     const { data: { user } } = await supabaseClient.auth.getUser();
     let isPaidTier = false;
     let currentLimits = FREE_TIER_LIMITS;
-    let userSubscriptionId: string | null = null;
+
+    const clientIp = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
+    const now = new Date();
 
     if (user) {
-      userSubscriptionId = user.id;
       const { data: subscriptionData, error: subscriptionError } = await supabaseClient
         .from('subscriptions')
         .select('status, plan_id')
@@ -84,46 +85,93 @@ serve(async (req) => {
     }
 
     // --- Enforce Daily Query Limit ---
-    const now = new Date();
-    const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
+    if (user) { // Authenticated user limit check
+      const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
+      let { count, error: countError } = await supabaseClient
+        .from('copilot_queries_log') // Assuming a new table 'copilot_queries_log' exists for authenticated users
+        .select('id', { count: 'exact', head: true })
+        .gte('created_at', twentyFourHoursAgo)
+        .eq('user_id', user.id);
 
-    // We need a way to track queries. For simplicity, we'll use a dummy table or
-    // rely on the frontend to manage this for now, as there's no direct 'query' table.
-    // For a real implementation, we'd log queries to a database table.
-    // For this exercise, we'll simulate a check or assume the frontend handles it.
-    // Since there's no existing table to log queries, we'll skip the actual DB count
-    // and rely on the frontend to prevent excessive calls for now, or we'd need a new table.
-    // For the purpose of demonstrating the *backend enforcement logic*, we'll assume
-    // a mechanism exists or will be added to track queries.
-    // For now, we'll just ensure the `currentLimits` are set correctly.
+      if (countError) {
+        console.error("Error counting daily copilot queries for authenticated user:", countError);
+        return new Response(JSON.stringify({ error: 'Failed to check daily copilot query limit.' }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500,
+        });
+      }
 
-    // If we were to implement a backend count, it would look something like this:
-    /*
-    let { count: queryCount, error: countError } = await supabaseClient
-      .from('copilot_queries') // Assuming a new table 'copilot_queries' exists
-      .select('id', { count: 'exact', head: true })
-      .gte('created_at', twentyFourHoursAgo)
-      .or(`user_id.eq.${userSubscriptionId},user_id.is.null`);
+      if (count !== null && count >= currentLimits.dailyQueries) {
+        return new Response(JSON.stringify({ 
+          error: `Daily Library Copilot query limit (${currentLimits.dailyQueries}) exceeded. ${isPaidTier ? 'You have reached your paid tier limit.' : 'Upgrade to a paid tier for more queries.'}` 
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 403,
+        });
+      }
+      // Log query for authenticated user
+      await supabaseClient.from('copilot_queries_log').insert({ user_id: user.id, created_at: now.toISOString() });
 
-    if (countError) {
-      console.error("Error counting daily copilot queries:", countError);
-      return new Response(JSON.stringify({ error: 'Failed to check daily copilot query limit.' }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500,
-      });
+    } else { // Unauthenticated user IP-based limit check
+      let { data: anonUsage, error: anonError } = await supabaseClient
+        .from('anon_usage')
+        .select('*')
+        .eq('ip_address', clientIp)
+        .single();
+
+      if (anonError && anonError.code !== 'PGRST116') {
+        console.error("Error fetching anon usage for IP:", clientIp, anonError);
+        return new Response(JSON.stringify({ error: 'Failed to check anonymous usage data.' }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500,
+        });
+      }
+
+      const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      let currentCopilotQueriesCount = 0;
+      let lastResetAt = now.toISOString();
+
+      if (anonUsage) {
+        if (new Date(anonUsage.last_reset_at) < twentyFourHoursAgo) {
+          // Reset counts if older than 24 hours
+          currentCopilotQueriesCount = 0;
+          lastResetAt = now.toISOString();
+        } else {
+          currentCopilotQueriesCount = anonUsage.copilot_queries_count;
+          lastResetAt = anonUsage.last_reset_at;
+        }
+      }
+
+      if (currentCopilotQueriesCount >= FREE_TIER_LIMITS.dailyQueries) {
+        return new Response(JSON.stringify({ 
+          error: `Daily Library Copilot query limit (${FREE_TIER_LIMITS.dailyQueries}) exceeded for your IP address. Upgrade to a paid tier for more queries.` 
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 403,
+        });
+      }
+
+      // Increment count and update anon_usage
+      currentCopilotQueriesCount++;
+      const { error: updateAnonError } = await supabaseClient
+        .from('anon_usage')
+        .upsert({ 
+          ip_address: clientIp, 
+          analyses_count: anonUsage?.analyses_count || 0, // Preserve other counts
+          comparisons_count: anonUsage?.comparisons_count || 0, // Preserve other counts
+          copilot_queries_count: currentCopilotQueriesCount, 
+          last_reset_at: lastResetAt,
+          updated_at: now.toISOString(),
+        }, { onConflict: 'ip_address' });
+
+      if (updateAnonError) {
+        console.error("Error updating anon usage for IP:", clientIp, updateAnonError);
+        return new Response(JSON.stringify({ error: 'Failed to update anonymous usage data.' }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500,
+        });
+      }
     }
-
-    if (queryCount !== null && queryCount >= currentLimits.dailyQueries) {
-      return new Response(JSON.stringify({ 
-        error: `Daily Library Copilot query limit (${currentLimits.dailyQueries}) exceeded. ${isPaidTier ? 'You have reached your paid tier limit.' : 'Upgrade to a paid tier for more queries.'}` 
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 403,
-      });
-    }
-    // If a query was successful, we'd also insert a record into 'copilot_queries'
-    // await supabaseClient.from('copilot_queries').insert({ user_id: userSubscriptionId });
-    */
 
     const { userQuery, blogPostsData } = await req.json();
 
@@ -223,9 +271,9 @@ serve(async (req) => {
       status: 200,
     });
 
-  } catch (error) {
-    console.error('Edge Function error (library-copilot-analyzer):', error.message);
-    return new Response(JSON.stringify({ error: error.message }), {
+  } catch (error: unknown) {
+    console.error('Edge Function error (library-copilot-analyzer):', (error as Error).message);
+    return new Response(JSON.stringify({ error: (error as Error).message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 500,
     });
