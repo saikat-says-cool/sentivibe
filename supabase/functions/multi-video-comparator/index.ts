@@ -35,6 +35,19 @@ function getApiKeys(baseName: string): string[] {
 // Define staleness threshold (e.g., 30 days)
 const STALENESS_THRESHOLD_DAYS = 30;
 
+// Define tier limits for multi-comparisons
+const FREE_TIER_LIMITS = {
+  dailyComparisons: 1,
+  maxCustomQuestions: 1,
+  maxCustomQuestionWordCount: 100,
+};
+
+const PAID_TIER_LIMITS = {
+  dailyComparisons: 20,
+  maxCustomQuestions: 5,
+  maxCustomQuestionWordCount: 500,
+};
+
 // Helper function to strip markdown code block fences
 function stripMarkdownFences(content: string): string {
   if (content.startsWith('```json') && content.endsWith('```')) {
@@ -93,8 +106,30 @@ serve(async (req) => {
     );
 
     const { data: { user } } = await supabaseClient.auth.getUser();
+    let isPaidTier = false;
+    let currentLimits = FREE_TIER_LIMITS;
+    let userSubscriptionId: string | null = null;
 
-    const { videoLinks, customComparativeQuestions, forceRecompare } = await req.json(); // Added forceRecompare
+    if (user) {
+      userSubscriptionId = user.id;
+      const { data: subscriptionData, error: subscriptionError } = await supabaseClient
+        .from('subscriptions')
+        .select('status, plan_id')
+        .eq('id', user.id)
+        .single();
+
+      if (subscriptionError && subscriptionError.code !== 'PGRST116') {
+        console.error("Error fetching subscription for user:", user.id, subscriptionError);
+      } else if (subscriptionData && subscriptionData.status === 'active' && subscriptionData.plan_id !== 'free') {
+        isPaidTier = true;
+        currentLimits = PAID_TIER_LIMITS;
+      }
+    }
+
+    const longcatApiKeys = getApiKeys('LONGCAT_AI_API_KEY');
+    const longcatApiUrl = "https://api.longcat.chat/openai/v1/chat/completions"; // Declared here
+
+    const { videoLinks, customComparativeQuestions, forceRecompare } = await req.json();
 
     if (!videoLinks || !Array.isArray(videoLinks) || videoLinks.length < 2) {
       return new Response(JSON.stringify({ error: 'At least two video links are required for multi-comparison.' }), {
@@ -103,16 +138,6 @@ serve(async (req) => {
       });
     }
 
-    const longcatApiKeys = getApiKeys('LONGCAT_AI_API_KEY');
-    if (longcatApiKeys.length === 0) {
-      return new Response(JSON.stringify({ error: 'Longcat AI API key(s) not configured' }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500,
-      });
-    }
-    const longcatApiUrl = "https://api.longcat.chat/openai/v1/chat/completions";
-
-    // Extract video IDs
     const videoIds = videoLinks.map(videoLink => {
       const videoIdMatch = videoLink.match(/(?:v=|\/videos\/|embed\/|youtu.be\/|\/v\/|\/e\/|watch\?v=|&v=)([^#&?]{11})/);
       return videoIdMatch ? videoIdMatch[1] : null;
@@ -125,28 +150,21 @@ serve(async (req) => {
       });
     }
 
-    // --- Check for existing multi-comparison by video_ids (simplified check for now, based on slug) ---
-    // For a robust check, one would need to query multi_comparison_videos and compare all blog_post_ids.
-    // For simplicity and given the slug uniqueness, we'll rely on finding an existing multi_comparison by slug
-    // if the slug is consistent.
+    // --- Check for existing multi-comparison and determine if re-comparison is needed ---
     let existingMultiComparison: any = null;
-    // If we are re-comparing an existing one, we might have its slug.
-    // For new comparisons, we'll generate a slug later.
-    // This part needs to be careful not to block new comparisons.
+    const blogPostIds = []; // Collect blog post IDs after individual analysis
 
-    // Let's assume for now that if a multi-comparison exists, it will be found by its slug later.
-    // The primary check for staleness will be on the `last_compared_at` of the multi-comparison itself.
-
-    // --- Step 1: Get individual video analysis data (from cache or re-analyze) ---
+    // First, ensure all individual videos are analyzed/fresh and collect their blog_post_ids
     const analyzedBlogPosts: any[] = [];
     const videoTitles: string[] = [];
     const videoKeywords: string[] = [];
+
+    const now = new Date(); // Declared here
 
     for (const videoLink of videoLinks) {
       const videoIdMatch = videoLink.match(/(?:v=|\/videos\/|embed\/|youtu.be\/|\/v\/|\/e\/|watch\?v=|&v=)([^#&?]{11})/);
       const videoId = videoIdMatch ? videoIdMatch[1] : null;
 
-      // This part already handles individual video staleness and re-analysis
       const { data: existingBlogPost, error: fetchError } = await supabaseClient
         .from('blog_posts')
         .select('*')
@@ -158,8 +176,7 @@ serve(async (req) => {
         throw new Error(`Failed to check for existing analysis for video ${videoId}`);
       }
 
-      const now = new Date();
-      let shouldPerformFullReanalysis = false;
+      let shouldPerformIndividualReanalysis = false;
       let blogPostData: any;
 
       if (existingBlogPost) {
@@ -167,20 +184,17 @@ serve(async (req) => {
         const daysSinceLastReanalysis = (now.getTime() - lastReanalyzedDate.getTime()) / (1000 * 60 * 60 * 24);
         
         if (daysSinceLastReanalysis > STALENESS_THRESHOLD_DAYS) {
-          console.log(`Triggering full re-analysis for video ID: ${videoId} due to staleness.`);
-          shouldPerformFullReanalysis = true;
+          shouldPerformIndividualReanalysis = true;
         } else {
-          console.log(`Reusing existing analysis for video ID: ${videoId}. Analysis is fresh.`);
           blogPostData = existingBlogPost;
         }
       } else {
-        console.log(`No existing analysis found for video ID: ${videoId}. Performing full analysis.`);
-        shouldPerformFullReanalysis = true;
+        shouldPerformIndividualReanalysis = true;
       }
 
-      if (shouldPerformFullReanalysis) {
+      if (shouldPerformIndividualReanalysis) {
         const youtubeAnalyzerResponse = await supabaseClient.functions.invoke('youtube-analyzer', {
-          body: { videoLink: videoLink, customQuestions: [], forceReanalyze: true }, // Always force reanalyze if individual video is stale or new
+          body: { videoLink: videoLink, customQuestions: [], forceReanalyze: true },
         });
 
         if (youtubeAnalyzerResponse.error) {
@@ -210,6 +224,7 @@ serve(async (req) => {
         blogPostData = updatedBlogPost;
       }
       analyzedBlogPosts.push(blogPostData);
+      blogPostIds.push(blogPostData.id); // Collect IDs here
       videoTitles.push(blogPostData.title);
       if (blogPostData.keywords) {
         videoKeywords.push(...blogPostData.keywords);
@@ -217,31 +232,26 @@ serve(async (req) => {
     }
 
     // Now that all individual videos are fresh, check multi-comparison staleness
-    // We need to find if a multi-comparison already exists for these specific blog_post_ids
-    // This requires a more complex query to the junction table
-    const blogPostIds = analyzedBlogPosts.map(bp => bp.id).sort(); // Sort to ensure consistent comparison
+    const sortedBlogPostIds = blogPostIds.sort();
 
     const { data: existingMultiComps, error: fetchMultiCompError } = await supabaseClient
       .from('multi_comparison_videos')
       .select('multi_comparison_id')
-      .in('blog_post_id', blogPostIds);
+      .in('blog_post_id', sortedBlogPostIds);
 
     if (fetchMultiCompError) {
       console.error("Error fetching existing multi-comparison videos:", fetchMultiCompError);
       throw new Error(`Failed to check for existing multi-comparison: ${fetchMultiCompError.message}`);
     }
 
-    // Group by multi_comparison_id and count how many of our blogPostIds match
     const multiCompIdCounts = new Map<string, number>();
     for (const row of existingMultiComps) {
       multiCompIdCounts.set(row.multi_comparison_id, (multiCompIdCounts.get(row.multi_comparison_id) || 0) + 1);
     }
 
-    // Find a multi_comparison_id that matches all our blogPostIds
     let foundMultiComparisonId: string | null = null;
     for (const [mcId, count] of multiCompIdCounts.entries()) {
-      if (count === blogPostIds.length) {
-        // Now verify that this multi_comparison_id only contains *our* blogPostIds and no others
+      if (count === sortedBlogPostIds.length) {
         const { data: mcVideos, error: mcVideosError } = await supabaseClient
           .from('multi_comparison_videos')
           .select('blog_post_id')
@@ -249,11 +259,11 @@ serve(async (req) => {
 
         if (mcVideosError) {
           console.error("Error fetching multi-comparison videos for verification:", mcVideosError);
-          continue; // Skip this one
+          continue;
         }
 
         const existingMcBlogPostIds = mcVideos.map((v: any) => v.blog_post_id).sort();
-        if (existingMcBlogPostIds.length === blogPostIds.length && existingMcBlogPostIds.every((val: string, idx: number) => val === blogPostIds[idx])) {
+        if (existingMcBlogPostIds.length === sortedBlogPostIds.length && existingMcBlogPostIds.every((val: string, idx: number) => val === sortedBlogPostIds[idx])) {
           foundMultiComparisonId = mcId;
           break;
         }
@@ -277,20 +287,18 @@ serve(async (req) => {
     let coreMultiComparisonData: any;
     let generatedMultiComparisonBlogPost: any;
     let combinedCustomComparativeQaResults: { question: string; wordCount: number; answer: string }[] = [];
-    const now = new Date();
     let lastComparedAt = now.toISOString();
 
     let shouldRegenerateMultiComparison = false;
+    let isNewComparison = false;
 
     if (existingMultiComparison) {
       const lastComparedDate = new Date(existingMultiComparison.last_compared_at);
       const daysSinceLastCompared = (now.getTime() - lastComparedDate.getTime()) / (1000 * 60 * 60 * 24);
 
       if (forceRecompare || daysSinceLastCompared > STALENESS_THRESHOLD_DAYS) {
-        console.log(`Triggering full re-comparison for multi-comparison ID: ${existingMultiComparison.id}. Force: ${forceRecompare}, Stale: ${daysSinceLastCompared > STALENESS_THRESHOLD_DAYS}`);
         shouldRegenerateMultiComparison = true;
       } else {
-        console.log(`Reusing existing multi-comparison for ID: ${existingMultiComparison.id}. Comparison is fresh.`);
         coreMultiComparisonData = existingMultiComparison.comparison_data_json;
         generatedMultiComparisonBlogPost = {
           title: existingMultiComparison.title,
@@ -300,11 +308,61 @@ serve(async (req) => {
           content: existingMultiComparison.content,
         };
         combinedCustomComparativeQaResults = existingMultiComparison.custom_comparative_qa_results || [];
-        lastComparedAt = existingMultiComparison.last_compared_at; // Keep original timestamp if not regenerating
+        lastComparedAt = existingMultiComparison.last_compared_at;
       }
     } else {
-      console.log(`No existing multi-comparison found for these videos. Performing full comparison.`);
       shouldRegenerateMultiComparison = true;
+      isNewComparison = true;
+    }
+
+    // --- Enforce Daily Comparison Limit (only for new comparisons or forced re-comparisons) ---
+    if (shouldRegenerateMultiComparison) {
+      const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
+      let { count, error: countError } = await supabaseClient
+        .from('multi_comparisons')
+        .select('id', { count: 'exact', head: true })
+        .gte('created_at', twentyFourHoursAgo)
+        .or(`author_id.eq.${userSubscriptionId},author_id.is.null`);
+
+      if (countError) {
+        console.error("Error counting daily multi-comparisons:", countError);
+        return new Response(JSON.stringify({ error: 'Failed to check daily comparison limit.' }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500,
+        });
+      }
+
+      if (count !== null && count >= currentLimits.dailyComparisons) {
+        return new Response(JSON.stringify({ 
+          error: `Daily multi-comparison limit (${currentLimits.dailyComparisons}) exceeded. ${isPaidTier ? 'You have reached your paid tier limit.' : 'Upgrade to a paid tier for more comparisons.'}` 
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 403,
+        });
+      }
+    }
+
+    // --- Enforce Custom Comparative Question Limits ---
+    if (customComparativeQuestions && customComparativeQuestions.length > currentLimits.maxCustomQuestions) {
+      return new Response(JSON.stringify({ 
+        error: `You can only ask a maximum of ${currentLimits.maxCustomQuestions} custom comparative question(s) per comparison. ${isPaidTier ? '' : 'Upgrade to a paid tier to ask more questions.'}` 
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 403,
+      });
+    }
+
+    if (customComparativeQuestions) {
+      for (const qa of customComparativeQuestions) {
+        if (qa.wordCount > currentLimits.maxCustomQuestionWordCount) {
+          return new Response(JSON.stringify({ 
+            error: `Maximum word count for a custom comparative question answer is ${currentLimits.maxCustomQuestionWordCount}. ${isPaidTier ? '' : 'Upgrade to a paid tier for longer answers.'}` 
+          }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 403,
+          });
+        }
+      }
     }
 
     // --- Step 2: Fetch External Context (only if regenerating multi-comparison or new questions) ---
@@ -371,6 +429,13 @@ serve(async (req) => {
         Ensure all fields are populated with relevant data derived from the provided video analyses.
       `;
 
+      if (longcatApiKeys.length === 0) {
+        return new Response(JSON.stringify({ error: 'Longcat AI API key(s) not configured' }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500,
+        });
+      }
+
       let coreMultiComparisonResponse;
       for (const currentLongcatApiKey of longcatApiKeys) {
         coreMultiComparisonResponse = await fetch(longcatApiUrl, {
@@ -411,9 +476,9 @@ serve(async (req) => {
         ${JSON.stringify(coreMultiComparisonData, null, 2)}
 
         The blog post should:
-        1. Have a compelling, SEO-optimized title (max 70 characters) in the format: "Multi-Video Sentiment Comparison: ${videoTitles.slice(0, 2).join(' vs ')}${videoTitles.length > 2 ? ' and more' : ''} ({{Year}}) | SentiVibe".
+        1. Have a compelling, SEO-optimized title (max 70 characters).
         2. Generate a URL-friendly slug from the title (lowercase, hyphen-separated, **without any leading or trailing slashes or path segments**).
-        3. Include a concise meta description (max 160 characters) summarizing the multi-comparison.
+        3. Include a concise meta description (max 160 characters).
         4. List 5-10 relevant keywords as an array, combining keywords from all videos and comparison terms.
         5. Be structured with an H1 (the title), H2s for sections, and H3s for sub-sections.
         6. Be at least 1000 words long.
@@ -461,12 +526,11 @@ serve(async (req) => {
       }
       const generatedMultiComparisonBlogPostContent = stripMarkdownFences(longcatDataBlogPost.choices[0].message.content);
       generatedMultiComparisonBlogPost = JSON.parse(generatedMultiComparisonBlogPostContent);
-      lastComparedAt = now.toISOString(); // Update timestamp if regenerated
+      lastComparedAt = now.toISOString();
     }
 
     // --- Process Custom Comparative Questions (always, merging with existing if any) ---
     if (customComparativeQuestions && customComparativeQuestions.length > 0) {
-      // If not regenerating, load existing QA results
       if (!shouldRegenerateMultiComparison && existingMultiComparison) {
         combinedCustomComparativeQaResults = existingMultiComparison.custom_comparative_qa_results || [];
       }
@@ -486,6 +550,13 @@ serve(async (req) => {
           
           Please provide an answer that is approximately ${qa.wordCount} words long. Your answer should primarily draw from the provided video analyses and core multi-comparison data. If the information is not present, indicate that. Ensure the answer is complete and directly addresses the question.
         `;
+
+        if (longcatApiKeys.length === 0) {
+          return new Response(JSON.stringify({ error: 'Longcat AI API key(s) not configured' }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 500,
+          });
+        }
 
         let customQaResponse;
         for (const currentLongcatApiKey of longcatApiKeys) {
@@ -524,7 +595,7 @@ serve(async (req) => {
 
     // Ensure slug is unique (only if new comparison or slug changed during regeneration)
     let finalSlug = generatedMultiComparisonBlogPost.slug;
-    if (!existingMultiComparison || shouldRegenerateMultiComparison) { // Only generate new slug if new or forced regeneration
+    if (isNewComparison || shouldRegenerateMultiComparison) {
       finalSlug = await generateUniqueSlug(supabaseClient, generatedMultiComparisonBlogPost.slug);
     }
     generatedMultiComparisonBlogPost.slug = finalSlug;
@@ -545,7 +616,7 @@ serve(async (req) => {
           content: generatedMultiComparisonBlogPost.content,
           comparison_data_json: coreMultiComparisonData,
           custom_comparative_qa_results: combinedCustomComparativeQaResults,
-          last_compared_at: lastComparedAt, // Use the determined lastComparedAt
+          last_compared_at: lastComparedAt,
           updated_at: currentTimestamp,
         })
         .eq('id', existingMultiComparison.id)
@@ -556,7 +627,7 @@ serve(async (req) => {
         console.error('Supabase Multi-Comparison Update Error:', updateMultiCompError);
         throw new Error(`Failed to update multi-comparison in database: ${updateMultiCompError.message}`);
       }
-      existingMultiComparison = updatedMultiComparison; // Use updated data for response
+      existingMultiComparison = updatedMultiComparison;
     } else {
       // Insert new multi-comparison
       const { data: newMultiComparison, error: insertMultiCompError } = await supabaseClient
@@ -573,7 +644,7 @@ serve(async (req) => {
           last_compared_at: lastComparedAt,
           comparison_data_json: coreMultiComparisonData,
           custom_comparative_qa_results: combinedCustomComparativeQaResults,
-          overall_thumbnail_url: null, // Set to null to allow frontend to use its multi-thumbnail logic
+          overall_thumbnail_url: null,
         })
         .select()
         .single();
@@ -582,7 +653,7 @@ serve(async (req) => {
         console.error('Supabase Multi-Comparison Insert Error:', insertMultiCompError);
         throw new Error(`Failed to save multi-comparison to database: ${insertMultiCompError.message}`);
       }
-      existingMultiComparison = newMultiComparison; // Use new data for response
+      existingMultiComparison = newMultiComparison;
 
       // Insert into multi_comparison_videos junction table only for new comparisons
       const multiComparisonVideosData = analyzedBlogPosts.map((bp, index) => ({
