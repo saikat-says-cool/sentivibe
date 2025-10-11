@@ -110,7 +110,7 @@ To successfully integrate a tiered access and usage model into SentiVibe, allowi
     *   **Free Member:** Search personal library only.
     *   **Pro Subscriber:** Full semantic search + cross-user recommendations + new-video suggestions (future AI prompt enhancements).
     *   **Affected Areas:** Frontend (`LibraryCopilot.tsx`), Backend (`library-copilot-analyzer` Edge Function - search scope).
-    *   **Status:** Pending
+    *   **Status:** Completed
 
 *   **Checkpoint 2.5: External Context Search**
     *   **Guest:** No access.

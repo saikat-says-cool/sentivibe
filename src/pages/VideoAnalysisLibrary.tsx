@@ -35,7 +35,7 @@ interface BlogPost {
   keywords: string[];
   content: string;
   published_at: string;
-  author_id: string;
+  author_id: string; // New field
   creator_name: string;
   thumbnail_url: string;
   created_at: string;

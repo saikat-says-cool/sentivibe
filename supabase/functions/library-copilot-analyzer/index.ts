@@ -87,8 +87,36 @@ serve(async (req) => {
       });
     }
 
+    // --- Tiered Access and Scope for Library Copilot ---
+    if (subscriptionTier === 'guest') {
+      return new Response(JSON.stringify({ 
+        error: 'Library Copilot is not available for guest users. Please log in or sign up.',
+        code: 'LIBRARY_COPILOT_ACCESS_DENIED'
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 403, // Forbidden
+      });
+    }
+
+    let filteredBlogPostsData = blogPostsData;
+    if (subscriptionTier === 'free') {
+      // For free users, only allow searching their own analyses
+      filteredBlogPostsData = blogPostsData.filter((post: any) => post.author_id === user.id);
+      if (filteredBlogPostsData.length === 0) {
+        return new Response(JSON.stringify({ 
+          aiResponse: "It looks like you haven't created any analyses yet, or none match your query. Try analyzing a video first!",
+          subscriptionTier: subscriptionTier 
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        });
+      }
+    }
+    // Pro users (and any other tiers) get full access to blogPostsData as provided by the frontend.
+    // --- End Tiered Access and Scope ---
+
     // Format blog posts data for the AI prompt
-    const formattedBlogPosts = blogPostsData.map((post: any, index: number) => `
+    const formattedBlogPosts = filteredBlogPostsData.map((post: any, index: number) => `
     --- Blog Post ${index + 1} ---
     Title: ${post.title}
     Slug: ${post.slug}
