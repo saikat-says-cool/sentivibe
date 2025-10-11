@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Loader2, Search, GitCompare } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
+import ComparisonLibraryCopilot from '@/components/ComparisonLibraryCopilot'; // Import the new copilot
 
 interface CustomComparativeQuestion {
   question: string;
@@ -29,20 +30,31 @@ interface Comparison {
   last_compared_at: string;
   comparison_data_json: any;
   custom_comparative_qa_results: CustomComparativeQuestion[];
-  video_a_thumbnail_url?: string; // New field
-  video_b_thumbnail_url?: string; // New field
+  video_a_thumbnail_url?: string;
+  video_b_thumbnail_url?: string;
+  videoATitle?: string; // Added for copilot context
+  videoBTitle?: string; // Added for copilot context
 }
 
 const fetchComparisons = async (): Promise<Comparison[]> => {
   const { data, error } = await supabase
     .from('comparisons')
-    .select('*')
+    .select(`
+      *,
+      videoA:blog_posts!video_a_blog_post_id (title),
+      videoB:blog_posts!video_b_blog_post_id (title)
+    `)
     .order('created_at', { ascending: false });
 
   if (error) {
     throw new Error(error.message);
   }
-  return data || [];
+  // Map the data to include videoATitle and videoBTitle directly
+  return data.map(comp => ({
+    ...comp,
+    videoATitle: comp.videoA?.title,
+    videoBTitle: comp.videoB?.title,
+  })) || [];
 };
 
 const ComparisonLibrary = () => {
@@ -60,7 +72,9 @@ const ComparisonLibrary = () => {
       const results = comparisons.filter(comp =>
         comp.title.toLowerCase().includes(lowerCaseSearchTerm) ||
         (comp.meta_description && comp.meta_description.toLowerCase().includes(lowerCaseSearchTerm)) ||
-        (comp.keywords && comp.keywords.some(keyword => keyword.toLowerCase().includes(lowerCaseSearchTerm)))
+        (comp.keywords && comp.keywords.some(keyword => keyword.toLowerCase().includes(lowerCaseSearchTerm))) ||
+        (comp.videoATitle && comp.videoATitle.toLowerCase().includes(lowerCaseSearchTerm)) ||
+        (comp.videoBTitle && comp.videoBTitle.toLowerCase().includes(lowerCaseSearchTerm))
       );
       setFilteredComparisons(results);
     }
@@ -99,7 +113,7 @@ const ComparisonLibrary = () => {
       <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-2 mb-6">
         <Input
           type="text"
-          placeholder="Search comparisons by title or keywords..."
+          placeholder="Search comparisons by title, video titles, or keywords..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="flex-1"
@@ -107,6 +121,9 @@ const ComparisonLibrary = () => {
         <Button variant="outline" size="icon" className="sm:hidden">
           <Search className="h-4 w-4" />
         </Button>
+        {comparisons && comparisons.length > 0 && (
+          <ComparisonLibraryCopilot comparisons={comparisons} />
+        )}
       </div>
 
       {filteredComparisons.length === 0 && (
