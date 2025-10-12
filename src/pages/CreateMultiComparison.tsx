@@ -47,16 +47,16 @@ interface MultiComparisonResult {
 }
 
 // Define simplified tier limits (only daily comparisons remain)
-const UNAUTHENTICATED_LIMITS = {
-  dailyComparisons: 1,
+const MULTICOMP_UNAUTHENTICATED_LIMITS = {
+  dailyComparisons: 1, // 1 comparison per day for unauthenticated users
 };
 
-const AUTHENTICATED_FREE_TIER_LIMITS = {
-  dailyComparisons: 1,
+const MULTICOMP_AUTHENTICATED_FREE_TIER_LIMITS = {
+  dailyComparisons: 1, // 1 comparison per day for authenticated free users
 };
 
-const PAID_TIER_LIMITS = {
-  dailyComparisons: 20, // Effectively unlimited
+const MULTICOMP_PAID_TIER_LIMITS = {
+  dailyComparisons: 20, // 20 comparisons per day for paid users (effectively unlimited)
 };
 
 // Function to fetch anonymous usage
@@ -91,11 +91,11 @@ const CreateMultiComparison = () => {
 
   let currentLimits;
   if (isPaidTier) {
-    currentLimits = PAID_TIER_LIMITS;
+    currentLimits = MULTICOMP_PAID_TIER_LIMITS;
   } else if (isAuthenticatedFreeTier) {
-    currentLimits = AUTHENTICATED_FREE_TIER_LIMITS;
+    currentLimits = MULTICOMP_AUTHENTICATED_FREE_TIER_LIMITS;
   } else { // Unauthenticated
-    currentLimits = UNAUTHENTICATED_LIMITS;
+    currentLimits = MULTICOMP_UNAUTHENTICATED_LIMITS;
   }
 
   // Fetch anonymous usage if not authenticated
@@ -332,7 +332,7 @@ const CreateMultiComparison = () => {
                     value={qa.question}
                     onChange={(e) => handleQuestionChange(index, 'question', e.target.value)}
                     className="mt-1"
-                    disabled={createMultiComparisonMutation.isPending}
+                    disabled={createMultiComparisonMutation.isPending || isComparisonLimitReached}
                   />
                 </div>
                 <div className="w-24">
@@ -346,7 +346,7 @@ const CreateMultiComparison = () => {
                     value={qa.wordCount}
                     onChange={(e) => handleQuestionChange(index, 'wordCount', e.target.value)}
                     className="mt-1"
-                    disabled={createMultiComparisonMutation.isPending}
+                    disabled={createMultiComparisonMutation.isPending || isComparisonLimitReached}
                   />
                 </div>
                 {customComparativeQuestions.length > 0 && ( // Always allow removing if there's at least one question
@@ -355,7 +355,7 @@ const CreateMultiComparison = () => {
                     variant="ghost"
                     size="icon"
                     onClick={() => handleRemoveQuestion(index)}
-                    disabled={createMultiComparisonMutation.isPending}
+                    disabled={createMultiComparisonMutation.isPending || isComparisonLimitReached}
                     className="self-end sm:self-auto"
                   >
                     <XCircle className="h-5 w-5 text-red-500" />
