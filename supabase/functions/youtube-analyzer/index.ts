@@ -152,7 +152,10 @@ serve(async (req: Request) => { // Explicitly typed 'req' as Request
 
     const { videoLink, customQuestions, forceReanalyze, isInternalCall } = await req.json();
 
+    console.log("youtube-analyzer: Received videoLink:", videoLink); // Log received videoLink
+
     if (!videoLink) {
+      console.error("youtube-analyzer: videoLink is empty."); // Log if videoLink is empty
       return new Response(JSON.stringify({ error: 'Video link is required.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,
@@ -160,9 +163,12 @@ serve(async (req: Request) => { // Explicitly typed 'req' as Request
     }
 
     const videoIdMatch = videoLink.match(/(?:v=|\/videos\/|embed\/|youtu.be\/|\/v\/|\/e\/|watch\?v=|&v=)([^#&?]{11})/);
+    console.log("youtube-analyzer: videoIdMatch result:", videoIdMatch); // Log regex match result
     const videoId = videoIdMatch ? videoIdMatch[1] : null;
+    console.log("youtube-analyzer: Extracted videoId:", videoId); // Log extracted videoId
 
     if (!videoId) {
+      console.error("youtube-analyzer: Invalid YouTube video link provided, videoId could not be extracted."); // Log if videoId is null
       return new Response(JSON.stringify({ error: 'Invalid YouTube video link provided.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,
