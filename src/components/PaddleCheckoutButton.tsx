@@ -4,7 +4,7 @@ import { useAuth } from '@/integrations/supabase/auth';
 import { toast } from 'sonner';
 
 interface PaddleCheckoutButtonProps {
-  productId: string; // This is now a V2 Price ID (e.g., pri_...)
+  productId: string; // This is now a V1 Product ID (numerical)
   children: React.ReactNode;
   className?: string;
   variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
@@ -26,30 +26,24 @@ const PaddleCheckoutButton: React.FC<PaddleCheckoutButtonProps> = ({
     }
 
     const customerEmail = user?.email || undefined;
-    const userId = user?.id || undefined;
+    const passthroughData = user?.id ? JSON.stringify({ userId: user.id }) : undefined; // Pass user ID
 
     window.Paddle.Checkout.open({
-      items: [{ priceId: productId, quantity: 1 }],
-      customer: {
-        email: customerEmail,
-      },
-      customData: {
-        userId: userId, // Pass user ID in customData for V2 webhooks
-      },
-      settings: {
-        displayMode: 'overlay',
-        theme: 'dark', // Or 'light'
-      },
-      success: (data: any) => {
-        console.log("Paddle Checkout Success (V2):", data);
+      product: productId, // V1 expects 'product'
+      customer_email: customerEmail,
+      passthrough: passthroughData, // Include passthrough data
+      successCallback: (data: any) => {
+        console.log("Paddle Checkout Success (V1):", data);
         toast.success("Subscription successful! Thank you for upgrading.");
         // In a real application, you would typically verify this with a webhook
         // and update the user's subscription status in your database.
       },
-      close: () => {
-        console.log("Paddle Checkout Closed (V2).");
+      closeCallback: () => {
+        console.log("Paddle Checkout Closed (V1).");
         toast.info("Checkout closed. You can upgrade anytime!");
       },
+      // You can add more V1 options here, e.g., coupon codes, etc.
+      // theme: 'dark', // V1 theme option
     });
   };
 
