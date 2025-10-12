@@ -102,7 +102,16 @@ const AnalyzeVideo = () => {
   const { user, subscriptionStatus, subscriptionPlanId } = useAuth();
 
   const [videoLink, setVideoLink] = useState("");
-  const [customQuestions, setCustomQuestions] = useState<CustomQuestion[]>([{ question: "", wordCount: 200 }]); 
+  // Refactored customQuestions initialization to use useState initializer
+  const [customQuestions, setCustomQuestions] = useState<CustomQuestion[]>(() => {
+    if (initialBlogPost?.custom_qa_results && initialBlogPost.custom_qa_results.length > 0) {
+      return initialBlogPost.custom_qa_results.map(qa => ({
+        question: qa.question,
+        wordCount: qa.wordCount
+      }));
+    }
+    return [{ question: "", wordCount: 200 }];
+  });
   const [analysisResult, setAnalysisResult] = useState<AnalysisResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isChatDialogOpen, setIsChatDialogOpen] = useState(false);
@@ -204,6 +213,7 @@ const AnalyzeVideo = () => {
     }
   }, [isUnauthenticated, user, anonUsage, authenticatedAnalysesCount]);
 
+  // This useEffect now only handles setting videoLink, analysisResult, and chat dialog logic
   useEffect(() => {
     if (initialBlogPost) {
       const loadedAnalysis: AnalysisResponse = {
@@ -228,12 +238,6 @@ const AnalyzeVideo = () => {
       setAnalysisResult(loadedAnalysis);
       setVideoLink(initialBlogPost.original_video_link || "");
 
-      const initialLoadedQuestions = initialBlogPost.custom_qa_results?.map(qa => ({
-        question: qa.question,
-        wordCount: qa.wordCount
-      })) || [{ question: "", wordCount: 200 }];
-      setCustomQuestions(initialLoadedQuestions);
-
       // Only open chat immediately if the flag is true AND the dialog is not already open
       if (openChatImmediately && !isChatDialogOpen) {
         setIsChatDialogOpen(true);
@@ -241,10 +245,9 @@ const AnalyzeVideo = () => {
       if (forceReanalyzeFromNav) {
         analyzeVideoMutation.mutate({ videoLink: initialBlogPost.original_video_link, customQuestions: [], forceReanalyze: true });
       }
-    } else {
-      setCustomQuestions([{ question: "", wordCount: 200 }]);
     }
-  }, [initialBlogPost, openChatImmediately, forceReanalyzeFromNav, analyzeVideoMutation, isChatDialogOpen]); // Added isChatDialogOpen to dependencies
+    // Dependencies for this useEffect are now more focused
+  }, [initialBlogPost, openChatImmediately, forceReanalyzeFromNav, analyzeVideoMutation, isChatDialogOpen]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

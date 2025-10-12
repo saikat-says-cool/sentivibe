@@ -77,7 +77,16 @@ const CreateMultiComparison = () => {
   const { user, subscriptionStatus, subscriptionPlanId } = useAuth();
 
   const [videoLinks, setVideoLinks] = useState<string[]>(['', '']);
-  const [customComparativeQuestions, setCustomComparativeQuestions] = useState<CustomComparativeQuestion[]>([{ question: "", wordCount: 200 }]);
+  // Refactored customComparativeQuestions initialization to use useState initializer
+  const [customComparativeQuestions, setCustomComparativeQuestions] = useState<CustomComparativeQuestion[]>(() => {
+    if (initialMultiComparison?.custom_comparative_qa_results && initialMultiComparison.custom_comparative_qa_results.length > 0) {
+      return initialMultiComparison.custom_comparative_qa_results.map(qa => ({
+        question: qa.question,
+        wordCount: qa.wordCount
+      }));
+    }
+    return [{ question: "", wordCount: 200 }];
+  });
   const [multiComparisonResult, setMultiComparisonResult] = useState<MultiComparisonResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isChatDialogOpen, setIsChatDialogOpen] = useState(false);
@@ -177,17 +186,11 @@ const CreateMultiComparison = () => {
     }
   }, [isUnauthenticated, user, anonUsage, authenticatedComparisonsCount]);
 
+  // This useEffect now only handles setting multiComparisonResult, videoLinks, and chat dialog logic
   useEffect(() => {
     if (initialMultiComparison) {
       setMultiComparisonResult(initialMultiComparison);
       setVideoLinks(initialMultiComparison.videos.map(video => video.original_video_link));
-      const initialLoadedQuestions = initialMultiComparison.custom_comparative_qa_results.length > 0 
-        ? initialMultiComparison.custom_comparative_qa_results.map(qa => ({
-            question: qa.question,
-            wordCount: qa.wordCount
-          }))
-        : [{ question: "", wordCount: 200 }];
-      setCustomComparativeQuestions(initialLoadedQuestions);
       
       // Only open chat immediately if the flag is true AND the dialog is not already open
       if (location.state?.openChat && !isChatDialogOpen) {
@@ -199,10 +202,9 @@ const CreateMultiComparison = () => {
         const validQuestions = initialMultiComparison.custom_comparative_qa_results.filter(q => q.question.trim() !== "");
         createMultiComparisonMutation.mutate({ videoLinks: validVideoLinks, customComparativeQuestions: validQuestions, forceRecompare: true });
       }
-    } else {
-      setCustomComparativeQuestions([{ question: "", wordCount: 200 }]);
     }
-  }, [initialMultiComparison, forceRecompareFromNav, createMultiComparisonMutation, isChatDialogOpen, location.state?.openChat]); // Added isChatDialogOpen and location.state?.openChat to dependencies
+    // Dependencies for this useEffect are now more focused
+  }, [initialMultiComparison, forceRecompareFromNav, createMultiComparisonMutation, isChatDialogOpen, location.state?.openChat]);
 
   const handleAddVideoLink = () => {
     setVideoLinks([...videoLinks, '']);
