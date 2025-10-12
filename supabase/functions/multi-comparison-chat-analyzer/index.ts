@@ -32,21 +32,7 @@ function getApiKeys(baseName: string): string[] {
   return keys;
 }
 
-// Define tier limits for chat
-const UNAUTHENTICATED_LIMITS = {
-  chatMessageLimit: 5, // Max AI responses per session
-  maxResponseWordCount: 100,
-};
-
-const AUTHENTICATED_FREE_TIER_LIMITS = {
-  chatMessageLimit: 10, // Max AI responses per session
-  maxResponseWordCount: 150,
-};
-
-const PAID_TIER_LIMITS = {
-  chatMessageLimit: 100, // Max AI responses per session
-  maxResponseWordCount: 500,
-};
+// Tier limits are no longer enforced in this function, so these constants are unused.
 
 serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
@@ -67,27 +53,8 @@ serve(async (req: Request) => {
       }
     );
 
-    const { data: { user } } = await supabaseClient.auth.getUser();
-    let currentLimits;
-
-    if (user) {
-      const { data: subscriptionData, error: subscriptionError } = await supabaseClient
-        .from('subscriptions')
-        .select('status, plan_id')
-        .eq('id', user.id)
-        .single();
-
-      if (subscriptionError && subscriptionError.code !== 'PGRST116') {
-        console.error("Error fetching subscription for user:", user.id, subscriptionError);
-        currentLimits = AUTHENTICATED_FREE_TIER_LIMITS; // Fallback
-      } else if (subscriptionData && subscriptionData.status === 'active' && subscriptionData.plan_id !== 'free') {
-        currentLimits = PAID_TIER_LIMITS;
-      } else {
-        currentLimits = AUTHENTICATED_FREE_TIER_LIMITS;
-      }
-    } else {
-      currentLimits = UNAUTHENTICATED_LIMITS;
-    }
+    // User and subscription data are no longer fetched as no limits are enforced based on them in this function.
+    // const { data: { user } } = await supabaseClient.auth.getUser();
 
     const { userMessage, chatMessages, multiComparisonResult, externalContext, desiredWordCount, selectedPersona } = await req.json();
 
@@ -98,19 +65,13 @@ serve(async (req: Request) => {
       });
     }
 
-    // --- Enforce Chat Message Limit ---
-    const aiMessageCount = chatMessages.filter((msg: any) => msg.sender === 'ai').length;
-    if (aiMessageCount >= currentLimits.chatMessageLimit) {
-      return new Response(JSON.stringify({ 
-        error: `Chat message limit (${currentLimits.chatMessageLimit} AI responses) exceeded for this session. ${currentLimits === PAID_TIER_LIMITS ? 'You have reached your paid tier limit.' : 'Upgrade to a paid tier for more chat messages.'}` 
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 403,
-      });
-    }
+    // --- Removed Chat Message Limit Enforcement ---
+    // All chat messages are now unlimited.
 
-    // --- Enforce Desired Word Count Limit ---
-    const finalDesiredWordCount = Math.min(desiredWordCount, currentLimits.maxResponseWordCount);
+    // --- Removed Desired Word Count Limit Enforcement ---
+    // All desired word counts are now unlimited.
+    // The desiredWordCount from the frontend will still be used by the AI, but not enforced as a hard limit here.
+    const finalDesiredWordCount = desiredWordCount; // Use as is from frontend
 
     // --- Longcat AI API Call ---
     const longcatApiKeys = getApiKeys('LONGCAT_AI_API_KEY');

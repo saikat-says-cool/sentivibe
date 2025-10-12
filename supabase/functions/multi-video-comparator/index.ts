@@ -35,23 +35,17 @@ function getApiKeys(baseName: string): string[] {
 // Define staleness threshold (e.g., 30 days)
 const STALENESS_THRESHOLD_DAYS = 30;
 
-// Define tier limits for multi-comparisons
+// Define simplified tier limits for multi-comparisons
 const UNAUTHENTICATED_LIMITS = {
-  dailyComparisons: 1,
-  maxCustomQuestions: 1,
-  maxCustomQuestionWordCount: 100,
+  dailyComparisons: 1, // Simplified: 1 comparison per day for free tier
 };
 
 const AUTHENTICATED_FREE_TIER_LIMITS = {
-  dailyComparisons: 2,
-  maxCustomQuestions: 2,
-  maxCustomQuestionWordCount: 150,
+  dailyComparisons: 1, // Simplified: 1 comparison per day for free tier
 };
 
 const PAID_TIER_LIMITS = {
-  dailyComparisons: 20,
-  maxCustomQuestions: 5,
-  maxCustomQuestionWordCount: 500,
+  dailyComparisons: 20, // Effectively unlimited
 };
 
 // Helper function to strip markdown code block fences
@@ -394,7 +388,6 @@ serve(async (req: Request) => {
             ip_address: clientIp, 
             analyses_count: anonUsage?.analyses_count || 0, // Preserve other counts
             comparisons_count: currentComparisonsCount, 
-            copilot_queries_count: anonUsage?.copilot_queries_count || 0, // Preserve other counts
             last_reset_at: lastResetAt,
             updated_at: now.toISOString(),
           }, { onConflict: 'ip_address' });
@@ -409,28 +402,8 @@ serve(async (req: Request) => {
       }
     }
 
-    // --- Enforce Custom Comparative Question Limits ---
-    if (customComparativeQuestions && customComparativeQuestions.length > currentLimits.maxCustomQuestions) {
-      return new Response(JSON.stringify({ 
-        error: `You can only ask a maximum of ${currentLimits.maxCustomQuestions} custom comparative question(s) per comparison. ${currentLimits === PAID_TIER_LIMITS ? '' : 'Upgrade to a paid tier to ask more questions.'}` 
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 403,
-      });
-    }
-
-    if (customComparativeQuestions) {
-      for (const qa of customComparativeQuestions) {
-        if (qa.wordCount > currentLimits.maxCustomQuestionWordCount) {
-          return new Response(JSON.stringify({ 
-            error: `Maximum word count for a custom comparative question answer is ${currentLimits.maxCustomQuestionWordCount}. ${currentLimits === PAID_TIER_LIMITS ? '' : 'Upgrade to a paid tier for longer answers.'}` 
-          }), {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: 403,
-          });
-        }
-      }
-    }
+    // --- Removed Custom Comparative Question Limits Enforcement ---
+    // All custom comparative questions are now unlimited in count and word count.
 
     // --- Step 2: Fetch External Context (only if regenerating multi-comparison or new questions) ---
     let externalContext = '';
@@ -597,6 +570,7 @@ serve(async (req: Request) => {
     }
 
     // --- Process Custom Comparative Questions (always, merging with existing if any) ---
+    // Custom question limits are removed, so this section remains as is for processing questions.
     if (customComparativeQuestions && customComparativeQuestions.length > 0) {
       if (!shouldRegenerateMultiComparison && existingMultiComparison) {
         combinedCustomComparativeQaResults = existingMultiComparison.custom_comparative_qa_results || [];

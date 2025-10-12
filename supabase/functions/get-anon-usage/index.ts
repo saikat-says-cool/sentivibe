@@ -1,7 +1,7 @@
 /// <reference lib="deno.ns" />
-// @deno-types="https://deno.land/std@0.190.0/http/server.d.ts"
+// @ts-ignore
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-// @deno-types="https://esm.sh/@supabase/supabase-js@2.45.0/dist/module.d.ts"
+// @ts-ignore
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 
 const corsHeaders = {
@@ -9,21 +9,22 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Define tier limits (matching backend for consistency)
+// Define simplified tier limits (matching frontend for consistency)
 const FREE_TIER_LIMITS = {
-  dailyAnalyses: 2,
+  dailyAnalyses: 1,
   dailyComparisons: 1,
-  dailyCopilotQueries: 5,
 };
 
-serve(async (req) => {
+serve(async (req: Request) => { // Explicitly typed 'req' as Request
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
     const supabaseClient = createClient(
+      // @ts-ignore
       Deno.env.get('SUPABASE_URL') ?? '',
+      // @ts-ignore
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
     );
 
@@ -51,7 +52,6 @@ serve(async (req) => {
       return new Response(JSON.stringify({
         analyses_count: 0,
         comparisons_count: 0,
-        copilot_queries_count: 0,
         limits: FREE_TIER_LIMITS,
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -62,16 +62,15 @@ serve(async (req) => {
     return new Response(JSON.stringify({
       analyses_count: anonUsage.analyses_count,
       comparisons_count: anonUsage.comparisons_count,
-      copilot_queries_count: anonUsage.copilot_queries_count,
       limits: FREE_TIER_LIMITS,
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     });
 
-  } catch (error) {
-    console.error('Edge Function error (get-anon-usage):', error.message);
-    return new Response(JSON.stringify({ error: error.message }), {
+  } catch (error: unknown) { // Explicitly typed 'error' as unknown
+    console.error('Edge Function error (get-anon-usage):', (error as Error).message); // Cast to Error
+    return new Response(JSON.stringify({ error: (error as Error).message }), { // Cast to Error
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 500,
     });

@@ -33,18 +33,7 @@ function getApiKeys(baseName: string): string[] {
   return keys;
 }
 
-// Define tier limits for library copilot queries
-const UNAUTHENTICATED_LIMITS = {
-  dailyQueries: 5,
-};
-
-const AUTHENTICATED_FREE_TIER_LIMITS = {
-  dailyQueries: 10,
-};
-
-const PAID_TIER_LIMITS = {
-  dailyQueries: 100,
-};
+// Tier limits are no longer enforced in this function, so these constants are unused.
 
 serve(async (req: Request) => {
   // Handle CORS preflight request
@@ -66,119 +55,14 @@ serve(async (req: Request) => {
       }
     );
 
-    const { data: { user } } = await supabaseClient.auth.getUser();
-    let currentLimits;
+    // User and subscription data are no longer fetched as no limits are enforced based on them in this function.
+    // const { data: { user } } = await supabaseClient.auth.getUser();
+    // const clientIp = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
+    // const now = new Date();
 
-    const clientIp = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
-    const now = new Date();
-
-    if (user) {
-      const { data: subscriptionData, error: subscriptionError } = await supabaseClient
-        .from('subscriptions')
-        .select('status, plan_id')
-        .eq('id', user.id)
-        .single();
-
-      if (subscriptionError && subscriptionError.code !== 'PGRST116') {
-        console.error("Error fetching subscription for user:", user.id, subscriptionError);
-        currentLimits = AUTHENTICATED_FREE_TIER_LIMITS; // Fallback
-      } else if (subscriptionData && subscriptionData.status === 'active' && subscriptionData.plan_id !== 'free') {
-        currentLimits = PAID_TIER_LIMITS;
-      } else {
-        currentLimits = AUTHENTICATED_FREE_TIER_LIMITS;
-      }
-    } else {
-      currentLimits = UNAUTHENTICATED_LIMITS;
-    }
-
-    // --- Enforce Daily Query Limit ---
-    if (user) { // Authenticated user limit check
-      const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
-      let { count, error: countError } = await supabaseClient
-        .from('copilot_queries_log') // Assuming a new table 'copilot_queries_log' exists for authenticated users
-        .select('id', { count: 'exact', head: true })
-        .gte('created_at', twentyFourHoursAgo)
-        .eq('user_id', user.id);
-
-      if (countError) {
-        console.error("Error counting daily copilot queries for authenticated user:", countError);
-        return new Response(JSON.stringify({ error: 'Failed to check daily copilot query limit.' }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 500,
-        });
-      }
-
-      if (count !== null && count >= currentLimits.dailyQueries) {
-        return new Response(JSON.stringify({ 
-          error: `Daily Library Copilot query limit (${currentLimits.dailyQueries}) exceeded. ${currentLimits === PAID_TIER_LIMITS ? 'You have reached your paid tier limit.' : 'Upgrade to a paid tier for more queries.'}` 
-        }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 403,
-        });
-      }
-      // Log query for authenticated user
-      await supabaseClient.from('copilot_queries_log').insert({ user_id: user.id, created_at: now.toISOString() });
-
-    } else { // Unauthenticated user IP-based limit check
-      let { data: anonUsage, error: anonError } = await supabaseClient
-        .from('anon_usage')
-        .select('*')
-        .eq('ip_address', clientIp)
-        .single();
-
-      if (anonError && anonError.code !== 'PGRST116') {
-        console.error("Error fetching anon usage for IP:", clientIp, anonError);
-        return new Response(JSON.stringify({ error: 'Failed to check anonymous usage data.' }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 500,
-        });
-      }
-
-      const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-      let currentCopilotQueriesCount = 0;
-      let lastResetAt = now.toISOString();
-
-      if (anonUsage) {
-        if (new Date(anonUsage.last_reset_at) < twentyFourHoursAgo) {
-          // Reset counts if older than 24 hours
-          currentCopilotQueriesCount = 0;
-          lastResetAt = now.toISOString();
-        } else {
-          currentCopilotQueriesCount = anonUsage.copilot_queries_count;
-          lastResetAt = anonUsage.last_reset_at;
-        }
-      }
-
-      if (currentCopilotQueriesCount >= UNAUTHENTICATED_LIMITS.dailyQueries) { // Always use UNAUTHENTICATED_LIMITS for anon
-        return new Response(JSON.stringify({ 
-          error: `Daily Library Copilot query limit (${UNAUTHENTICATED_LIMITS.dailyQueries}) exceeded for your IP address. Upgrade to a paid tier for more queries.` 
-        }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 403,
-        });
-      }
-
-      // Increment count and update anon_usage
-      currentCopilotQueriesCount++;
-      const { error: updateAnonError } = await supabaseClient
-        .from('anon_usage')
-        .upsert({ 
-          ip_address: clientIp, 
-          analyses_count: anonUsage?.analyses_count || 0, // Preserve other counts
-          comparisons_count: anonUsage?.comparisons_count || 0, // Preserve other counts
-          copilot_queries_count: currentCopilotQueriesCount, 
-          last_reset_at: lastResetAt,
-          updated_at: now.toISOString(),
-        }, { onConflict: 'ip_address' });
-
-      if (updateAnonError) {
-        console.error("Error updating anon usage for IP:", clientIp, updateAnonError);
-        return new Response(JSON.stringify({ error: 'Failed to update anonymous usage data.' }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 500,
-        });
-      }
-    }
+    // --- Daily Query Limit Enforcement Removed ---
+    // All copilot queries are now unlimited.
+    // Removed interaction with 'copilot_queries_log' and 'anon_usage.copilot_queries_count'.
 
     const { userQuery, blogPostsData } = await req.json();
 
@@ -200,7 +84,7 @@ serve(async (req: Request) => {
     --- End Blog Post ${index + 1} ---
     `).join('\n');
 
-    const systemPrompt = `You are SentiVibe AI, the dedicated Library Copilot. Your purpose is to efficiently and accurately help users discover relevant video analysis blog posts from their collection, AND to act as an analysis topic recommender.
+    const systemPrompt = `You are SentiVibe AI, the dedicated Library Copilot. Your purpose is to efficiently and accurately help users discover relevant video analysis blog posts from their collection, AND to act as an an analysis topic recommender.
 
     **Response Guidelines:**
     1.  **Semantic Search & Relevance:**

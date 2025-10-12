@@ -33,23 +33,9 @@ function getApiKeys(baseName: string): string[] {
   return keys;
 }
 
-// Define tier limits for chat
-const UNAUTHENTICATED_LIMITS = {
-  chatMessageLimit: 5, // Max AI responses per session
-  maxResponseWordCount: 100,
-};
+// Tier limits are no longer enforced in this function, so these constants are unused.
 
-const AUTHENTICATED_FREE_TIER_LIMITS = {
-  chatMessageLimit: 10, // Max AI responses per session
-  maxResponseWordCount: 150,
-};
-
-const PAID_TIER_LIMITS = {
-  chatMessageLimit: 100, // Max AI responses per session
-  maxResponseWordCount: 500,
-};
-
-serve(async (req: Request) => { // Fixed: Parameter 'req' implicitly has an 'any' type. (TS7006)
+serve(async (req: Request) => {
   // Handle CORS preflight request
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -69,27 +55,8 @@ serve(async (req: Request) => { // Fixed: Parameter 'req' implicitly has an 'any
       }
     );
 
-    const { data: { user } } = await supabaseClient.auth.getUser();
-    let currentLimits;
-
-    if (user) {
-      const { data: subscriptionData, error: subscriptionError } = await supabaseClient
-        .from('subscriptions')
-        .select('status, plan_id')
-        .eq('id', user.id)
-        .single();
-
-      if (subscriptionError && subscriptionError.code !== 'PGRST116') {
-        console.error("Error fetching subscription for user:", user.id, subscriptionError);
-        currentLimits = AUTHENTICATED_FREE_TIER_LIMITS; // Fallback
-      } else if (subscriptionData && subscriptionData.status === 'active' && subscriptionData.plan_id !== 'free') {
-        currentLimits = PAID_TIER_LIMITS;
-      } else {
-        currentLimits = AUTHENTICATED_FREE_TIER_LIMITS;
-      }
-    } else {
-      currentLimits = UNAUTHENTICATED_LIMITS;
-    }
+    // User and subscription data are no longer fetched as no limits are enforced based on them in this function.
+    // const { data: { user } } = await supabaseClient.auth.getUser(); 
 
     const { userMessage, chatMessages, analysisResult, externalContext, desiredWordCount, selectedPersona, customQaResults } = await req.json();
 
@@ -100,21 +67,13 @@ serve(async (req: Request) => { // Fixed: Parameter 'req' implicitly has an 'any
       });
     }
 
-    // --- Enforce Chat Message Limit ---
-    // The chatMessages array includes both user and AI messages.
-    // We count AI messages to enforce the limit.
-    const aiMessageCount = chatMessages.filter((msg: any) => msg.sender === 'ai').length;
-    if (aiMessageCount >= currentLimits.chatMessageLimit) {
-      return new Response(JSON.stringify({ 
-        error: `Chat message limit (${currentLimits.chatMessageLimit} AI responses) exceeded for this session. ${currentLimits === PAID_TIER_LIMITS ? 'You have reached your paid tier limit.' : 'Upgrade to a paid tier for more chat messages.'}` 
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 403,
-      });
-    }
+    // --- Removed Chat Message Limit Enforcement ---
+    // All chat messages are now unlimited.
 
-    // --- Enforce Desired Word Count Limit ---
-    const finalDesiredWordCount = Math.min(desiredWordCount, currentLimits.maxResponseWordCount);
+    // --- Removed Desired Word Count Limit Enforcement ---
+    // All desired word counts are now unlimited.
+    // The desiredWordCount from the frontend will still be used by the AI, but not enforced as a hard limit here.
+    const finalDesiredWordCount = desiredWordCount; // Use as is from frontend
 
     // --- Longcat AI API Call ---
     const longcatApiKeys = getApiKeys('LONGCAT_AI_API_KEY');
@@ -125,9 +84,7 @@ serve(async (req: Request) => { // Fixed: Parameter 'req' implicitly has an 'any
       });
     }
 
-    // Determine max_tokens based on finalDesiredWordCount
     const maxTokens = Math.ceil(finalDesiredWordCount * 1.5); 
-    // Removed: 'wordCountInstruction' is declared but its value is never read. (TS6133)
 
     // Base instructions for all personas, emphasizing completeness
     const baseInstructions = `
@@ -253,9 +210,9 @@ serve(async (req: Request) => { // Fixed: Parameter 'req' implicitly has an 'any
       status: 200,
     });
 
-  } catch (error: unknown) { // Fixed: 'error' is of type 'unknown'. (TS18046)
-    console.error('Edge Function error:', (error as Error).message); // Fixed: 'error' is of type 'unknown'. (TS18046)
-    return new Response(JSON.stringify({ error: (error as Error).message }), { // Fixed: 'error' is of type 'unknown'. (TS18046)
+  } catch (error: unknown) {
+    console.error('Edge Function error:', (error as Error).message);
+    return new Response(JSON.stringify({ error: (error as Error).message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 500,
     });

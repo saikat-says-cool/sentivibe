@@ -36,23 +36,17 @@ function getApiKeys(baseName: string): string[] {
 // Define staleness threshold (e.g., 30 days)
 const STALENESS_THRESHOLD_DAYS = 30;
 
-// Define tier limits
+// Define simplified tier limits
 const UNAUTHENTICATED_LIMITS = {
-  dailyAnalyses: 2,
-  maxCustomQuestions: 1,
-  maxCustomQuestionWordCount: 100,
+  dailyAnalyses: 1, // Simplified: 1 analysis per day for free tier
 };
 
 const AUTHENTICATED_FREE_TIER_LIMITS = {
-  dailyAnalyses: 5,
-  maxCustomQuestions: 2,
-  maxCustomQuestionWordCount: 150,
+  dailyAnalyses: 1, // Simplified: 1 analysis per day for free tier
 };
 
 const PAID_TIER_LIMITS = {
-  dailyAnalyses: 50,
-  maxCustomQuestions: 5,
-  maxCustomQuestionWordCount: 500,
+  dailyAnalyses: 50, // Effectively unlimited
 };
 
 serve(async (req: Request) => {
@@ -228,7 +222,6 @@ serve(async (req: Request) => {
             ip_address: clientIp, 
             analyses_count: currentAnalysesCount, 
             comparisons_count: anonUsage?.comparisons_count || 0, // Preserve other counts
-            copilot_queries_count: anonUsage?.copilot_queries_count || 0, // Preserve other counts
             last_reset_at: lastResetAt,
             updated_at: now.toISOString(),
           }, { onConflict: 'ip_address' });
@@ -243,28 +236,8 @@ serve(async (req: Request) => {
       }
     }
 
-    // --- Enforce Custom Question Limits ---
-    if (customQuestions && customQuestions.length > currentLimits.maxCustomQuestions) {
-      return new Response(JSON.stringify({ 
-        error: `You can only ask a maximum of ${currentLimits.maxCustomQuestions} custom question(s) per analysis. ${currentLimits === PAID_TIER_LIMITS ? '' : 'Upgrade to a paid tier to ask more questions.'}` 
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 403,
-      });
-    }
-
-    if (customQuestions) {
-      for (const qa of customQuestions) {
-        if (qa.wordCount > currentLimits.maxCustomQuestionWordCount) {
-          return new Response(JSON.stringify({ 
-            error: `Maximum word count for a custom question answer is ${currentLimits.maxCustomQuestionWordCount}. ${currentLimits === PAID_TIER_LIMITS ? '' : 'Upgrade to a paid tier for longer answers.'}` 
-          }), {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: 403,
-          });
-        }
-      }
-    }
+    // --- Removed Custom Question Limits Enforcement ---
+    // All custom questions are now unlimited in count and word count.
 
     let videoTitle: string;
     let videoDescription: string;
@@ -608,7 +581,7 @@ serve(async (req: Request) => {
             if (customQaResponse.ok) {
               break;
             } else if (customQaResponse.status === 429) {
-              console.warn(`Longcat AI API key ${currentLongcatApiKey} hit rate limit for custom QA. Trying next key.`);
+              console.warn(`Longcat AI API key ${currentLongcatApiKey} hit quota limit for custom QA. Trying next key.`);
               continue;
             }
             break;
