@@ -7,7 +7,8 @@ declare const Deno: {
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 // @ts-ignore
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
-// Removed Node.js crypto import, using Web Crypto API instead
+// @ts-ignore
+import { createHmac } from 'https://deno.land/std@0.224.0/crypto/mod.ts'; // Updated import for createHmac
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -50,30 +51,13 @@ serve(async (req: Request) => {
 
     const requestBody = await req.text(); // Read raw body for signature verification
 
-    // Verify the webhook signature using Web Crypto API (HMAC-SHA256 for Paddle V2)
-    const [timestampPart, hmacSignaturePart] = paddleSignature.split(';');
-    const timestamp = timestampPart.split('=')[1];
-    const hmacSignature = hmacSignaturePart.split('=')[1];
+    // Verify the webhook signature (HMAC-SHA256 for Paddle V2)
+    const [timestamp, hmacSignature] = paddleSignature.split(';').map(s => s.split('=')[1]);
     const signedPayload = `${timestamp}:${requestBody}`;
 
-    const encoder = new TextEncoder();
-    const key = await crypto.subtle.importKey(
-      "raw",
-      encoder.encode(webhookSecret),
-      { name: "HMAC", hash: "SHA-256" },
-      false,
-      ["sign"]
-    );
-
-    const signature = await crypto.subtle.sign(
-      "HMAC",
-      key,
-      encoder.encode(signedPayload)
-    );
-
-    const generatedHmac = Array.from(new Uint8Array(signature))
-      .map((b) => b.toString(16).padStart(2, "0"))
-      .join("");
+    const hmac = createHmac('sha256', webhookSecret);
+    hmac.update(signedPayload);
+    const generatedHmac = hmac.digest('hex');
 
     if (generatedHmac !== hmacSignature) {
       console.warn('Webhook signature mismatch. Request potentially tampered with.');
