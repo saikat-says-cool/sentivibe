@@ -19,7 +19,6 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-// Removed useAuth import as it's no longer needed for chat message initialization
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface MultiComparisonVideo {
@@ -64,19 +63,15 @@ const MultiComparisonChatDialog: React.FC<MultiComparisonChatDialogProps> = ({
   onOpenChange,
   initialMultiComparisonResult,
 }) => {
-  // Removed user, subscriptionStatus, subscriptionPlanId from useAuth() as they are not relevant for chat message initialization
-
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
   const [desiredWordCount, setDesiredWordCount] = useState<number>(300); 
   const [selectedPersona, setSelectedPersona] = useState<string>("friendly");
-  // Removed currentExternalContext and setCurrentExternalContext as they are no longer used
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen && initialMultiComparisonResult) {
       const videoTitles = initialMultiComparisonResult.videos.map(v => `"${v.title}"`).join(', ');
       const initialMessageText = `Multi-video comparison for ${videoTitles} loaded. What would you like to know about it?`;
-      // Only initialize if chatMessages is empty or the context has changed
       if (chatMessages.length === 0 || chatMessages[0]?.text !== initialMessageText) {
         setChatMessages([
           {
@@ -86,15 +81,12 @@ const MultiComparisonChatDialog: React.FC<MultiComparisonChatDialogProps> = ({
           },
         ]);
       }
-      // Removed setDesiredWordCount(300); to allow user input to persist
       setError(null);
-    } else if (!isOpen) { // Cleanup when closing
+    } else if (!isOpen) {
       setChatMessages([]);
       setError(null);
     }
-  }, [isOpen, initialMultiComparisonResult]); // Removed useAuth dependencies as they are not relevant for chat message initialization
-
-  // Removed fetchExternalContextMutation as it's no longer used
+  }, [isOpen, initialMultiComparisonResult]);
 
   const chatMutation = useMutation({
     mutationFn: async (userMessageText: string) => {
@@ -123,7 +115,6 @@ const MultiComparisonChatDialog: React.FC<MultiComparisonChatDialogProps> = ({
           userMessage: userMessageText,
           chatMessages: [...chatMessages, newUserMessage],
           multiComparisonResult: initialMultiComparisonResult,
-          // Removed externalContext: currentExternalContext,
           desiredWordCount: desiredWordCount,
           selectedPersona: selectedPersona,
         },
@@ -165,7 +156,6 @@ const MultiComparisonChatDialog: React.FC<MultiComparisonChatDialogProps> = ({
     }
   };
 
-  // Simplified disabled logic: removed fetchExternalContextMutation.isPending
   const isChatDisabled = !initialMultiComparisonResult || chatMutation.isPending;
 
   return (

@@ -19,7 +19,6 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-// Removed useAuth import as it's no longer needed for chat message initialization
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface AiAnalysisResult {
@@ -92,16 +91,12 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
   initialAnalysisResult,
   initialBlogPost,
 }) => {
-  // Removed user, subscriptionStatus, subscriptionPlanId from useAuth() as they are not relevant for chat message initialization
-
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
   const [desiredWordCount, setDesiredWordCount] = useState<number>(300); 
   const [selectedPersona, setSelectedPersona] = useState<string>("friendly");
-  // Removed currentExternalContext state as it's no longer used
   const [currentAnalysisResult, setCurrentAnalysisResult] = useState<AnalysisResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Effect to set the current analysis result based on props
   useEffect(() => {
     let analysisToUse: AnalysisResponse | null = null;
     if (initialAnalysisResult) {
@@ -119,7 +114,7 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
           overall_sentiment: initialBlogPost.ai_analysis_json.overall_sentiment || 'N/A',
           emotional_tones: initialBlogPost.ai_analysis_json.emotional_tones || [],
           key_themes: initialBlogPost.ai_analysis_json.key_themes || [],
-          summary_insights: initialBlogPost.ai_analysis_json.summary_insights || 'No insights available.',
+          summary_insights: initialBlogPost.ai_analysis_json.overall_sentiment || 'No insights available.',
         },
         blogPostSlug: initialBlogPost.slug,
         originalVideoLink: initialBlogPost.original_video_link,
@@ -129,11 +124,9 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
     setCurrentAnalysisResult(analysisToUse);
   }, [initialAnalysisResult, initialBlogPost]);
 
-  // Effect to manage chat messages based on dialog open state and current analysis result
   useEffect(() => {
     if (isOpen && currentAnalysisResult) {
       const initialMessageText = `Analysis for "${currentAnalysisResult.videoTitle}" loaded. What would you like to know about it?`;
-      // Only initialize if chatMessages is empty or the context has changed
       if (chatMessages.length === 0 || chatMessages[0]?.text !== initialMessageText) {
         setChatMessages([
           {
@@ -143,15 +136,12 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
           },
         ]);
       }
-      // Removed setDesiredWordCount(300); to allow user input to persist
       setError(null);
-    } else if (!isOpen) { // Cleanup when closing
+    } else if (!isOpen) {
       setChatMessages([]);
       setError(null);
     }
-  }, [isOpen, currentAnalysisResult]); // Dependencies: isOpen and currentAnalysisResult
-
-  // Removed fetchExternalContextMutation as it's no longer used
+  }, [isOpen, currentAnalysisResult]);
 
   const chatMutation = useMutation({
     mutationFn: async (userMessageText: string) => {
@@ -180,7 +170,6 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
           userMessage: userMessageText,
           chatMessages: [...chatMessages, newUserMessage],
           analysisResult: currentAnalysisResult,
-          // Removed externalContext: currentExternalContext,
           desiredWordCount: desiredWordCount,
           selectedPersona: selectedPersona,
           customQaResults: currentAnalysisResult.customQaResults,
@@ -223,7 +212,6 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
     }
   };
 
-  // Simplified disabled logic: removed fetchExternalContextMutation.isPending
   const isChatDisabled = !currentAnalysisResult || chatMutation.isPending;
 
   return (

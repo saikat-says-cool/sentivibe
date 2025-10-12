@@ -61,13 +61,11 @@ const ComparisonChatDialog: React.FC<ComparisonChatDialogProps> = ({
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
   const [desiredWordCount, setDesiredWordCount] = React.useState<number>(300);
   const [selectedPersona, setSelectedPersona] = React.useState<string>("friendly");
-  // Removed currentExternalContext state as external context is no longer used
   const [error, setError] = React.useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen && initialComparisonResult) {
       const initialMessageText = `Comparison for "${initialComparisonResult.videoATitle}" vs "${initialComparisonResult.videoBTitle}" loaded. What would you like to know about it?`;
-      // Only initialize if chatMessages is empty or the context has changed
       if (chatMessages.length === 0 || chatMessages[0]?.text !== initialMessageText) {
         setChatMessages([
           {
@@ -77,15 +75,12 @@ const ComparisonChatDialog: React.FC<ComparisonChatDialogProps> = ({
           },
         ]);
       }
-      // Removed setDesiredWordCount(300); to allow user input to persist
       setError(null);
-    } else if (!isOpen) { // Cleanup when closing
+    } else if (!isOpen) {
       setChatMessages([]);
       setError(null);
     }
-  }, [isOpen, initialComparisonResult]); // Removed useAuth dependencies as they are not relevant for chat message initialization
-
-  // Removed fetchExternalContextMutation as external context is no longer used
+  }, [isOpen, initialComparisonResult]);
 
   const chatMutation = useMutation({
     mutationFn: async (userMessageText: string) => {
@@ -114,7 +109,6 @@ const ComparisonChatDialog: React.FC<ComparisonChatDialogProps> = ({
           userMessage: userMessageText,
           chatMessages: [...chatMessages, newUserMessage],
           comparisonResult: initialComparisonResult,
-          // Removed externalContext: currentExternalContext,
           desiredWordCount: desiredWordCount,
           selectedPersona: selectedPersona,
         },
@@ -156,7 +150,6 @@ const ComparisonChatDialog: React.FC<ComparisonChatDialogProps> = ({
     }
   };
 
-  // Simplified disabled logic: removed fetchExternalContextMutation.isPending
   const isChatDisabled = !initialComparisonResult || chatMutation.isPending;
 
   return (

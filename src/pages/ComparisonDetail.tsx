@@ -229,7 +229,7 @@ const ComparisonDetail = () => {
 
   return (
     <div className="container mx-auto p-4 max-w-3xl">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-2">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-2 flex-wrap">
         <Link to="/comparison-library" className="text-blue-500 hover:underline flex items-center w-fit">
           <ArrowLeft className="h-4 w-4 mr-2" /> Back to Comparison Library
         </Link>

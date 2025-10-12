@@ -47,7 +47,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ messages, onSendMessage, 
             className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             <div
-              className={`max-w-[70%] p-3 rounded-lg ${
+              className={`max-w-[90%] sm:max-w-[70%] p-3 rounded-lg ${
                 message.sender === 'user'
                   ? 'bg-blue-500 text-white rounded-br-none'
                   : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200 rounded-bl-none'
@@ -61,7 +61,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ messages, onSendMessage, 
         ))}
         {isLoading && messages[messages.length - 1]?.sender === 'user' && (
           <div className="flex justify-start">
-            <div className="max-w-[70%] p-3 rounded-lg bg-gray-100 dark:bg-gray-700 rounded-bl-none flex items-center">
+            <div className="max-w-[90%] sm:max-w-[70%] p-3 rounded-lg bg-gray-100 dark:bg-gray-700 rounded-bl-none flex items-center">
               <Loader2 className="mr-2 h-4 w-4 animate-spin text-gray-500 dark:text-gray-400" />
               <span className="text-gray-500 dark:text-gray-400">Thinking...</span>
             </div>
