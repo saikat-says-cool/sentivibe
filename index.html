@@ -6,13 +6,11 @@
     <title>SentiVibe - YouTube Comment Sentiment Analysis</title>
     <link href="https://fonts.googleapis.com/css2?family=Jura:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="icon" type="image/svg+xml" href="/logo.svg" />
-    <!-- Paddle Billing (V2) SDK script -->
-    <script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
+    <!-- Paddle.js script for client-side checkout -->
+    <script src="https://cdn.paddle.com/paddle/paddle.js"></script>
     <script type="module" type="text/javascript">
-      // Initialize Paddle Billing (V2)
-      Paddle.initialize({ 
-        environment: 'sandbox', // Use 'sandbox' for testing
-        token: import.meta.env.VITE_PADDLE_CLIENT_SIDE_TOKEN
+      Paddle.Setup({ 
+        vendor: parseInt(import.meta.env.VITE_PADDLE_VENDOR_ID)
       });
     </script>
   </head>
