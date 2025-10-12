@@ -320,7 +320,8 @@ const AnalyzeVideo = () => {
   const isAnalysisLimitReached = analysesToday >= currentLimits.dailyAnalyses;
 
   // Determine if custom question inputs should be disabled
-  const areCustomQuestionInputsDisabled = analyzeVideoMutation.isPending || isAnalysisLimitReached;
+  // Custom questions are now unlimited, so only disable if analysis is pending
+  const areCustomQuestionInputsDisabled = analyzeVideoMutation.isPending;
 
   return (
     <div className="container mx-auto p-4 max-w-3xl">

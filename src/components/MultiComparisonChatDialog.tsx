@@ -213,6 +213,7 @@ const MultiComparisonChatDialog: React.FC<MultiComparisonChatDialogProps> = ({
               id="desired-word-count"
               type="number"
               min="50"
+              // Removed max attribute as word count is now unlimited
               step="50"
               value={desiredWordCount}
               onChange={(e) => setDesiredWordCount(Number(e.target.value))}

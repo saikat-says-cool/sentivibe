@@ -253,7 +253,8 @@ const CreateMultiComparison = () => {
   const isComparisonLimitReached = comparisonsToday >= currentLimits.dailyComparisons;
 
   // Determine if custom question inputs should be disabled
-  const areCustomQuestionInputsDisabled = createMultiComparisonMutation.isPending || isComparisonLimitReached;
+  // Custom questions are now unlimited, so only disable if comparison is pending
+  const areCustomQuestionInputsDisabled = createMultiComparisonMutation.isPending;
 
   return (
     <div className="container mx-auto p-4 max-w-3xl">

@@ -271,6 +271,7 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
               id="desired-word-count"
               type="number"
               min="50"
+              // Removed max attribute as word count is now unlimited
               step="50"
               value={desiredWordCount}
               onChange={(e) => setDesiredWordCount(Number(e.target.value))}
@@ -290,8 +291,8 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
         <div className="flex-1 overflow-hidden">
           <ChatInterface
             messages={chatMessages}
-            onSendMessage={handleSendMessage}
             // Removed fetchExternalContextMutation.isPending from isLoading
+            onSendMessage={handleSendMessage}
             isLoading={chatMutation.isPending}
             disabled={isChatDisabled}
           />
