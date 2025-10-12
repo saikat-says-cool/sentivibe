@@ -9,14 +9,37 @@ const PaddleContext = createContext<PaddleContextType | undefined>(undefined);
 
 export const PaddleProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [isPaddleInitialized, setIsPaddleInitialized] = useState(false);
+  const [isScriptLoaded, setIsScriptLoaded] = useState(false);
 
   useEffect(() => {
-    let intervalId: NodeJS.Timeout | undefined;
+    // Load Paddle.js script dynamically
+    if (!isScriptLoaded) {
+      const script = document.createElement('script');
+      script.src = "https://cdn.paddle.com/paddle/v2/paddle.js";
+      script.async = true;
+      script.onload = () => {
+        setIsScriptLoaded(true);
+        console.log("Paddle Billing (V2) SDK script loaded.");
+      };
+      script.onerror = (e) => {
+        console.error("Failed to load Paddle Billing (V2) SDK script:", e);
+        toast.error("Failed to load payment system script. Please check your internet connection.");
+      };
+      document.head.appendChild(script);
 
-    const tryInitializePaddle = async () => {
-      // Check if Paddle.js is loaded and the initialize function is available
-      if (typeof window.Paddle !== 'undefined' && typeof window.Paddle.initialize === 'function' && !isPaddleInitialized) {
-        clearInterval(intervalId); // Stop polling once found
+      return () => {
+        // Clean up script if component unmounts before load
+        if (document.head.contains(script)) {
+          document.head.removeChild(script);
+        }
+      };
+    }
+  }, [isScriptLoaded]);
+
+  useEffect(() => {
+    // Initialize Paddle.js once the script is loaded and Paddle object is available
+    if (isScriptLoaded && typeof window.Paddle !== 'undefined' && typeof window.Paddle.initialize === 'function' && !isPaddleInitialized) {
+      const initializePaddleSDK = async () => {
         try {
           await window.Paddle.initialize({
             environment: 'sandbox', // Use 'sandbox' for testing
@@ -28,19 +51,10 @@ export const PaddleProvider: React.FC<{ children: ReactNode }> = ({ children }) 
           console.error("Failed to initialize Paddle Billing (V2) SDK:", error);
           toast.error("Failed to initialize payment system. Please try again later.");
         }
-      }
-    };
-
-    // Start polling for Paddle.initialize to become available
-    intervalId = setInterval(tryInitializePaddle, 100); // Check every 100ms
-
-    // Clean up interval on component unmount
-    return () => {
-      if (intervalId) {
-        clearInterval(intervalId);
-      }
-    };
-  }, [isPaddleInitialized]); // Only re-run if initialization status changes
+      };
+      initializePaddleSDK();
+    }
+  }, [isScriptLoaded, isPaddleInitialized]); // Depend on isScriptLoaded and isPaddleInitialized
 
   return (
     <PaddleContext.Provider value={{ isPaddleInitialized }}>
