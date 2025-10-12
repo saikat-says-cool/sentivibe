@@ -7,8 +7,7 @@ declare const Deno: {
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 // @ts-ignore
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
-// @ts-ignore
-import { createHmac } from 'https://deno.land/std@0.190.0/node/crypto.ts'; // For HMAC-SHA256
+// Removed Node.js crypto import, using Web Crypto API instead
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -51,13 +50,30 @@ serve(async (req: Request) => {
 
     const requestBody = await req.text(); // Read raw body for signature verification
 
-    // Verify the webhook signature (HMAC-SHA256 for Paddle V2)
-    const [timestamp, hmacSignature] = paddleSignature.split(';').map(s => s.split('=')[1]);
+    // Verify the webhook signature using Web Crypto API (HMAC-SHA256 for Paddle V2)
+    const [timestampPart, hmacSignaturePart] = paddleSignature.split(';');
+    const timestamp = timestampPart.split('=')[1];
+    const hmacSignature = hmacSignaturePart.split('=')[1];
     const signedPayload = `${timestamp}:${requestBody}`;
 
-    const hmac = createHmac('sha256', webhookSecret);
-    hmac.update(signedPayload);
-    const generatedHmac = hmac.digest('hex');
+    const encoder = new TextEncoder();
+    const key = await crypto.subtle.importKey(
+      "raw",
+      encoder.encode(webhookSecret),
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["sign"]
+    );
+
+    const signature = await crypto.subtle.sign(
+      "HMAC",
+      key,
+      encoder.encode(signedPayload)
+    );
+
+    const generatedHmac = Array.from(new Uint8Array(signature))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
 
     if (generatedHmac !== hmacSignature) {
       console.warn('Webhook signature mismatch. Request potentially tampered with.');
@@ -75,7 +91,6 @@ serve(async (req: Request) => {
 
     // Extract relevant data for subscription management
     const userId = data.custom_data?.userId; // Custom data passed during checkout
-    // Removed 'subscriptionId' as it was declared but never read.
     const status = data.status; // e.g., 'active', 'canceled', 'past_due'
     const priceId = data.items?.[0]?.price?.id; // The price ID of the subscribed product
     const nextBillDate = data.current_billing_period?.ends_at; // ISO 8601 format
