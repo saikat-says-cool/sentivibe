@@ -341,6 +341,19 @@ const AnalyzeVideo = () => {
 
   const isAnalysisLimitReached = analysesToday >= currentLimits.dailyAnalyses;
 
+  // --- DEBUG LOGS ---
+  useEffect(() => {
+    console.log("AnalyzeVideo Debug:");
+    console.log("  analyzeVideoMutation.isPending:", analyzeVideoMutation.isPending);
+    console.log("  analysesToday:", analysesToday);
+    console.log("  currentLimits.dailyAnalyses:", currentLimits.dailyAnalyses);
+    console.log("  isAnalysisLimitReached:", isAnalysisLimitReached);
+    console.log("  isUnauthenticated:", isUnauthenticated);
+    console.log("  isAuthenticatedFreeTier:", isAuthenticatedFreeTier);
+    console.log("  isPaidTier:", isPaidTier);
+  }, [analyzeVideoMutation.isPending, analysesToday, currentLimits.dailyAnalyses, isAnalysisLimitReached, isUnauthenticated, isAuthenticatedFreeTier, isPaidTier]);
+  // --- END DEBUG LOGS ---
+
   return (
     <div className="container mx-auto p-4 max-w-3xl">
       <Card className="mb-6">

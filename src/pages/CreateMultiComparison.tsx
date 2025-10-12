@@ -258,6 +258,19 @@ const CreateMultiComparison = () => {
 
   const isComparisonLimitReached = comparisonsToday >= currentLimits.dailyComparisons;
 
+  // --- DEBUG LOGS ---
+  useEffect(() => {
+    console.log("CreateMultiComparison Debug:");
+    console.log("  createMultiComparisonMutation.isPending:", createMultiComparisonMutation.isPending);
+    console.log("  comparisonsToday:", comparisonsToday);
+    console.log("  currentLimits.dailyComparisons:", currentLimits.dailyComparisons);
+    console.log("  isComparisonLimitReached:", isComparisonLimitReached);
+    console.log("  isUnauthenticated:", isUnauthenticated);
+    console.log("  isAuthenticatedFreeTier:", isAuthenticatedFreeTier);
+    console.log("  isPaidTier:", isPaidTier);
+  }, [createMultiComparisonMutation.isPending, comparisonsToday, currentLimits.dailyComparisons, isComparisonLimitReached, isUnauthenticated, isAuthenticatedFreeTier, isPaidTier]);
+  // --- END DEBUG LOGS ---
+
   return (
     <div className="container mx-auto p-4 max-w-3xl">
       <Card className="mb-6">
