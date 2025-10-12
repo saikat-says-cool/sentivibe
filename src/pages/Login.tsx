@@ -25,30 +25,40 @@ const Login = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 p-4">
-      <div className="w-full max-w-md bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg">
-        <h2 className="text-2xl font-bold text-center mb-6 text-gray-900 dark:text-gray-100">
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <div className="w-full max-w-md bg-card p-8 rounded-lg shadow-lg border border-border">
+        <h2 className="text-2xl font-bold text-center mb-6 text-foreground">
           Welcome to SentiVibe
         </h2>
         <Auth
           supabaseClient={supabase}
-          providers={[]}
+          // Added Google provider
+          providers={['google']}
           appearance={{
             theme: ThemeSupa,
             variables: {
               default: {
                 colors: {
-                  brand: 'hsl(var(--primary))',
-                  brandAccent: 'hsl(var(--primary-foreground))',
+                  brand: 'hsl(var(--accent))', // Using accent color for brand
+                  brandAccent: 'hsl(var(--accent-foreground))', // Using accent-foreground
+                  // Adjust other colors to match SentiVibe dark theme
+                  defaultButtonBackground: 'hsl(var(--secondary))',
+                  defaultButtonBackgroundHover: 'hsl(var(--secondary-foreground))',
+                  defaultButtonBorder: 'hsl(var(--border))',
+                  defaultButtonText: 'hsl(var(--foreground))',
+                  inputBackground: 'hsl(var(--input))',
+                  inputBorder: 'hsl(var(--border))',
+                  inputText: 'hsl(var(--foreground))',
+                  inputLabelText: 'hsl(var(--muted-foreground))',
+                  anchorTextColor: 'hsl(var(--accent))',
+                  anchorTextHoverColor: 'hsl(var(--accent-foreground))',
                 },
               },
             },
           }}
-          theme="light"
+          theme="dark" // Set theme to dark
           redirectTo={window.location.origin + '/'}
-          magicLink={true} // Ensure magic link is enabled if desired
-          // The 'signUp' prop for passing initial data is not supported by this Auth component.
-          // First name and last name will be null in profiles table until user updates them in AccountCenter.
+          magicLink={true}
         />
       </div>
     </div>
