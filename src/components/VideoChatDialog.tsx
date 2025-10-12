@@ -18,8 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-// Input is no longer needed for desiredWordCount, but kept if used elsewhere
-// import { Input } from "@/components/ui/input"; 
+import { Input } from "@/components/ui/input"; // Input is now explicitly needed
 import { useAuth } from '@/integrations/supabase/auth';
 // import { Link } from 'react-router-dom'; // Removed as it's no longer used
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -292,32 +291,30 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
               </SelectContent>
             </Select>
           </div>
-          {/* Removed "Response Word Count" input as it's no longer tier-limited */}
-          {/* <div className="flex items-center space-x-2">
+          {/* Re-enabling "Response Word Count" input */}
+          <div className="flex items-center space-x-2">
             <Label htmlFor="desired-word-count" className="text-sm">Response Word Count:</Label>
             <Input
               id="desired-word-count"
               type="number"
               min="50"
-              max={currentLimits.maxResponseWordCount}
+              // Max attribute removed as custom question word count is now unlimited
               step="50"
               value={desiredWordCount}
               onChange={(e) => setDesiredWordCount(Number(e.target.value))}
               className="w-[100px]"
-              disabled={isChatDisabled || isChatLimitReached}
+              disabled={isChatDisabled} // Only disable if chat is generally disabled
             />
-          </div> */}
+          </div>
         </div>
         {error && (
           <Alert variant="destructive" className="mb-4">
-            <AlertTitle>Chat Error</AlertTitle> {/* Changed title from "Chat Limit Reached" */}
+            <AlertTitle>Chat Error</AlertTitle>
             <AlertDescription>
               {error}
-              {/* Removed upgrade prompt as limits are no longer enforced here */}
             </AlertDescription>
           </Alert>
         )}
-        {/* Removed "AI responses remaining" display */}
         <div className="flex-1 overflow-hidden">
           <ChatInterface
             messages={chatMessages}
