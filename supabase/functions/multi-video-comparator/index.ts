@@ -199,16 +199,19 @@ serve(async (req: Request) => {
 
         if (youtubeAnalyzerResponse.error) {
           console.error(`Error invoking youtube-analyzer for ${videoId}:`, youtubeAnalyzerResponse.error);
-          if (youtubeAnalyzerResponse.error.name === 'FunctionsHttpError' && youtubeAnalyzerResponse.error.context?.status === 400) {
+          // Check if the error is a FunctionsHttpError with a 400 or 403 status
+          if (youtubeAnalyzerResponse.error.name === 'FunctionsHttpError' && (youtubeAnalyzerResponse.error.context?.status === 400 || youtubeAnalyzerResponse.error.context?.status === 403)) {
             try {
               const errorBody = await youtubeAnalyzerResponse.error.context.json();
               if (errorBody && errorBody.error) {
+                // Propagate the specific error message from youtube-analyzer
                 throw new Error(`Failed to analyze video ${videoId}: ${errorBody.error}`);
               }
             } catch (jsonError) {
               console.error(`Failed to parse youtube-analyzer error response for ${videoId}:`, jsonError);
             }
           }
+          // Fallback to generic error if specific message couldn't be extracted
           throw new Error(`Failed to analyze video ${videoId}: ${youtubeAnalyzerResponse.error.message}`);
         }
         const { data: updatedBlogPost, error: refetchError } = await supabaseClient
