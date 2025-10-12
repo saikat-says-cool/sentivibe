@@ -19,10 +19,11 @@ const Upgrade = () => {
             <div className="bg-gray-50 dark:bg-gray-800 p-6 rounded-lg shadow-md">
               <h3 className="text-2xl font-semibold mb-4 text-primary">Free Tier</h3>
               <ul className="space-y-2 text-gray-700 dark:text-gray-300">
-                <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-500 mr-2" /> 2 Single Video Analyses/day</li>
+                <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-500 mr-2" /> 1 Single Video Analysis/day</li>
                 <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-500 mr-2" /> 1 Multi-Video Comparison/day</li>
-                <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-500 mr-2" /> 5 AI Chat Messages/session</li>
-                <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-500 mr-2" /> 1 Custom Question (100 words)/analysis</li>
+                <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-500 mr-2" /> Unlimited Custom Questions</li>
+                <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-500 mr-2" /> Unlimited AI Chat Messages</li>
+                <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-500 mr-2" /> Unlimited Copilot Queries</li>
                 <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-500 mr-2" /> Watermarked PDF Reports</li>
                 <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-500 mr-2" /> Ads displayed</li>
               </ul>
@@ -33,8 +34,9 @@ const Upgrade = () => {
               <ul className="space-y-2">
                 <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-200 mr-2" /> 50 Single Video Analyses/day</li>
                 <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-200 mr-2" /> 20 Multi-Video Comparisons/day</li>
-                <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-200 mr-2" /> 100 AI Chat Messages/session</li>
-                <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-200 mr-2" /> 5 Custom Questions (500 words)/analysis</li>
+                <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-200 mr-2" /> Unlimited Custom Questions</li>
+                <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-200 mr-2" /> Unlimited AI Chat Messages</li>
+                <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-200 mr-2" /> Unlimited Copilot Queries</li>
                 <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-200 mr-2" /> Unwatermarked PDF Reports</li>
                 <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-200 mr-2" /> Ad-Free Experience</li>
                 <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-200 mr-2" /> Access to "My Analyses" History</li>
