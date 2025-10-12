@@ -374,7 +374,7 @@
 
     /* Override specific text colors that might be set by dark mode or themes */
     --foreground: 0 0% 0% !important; /* Black */
-    --muted-foreground: 0 0% 20% !important; /* Darker gray for muted text */
+    --muted-foreground: 0 0% 0% !important; /* Black for muted text */
     --primary-foreground: 0 0% 0% !important; /* Black */
     --secondary-foreground: 0 0% 0% !important; /* Black */
     --accent-foreground: 0 0% 0% !important; /* Black */
