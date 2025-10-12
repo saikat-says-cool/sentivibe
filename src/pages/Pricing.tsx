@@ -67,6 +67,9 @@ const Pricing = () => {
                   <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" /> Ad-Free Experience</li>
                   <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" /> Access to "My Analyses" History</li>
                 </ul>
+                <div className="text-2xl font-bold text-accent mb-4">
+                  $14.99 / month
+                </div>
                 <Button asChild className="w-full mt-auto">
                   <Link to="/upgrade">Upgrade Now</Link>
                 </Button>
