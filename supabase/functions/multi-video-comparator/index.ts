@@ -200,21 +200,25 @@ serve(async (req: Request) => {
         if (youtubeAnalyzerResponse.error) {
           console.error(`Error invoking youtube-analyzer for ${videoId}:`, youtubeAnalyzerResponse.error);
           const errorContextResponse = youtubeAnalyzerResponse.error.context as Response; // Cast to Response
+          let errorMessage = `Edge Function returned status ${errorContextResponse.status}`;
 
-          if (errorContextResponse && (errorContextResponse.status === 400 || errorContextResponse.status === 403)) {
+          if (errorContextResponse) {
             try {
-              const errorBody = await errorContextResponse.json();
+              // Clone the response body as it can only be read once
+              const clonedResponse = errorContextResponse.clone();
+              const errorBody = await clonedResponse.json();
               if (errorBody && errorBody.error) {
-                throw new Error(`Failed to analyze video ${videoId}: ${errorBody.error}`);
+                errorMessage = errorBody.error; // Use the specific error message from youtube-analyzer
+              } else {
+                errorMessage = `youtube-analyzer returned status ${errorContextResponse.status} but its error message could not be parsed.`;
               }
             } catch (jsonError) {
               console.error(`Failed to parse youtube-analyzer error response body for ${videoId}:`, jsonError);
-              // If JSON parsing fails, still provide a more specific error than generic FunctionsHttpError message
-              throw new Error(`Failed to analyze video ${videoId}: youtube-analyzer returned status ${errorContextResponse.status} but its error message could not be parsed.`);
+              errorMessage = `youtube-analyzer returned status ${errorContextResponse.status} but its error message could not be parsed.`;
             }
           }
-          // Fallback for other types of FunctionsHttpError or non-FunctionsHttpError
-          throw new Error(`Failed to analyze video ${videoId}: ${youtubeAnalyzerResponse.error.message}`);
+          // Propagate the specific error message
+          throw new Error(`Failed to analyze video ${videoId}: ${errorMessage}`);
         }
         const { data: updatedBlogPost, error: refetchError } = await supabaseClient
           .from('blog_posts')
