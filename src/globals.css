@@ -366,4 +366,51 @@
   .prose a {
     text-decoration: underline;
   }
+
+  /* New class for PDF light mode override */
+  .pdf-light-mode {
+    background-color: white !important;
+    color: black !important;
+
+    /* Override specific text colors that might be set by dark mode or themes */
+    --foreground: 0 0% 0% !important; /* Black */
+    --muted-foreground: 0 0% 20% !important; /* Darker gray for muted text */
+    --primary-foreground: 0 0% 0% !important; /* Black */
+    --secondary-foreground: 0 0% 0% !important; /* Black */
+    --accent-foreground: 0 0% 0% !important; /* Black */
+    --destructive-foreground: 0 0% 0% !important; /* Black */
+    --card-foreground: 0 0% 0% !important; /* Black */
+    --popover-foreground: 0 0% 0% !important; /* Black */
+    --sidebar-foreground: 0 0% 0% !important; /* Black */
+    
+    /* Ensure all text within prose is black */
+    .prose, .prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6, .prose p, .prose li, .prose a, .prose strong, .prose em {
+      color: black !important;
+    }
+
+    /* Ensure badges have readable text on white background */
+    .badge {
+      color: black !important; /* Default badge text to black */
+    }
+    .badge.bg-sentiment-positive {
+      background-color: #2DD4BF !important; /* Original green */
+      color: white !important;
+    }
+    .badge.bg-sentiment-negative {
+      background-color: #F87171 !important; /* Original red */
+      color: white !important;
+    }
+    .badge.bg-sentiment-neutral {
+      background-color: #9CA3AF !important; /* Original gray */
+      color: white !important;
+    }
+    .badge.badge-secondary {
+      background-color: #E5E7EB !important; /* Light gray for secondary badge */
+      color: black !important;
+    }
+    .badge.badge-outline {
+      border-color: #D1D5DB !important; /* Light gray border for outline */
+      color: black !important;
+    }
+  }
 }
