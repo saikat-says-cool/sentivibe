@@ -77,7 +77,7 @@ const ComparisonChatDialog: React.FC<ComparisonChatDialogProps> = ({
           },
         ]);
       }
-      setDesiredWordCount(300);
+      // Removed setDesiredWordCount(300); to allow user input to persist
       setError(null);
     } else if (!isOpen) { // Cleanup when closing
       setChatMessages([]);

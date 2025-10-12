@@ -189,6 +189,11 @@ const CreateMultiComparison = () => {
         : [{ question: "", wordCount: 200 }];
       setCustomComparativeQuestions(initialLoadedQuestions);
       
+      // Only open chat immediately if the flag is true AND the dialog is not already open
+      if (location.state?.openChat && !isChatDialogOpen) {
+        setIsChatDialogOpen(true);
+      }
+
       if (forceRecompareFromNav) {
         const validVideoLinks = initialMultiComparison.videos.map(video => video.original_video_link);
         const validQuestions = initialMultiComparison.custom_comparative_qa_results.filter(q => q.question.trim() !== "");
@@ -197,7 +202,7 @@ const CreateMultiComparison = () => {
     } else {
       setCustomComparativeQuestions([{ question: "", wordCount: 200 }]);
     }
-  }, [initialMultiComparison, forceRecompareFromNav, createMultiComparisonMutation]);
+  }, [initialMultiComparison, forceRecompareFromNav, createMultiComparisonMutation, isChatDialogOpen, location.state?.openChat]); // Added isChatDialogOpen and location.state?.openChat to dependencies
 
   const handleAddVideoLink = () => {
     setVideoLinks([...videoLinks, '']);

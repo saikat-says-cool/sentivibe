@@ -234,7 +234,8 @@ const AnalyzeVideo = () => {
       })) || [{ question: "", wordCount: 200 }];
       setCustomQuestions(initialLoadedQuestions);
 
-      if (openChatImmediately) {
+      // Only open chat immediately if the flag is true AND the dialog is not already open
+      if (openChatImmediately && !isChatDialogOpen) {
         setIsChatDialogOpen(true);
       }
       if (forceReanalyzeFromNav) {
@@ -243,7 +244,7 @@ const AnalyzeVideo = () => {
     } else {
       setCustomQuestions([{ question: "", wordCount: 200 }]);
     }
-  }, [initialBlogPost, openChatImmediately, forceReanalyzeFromNav, analyzeVideoMutation]);
+  }, [initialBlogPost, openChatImmediately, forceReanalyzeFromNav, analyzeVideoMutation, isChatDialogOpen]); // Added isChatDialogOpen to dependencies
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
