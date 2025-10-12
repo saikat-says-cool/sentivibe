@@ -14,9 +14,11 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { ChevronDown } from "lucide-react";
 import html2pdf from 'html2pdf.js';
 import { Textarea } from "@/components/ui/textarea";
-import { Link, useLocation, useNavigate } from "react-router-dom"; // Import useNavigate
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import VideoChatDialog from "@/components/VideoChatDialog";
 import { useAuth } from '@/integrations/supabase/auth';
+import ReactMarkdown from 'react-markdown'; // Import ReactMarkdown
+import remarkGfm from 'remark-gfm'; // Import remarkGfm
 
 interface AiAnalysisResult {
   overall_sentiment: string;
@@ -95,7 +97,7 @@ const fetchAnonUsage = async () => {
 
 const AnalyzeVideo = () => {
   const location = useLocation();
-  const navigate = useNavigate(); // Initialize useNavigate
+  const navigate = useNavigate();
   const initialBlogPost = location.state?.blogPost as BlogPost | undefined;
   const openChatImmediately = location.state?.openChat as boolean | undefined;
   const forceReanalyzeFromNav = location.state?.forceReanalyze as boolean | undefined;
@@ -103,7 +105,6 @@ const AnalyzeVideo = () => {
   const { user, subscriptionStatus, subscriptionPlanId } = useAuth();
 
   const [videoLink, setVideoLink] = useState("");
-  // Refactored customQuestions initialization to use useState initializer
   const [customQuestions, setCustomQuestions] = useState<CustomQuestion[]>(() => {
     if (initialBlogPost?.custom_qa_results && initialBlogPost.custom_qa_results.length > 0) {
       return initialBlogPost.custom_qa_results.map(qa => ({
@@ -152,7 +153,6 @@ const AnalyzeVideo = () => {
 
       if (invokeError) {
         console.error("Supabase Function Invoke Error:", invokeError);
-        // Check if the error is a FunctionsHttpError with a 403 or 400 status
         if (invokeError.name === 'FunctionsHttpError' && (invokeError.context?.status === 403 || invokeError.context?.status === 400)) {
           try {
             const errorBody = await invokeError.context.json();
@@ -215,7 +215,6 @@ const AnalyzeVideo = () => {
     }
   }, [isUnauthenticated, user, anonUsage, authenticatedAnalysesCount]);
 
-  // This useEffect now only handles setting videoLink, analysisResult, and chat dialog logic
   useEffect(() => {
     if (initialBlogPost) {
       const loadedAnalysis: AnalysisResponse = {
@@ -240,19 +239,15 @@ const AnalyzeVideo = () => {
       setAnalysisResult(loadedAnalysis);
       setVideoLink(initialBlogPost.original_video_link || "");
 
-      // Only open chat immediately if the flag is true AND the dialog is not already open
       if (openChatImmediately && !isChatDialogOpen) {
         setIsChatDialogOpen(true);
-        // Clear the openChat flag from location.state to prevent re-opening on subsequent renders
         navigate(location.pathname, { replace: true, state: { ...location.state, openChat: false } });
       }
       if (forceReanalyzeFromNav) {
         analyzeVideoMutation.mutate({ videoLink: initialBlogPost.original_video_link, customQuestions: [], forceReanalyze: true });
-        // Clear forceReanalyze flag
         navigate(location.pathname, { replace: true, state: { ...location.state, forceReanalyze: false } });
       }
     }
-    // Dependencies for this useEffect are now more focused
   }, [initialBlogPost, openChatImmediately, forceReanalyzeFromNav, analyzeVideoMutation, isChatDialogOpen, navigate, location.pathname, location.state]);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -329,8 +324,6 @@ const AnalyzeVideo = () => {
 
   const isAnalysisLimitReached = analysesToday >= currentLimits.dailyAnalyses;
 
-  // Determine if custom question inputs should be disabled
-  // Custom questions are now unlimited, so only disable if analysis is pending
   const areCustomQuestionInputsDisabled = analyzeVideoMutation.isPending;
 
   return (
@@ -565,9 +558,11 @@ const AnalyzeVideo = () => {
 
                   <div>
                     <h3 className="text-lg font-semibold mb-2">Summary Insights</h3>
-                    <p className="text-gray-700 dark:text-gray-300">
-                      {String(analysisResult.aiAnalysis.summary_insights)}
-                    </p>
+                    <div className="prose dark:prose-invert max-w-none">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {String(analysisResult.aiAnalysis.summary_insights)}
+                      </ReactMarkdown>
+                    </div>
                   </div>
                 </>
               ) : (
@@ -591,7 +586,11 @@ const AnalyzeVideo = () => {
                     {analysisResult.customQaResults.map((qa, index) => (
                       <div key={index} className="border p-3 rounded-md bg-gray-50 dark:bg-gray-700">
                         <p className="font-medium text-gray-800 dark:text-gray-200 mb-1">Q{index + 1}: {String(qa.question)}</p>
-                        <p className="text-gray-700 dark:text-gray-300">A{index + 1}: {String(qa.answer || "No answer generated.")}</p>
+                        <div className="prose dark:prose-invert max-w-none text-gray-700 dark:text-gray-300">
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                            {String(qa.answer || "No answer generated.")}
+                          </ReactMarkdown>
+                        </div>
                       </div>
                     ))}
                   </div>

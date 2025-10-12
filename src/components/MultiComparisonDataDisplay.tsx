@@ -1,6 +1,8 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import ReactMarkdown from 'react-markdown'; // Import ReactMarkdown
+import remarkGfm from 'remark-gfm'; // Import remarkGfm
 
 interface VideoSummary {
   title: string;
@@ -47,8 +49,10 @@ const MultiComparisonDataDisplay: React.FC<MultiComparisonDataDisplayProps> = ({
           <CardHeader>
             <CardTitle className="text-xl">Overall Sentiment Trend</CardTitle>
           </CardHeader>
-          <CardContent>
-            <p>{data.overall_sentiment_trend}</p>
+          <CardContent className="prose dark:prose-invert max-w-none">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {data.overall_sentiment_trend}
+            </ReactMarkdown>
           </CardContent>
         </Card>
       )}
@@ -128,8 +132,10 @@ const MultiComparisonDataDisplay: React.FC<MultiComparisonDataDisplayProps> = ({
           <CardHeader>
             <CardTitle className="text-xl">Summary Insights</CardTitle>
           </CardHeader>
-          <CardContent>
-            <p>{data.summary_insights}</p>
+          <CardContent className="prose dark:prose-invert max-w-none">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {data.summary_insights}
+            </ReactMarkdown>
           </CardContent>
         </Card>
       )}
