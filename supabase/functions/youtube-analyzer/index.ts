@@ -102,7 +102,8 @@ serve(async (req: Request) => {
 
     const longcatApiKeys = getApiKeys('LONGCAT_AI_API_KEY'); // Declared here
 
-    const { videoLink, customQuestions, forceReanalyze } = await req.json();
+    const { videoLink, customQuestions, forceReanalyze, isInternalCall = false } = await req.json(); // Added isInternalCall
+
     if (!videoLink) {
       return new Response(JSON.stringify({ error: 'Video link is required' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -121,9 +122,7 @@ serve(async (req: Request) => {
       });
     }
 
-    // --- Enforce Daily Analysis Limit (only for new analyses or forced re-analyses) ---
-    // We only count against the limit if it's a new analysis or a forced re-analysis.
-    // If it's a cached, fresh analysis without forceReanalyze, it doesn't count.
+    // --- Enforce Daily Analysis Limit (only for new analyses or forced re-analyses AND NOT an internal call) ---
     let isNewAnalysisOrForcedReanalysis = false;
 
     const { data: existingBlogPost, error: _fetchError } = await supabaseClient
@@ -150,7 +149,8 @@ serve(async (req: Request) => {
       isNewAnalysisOrForcedReanalysis = true;
     }
 
-    if (isNewAnalysisOrForcedReanalysis) {
+    // Only enforce limits if it's a new analysis/forced re-analysis AND NOT an internal call
+    if (isNewAnalysisOrForcedReanalysis && !isInternalCall) {
       if (user) { // Authenticated user limit check
         const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
         let { count, error: countError } = await supabaseClient

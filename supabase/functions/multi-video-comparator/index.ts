@@ -193,8 +193,9 @@ serve(async (req: Request) => {
       }
 
       if (shouldPerformIndividualReanalysis) {
+        // Pass isInternalCall: true to youtube-analyzer
         const youtubeAnalyzerResponse = await supabaseClient.functions.invoke('youtube-analyzer', {
-          body: { videoLink: videoLink, customQuestions: [], forceReanalyze: true },
+          body: { videoLink: videoLink, customQuestions: [], forceReanalyze: true, isInternalCall: true },
         });
 
         if (youtubeAnalyzerResponse.error) {
