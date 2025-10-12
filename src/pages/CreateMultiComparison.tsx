@@ -8,12 +8,14 @@ import { Loader2, GitCompare, PlusCircle, XCircle, MessageSquare, RefreshCw, You
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Link, useLocation, useNavigate } from 'react-router-dom'; // Import useNavigate
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import MultiComparisonDataDisplay from '@/components/MultiComparisonDataDisplay';
 import MultiComparisonChatDialog from '@/components/MultiComparisonChatDialog';
 import { useAuth } from '@/integrations/supabase/auth';
 import { Skeleton } from '@/components/ui/skeleton';
-import html2pdf from 'html2pdf.js'; // Import html2pdf
+import html2pdf from 'html2pdf.js';
+import ReactMarkdown from 'react-markdown'; // Import ReactMarkdown
+import remarkGfm from 'remark-gfm'; // Import remarkGfm
 
 // New interfaces for multi-comparison
 interface MultiComparisonVideo {
@@ -72,14 +74,13 @@ const fetchAnonUsage = async () => {
 
 const CreateMultiComparison = () => {
   const location = useLocation();
-  const navigate = useNavigate(); // Initialize useNavigate
+  const navigate = useNavigate();
   const initialMultiComparison = location.state?.multiComparison as MultiComparisonResult | undefined;
   const forceRecompareFromNav = location.state?.forceRecompare as boolean | undefined;
 
   const { user, subscriptionStatus, subscriptionPlanId } = useAuth();
 
   const [videoLinks, setVideoLinks] = useState<string[]>(['', '']);
-  // Refactored customComparativeQuestions initialization to use useState initializer
   const [customComparativeQuestions, setCustomComparativeQuestions] = useState<CustomComparativeQuestion[]>(() => {
     if (initialMultiComparison?.custom_comparative_qa_results && initialMultiComparison.custom_comparative_qa_results.length > 0) {
       return initialMultiComparison.custom_comparative_qa_results.map(qa => ({
@@ -93,7 +94,7 @@ const CreateMultiComparison = () => {
   const [error, setError] = useState<string | null>(null);
   const [isChatDialogOpen, setIsChatDialogOpen] = useState(false);
   const [comparisonsToday, setComparisonsToday] = useState<number>(0);
-  const comparisonReportRef = useRef<HTMLDivElement>(null); // Ref for PDF download
+  const comparisonReportRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
 
   const isPaidTier = subscriptionStatus === 'active' && subscriptionPlanId !== 'free';
@@ -128,7 +129,6 @@ const CreateMultiComparison = () => {
 
       if (invokeError) {
         console.error("Supabase Function Invoke Error (multi-video-comparator):", invokeError);
-        // Check if the error is a FunctionsHttpError with a 403 or 400 status
         if (invokeError.name === 'FunctionsHttpError' && (invokeError.context?.status === 403 || invokeError.context?.status === 400)) {
           try {
             const errorBody = await invokeError.context.json();
@@ -190,16 +190,13 @@ const CreateMultiComparison = () => {
     }
   }, [isUnauthenticated, user, anonUsage, authenticatedComparisonsCount]);
 
-  // This useEffect now only handles setting multiComparisonResult, videoLinks, and chat dialog logic
   useEffect(() => {
     if (initialMultiComparison) {
       setMultiComparisonResult(initialMultiComparison);
       setVideoLinks(initialMultiComparison.videos.map(video => video.original_video_link));
       
-      // Only open chat immediately if the flag is true AND the dialog is not already open
       if (location.state?.openChat && !isChatDialogOpen) {
         setIsChatDialogOpen(true);
-        // Clear the openChat flag from location.state to prevent re-opening on subsequent renders
         navigate(location.pathname, { replace: true, state: { ...location.state, openChat: false } });
       }
 
@@ -207,11 +204,9 @@ const CreateMultiComparison = () => {
         const validVideoLinks = initialMultiComparison.videos.map(video => video.original_video_link);
         const validQuestions = initialMultiComparison.custom_comparative_qa_results.filter(q => q.question.trim() !== "");
         createMultiComparisonMutation.mutate({ videoLinks: validVideoLinks, customComparativeQuestions: validQuestions, forceRecompare: true });
-        // Clear forceRecompare flag
         navigate(location.pathname, { replace: true, state: { ...location.state, forceRecompare: false } });
       }
     }
-    // Dependencies for this useEffect are now more focused
   }, [initialMultiComparison, forceRecompareFromNav, createMultiComparisonMutation, isChatDialogOpen, navigate, location.pathname, location.state]);
 
   const handleAddVideoLink = () => {
@@ -307,8 +302,6 @@ const CreateMultiComparison = () => {
 
   const isComparisonLimitReached = comparisonsToday >= currentLimits.dailyComparisons;
 
-  // Determine if custom question inputs should be disabled
-  // Custom questions are now unlimited, so only disable if comparison is pending
   const areCustomQuestionInputsDisabled = createMultiComparisonMutation.isPending;
 
   return (
@@ -519,7 +512,11 @@ const CreateMultiComparison = () => {
                     {multiComparisonResult.custom_comparative_qa_results.map((qa, index) => (
                       <div key={index} className="border p-3 rounded-md bg-gray-50 dark:bg-gray-700">
                         <p className="font-medium text-gray-800 dark:text-gray-200 mb-1">Q{index + 1}: {qa.question}</p>
-                        <p className="text-gray-700 dark:text-gray-300">A{index + 1}: {qa.answer || "No answer generated."}</p>
+                        <div className="prose dark:prose-invert max-w-none text-gray-700 dark:text-gray-300">
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                            {qa.answer || "No answer generated."}
+                          </ReactMarkdown>
+                        </div>
                       </div>
                     ))}
                   </div>

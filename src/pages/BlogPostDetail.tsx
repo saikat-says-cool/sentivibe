@@ -374,7 +374,11 @@ const BlogPostDetail = () => {
               {blogPost.custom_qa_results.map((qa, index) => (
                 <div key={index} className="border p-3 rounded-md bg-gray-50 dark:bg-gray-700">
                   <p className="font-medium text-gray-800 dark:text-gray-200 mb-1">Q{index + 1}: {qa.question}</p>
-                  <p className="text-gray-700 dark:text-gray-300">A{index + 1}: {qa.answer || "No answer generated."}</p>
+                  <div className="prose dark:prose-invert max-w-none text-gray-700 dark:text-gray-300">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {qa.answer || "No answer generated."}
+                    </ReactMarkdown>
+                  </div>
                 </div>
               ))}
             </div>

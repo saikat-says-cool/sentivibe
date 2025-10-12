@@ -321,10 +321,10 @@ const MultiComparisonDetail = () => {
       </div>
       <Card ref={comparisonReportRef} className="mb-6">
         <CardHeader>
-          <div className="flex flex-wrap justify-center items-center gap-4 mb-2"> {/* Reduced mb to make space for instruction */}
+          <div className="flex flex-wrap justify-center items-center gap-4 mb-2">
             {multiComparison.videos && multiComparison.videos.map((video, index) => (
               <div key={index} className="flex flex-col items-center text-center">
-                <Link to={`/blog/${video.slug}`} className="block hover:opacity-80 transition-opacity"> {/* Link to individual blog post */}
+                <Link to={`/blog/${video.slug}`} className="block hover:opacity-80 transition-opacity">
                   <img
                     src={video.thumbnail_url}
                     alt={`Thumbnail for ${video.title}`}
@@ -384,7 +384,11 @@ const MultiComparisonDetail = () => {
               {multiComparison.custom_comparative_qa_results.map((qa, index) => (
                 <div key={index} className="border p-3 rounded-md bg-gray-50 dark:bg-gray-700">
                   <p className="font-medium text-gray-800 dark:text-gray-200 mb-1">Q{index + 1}: {qa.question}</p>
-                  <p className="text-gray-700 dark:text-gray-300">A{index + 1}: {qa.answer || "No answer generated."}</p>
+                  <div className="prose dark:prose-invert max-w-none text-gray-700 dark:text-gray-300">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {qa.answer || "No answer generated."}
+                    </ReactMarkdown>
+                  </div>
                 </div>
               ))}
             </div>
