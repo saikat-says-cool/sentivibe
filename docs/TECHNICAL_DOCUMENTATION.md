@@ -117,6 +117,7 @@ The project follows a standard React application structure with specific directo
 *   Features the **SentiVibe wordmark** prominently (`text-5xl font-extrabold tracking-tight`).
 *   Displays the new tagline: "Unlock Video Insights with SentiVibe".
 *   **Includes clear calls-to-action** with buttons to "Analyze a Video", "Compare Videos", "Explore the Library", and "View Comparisons", directly guiding users to the core functionalities.
+*   **Multi-Video Comparison Disclaimer:** A note is added under the "Compare Videos" card: "<span class='font-semibold text-red-500'>Note:</span> Reliable for up to 3 videos simultaneously."
 
 ### 4.4. `Login.tsx` (Authentication Page)
 *   Utilizes the `@supabase/auth-ui-react` component for a pre-built authentication UI.
@@ -204,6 +205,7 @@ The project follows a standard React application structure with specific directo
     *   **`createMultiComparisonMutation`:** Uses `useMutation` to call the `multi-video-comparator` Supabase Edge Function. The payload includes `videoLinks`, `customComparativeQuestions`, and an optional `forceRecompare` flag. **Handles 403 errors from the Edge Function to display tier-specific daily comparison limit messages.**
 *   **UI Elements:**
     *   Dynamic input fields for `videoLinks` (minimum 2, with add/remove buttons).
+    *   **Multi-Video Comparison Disclaimer:** A note is added under the video link input fields: "<span class='font-semibold text-red-500'>Note:</span> For reliable and stable performance, multi-video comparisons are currently limited to a maximum of 3 videos simultaneously." The "Add Another Video" button is disabled if 3 videos are already added.
     *   Dynamic input fields for `customComparativeQuestions` (with question and word count). **Custom comparative questions are now unlimited in count and word count for all tiers.**
     *   **Displays current usage:** "Comparisons today: X/Y" with a link to `/upgrade` if not on a paid tier.
     *   `Button` to trigger the comparison, showing a `Loader2` icon when pending. **Disabled if `isComparisonLimitReached`.**
@@ -468,31 +470,18 @@ This Deno-based serverless function is responsible for orchestrating multi-video
 *   **Usage Enforcement:**
     *   **Daily Comparison Limit:** Checks `public.multi_comparisons` for authenticated users or `public.anon_usage` for unauthenticated users to enforce daily comparison limits. Increments counts on successful comparison.
     *   **Custom Comparative Question Limits:** **Removed. Custom comparative questions are now unlimited.**
-*   **Input Validation:** Checks for `videoLinks` (minimum 2) and extracts `videoIds`. Also receives `customComparativeQuestions` and an optional `forceRecompare` flag.
-*   **Orchestrate Individual Video Analysis:**
-    *   For each `videoLink` provided, it first checks if an analysis for that video exists in `public.blog_posts`.
-    *   It applies the `STALENESS_THRESHOLD_DAYS` to the individual video's `last_reanalyzed_at`.
-    *   If an individual video's analysis is stale or if a full re-analysis is explicitly forced, it invokes the `youtube-analyzer` Edge Function with `forceReanalyze: true` to ensure the latest data.
-    *   It collects the fresh `blog_posts` data for all videos.
-*   **Multi-Comparison Caching & Staleness Logic:**
-    *   After ensuring all individual videos are fresh, it attempts to find an existing `multi_comparison` in the database that matches the exact set of `blog_post_id`s.
-    *   If an `existingMultiComparison` is found, it checks its `last_compared_at` timestamp against `STALENESS_THRESHOLD_DAYS`.
-    *   If `forceRecompare` is `true` OR the multi-comparison is `stale`, it proceeds with a full re-generation of the comparative insights and blog post.
-    *   Otherwise (multi-comparison is fresh and no `forceRecompare`), it reuses the existing `comparison_data_json` and `content`.
+*   **Input Validation:** Checks for `videoLinks` (minimum 2, **maximum 3 for reliable performance**) and extracts `videoIds`. Also receives `customComparativeQuestions` and an optional `forceRecompare` flag.
+*   **Analysis Orchestration:** For each `videoLink`, it ensures the individual video analysis is fresh (re-analyzing if stale or forced) by invoking the `youtube-analyzer` Edge Function.
+*   **Multi-Comparison Caching & Staleness Logic:** After ensuring all individual videos are fresh, it attempts to find an existing `multi_comparison` that matches the exact set of `blog_post_id`s. If found and fresh, it reuses existing data; otherwise, it regenerates.
 *   **API Key Retrieval & Rotation:** Retrieves `LONGCAT_AI_API_KEY`s and iterates through them for AI calls, handling rate limits.
 *   **External Context Fetching:** **Removed. External context is no longer fetched for multi-comparison analysis.**
 *   **Longcat AI Calls (if regenerating multi-comparison):**
-    *   **Core Multi-Comparison Data:** Constructs a prompt with all individual video analyses and external context, instructing Longcat AI to generate structured comparative insights (overall sentiment trend, common/divergent emotional tones, themes, summary insights, individual video summaries) in JSON format.
+    *   **Core Multi-Comparison Data:** Constructs a prompt with all individual video analyses, instructing Longcat AI to generate structured comparative insights in JSON format.
     *   **Multi-Comparative Blog Post Generation:** Constructs a prompt with the core comparison data, instructing Longcat AI to generate a comprehensive, SEO-optimized blog post in Markdown format, also in JSON.
-*   **Process Custom Comparative Questions:**
-    *   If `customComparativeQuestions` are provided, it processes each question.
-    *   It constructs a specific prompt including all video analyses, core comparison data, and the user's question, instructing Longcat AI to generate an "answer" of the specified `wordCount`.
-    *   These answers are collected and merged with any existing `custom_comparative_qa_results`.
+*   **Process Custom Comparative Questions:** If `customComparativeQuestions` are provided, it processes each question, generates answers, and merges them with any existing `custom_comparative_qa_results`.
 *   **Slug Generation:** Ensures a unique `slug` for the multi-comparison blog post.
-*   **Database Save/Update:**
-    *   If an `existingMultiComparison` was found and re-generated, it updates the existing entry in `public.multi_comparisons` with new content, insights, Q&A, and updates `last_compared_at` and `updated_at`.
-    *   If it's a new multi-comparison, it inserts a new entry into `public.multi_comparisons` and then populates the `public.multi_comparison_videos` junction table to link the constituent `blog_posts`.
-*   **Response:** Returns a `200 OK` response with the full `MultiComparisonResult` object, including the `id`, `title`, `slug`, `meta_description`, `keywords`, `content`, `created_at`, `last_compared_at`, `comparison_data_json`, `custom_comparative_qa_results`, `overall_thumbnail_url`, and a `videos` array (containing `blog_post_id`, `slug`, `title`, `thumbnail_url`, `original_video_link`, and `raw_comments_for_chat` for each video).
+*   **Database Save/Update:** Inserts a new `multi_comparison` or updates an existing one, and manages the `multi_comparison_videos` junction table.
+*   **Response:** Returns a `200 OK` response with the full `MultiComparisonResult` object.
 *   **Error Handling:** Includes comprehensive `try-catch` blocks, **returning 403 status for daily comparison limit exceedances.**
 
 ### 5.7. Supabase Edge Function (`supabase/functions/fetch-external-context/index.ts`)

@@ -254,6 +254,11 @@ const CreateMultiComparison = () => {
       setError("Please provide at least two video links for multi-comparison.");
       return;
     }
+    // Add the 3-video limit check here
+    if (validVideoLinks.length > 3) {
+      setError("For reliable performance, multi-video comparisons are limited to a maximum of 3 videos simultaneously.");
+      return;
+    }
     const validQuestions = customComparativeQuestions.filter(q => q.question.trim() !== "");
     createMultiComparisonMutation.mutate({ videoLinks: validVideoLinks, customComparativeQuestions: validQuestions, forceRecompare: false });
   };
@@ -350,7 +355,7 @@ const CreateMultiComparison = () => {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <h3 className="text-lg font-semibold mb-2">YouTube Video Links (Min 2)</h3>
+            <h3 className="text-lg font-semibold mb-2">YouTube Video Links (Min 2, Max 3 for reliable performance)</h3>
             {videoLinks.map((link, index) => (
               <div key={index} className="flex flex-col sm:flex-row gap-2 items-end">
                 <div className="flex-1">
@@ -384,13 +389,15 @@ const CreateMultiComparison = () => {
               type="button"
               variant="outline"
               onClick={handleAddVideoLink}
-              disabled={createMultiComparisonMutation.isPending || isComparisonLimitReached}
+              disabled={createMultiComparisonMutation.isPending || isComparisonLimitReached || videoLinks.length >= 3} // Disable add button after 3 videos
               className="w-full flex items-center gap-2"
             >
               <PlusCircle className="h-4 w-4" /> Add Another Video
             </Button>
             <p className="text-sm text-muted-foreground mt-2">
               <span className="font-semibold text-red-500">Important:</span> Each video must have at least 50 comments for a proper sentiment analysis. Analysis may take up to 30 seconds per video.
+              <br />
+              <span className="font-semibold text-red-500">Note:</span> For reliable and stable performance, multi-video comparisons are currently limited to a maximum of 3 videos simultaneously.
             </p>
             <p className="text-sm text-muted-foreground mt-1">
               Comparisons today: {comparisonsToday}/{currentLimits.dailyComparisons}

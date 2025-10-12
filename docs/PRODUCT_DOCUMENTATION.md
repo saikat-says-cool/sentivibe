@@ -45,6 +45,7 @@
 
 ### 2.3. Multi-Video Comparison Analysis
 *   **Compare Multiple Videos:** Users can input two or more YouTube video links to perform a comparative sentiment analysis.
+*   **Reliability Note:** For reliable and stable performance, multi-video comparisons are currently limited to a **maximum of 3 videos simultaneously**.
 *   **Custom Comparative Questions:** Similar to single video analysis, users can add custom questions specifically tailored for comparative insights, with desired word count limits. **These are now unlimited for all tiers.**
 *   **Intelligent Comparison Caching with Staleness Logic:** Multi-comparisons are also cached. If a comparison of the exact same set of videos exists, it will be retrieved.
     *   **Staleness Check:** A multi-comparison is considered "stale" after a predefined period (e.g., 30 days) or if any of its individual constituent video analyses are stale. If stale, or if a user explicitly requests it, a **full re-comparison** will be performed, ensuring all underlying video data is fresh and then re-generating the comparative insights and blog post.
@@ -67,7 +68,7 @@
     *   A list of relevant keywords.
     *   Structured content with appropriate headings (H1, H2, H3) in Markdown format, following a logical content block layout (Intro, Sentiment Summary, Top Keywords, Viewer Insights, Conclusion/CTA).
     *   **Dynamic Meta Tags:** Blog post detail pages dynamically update the browser title and meta description for optimal search engine indexing.
-    *   **Open Graph (OG) Tags:** Blog post detail pages include dynamic Open Graph meta tags for rich social media sharing previews.
+    *   **Open Graph (OG) Tags:** Dynamically adds `og:title`, `og:description`, `og:image`, `og:url`, `og:type`, and `og:site_name` meta tags for rich social media sharing previews.
     *   **Structured Data (JSON-LD):** Blog post detail pages incorporate `BlogPosting` and `SoftwareApplication` schema markup to provide structured information to search engines.
     *   **Image Alt Text:** All video thumbnail images include descriptive `alt` attributes for accessibility and SEO.
     *   **Content Freshness:** Blog post detail pages display publication and last updated dates, including the `Last Full Analysis` or `Last Full Comparison` timestamp.
@@ -92,7 +93,7 @@
     *   **Video Analysis Report / Comparison Report:** All details from the initial analysis or comparison (sentiment, themes, summary, structured comparison data).
     *   **Exact Top Comments:** The raw text of the top 10 most popular comments for the single video, or for *each* video in a multi-comparison, allowing for deep dives into audience feedback.
     *   **Community Q&A:** The AI has access to all pre-generated answers for custom questions (single video or comparative), allowing it to reference or elaborate on them during the chat.
-    *   **Pre-existing Knowledge:** The AI leverages its vast general knowledge for time-independent questions that aren't covered by the video or comparison. **External search results are no longer used for chat context.**
+    *   **Pre-existing Knowledge:** The AI leverages its vast general knowledge for time-independent questions that aren't covered by the video or comparison. **(Note: External search results are no longer used for chat context to optimize for cost-efficiency and reliability, ensuring the AI focuses on the most relevant, internal data.)**
 *   **Cost-Optimized External Context:** **External search for broader context has been removed from chat functions to optimize costs and improve reliability.**
 *   **Chat Message Limits:** **The number of AI responses per chat session is now unlimited for all tiers.**
 

@@ -22,13 +22,14 @@ You can initiate a multi-video comparison from several convenient locations:
 *   **From the Homepage:** Select the **"Compare Videos"** call-to-action card on the SentiVibe landing page.
 *   **From a Saved Multi-Comparison:** If you're viewing a previously generated multi-comparison blog post, click the **"Go to Multi-Comparison Analysis"** button. This will pre-fill the video links and allow you to re-compare or add new custom questions.
 
-## 2. Inputting Video Links (Minimum 2, Unlimited Max)
+## 2. Inputting Video Links (Minimum 2, Max 3 for Reliable Performance)
 
 The foundation of a multi-comparison is providing the YouTube video links you wish to analyze.
 
 *   **Add Video URLs:** You'll initially see input fields for two YouTube video links. Paste the complete URL of each public YouTube video you want to include in your comparison.
 *   **Minimum Requirement:** You must provide **at least two video links** to perform a comparison.
-*   **Unlimited Videos:** There is **no upper limit** to the number of videos you can include in a single multi-comparison. Click the **[+] "Add Another Video"** button to dynamically add more input fields as needed.
+*   **Maximum for Reliability:** For reliable and stable performance, multi-video comparisons are currently limited to a **maximum of 3 videos simultaneously**. While the system might attempt more, performance and stability cannot be guaranteed beyond this limit due to underlying infrastructure constraints.
+*   **Adding More Videos:** Click the **[+] "Add Another Video"** button to dynamically add more input fields. This button will be disabled once you reach the 3-video limit.
 *   **Removing Videos:** Click the **[X]** icon next to a video link to remove it from your comparison list.
 *   **Important Requirement: Each Video Needs 50+ Comments:** For the AI to perform a robust sentiment analysis for each individual video within the comparison, **each video must have at least 50 comments**. If any video in your list has fewer comments, the entire multi-comparison will not proceed, and an error message will guide you to select more engaged videos.
 *   **Processing Time:** Multi-video comparisons are resource-intensive as they involve analyzing each video individually and then performing a comparative AI analysis. Expect the process to take up to **30 seconds per video** included in the comparison. Dynamic loading messages will keep you informed of the AI's progress.
