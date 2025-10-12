@@ -18,8 +18,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['AR One Sans', 'sans-serif'], // Changed to AR One Sans
-        heading: ['AR One Sans', 'sans-serif'], // Changed to AR One Sans
+        sans: ['Inter', 'sans-serif'], // Changed to Inter
+        heading: ['Inter', 'sans-serif'], // Changed to Inter
       },
       colors: {
         border: "hsl(var(--border))",
