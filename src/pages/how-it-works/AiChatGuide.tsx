@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import HowItWorksSidebar from '@/components/HowItWorksSidebar'; // Import the sidebar
 
 const AiChatGuide = () => {
   useEffect(() => {
@@ -86,8 +87,9 @@ By mastering SentiVibe's AI Chat, you transform raw data into dynamic, conversat
   `;
 
   return (
-    <div className="container mx-auto p-4 max-w-3xl">
-      <Card className="mb-6">
+    <div className="container mx-auto p-4 max-w-5xl flex flex-col md:flex-row gap-6">
+      <HowItWorksSidebar />
+      <Card className="flex-1 mb-6">
         <CardHeader>
           <CardTitle className="text-3xl font-bold text-center">Interact with AI Chat</CardTitle>
         </CardHeader>

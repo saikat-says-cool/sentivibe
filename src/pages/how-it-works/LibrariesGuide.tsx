@@ -1,8 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useEffect } from 'react'; // Corrected import syntax
+import { useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-// Removed 'Link' import as it's only used in Markdown, not as a React component.
+import HowItWorksSidebar from '@/components/HowItWorksSidebar'; // Import the sidebar
 
 const LibrariesGuide = () => {
   useEffect(() => {
@@ -89,8 +89,9 @@ By effectively utilizing SentiVibe's libraries and AI Copilots, you transform si
   `;
 
   return (
-    <div className="container mx-auto p-4 max-w-3xl">
-      <Card className="mb-6">
+    <div className="container mx-auto p-4 max-w-5xl flex flex-col md:flex-row gap-6">
+      <HowItWorksSidebar />
+      <Card className="flex-1 mb-6">
         <CardHeader>
           <CardTitle className="text-3xl font-bold text-center">Explore Libraries & AI Copilots</CardTitle>
         </CardHeader>

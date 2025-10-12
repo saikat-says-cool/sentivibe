@@ -1,8 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-// Removed unused lucide-react icons: Youtube, GitCompare, MessageSquare, FileText, Search
 import { useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import HowItWorksSidebar from '@/components/HowItWorksSidebar'; // Import the sidebar
 
 const Overview = () => {
   useEffect(() => {
@@ -65,8 +65,9 @@ Ready to dive deeper? Use the navigation to explore detailed, hands-on guides fo
   `;
 
   return (
-    <div className="container mx-auto p-4 max-w-3xl">
-      <Card className="mb-6">
+    <div className="container mx-auto p-4 max-w-5xl flex flex-col md:flex-row gap-6">
+      <HowItWorksSidebar />
+      <Card className="flex-1 mb-6">
         <CardHeader>
           <CardTitle className="text-3xl font-bold text-center">Platform Overview</CardTitle>
         </CardHeader>
