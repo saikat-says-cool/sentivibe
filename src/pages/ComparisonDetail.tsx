@@ -1,1 +1,0 @@
-<dyad-delete path="src/pages/ComparisonDetail.tsx"></dyad-delete>
