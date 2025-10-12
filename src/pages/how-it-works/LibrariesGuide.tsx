@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 // Removed unused lucide-react icons: BookOpen, GitCompare, Search, MessageSquarePlus, Youtube
 // Removed unused Link import
-import { useEffect } => 'react';
+import { useEffect } from 'react'; // Corrected import syntax
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 // Removed 'Link' import as it's only used in Markdown, not as a React component.
