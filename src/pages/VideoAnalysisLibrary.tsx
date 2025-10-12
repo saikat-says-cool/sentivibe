@@ -8,6 +8,7 @@ import { Search, Youtube } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
 import LibraryCopilot from '@/components/LibraryCopilot';
+import PaginationControls from '@/components/PaginationControls'; // Import PaginationControls
 
 interface AiAnalysisResult {
   overall_sentiment: string;
@@ -46,26 +47,39 @@ interface BlogPost {
   last_reanalyzed_at?: string; // New field
 }
 
-const fetchBlogPosts = async (): Promise<BlogPost[]> => {
-  const { data, error } = await supabase
+const PAGE_SIZE = 9; // Number of items per page
+
+const fetchBlogPosts = async (page: number, pageSize: number): Promise<{ data: BlogPost[], totalCount: number }> => {
+  const start = (page - 1) * pageSize;
+  const end = start + pageSize - 1;
+
+  // Fetch paginated data
+  const { data, error, count } = await supabase
     .from('blog_posts')
-    .select('*')
-    .order('published_at', { ascending: false });
+    .select('*', { count: 'exact' })
+    .order('published_at', { ascending: false })
+    .range(start, end);
 
   if (error) {
     throw new Error(error.message);
   }
-  return data || [];
+  return { data: data || [], totalCount: count || 0 };
 };
 
 const VideoAnalysisLibrary = () => {
-  const { data: blogPosts, isLoading, error } = useQuery<BlogPost[], Error>({
-    queryKey: ['blogPosts'],
-    queryFn: fetchBlogPosts,
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [filteredPosts, setFilteredPosts] = useState<BlogPost[]>([]);
+
+  const { data, isLoading, error } = useQuery<{ data: BlogPost[], totalCount: number }, Error>({
+    queryKey: ['blogPosts', currentPage],
+    queryFn: () => fetchBlogPosts(currentPage, PAGE_SIZE),
+    refetchOnWindowFocus: false,
   });
 
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filteredPosts, setFilteredPosts] = useState<BlogPost[]>([]);
+  const blogPosts = data?.data || [];
+  const totalCount = data?.totalCount || 0;
+  const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
   useEffect(() => {
     if (blogPosts) {
@@ -80,12 +94,21 @@ const VideoAnalysisLibrary = () => {
     }
   }, [searchTerm, blogPosts]);
 
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    setSearchTerm(''); // Clear search when changing page
+  };
+
   if (isLoading) {
     return (
       <div className="container mx-auto p-4 max-w-4xl">
         <h1 className="text-3xl font-bold mb-6">Analysis Library</h1>
+        <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-2 mb-6">
+          <Skeleton className="flex-1 h-10" />
+          <Skeleton className="h-10 w-10 sm:w-auto px-4" />
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[...Array(6)].map((_, i) => (
+          {[...Array(PAGE_SIZE)].map((_, i) => (
             <Card key={i}>
               <CardContent className="p-4">
                 <Skeleton className="w-full h-40 mb-4" />
@@ -95,6 +118,7 @@ const VideoAnalysisLibrary = () => {
             </Card>
           ))}
         </div>
+        <Skeleton className="h-10 w-full mt-6" />
       </div>
     );
   }
@@ -113,7 +137,7 @@ const VideoAnalysisLibrary = () => {
       <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-2 mb-6">
         <Input
           type="text"
-          placeholder="Search by title, creator, or keywords..."
+          placeholder="Search by title, creator, or keywords (current page)..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="flex-1"
@@ -127,7 +151,7 @@ const VideoAnalysisLibrary = () => {
       </div>
 
       {filteredPosts.length === 0 && (
-        <p className="text-center text-gray-500 dark:text-gray-400">No analysis found matching your criteria.</p>
+        <p className="text-center text-gray-500 dark:text-gray-400">No analysis found matching your criteria on this page.</p>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -159,6 +183,13 @@ const VideoAnalysisLibrary = () => {
             </Card>
           </Link>
         ))}
+      </div>
+      <div className="mt-8">
+        <PaginationControls
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+        />
       </div>
     </div>
   );

@@ -9,6 +9,7 @@ import { Link } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
 import ComparisonLibraryCopilot from '@/components/ComparisonLibraryCopilot'; // Import the copilot
 import { Badge } from '@/components/ui/badge'; // Import Badge component
+import PaginationControls from '@/components/PaginationControls'; // Import PaginationControls
 
 interface MultiComparisonVideoSummary {
   title: string;
@@ -37,10 +38,18 @@ interface MultiComparison {
   custom_comparative_qa_results: CustomComparativeQuestion[];
   overall_thumbnail_url?: string;
   videos: MultiComparisonVideoSummary[]; // Flattened video data for display
+  videoATitle?: string; // For copilot context
+  videoBTitle?: string; // For copilot context
 }
 
-const fetchMultiComparisons = async (): Promise<MultiComparison[]> => {
-  const { data, error } = await supabase
+const PAGE_SIZE = 9; // Number of items per page
+
+const fetchMultiComparisons = async (page: number, pageSize: number): Promise<{ data: MultiComparison[], totalCount: number }> => {
+  const start = (page - 1) * pageSize;
+  const end = start + pageSize - 1;
+
+  // Fetch paginated data and count
+  const { data, error, count } = await supabase
     .from('multi_comparisons')
     .select(`
       *,
@@ -48,14 +57,15 @@ const fetchMultiComparisons = async (): Promise<MultiComparison[]> => {
         video_order,
         blog_posts (title, thumbnail_url, original_video_link)
       )
-    `)
-    .order('created_at', { ascending: false });
+    `, { count: 'exact' })
+    .order('created_at', { ascending: false })
+    .range(start, end);
 
   if (error) {
     throw new Error(error.message);
   }
 
-  return data.map(mc => {
+  const formattedData = (data || []).map(mc => {
     const videos = mc.multi_comparison_videos
       .sort((a: any, b: any) => a.video_order - b.video_order)
       .map((mcv: any) => ({
@@ -67,21 +77,28 @@ const fetchMultiComparisons = async (): Promise<MultiComparison[]> => {
     return {
       ...mc,
       videos,
-      // These are for the copilot to have context, even if not directly displayed
       videoATitle: videos[0]?.title,
       videoBTitle: videos[1]?.title,
     };
-  }) || [];
+  });
+
+  return { data: formattedData, totalCount: count || 0 };
 };
 
 const MultiComparisonLibrary = () => {
-  const { data: multiComparisons, isLoading, error } = useQuery<MultiComparison[], Error>({
-    queryKey: ['multiComparisons'],
-    queryFn: fetchMultiComparisons,
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [filteredComparisons, setFilteredComparisons] = useState<MultiComparison[]>([]);
+
+  const { data, isLoading, error } = useQuery<{ data: MultiComparison[], totalCount: number }, Error>({
+    queryKey: ['multiComparisons', currentPage],
+    queryFn: () => fetchMultiComparisons(currentPage, PAGE_SIZE),
+    refetchOnWindowFocus: false,
   });
 
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filteredComparisons, setFilteredComparisons] = useState<MultiComparison[]>([]);
+  const multiComparisons = data?.data || [];
+  const totalCount = data?.totalCount || 0;
+  const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
   useEffect(() => {
     if (multiComparisons) {
@@ -96,12 +113,21 @@ const MultiComparisonLibrary = () => {
     }
   }, [searchTerm, multiComparisons]);
 
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    setSearchTerm(''); // Clear search when changing page
+  };
+
   if (isLoading) {
     return (
       <div className="container mx-auto p-4 max-w-4xl">
         <h1 className="text-3xl font-bold mb-6">Comparison Library</h1>
+        <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-2 mb-6">
+          <Skeleton className="flex-1 h-10" />
+          <Skeleton className="h-10 w-10 sm:w-auto px-4" />
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[...Array(6)].map((_, i) => (
+          {[...Array(PAGE_SIZE)].map((_, i) => (
             <Card key={i}>
               <CardContent className="p-4">
                 <Skeleton className="w-full h-40 mb-4" />
@@ -111,6 +137,7 @@ const MultiComparisonLibrary = () => {
             </Card>
           ))}
         </div>
+        <Skeleton className="h-10 w-full mt-6" />
       </div>
     );
   }
@@ -129,7 +156,7 @@ const MultiComparisonLibrary = () => {
       <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-2 mb-6">
         <Input
           type="text"
-          placeholder="Search comparisons by title, video titles, or keywords..."
+          placeholder="Search comparisons by title, video titles, or keywords (current page)..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="flex-1"
@@ -143,14 +170,14 @@ const MultiComparisonLibrary = () => {
       </div>
 
       {filteredComparisons.length === 0 && (
-        <p className="text-center text-gray-500 dark:text-gray-400">No comparisons found matching your criteria.</p>
+        <p className="text-center text-gray-500 dark:text-gray-400">No comparisons found matching your criteria on this page.</p>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredComparisons.map((comp) => (
           <Link to={`/multi-comparison/${comp.slug}`} key={comp.id}>
             <Card className="h-full flex flex-col hover:shadow-lg transition-shadow duration-200">
-              <CardHeader className="p-0 relative"> {/* Added relative for absolute positioning of badge */}
+              <CardHeader className="p-0 relative">
                 {comp.overall_thumbnail_url ? (
                   <img
                     src={comp.overall_thumbnail_url}
@@ -187,6 +214,13 @@ const MultiComparisonLibrary = () => {
             </Card>
           </Link>
         ))}
+      </div>
+      <div className="mt-8">
+        <PaginationControls
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+        />
       </div>
     </div>
   );
