@@ -252,6 +252,17 @@ const AnalyzeVideo = () => {
     }
   }, [initialBlogPost, openChatImmediately, forceReanalyzeFromNav, analyzeVideoMutation]); // Removed currentLimits from dependencies
 
+  // Add this console log to inspect the full analysisResult
+  useEffect(() => {
+    if (analysisResult) {
+      console.log("Full analysisResult:", analysisResult);
+      // Also log the specific aiAnalysis part
+      console.log("analysisResult.aiAnalysis:", analysisResult.aiAnalysis);
+      // And customQaResults
+      console.log("analysisResult.customQaResults:", analysisResult.customQaResults);
+    }
+  }, [analysisResult]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (videoLink.trim()) {
@@ -504,67 +515,82 @@ const AnalyzeVideo = () => {
               )}
             </CardHeader>
             <CardContent className="space-y-6">
-              {analysisResult.videoTags && analysisResult.videoTags.length > 0 && (
-                <div>
-                  <h3 className="text-lg font-semibold mb-2">Video Tags</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {analysisResult.videoTags.map((tag, index) => (
-                      <Badge key={index} variant="secondary">
-                        {tag}
-                      </Badge>
-                    ))}
+              {/* Defensive rendering for aiAnalysis */}
+              {analysisResult.aiAnalysis && typeof analysisResult.aiAnalysis === 'object' && 'overall_sentiment' in analysisResult.aiAnalysis && typeof analysisResult.aiAnalysis.overall_sentiment === 'string' ? (
+                <>
+                  {analysisResult.videoTags && analysisResult.videoTags.length > 0 && (
+                    <div>
+                      <h3 className="text-lg font-semibold mb-2">Video Tags</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {analysisResult.videoTags.map((tag, index) => (
+                          <Badge key={index} variant="secondary">
+                            {String(tag)}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {analysisResult.videoSubtitles && (
+                    <div>
+                      <Collapsible>
+                        <CollapsibleTrigger className="flex items-center justify-between w-full text-lg font-semibold mb-2">
+                          Video Subtitles <ChevronDown className="h-4 w-4" />
+                        </CollapsibleTrigger>
+                        <CollapsibleContent className="text-gray-700 dark:text-gray-300 text-sm max-h-60 overflow-y-auto border p-3 rounded-md bg-gray-50 dark:bg-gray-700">
+                          <p>{String(analysisResult.videoSubtitles)}</p>
+                        </CollapsibleContent>
+                      </Collapsible>
+                    </div>
+                  )}
+
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2">Overall Sentiment</h3>
+                    <Badge variant="secondary" className="text-base px-3 py-1">
+                      {String(analysisResult.aiAnalysis.overall_sentiment)}
+                    </Badge>
                   </div>
-                </div>
+
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2">Emotional Tones</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {Array.isArray(analysisResult.aiAnalysis.emotional_tones) && analysisResult.aiAnalysis.emotional_tones.map((tone, index) => (
+                        <Badge key={index} variant="outline">
+                          {String(tone)}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2">Key Themes</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {Array.isArray(analysisResult.aiAnalysis.key_themes) && analysisResult.aiAnalysis.key_themes.map((theme, index) => (
+                        <Badge key={index} variant="outline">
+                          {String(theme)}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2">Summary Insights</h3>
+                    <p className="text-gray-700 dark:text-gray-300">
+                      {String(analysisResult.aiAnalysis.summary_insights)}
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <Alert variant="destructive">
+                  <AlertTitle>AI Analysis Data Error</AlertTitle>
+                  <AlertDescription>
+                    The AI analysis data is malformed or missing expected fields. Please try re-analyzing the video.
+                    <pre className="whitespace-pre-wrap break-all text-xs mt-2">
+                      {JSON.stringify(analysisResult.aiAnalysis, null, 2)}
+                    </pre>
+                  </AlertDescription>
+                </Alert>
               )}
-
-              {analysisResult.videoSubtitles && (
-                <div>
-                  <Collapsible>
-                    <CollapsibleTrigger className="flex items-center justify-between w-full text-lg font-semibold mb-2">
-                      Video Subtitles <ChevronDown className="h-4 w-4" />
-                    </CollapsibleTrigger>
-                    <CollapsibleContent className="text-gray-700 dark:text-gray-300 text-sm max-h-60 overflow-y-auto border p-3 rounded-md bg-gray-50 dark:bg-gray-700">
-                      <p>{analysisResult.videoSubtitles}</p>
-                    </CollapsibleContent>
-                  </Collapsible>
-                </div>
-              )}
-
-              <div>
-                <h3 className="text-lg font-semibold mb-2">Overall Sentiment</h3>
-                <Badge variant="secondary" className="text-base px-3 py-1">
-                  {analysisResult.aiAnalysis.overall_sentiment}
-                </Badge>
-              </div>
-
-              <div>
-                <h3 className="text-lg font-semibold mb-2">Emotional Tones</h3>
-                <div className="flex flex-wrap gap-2">
-                  {analysisResult.aiAnalysis.emotional_tones.map((tone, index) => (
-                    <Badge key={index} variant="outline">
-                      {tone}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-lg font-semibold mb-2">Key Themes</h3>
-                <div className="flex flex-wrap gap-2">
-                  {analysisResult.aiAnalysis.key_themes.map((theme, index) => (
-                    <Badge key={index} variant="outline">
-                      {theme}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-lg font-semibold mb-2">Summary Insights</h3>
-                <p className="text-gray-700 dark:text-gray-300">
-                  {analysisResult.aiAnalysis.summary_insights}
-                </p>
-              </div>
 
               <Separator />
 
@@ -574,8 +600,8 @@ const AnalyzeVideo = () => {
                   <div className="space-y-4">
                     {analysisResult.customQaResults.map((qa, index) => (
                       <div key={index} className="border p-3 rounded-md bg-gray-50 dark:bg-gray-700">
-                        <p className="font-medium text-gray-800 dark:text-gray-200 mb-1">Q{index + 1}: {qa.question}</p>
-                        <p className="text-gray-700 dark:text-gray-300">A{index + 1}: {qa.answer || "No answer generated."}</p>
+                        <p className="font-medium text-gray-800 dark:text-gray-200 mb-1">Q{index + 1}: {String(qa.question)}</p>
+                        <p className="text-gray-700 dark:text-gray-300">A{index + 1}: {String(qa.answer || "No answer generated.")}</p>
                       </div>
                     ))}
                   </div>
@@ -588,7 +614,7 @@ const AnalyzeVideo = () => {
                 {analysisResult.comments.length > 0 ? (
                   <ul className="list-disc list-inside space-y-1 text-sm text-gray-600 dark:text-gray-400">
                     {analysisResult.comments.slice(0, 10).map((comment, index) => (
-                      <li key={index}>{comment}</li>
+                      <li key={index}>{String(comment)}</li>
                     ))}
                   </ul>
                 ) : (
