@@ -29,6 +29,7 @@ export const PaddleProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       document.head.appendChild(script);
 
       return () => {
+        // Clean up script if component unmounts before load
         if (document.head.contains(script)) {
           document.head.removeChild(script);
         }
@@ -37,40 +38,26 @@ export const PaddleProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   }, [isScriptLoaded]);
 
   useEffect(() => {
-    let intervalId: NodeJS.Timeout | undefined;
-
-    const attemptInitialization = async () => {
-      console.log(`PaddleProvider: Attempting initialization. isScriptLoaded: ${isScriptLoaded}, typeof window.Paddle: ${typeof window.Paddle}, typeof window.Paddle?.initialize: ${typeof window.Paddle?.initialize}, isPaddleInitialized: ${isPaddleInitialized}`);
-
-      if (isScriptLoaded && typeof window.Paddle !== 'undefined' && typeof window.Paddle.initialize === 'function' && !isPaddleInitialized) {
-        clearInterval(intervalId); // Stop polling
-        console.log("PaddleProvider: Paddle.initialize function found. Attempting to call initialize.");
+    // Initialize Paddle.js once the script is loaded and Paddle object is available
+    // Corrected to check for 'Initialize' (capital 'I')
+    if (isScriptLoaded && typeof window.Paddle !== 'undefined' && typeof window.Paddle.Initialize === 'function' && !isPaddleInitialized) {
+      const initializePaddleSDK = async () => {
         try {
-          await window.Paddle.initialize({
+          // Corrected to call 'Initialize' (capital 'I')
+          await window.Paddle.Initialize({
             environment: 'sandbox', // Use 'sandbox' for testing
             token: import.meta.env.VITE_PADDLE_CLIENT_SIDE_TOKEN,
           });
           setIsPaddleInitialized(true);
           console.log("Paddle Billing (V2) SDK initialized successfully.");
         } catch (error) {
-          console.error("Failed to initialize Paddle Billing (V2) SDK during call:", error);
+          console.error("Failed to initialize Paddle Billing (V2) SDK:", error);
           toast.error("Failed to initialize payment system. Please try again later.");
         }
-      } else if (isScriptLoaded && typeof window.Paddle !== 'undefined' && typeof window.Paddle.initialize !== 'function') {
-        console.warn("PaddleProvider: Paddle object found, but Paddle.initialize is not a function yet. Retrying...");
-      }
-    };
-
-    if (isScriptLoaded && !isPaddleInitialized) {
-      intervalId = setInterval(attemptInitialization, 100); // Poll every 100ms
+      };
+      initializePaddleSDK();
     }
-
-    return () => {
-      if (intervalId) {
-        clearInterval(intervalId);
-      }
-    };
-  }, [isScriptLoaded, isPaddleInitialized]);
+  }, [isScriptLoaded, isPaddleInitialized]); // Depend on isScriptLoaded and isPaddleInitialized
 
   return (
     <PaddleContext.Provider value={{ isPaddleInitialized }}>

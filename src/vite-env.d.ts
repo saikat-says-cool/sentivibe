@@ -15,13 +15,13 @@ interface ImportMeta {
 // Explicitly augment the Window interface for Paddle Billing (V2)
 interface Window {
   Paddle: {
-    initialize: (options: {
+    Initialize: (options: { // Corrected to 'Initialize' (capital 'I')
       environment: 'sandbox' | 'production';
       token: string;
       seller?: {
         id: string;
       };
-    }) => Promise<void>; // initialize returns a Promise<void>
+    }) => Promise<void>;
     Checkout: {
       open: (options: {
         items: Array<{ priceId: string; quantity?: number }>;
