@@ -31,7 +31,7 @@ function getApiKeys(baseName: string): string[] {
   return keys;
 }
 
-serve(async (req) => {
+serve(async (req: Request) => { // Explicitly typed 'req' as Request
   // Handle CORS preflight request
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -53,6 +53,7 @@ serve(async (req) => {
     const googleSearchEngineId = Deno.env.get('GOOGLE_SEARCH_ENGINE_ID');
 
     if (googleSearchApiKeys.length === 0 || !googleSearchEngineId) {
+      console.error('Configuration Error: Google Search API key(s) or Engine ID not set in Supabase secrets.');
       return new Response(JSON.stringify({ error: 'Google Search API key(s) or Engine ID not configured' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500,
@@ -60,26 +61,31 @@ serve(async (req) => {
     }
 
     let searchResponse;
+    let lastErrorData: any = { message: "No response from Google Custom Search API" };
+
     for (const currentGoogleSearchApiKey of googleSearchApiKeys) {
       const googleSearchApiUrl = `https://www.googleapis.com/customsearch/v1?key=${currentGoogleSearchApiKey}&cx=${googleSearchEngineId}&q=${encodeURIComponent(query)}`;
       searchResponse = await fetch(googleSearchApiUrl);
 
       if (searchResponse.ok) {
         break; // Key worked, proceed
-      } else if (searchResponse.status === 403 || searchResponse.status === 429) {
-        const errorData = await searchResponse.json();
-        if (errorData.error?.errors?.[0]?.reason === 'quotaExceeded') {
-          console.warn(`Google Search API key ${currentGoogleSearchApiKey} hit quota limit for video details. Trying next key.`);
-          continue; // Try next key
+      } else {
+        lastErrorData = await searchResponse.json();
+        console.warn(`Google Search API key ${currentGoogleSearchApiKey} failed with status ${searchResponse.status}. Error:`, lastErrorData);
+        if (searchResponse.status === 403 || searchResponse.status === 429) {
+          if (lastErrorData.error?.errors?.[0]?.reason === 'quotaExceeded') {
+            console.warn(`Google Search API key ${currentGoogleSearchApiKey} hit quota limit. Trying next key.`);
+            continue; // Try next key
+          }
         }
+        // If it's not a quota error or another recoverable error, break and report
+        break;
       }
-      break;
     }
 
     if (!searchResponse || !searchResponse.ok) {
-      const errorData = searchResponse ? await searchResponse.json() : { message: "No response from Google Custom Search API" };
-      console.error('Google Custom Search API error:', errorData);
-      return new Response(JSON.stringify({ error: 'Failed to fetch external search results', details: errorData }), {
+      console.error('Google Custom Search API final error:', lastErrorData);
+      return new Response(JSON.stringify({ error: 'Failed to fetch external search results', details: lastErrorData }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: searchResponse?.status || 500,
       });
@@ -96,9 +102,9 @@ serve(async (req) => {
       status: 200,
     });
 
-  } catch (error) {
-    console.error('Edge Function error:', error.message);
-    return new Response(JSON.stringify({ error: error.message }), {
+  } catch (error: unknown) { // Explicitly typed 'error' as unknown
+    console.error('Edge Function error (fetch-external-context):', (error as Error).message); // Cast to Error
+    return new Response(JSON.stringify({ error: (error as Error).message }), { // Cast to Error
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 500,
     });

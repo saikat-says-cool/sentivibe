@@ -36,16 +36,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           .eq('id', currentSession.user.id)
           .single();
 
-        if (subscriptionError && (subscriptionError as PostgrestError).code !== 'PGRST116') { // PGRST116 means no rows found
+        if (subscriptionError) {
+          // Log the full error object for better debugging
           console.error("Error fetching subscription:", subscriptionError);
-          // Fallback to free if there's an actual error
-          setSubscriptionStatus('free');
-          setSubscriptionPlanId('free');
+          if ((subscriptionError as PostgrestError).code !== 'PGRST116') { // PGRST116 means no rows found
+            // Fallback to free if there's an actual error other than no rows found
+            setSubscriptionStatus('free');
+            setSubscriptionPlanId('free');
+          } else {
+            // If no subscription found (PGRST116), ensure it's set to 'free'
+            setSubscriptionStatus('free');
+            setSubscriptionPlanId('free');
+          }
         } else if (subscriptionData) {
           setSubscriptionStatus(subscriptionData.status);
           setSubscriptionPlanId(subscriptionData.plan_id);
         } else {
-          // If no subscription found (PGRST116), ensure it's set to 'free'
+          // If no subscription data returned (e.g., user exists but no subscription entry), default to free
           setSubscriptionStatus('free');
           setSubscriptionPlanId('free');
         }
