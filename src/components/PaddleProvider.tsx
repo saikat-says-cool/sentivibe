@@ -11,8 +11,12 @@ export const PaddleProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const [isPaddleInitialized, setIsPaddleInitialized] = useState(false);
 
   useEffect(() => {
-    const initializePaddleSDK = async () => {
-      if (typeof window.Paddle !== 'undefined' && !isPaddleInitialized) {
+    let intervalId: NodeJS.Timeout | undefined;
+
+    const tryInitializePaddle = async () => {
+      // Check if Paddle.js is loaded and the initialize function is available
+      if (typeof window.Paddle !== 'undefined' && typeof window.Paddle.initialize === 'function' && !isPaddleInitialized) {
+        clearInterval(intervalId); // Stop polling once found
         try {
           await window.Paddle.initialize({
             environment: 'sandbox', // Use 'sandbox' for testing
@@ -27,14 +31,16 @@ export const PaddleProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       }
     };
 
-    // Ensure Paddle.js script is loaded before attempting to initialize
-    if (document.readyState === 'complete') {
-      initializePaddleSDK();
-    } else {
-      window.addEventListener('load', initializePaddleSDK);
-      return () => window.removeEventListener('load', initializePaddleSDK);
-    }
-  }, [isPaddleInitialized]);
+    // Start polling for Paddle.initialize to become available
+    intervalId = setInterval(tryInitializePaddle, 100); // Check every 100ms
+
+    // Clean up interval on component unmount
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [isPaddleInitialized]); // Only re-run if initialization status changes
 
   return (
     <PaddleContext.Provider value={{ isPaddleInitialized }}>
