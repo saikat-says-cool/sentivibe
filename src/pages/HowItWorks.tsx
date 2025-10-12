@@ -1,105 +1,77 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Youtube, GitCompare, MessageSquare, FileText, Search } from 'lucide-react';
-import { useEffect } from 'react'; // Import useEffect
+import { Link } from 'react-router-dom';
+import { ArrowRight, Youtube, GitCompare, MessageSquare, BookOpen, Download } from 'lucide-react';
+import { useEffect } from 'react';
 
 const HowItWorks = () => {
-  // Set SEO-optimized browser tab title
   useEffect(() => {
-    document.title = "How SentiVibe Works";
+    document.title = "How SentiVibe Works - Hands-on Guide";
   }, []);
 
+  const guideSections = [
+    {
+      title: "Platform Overview",
+      description: "Get a quick introduction to SentiVibe's core mission and capabilities.",
+      icon: BookOpen,
+      link: "/how-it-works/overview",
+    },
+    {
+      title: "Analyze a Single Video",
+      description: "A step-by-step guide to performing sentiment analysis on individual YouTube videos.",
+      icon: Youtube,
+      link: "/how-it-works/analyze-video",
+    },
+    {
+      title: "Compare Multiple Videos",
+      description: "Learn how to conduct multi-video comparisons and understand audience sentiment across content.",
+      icon: GitCompare,
+      link: "/how-it-works/compare-videos",
+    },
+    {
+      title: "Interact with AI Chat",
+      description: "Master the context-aware AI chat, personas, and precise response length control.",
+      icon: MessageSquare,
+      link: "/how-it-works/ai-chat",
+    },
+    {
+      title: "Explore Libraries & AI Copilots",
+      description: "Discover how to navigate the analysis and comparison libraries and leverage AI Copilots.",
+      icon: BookOpen,
+      link: "/how-it-works/libraries",
+    },
+    {
+      title: "Download PDF Reports",
+      description: "Understand how to export professional, branded PDF reports of your analyses and comparisons.",
+      icon: Download,
+      link: "/how-it-works/pdf-export",
+    },
+  ];
+
   return (
-    <div className="container mx-auto p-4 max-w-3xl">
+    <div className="container mx-auto p-4 max-w-4xl">
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle className="text-3xl font-bold text-center">How SentiVibe Works</CardTitle>
+          <CardTitle className="text-4xl font-bold text-center mb-4">SentiVibe Hands-on Guide</CardTitle>
+          <p className="text-lg text-muted-foreground text-center">
+            Dive deep into every feature of SentiVibe with our comprehensive guides.
+            Learn how to unlock powerful video insights, compare content, and interact with our AI.
+          </p>
         </CardHeader>
-        <CardContent className="prose dark:prose-invert max-w-none">
-          <p className="text-lg text-muted-foreground mb-6 text-center">
-            SentiVibe leverages advanced AI to provide deep insights into YouTube video comments. Here's a quick guide to our powerful features:
-          </p>
-
-          <div className="space-y-8">
-            <div className="flex flex-col sm:flex-row items-start sm:space-x-4 space-y-4 sm:space-y-0">
-              <div className="flex-shrink-0 p-3 bg-accent text-accent-foreground rounded-full">
-                <Youtube className="h-6 w-6" />
-              </div>
-              <div>
-                <h2 className="text-xl font-semibold mb-1">1. Analyze a Single Video</h2>
-                <p>
-                  Simply paste any public YouTube video link into our analyzer. Our AI will intelligently fetch video details, up to 100 comments, and apply a weighted sentiment analysis, prioritizing comments with higher likes.
-                  <span className="font-semibold text-red-500"> Important: Videos must have at least 50 comments for a robust analysis. Analysis may take up to 30 seconds.</span>
-                </p>
-                <p className="mt-2">
-                  Enhance your insights by adding custom questions with desired word counts. Our AI will generate precise answers, which are then integrated into your report and saved for the community. We also employ smart caching and staleness logic to ensure your analyses are always fresh and efficient.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex flex-col sm:flex-row items-start sm:space-x-4 space-y-4 sm:space-y-0">
-              <div className="flex-shrink-0 p-3 bg-accent text-accent-foreground rounded-full">
-                <GitCompare className="h-6 w-6" />
-              </div>
-              <div>
-                <h2 className="text-xl font-semibold mb-1">2. Compare Multiple Videos</h2>
-                <p>
-                  Gain a competitive edge by comparing audience sentiment and engagement across two or more YouTube videos. Our AI identifies commonalities, highlights unique aspects, and reveals overall sentiment trends across your selected content.
-                </p>
-                <p className="mt-2">
-                  <span className="font-semibold text-red-500">Important: Each video must have at least 50 comments for a robust analysis. Analysis may take up to 30 seconds per video.</span> Submit custom comparative questions to delve deeper into specific aspects of the videos. SentiVibe intelligently caches comparisons and refreshes stale data, ensuring your multi-video insights are always current and relevant.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex flex-col sm:flex-row items-start sm:space-x-4 space-y-4 sm:space-y-0">
-              <div className="flex-shrink-0 p-3 bg-accent text-accent-foreground rounded-full">
-                <FileText className="h-6 w-6" />
-              </div>
-              <div>
-                <h2 className="text-xl font-semibold mb-1">3. Get Detailed Reports & SEO-Optimized Blog Posts</h2>
-                <p>
-                  Receive a comprehensive, structured report detailing overall sentiment, emotional tones, key themes, and actionable summary insights. For every analysis or comparison, SentiVibe automatically generates and publishes an SEO-optimized blog post to our public library.
-                </p>
-                <p className="mt-2">
-                  Reports include all AI-generated answers to your custom questions and the top 10 most popular comments. You can also download your complete report as a professional, branded PDF for easy sharing and archiving.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex flex-col sm:flex-row items-start sm:space-x-4 space-y-4 sm:space-y-0">
-              <div className="flex-shrink-0 p-3 bg-accent text-accent-foreground rounded-full">
-                <MessageSquare className="h-6 w-6" />
-              </div>
-              <div>
-                <h2 className="text-xl font-semibold mb-1">4. Chat with Our Context-Aware AI</h2>
-                <p>
-                  Engage in dynamic, context-aware conversations with our AI about any video analysis or comparison. Ask follow-up questions, explore specific topics, and even customize the AI's persona and desired response word count.
-                </p>
-                <p className="mt-2">
-                  Our AI synthesizes information from the video analysis, top comments, pre-generated community Q&A, and up-to-date external search results to provide comprehensive and insightful answers, complete with clickable Markdown links.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex flex-col sm:flex-row items-start sm:space-x-4 space-y-4 sm:space-y-0">
-              <div className="flex-shrink-0 p-3 bg-accent text-accent-foreground rounded-full">
-                <Search className="h-6 w-6" />
-              </div>
-              <div>
-                <h2 className="text-xl font-semibold mb-1">5. Explore Libraries & Use AI Copilots</h2>
-                <p>
-                  Browse our dedicated Analysis Library and Comparison Library for all past reports. Utilize our intelligent AI Copilots to semantically search your analyses and get proactive recommendations for new, related analysis topics or video ideas.
-                </p>
-                <p className="mt-2">
-                  These copilots provide direct, clickable links to relevant blog posts, streamlining your research and content discovery process.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <p className="mt-8 text-center text-sm text-gray-500">
-            SentiVibe makes understanding your audience easier and more efficient than ever before, empowering you with data-driven decisions.
-          </p>
+        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {guideSections.map((section, index) => (
+            <Link to={section.link} key={index} className="block">
+              <Card className="h-full flex flex-col justify-between p-6 hover:shadow-lg transition-shadow duration-200">
+                <div className="flex items-center mb-4">
+                  <section.icon className="h-8 w-8 text-accent mr-4" />
+                  <h2 className="text-xl font-semibold">{section.title}</h2>
+                </div>
+                <p className="text-muted-foreground mb-4 flex-grow">{section.description}</p>
+                <div className="flex items-center text-accent hover:underline">
+                  Read Guide <ArrowRight className="ml-2 h-4 w-4" />
+                </div>
+              </Card>
+            </Link>
+          ))}
         </CardContent>
       </Card>
     </div>

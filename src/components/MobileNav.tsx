@@ -4,10 +4,9 @@ import { Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useAuth } from '@/integrations/supabase/auth';
-// ModeToggle is removed from here, it will be in Header directly
 
 interface MobileNavProps {
-  onLinkClick?: () => void; // Optional callback for when a link is clicked
+  onLinkClick?: () => void;
 }
 
 const MobileNav: React.FC<MobileNavProps> = ({ onLinkClick }) => {
@@ -15,7 +14,7 @@ const MobileNav: React.FC<MobileNavProps> = ({ onLinkClick }) => {
   const [isOpen, setIsOpen] = React.useState(false);
 
   const handleLinkClick = () => {
-    setIsOpen(false); // Close the sheet when a link is clicked
+    setIsOpen(false);
     if (onLinkClick) {
       onLinkClick();
     }
@@ -107,7 +106,7 @@ const MobileNav: React.FC<MobileNavProps> = ({ onLinkClick }) => {
             </li>
             <li>
               <Link 
-                to="/how-it-works" 
+                to="/how-it-works" /* Updated link */
                 className="block px-4 py-2 text-lg font-medium hover:bg-accent hover:text-accent-foreground rounded-md"
                 onClick={handleLinkClick}
               >
@@ -125,7 +124,6 @@ const MobileNav: React.FC<MobileNavProps> = ({ onLinkClick }) => {
             </li>
           </ul>
         </nav>
-        {/* ModeToggle is no longer here */}
       </SheetContent>
     </Sheet>
   );

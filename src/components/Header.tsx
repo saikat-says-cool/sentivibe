@@ -1,15 +1,14 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/integrations/supabase/auth';
-// Removed ModeToggle import
 import MobileNav from './MobileNav';
 
 const Header = () => {
-  const { session, subscriptionStatus, subscriptionPlanId } = useAuth(); // Get subscription info
+  const { session, subscriptionStatus, subscriptionPlanId } = useAuth();
 
   const isPaidTier = subscriptionStatus === 'active' && subscriptionPlanId !== 'free';
-  const showUpgradeButton = session && !isPaidTier; // Show upgrade if logged in but not paid
-  const showAuthButtons = !session; // Show Sign In/Sign Up if not logged in
+  const showUpgradeButton = session && !isPaidTier;
+  const showAuthButtons = !session;
 
   return (
     <header className="bg-background border-b border-border p-4 flex items-center justify-between">
@@ -87,7 +86,7 @@ const Header = () => {
             </li>
             <li>
               <Link 
-                to="/how-it-works" 
+                to="/how-it-works" /* Updated link */
                 className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 px-4 py-2 hover:bg-accent hover:text-accent-foreground"
               >
                 How It Works
@@ -113,7 +112,6 @@ const Header = () => {
             <Button variant="default" className="ml-4">Upgrade</Button>
           </Link>
         )}
-        {/* Removed ModeToggle component */}
       </div>
     </header>
   );

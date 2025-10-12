@@ -9,7 +9,13 @@ import CreateMultiComparison from '@/pages/CreateMultiComparison';
 import MultiComparisonLibrary from '@/pages/MultiComparisonLibrary';
 import MultiComparisonDetail from '@/pages/MultiComparisonDetail';
 import AboutUs from '@/pages/AboutUs';
-import HowItWorks from '@/pages/HowItWorks';
+import HowItWorks from '@/pages/HowItWorks'; // The new index page
+import Overview from '@/pages/how-it-works/Overview';
+import AnalyzeVideoGuide from '@/pages/how-it-works/AnalyzeVideoGuide';
+import CompareVideosGuide from '@/pages/how-it-works/CompareVideosGuide';
+import AiChatGuide from '@/pages/how-it-works/AiChatGuide';
+import LibrariesGuide from '@/pages/how-it-works/LibrariesGuide';
+import PdfExportGuide from '@/pages/how-it-works/PdfExportGuide';
 import Upgrade from '@/pages/Upgrade';
 import AccountCenter from '@/pages/AccountCenter';
 import Pricing from '@/pages/Pricing';
@@ -41,7 +47,14 @@ function AppContent() {
           <Route path="/multi-comparison-library" element={<MultiComparisonLibrary />} />
           <Route path="/multi-comparison/:slug" element={<MultiComparisonDetail />} />
           <Route path="/about-us" element={<AboutUs />} />
-          <Route path="/how-it-works" element={<HowItWorks />} />
+          {/* New nested routes for How It Works guide */}
+          <Route path="/how-it-works" element={<HowItWorks />} /> {/* Main guide index */}
+          <Route path="/how-it-works/overview" element={<Overview />} />
+          <Route path="/how-it-works/analyze-video" element={<AnalyzeVideoGuide />} />
+          <Route path="/how-it-works/compare-videos" element={<CompareVideosGuide />} />
+          <Route path="/how-it-works/ai-chat" element={<AiChatGuide />} />
+          <Route path="/how-it-works/libraries" element={<LibrariesGuide />} />
+          <Route path="/how-it-works/pdf-export" element={<PdfExportGuide />} />
           <Route path="/upgrade" element={<Upgrade />} />
           <Route path="/account" element={<AccountCenter />} />
           <Route path="/pricing" element={<Pricing />} />
