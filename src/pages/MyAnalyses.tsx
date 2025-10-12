@@ -9,7 +9,8 @@ import { Link } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/integrations/supabase/auth';
 import LibraryCopilot from '@/components/LibraryCopilot';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'; // Import Alert components
+// Alert components are no longer needed for the upgrade prompt on this page
+// import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'; 
 
 interface AiAnalysisResult {
   overall_sentiment: string;
@@ -62,15 +63,16 @@ const fetchMyBlogPosts = async (userId: string): Promise<BlogPost[]> => {
 };
 
 const MyAnalyses = () => {
-  const { user, isLoading: isAuthLoading, subscriptionStatus, subscriptionPlanId } = useAuth();
+  const { user, isLoading: isAuthLoading } = useAuth(); // Removed subscriptionStatus, subscriptionPlanId as they are not used for access here
   const userId = user?.id;
 
-  const isPaidTier = subscriptionStatus === 'active' && subscriptionPlanId !== 'free';
+  // isPaidTier is no longer used for access control on this page
+  // const isPaidTier = subscriptionStatus === 'active' && subscriptionPlanId !== 'free';
 
   const { data: blogPosts, isLoading, error } = useQuery<BlogPost[], Error>({
     queryKey: ['myBlogPosts', userId],
     queryFn: () => fetchMyBlogPosts(userId!),
-    enabled: !!userId && !isAuthLoading && isPaidTier, // Only fetch if user is logged in AND is on a paid tier
+    enabled: !!userId && !isAuthLoading, // Fetch if any user is logged in
   });
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -110,21 +112,7 @@ const MyAnalyses = () => {
     );
   }
 
-  if (!isPaidTier) {
-    return (
-      <div className="container mx-auto p-4 max-w-4xl text-center">
-        <Alert variant="default" className="max-w-md mx-auto">
-          <AlertTitle className="text-xl font-bold">Upgrade to Access "My Analyses"</AlertTitle>
-          <AlertDescription className="mt-2">
-            Your personal analysis history is a premium feature. Upgrade to a paid tier to save and view all your past video analyses and comparisons.
-          </AlertDescription>
-          <Button asChild className="mt-4">
-            <Link to="/upgrade">Upgrade Now</Link>
-          </Button>
-        </Alert>
-      </div>
-    );
-  }
+  // Removed the entire 'if (!isPaidTier)' block, as all authenticated users can now access this page.
 
   if (isLoading) {
     return (
