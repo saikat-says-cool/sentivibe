@@ -1,6 +1,4 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-// Removed unused lucide-react icons: GitCompare, PlusCircle, RefreshCw, MessageSquare, Download, Youtube
-// Removed unused Link import
 import { useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -12,61 +10,88 @@ const CompareVideosGuide = () => {
   }, []);
 
   const content = `
-# How to Compare Multiple YouTube Videos
+# How to Compare Multiple YouTube Videos: A Deep Dive into Comparative Insights
 
-SentiVibe's multi-video comparison feature allows you to analyze audience sentiment and insights across two or more YouTube videos. This guide explains how to use it.
+This guide provides a comprehensive, hands-on walkthrough of SentiVibe's multi-video comparison feature, enabling you to analyze and understand audience sentiment across two or more YouTube videos. Uncover trends, divergences, and unique insights to inform your content strategy.
 
 ## 1. Accessing the Comparison Tool
 
-*   Navigate to the **"Compare Videos"** page from the main navigation or the homepage.
-*   You can also reach this page by clicking the **"Go to Multi-Comparison Analysis"** button from a saved multi-comparison's detail page.
+You can initiate a multi-video comparison from several convenient locations:
 
-## 2. Inputting Video Links (Minimum 2)
+*   **From the Main Navigation:** Click on **"Compare Videos"** in the header or mobile navigation menu.
+*   **From the Homepage:** Select the **"Compare Videos"** call-to-action card on the SentiVibe landing page.
+*   **From a Saved Multi-Comparison:** If you're viewing a previously generated multi-comparison blog post, click the **"Go to Multi-Comparison Analysis"** button. This will pre-fill the video links and allow you to re-compare or add new custom questions.
 
-*   **Add Video URLs:** You'll see input fields for YouTube video links. You need to provide at least two video links to perform a comparison.
-*   **Add More Videos:** Click the **[+] "Add Another Video"** button to add more input fields for additional videos. There's no upper limit to the number of videos you can compare.
-*   **Remove Videos:** Click the **[X]** icon next to a video link to remove it.
-*   **Important Requirement:** Each individual video **must have at least 50 comments** for its analysis to be included in the comparison. If any video has fewer comments, the comparison will not proceed.
-*   **Processing Time:** Multi-video comparisons can take longer than single analyses, as each video needs to be processed. Expect up to **30 seconds per video** for the full comparison to complete.
+## 2. Inputting Video Links (Minimum 2, Unlimited Max)
 
-## 3. Adding Custom Comparative Questions (Unlimited)
+The foundation of a multi-comparison is providing the YouTube video links you wish to analyze.
 
-Beyond the standard comparative insights, you can ask specific questions tailored to your comparison.
+*   **Add Video URLs:** You'll initially see input fields for two YouTube video links. Paste the complete URL of each public YouTube video you want to include in your comparison.
+*   **Minimum Requirement:** You must provide **at least two video links** to perform a comparison.
+*   **Unlimited Videos:** There is **no upper limit** to the number of videos you can include in a single multi-comparison. Click the **[+] "Add Another Video"** button to dynamically add more input fields as needed.
+*   **Removing Videos:** Click the **[X]** icon next to a video link to remove it from your comparison list.
+*   **Important Requirement: Each Video Needs 50+ Comments:** For the AI to perform a robust sentiment analysis for each individual video within the comparison, **each video must have at least 50 comments**. If any video in your list has fewer comments, the entire multi-comparison will not proceed, and an error message will guide you to select more engaged videos.
+*   **Processing Time:** Multi-video comparisons are resource-intensive as they involve analyzing each video individually and then performing a comparative AI analysis. Expect the process to take up to **30 seconds per video** included in the comparison. Dynamic loading messages will keep you informed of the AI's progress.
 
-*   **Add a Question:** Use the input field labeled "Question" to type your comparative query (e.g., "What are the key differences in audience reaction between Video 1 and Video 3?").
-*   **Set Word Count:** Specify a "Word Count" for the AI's answer.
-*   **Add More Questions:** Click the **[+] "Add Another Comparative Question"** button to add as many questions as you need. There are no limits on the number of questions or their desired word count.
+## 3. Adding Custom Comparative Questions (Unlimited & Targeted)
+
+Beyond the standard comparative insights, SentiVibe allows you to ask specific questions tailored to your comparison, receiving AI-generated answers that provide deeper, targeted context.
+
+*   **How to Add a Question:**
+    *   Use the input field labeled "Question" to type your comparative query (e.g., "What are the key differences in audience reaction between Video 1 and Video 3 regarding product features?").
+    *   **Set Desired Word Count:** For each question, specify an approximate "Word Count" (e.g., 100, 200, 300 words). The AI will intelligently aim to provide an answer close to this length, ensuring concise and relevant information.
+*   **Unlimited Questions:** You can add as many custom comparative questions as you need. There are **no limits** on the number of questions or their desired word count, regardless of your subscription tier.
+*   **Adding More Questions:** Click the **[+] "Add Another Comparative Question"** button to dynamically add more input fields.
+*   **Removing Questions:** Click the **[X]** icon next to any question to remove it.
+*   **Intelligent Merging for Existing Comparisons:** If you're re-comparing videos or loading a saved comparison, any *new* custom questions you add will be processed by the AI, answered, and then **seamlessly merged with any existing custom Q&A results** already stored for that multi-comparison. This continuously enriches the comparative insights.
 
 ## 4. Initiating the Comparison
 
-*   Once all video links are entered and any custom questions are added, click the **"Create Multi-Video Comparison"** button.
-*   **Loading State:** You will see a loading indicator with messages like "Fetching individual video data...", "Performing AI multi-comparison analysis...", and "Answering custom comparative questions with AI...".
-*   **Daily Limits:** Your "Comparisons today" counter tracks your usage. Free Tier users have a daily limit (1 comparison/day). Exceeding this will prompt you to [upgrade](/upgrade).
+Once all video links are entered and all desired custom comparative questions are added:
 
-## 5. Understanding Your Multi-Comparison Report
+*   Click the **"Create Multi-Video Comparison"** button.
+*   **Loading State & Dynamic Messages:** The button will display a loading spinner, and you'll see dynamic messages (e.g., "Fetching individual video data...", "Performing AI multi-comparison analysis...", "Answering custom comparative questions with AI...") guiding you through the AI's progress.
+*   **Daily Limits & Upgrade Prompt:** Monitor your "Comparisons today" counter.
+    *   **Free Tier (Authenticated & Unauthenticated):** Limited to **1 comparison per day**.
+    *   **Paid Tier:** Enjoy **20 comparisons per day** (designed to be effectively unlimited for typical usage).
+    *   If you exceed your daily limit, the button will be disabled, and an alert will prompt you to [upgrade to a paid tier](/upgrade) for more comparisons.
 
-After a successful comparison, a detailed report will be displayed, including:
+## 5. Understanding Your Comprehensive Multi-Comparison Report
 
-*   **Video Thumbnails:** A row of clickable thumbnails for each video in the comparison. Clicking on a thumbnail will take you to that video's individual sentiment analysis report.
-*   **Last Compared Timestamp:** Indicates when the full multi-comparison was last performed.
-*   **Comparison Overview:**
-    *   **Overall Sentiment Trend:** General shifts in sentiment across all videos.
-    *   **Common & Divergent Emotional Tones:** Emotions shared across videos or unique to specific ones.
-    *   **Common & Unique Themes:** Topics discussed across all videos or specific to one.
-    *   **Summary Insights:** A high-level overview of the key comparative findings.
-    *   **Individual Video Summaries:** Brief sentiment and theme summaries for each video.
-*   **Comparative Q&A Section:** Displays all AI-generated answers to your custom comparative questions.
-*   **Top 10 Comments for Each Video:** A dedicated section lists the 10 most popular comments for *each* video included in the comparison, allowing for granular review.
+After a successful comparison, a detailed, value-packed report will be displayed, offering a holistic view of audience sentiment across your selected videos:
 
-## 6. Actions After Comparison
+*   **Video Thumbnails (Clickable):** A prominent row of clickable thumbnails for each video included in the comparison. Clicking on any thumbnail will seamlessly navigate you to that video's **individual sentiment analysis report**, allowing for deep dives into specific content.
+*   **Last Compared Timestamp:** This timestamp indicates when the full multi-comparison (including individual video analysis refreshes and comparative AI processing) was last performed, ensuring transparency about data freshness.
+*   **Comparison Overview (Structured Multi-Comparison Data):** This section provides the core AI-generated comparative insights:
+    *   **Overall Sentiment Trend:** A high-level summary of how audience sentiment evolves or differs across the compared videos.
+    *   **Common Emotional Tones:** Identifies emotions consistently present across multiple videos.
+    *   **Divergent Emotional Tones:** Highlights emotions that are unique or significantly more prevalent in specific videos.
+    *   **Common Themes:** Pinpoints recurring topics and discussion points across the entire set of videos.
+    *   **Unique Themes:** Reveals themes that are specific to individual videos, indicating distinct audience interests or content focus.
+    *   **Summary Insights:** A concise, human-readable summary that synthesizes all comparative findings into actionable takeaways.
+    *   **Individual Video Summaries:** Brief sentiment and theme summaries for each video within the comparison, providing quick context.
+*   **Comparative Q&A Section:** Displays all AI-generated answers to the custom comparative questions you (and potentially other users) have asked about this specific multi-comparison. This provides targeted, in-depth answers to your most pressing comparative queries.
+*   **Top 10 Comments for Each Video:** For granular review and transparency, a dedicated section lists the actual text of the 10 most popular comments (by like count) for *each* video included in the comparison. This allows you to directly examine the audience feedback that shaped the AI's insights.
 
-*   **View Individual Video Analysis:** Click on any video thumbnail in the report to navigate to its dedicated single video analysis page.
-*   **View Full Multi-Comparison Blog Post:** Click the **"View Full Multi-Comparison Blog Post"** button to go to the SEO-optimized blog post generated for this comparison in the library.
-*   **Refresh Comparison:** Click the **(Refresh icon) "Refresh Comparison"** button to manually trigger a full re-comparison. This is useful if you believe the underlying video comments or sentiment might have changed, or if the \`Last Compared\` timestamp indicates stale data.
-*   **Chat with AI:** Click the **(Message icon) "Chat with AI"** button to open a pop-up chat dialog. Here, you can ask follow-up questions about the comparison, individual videos, or custom Q&A. (See the [Interact with AI Chat Guide](/how-it-works/ai-chat) for more details).
-*   **Download Report PDF:** Click the **(Download icon) "Download Report PDF"** button to save a professional PDF report of your multi-comparison. (See the [Download PDF Reports Guide](/how-it-works/pdf-export) for more details).
+## 6. Actions After Comparison: Deepening Your Analysis
 
-This guide will help you leverage SentiVibe's powerful multi-video comparison features to gain deeper, comparative audience insights.
+Once your multi-comparison report is generated, a suite of action buttons allows you to further explore, share, and interact with your insights:
+
+*   **View Individual Video Analysis (via Thumbnails):** As mentioned, clicking on any video thumbnail in the report will take you to its dedicated single video analysis page.
+*   **(Link icon) "View Full Multi-Comparison Blog Post" Button:** Navigate directly to the comprehensive, SEO-optimized blog post generated for this multi-comparison. This post is designed for public consumption and search engine visibility.
+*   **(Refresh icon) "Refresh Comparison" Button:** Manually trigger a full re-comparison. This is invaluable if you believe the underlying video comments or audience sentiment might have changed significantly since the \`Last Compared\` timestamp, or if you simply want the absolute latest comparative data.
+*   **(Message icon) "Chat with AI" Button:** Open a dedicated pop-up chat dialog. Here, you can engage in an unlimited, context-aware conversation with SentiVibe's AI, asking follow-up questions about the multi-comparison, individual videos, or custom Q&A. (For more details, refer to the [Interact with AI Chat Guide](/how-it-works/ai-chat)).
+*   **(Download icon) "Download Report PDF" Button:** Save a professional, comprehensive PDF report of your multi-comparison to your device. This report includes all AI-generated insights, custom Q&A, and raw comments for each video, perfect for sharing or archiving. (For more details, refer to the [Download PDF Reports Guide](/how-it-works/pdf-export) for more details).
+
+## 7. Optimal Usage Tips for Multi-Video Comparison
+
+*   **Strategic Grouping:** Compare videos that are thematically similar, part of a series, or represent different approaches to the same topic to identify meaningful trends.
+*   **Targeted Comparative Questions:** Use custom questions to directly address your comparative hypotheses. Examples: "Which video generated more positive sentiment regarding the creator's authenticity?", "What are the unique emotional responses to Video A versus Video B?", "How do the key themes differ between the early and late videos in this series?"
+*   **Monitor Evolving Trends:** For ongoing campaigns or series, use the "Refresh Comparison" feature to track shifts in audience perception over time.
+*   **Leverage Individual Analysis:** Don't forget to click on individual video thumbnails to dive deeper into specific video insights before drawing overall comparative conclusions.
+*   **Content Strategy:** Use comparative insights to refine your content strategy, identify successful elements, and understand audience expectations across different video types.
+
+By mastering this guide, you'll unlock the full potential of SentiVibe's multi-video comparison feature, gaining a strategic edge in understanding complex audience dynamics.
   `;
 
   return (

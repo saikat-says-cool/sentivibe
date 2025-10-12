@@ -17,7 +17,7 @@ The application is built using the following technologies:
 *   **Icons:** `lucide-react`
 *   **Utilities:** `clsx`, `tailwind-merge` (`cn` utility)
 *   **Markdown Rendering:** `react-markdown`, `remark-gfm`
-*   **Fonts:** Google Fonts (`Jura` for body and headings)
+*   **Fonts:** Google Fonts (`Inter` for body and headings)
 *   **Toast Notifications:** `sonner`
 
 ## 3. Project Structure
@@ -48,6 +48,7 @@ The project follows a standard React application structure with specific directo
     *   `src/hooks/`: Custom React hooks.
         *   `src/hooks/use-mobile.tsx`: Hook for detecting mobile viewport.
         *   `src/hooks/use-toast.ts`: Shadcn/ui toast hook (distinct from `sonner` toasts).
+        *   `src/hooks/use-loading-messages.tsx`: **New hook to provide dynamic, context-aware loading messages for AI operations.**
     *   `src/pages/`: Application pages/views.
         *   `src/pages/Index.tsx`: **Updated landing page, now featuring direct calls to action for analyzing videos, comparing videos, and exploring both analysis and comparison libraries.**
         *   `src/pages/Login.tsx`: User authentication page, styled to integrate with the new color palette.
@@ -61,6 +62,13 @@ The project follows a standard React application structure with specific directo
         *   `src/pages/ComparisonDetail.tsx`: (Legacy, but still present) Page for displaying two-video comparisons.
         *   `src/pages/Upgrade.tsx`: **Updated page detailing the benefits of upgrading to a paid tier, reflecting the simplified tier structure.**
         *   `src/pages/AccountCenter.tsx`: **New page for authenticated users to manage their profile and view subscription details.**
+        *   `src/pages/how-it-works/`: **New directory for detailed guide pages.**
+            *   `src/pages/how-it-works/Overview.tsx`: **The main introduction to the guide.**
+            *   `src/pages/how-it-works/AnalyzeVideoGuide.tsx`: **Detailed guide for single video analysis.**
+            *   `src/pages/how-it-works/CompareVideosGuide.tsx`: **Detailed guide for multi-video comparison.**
+            *   `src/pages/how-it-works/AiChatGuide.tsx`: **Detailed guide for AI chat interactions.**
+            *   `src/pages/how-it-works/LibrariesGuide.tsx`: **Detailed guide for libraries and AI copilots.**
+            *   `src/pages/how-it-works/PdfExportGuide.tsx`: **Detailed guide for PDF report export.**
     *   `src/integrations/`: Supabase-related client-side files.
         *   `src/integrations/supabase/client.ts`: Supabase client initialization.
         *   `src/integrations/supabase/auth.tsx`: **Updated AuthProvider to fetch and expose `subscriptionStatus` and `subscriptionPlanId` via the `useAuth` hook.**
@@ -76,8 +84,9 @@ The project follows a standard React application structure with specific directo
             *   `supabase/functions/multi-comparison-chat-analyzer/index.ts`: **New Edge Function for handling AI chat conversations for multi-video comparisons, with chat message limits and max response word count removed. External context has been removed from the AI prompt.**
             *   `supabase/functions/comparison-library-copilot-analyzer/index.ts`: **New Edge Function for handling AI chat for the Comparison Library Copilot, performing semantic search, recommending new comparative analysis topics, and with daily query limits removed. External context has been removed from the AI prompt.**
             *   `supabase/functions/get-anon-usage/index.ts`: **New Edge Function to retrieve anonymous user usage data for IP-based rate limiting, now only tracking analyses and comparisons.**
+            *   `supabase/functions/paddle-webhook-handler/index.ts`: **Updated Edge Function to correctly verify Paddle V2 webhooks using Deno's Web Crypto API and manage user subscriptions.**
         *   `supabase/migrations/`: Database migration files.
-*   `tailwind.config.ts`: Tailwind CSS configuration, including custom fonts (`Jura`) and the new brand color palette.
+*   `tailwind.config.ts`: Tailwind CSS configuration, including custom fonts (`Inter`) and the new brand color palette.
 *   `.env`: Environment variables (e.g., Supabase URLs, API keys).
 
 ## 4. Core Application Flow & Components
@@ -95,7 +104,7 @@ The project follows a standard React application structure with specific directo
 
 ### 4.2. `Header.tsx`
 *   A React component that renders a consistent header across all pages.
-*   Displays the **SentiVibe wordmark** (`<span className="text-foreground">Senti</span><span className="text-accent">Vibe</span>`) using the `font-heading` (Jura) typeface.
+*   Displays the **SentiVibe wordmark** (`<span className="text-foreground">Senti</span><span className="text-accent">Vibe</span>`) using the `font-heading` (Inter) typeface.
 *   **Now includes navigation links to `/analyze-video`, `/library`, `/create-multi-comparison`, `/multi-comparison-library`, `/how-it-works`, and `/about-us` for all users.**
 *   Includes a link to `/my-analyses` and the new `/account` page for authenticated users.
 *   **Conditionally renders an "Upgrade" button for authenticated users who are not on a paid tier.**
@@ -569,16 +578,16 @@ This Deno-based serverless function is used by the frontend to retrieve the curr
 *   **Response:** Returns a `200 OK` response with `analyses_count`, `comparisons_count`, and the `FREE_TIER_LIMITS`.
 *   **Error Handling:** Includes `try-catch` blocks.
 
-## 6. Styling and Branding
+### 6. Styling and Branding
 *   **Tailwind CSS:** Used extensively for all styling, providing a utility-first approach.
 *   **`src/globals.css`:**
     *   Defines custom CSS variables for the **Crowd Black** and **Pure White** color palette for dark mode. This ensures consistent theming across the application.
     *   Includes specific variables for **Positive Green**, **Neutral Gray**, **Negative Red**, and **Accent Blue** to be used for sentiment and interactive elements.
     *   **Now includes color variables for Emerald, Crimson, Yellow, Cyan, Deep Blue, Forest Green, and Purple Haze themes.**
-    *   Applies the `Jura` font globally to the `body` element.
+    *   Applies the `Inter` font globally to the `body` element.
     *   **New CSS Rule:** Includes `.prose a { text-decoration: underline; }` to ensure all links within Markdown-rendered content are clearly underlined.
-*   **`tailwind.config.ts`:** Configures Tailwind to use `Jura` as the default `font-sans` family and `font-heading`. It also extends the color palette with the new brand colors and sentiment-specific colors.
-*   **Branding:** The application features a distinct "SentiVibe" word logo with `text-3xl font-extrabold tracking-tight` styling in the header and `text-5xl font-extrabold tracking-tight` on the landing page, using the `font-heading` (Jura) typeface. The "Vibe" part of the logo is highlighted with the `text-accent` color.
+*   **`tailwind.config.ts`:** Configures Tailwind to use `Inter` as the default `font-sans` family and `font-heading`. It also extends the color palette with the new brand colors and sentiment-specific colors.
+*   **Branding:** The application features a distinct "SentiVibe" word logo with `text-3xl font-extrabold tracking-tight` styling in the header and `text-5xl font-extrabold tracking-tight` on the landing page, using the `font-heading` (Inter) typeface. The "Vibe" part of the logo is highlighted with the `text-accent` color.
 
 ## 7. Dependencies
 Key dependencies include:
