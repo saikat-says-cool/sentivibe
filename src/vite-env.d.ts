@@ -3,55 +3,48 @@
 interface ImportMetaEnv {
   readonly VITE_SUPABASE_URL: string;
   readonly VITE_SUPABASE_ANON_KEY: string;
-  readonly VITE_PADDLE_VENDOR_ID: string;
+  readonly VITE_PADDLE_VENDOR_ID: string; // V1 specific, but keeping for now if needed elsewhere
   readonly VITE_PADDLE_CLIENT_SIDE_TOKEN: string;
-  readonly VITE_PADDLE_PRODUCT_ID: string;
+  readonly VITE_PADDLE_PRODUCT_ID: string; // This will now be a V2 Price ID
 }
 
 interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
 
-// Explicitly augment the Window interface
+// Explicitly augment the Window interface for Paddle Billing (V2)
 interface Window {
   Paddle: {
-    Setup: (options: { vendor: number }) => void;
+    initialize: (options: {
+      environment: 'sandbox' | 'production';
+      token: string;
+      seller?: {
+        id: string;
+      };
+    }) => void;
     Checkout: {
       open: (options: {
-        product: string;
-        email?: string;
-        customer_email?: string;
-        successCallback?: (data: any) => void;
-        closeCallback?: () => void;
-        passthrough?: string;
-        allow_quantity?: boolean;
-        quantity?: number;
-        coupon?: string;
-        locale?: string;
-        override?: string;
-        disable_icon?: boolean;
-        theme?: string;
-        referring_domain?: string;
-        marketing_consent?: string;
-        vat_number?: string;
-        vat_country?: string;
-        vat_state?: string;
-        vat_city?: string;
-        vat_zip?: string;
-        vat_street?: string;
-        vat_company_name?: string;
-        vat_first_name?: string;
-        vat_last_name?: string;
-        vat_address?: string;
-        vat_country_code?: string;
-        vat_state_code?: string;
-        vat_city_code?: string;
-        vat_zip_code?: string;
-        vat_street_code?: string;
-        vat_company_name_code?: string;
-        vat_first_name_code?: string;
-        vat_last_name_code?: string;
-        vat_address_code?: string;
+        items: Array<{ priceId: string; quantity?: number }>;
+        customer?: {
+          email?: string;
+          id?: string;
+        };
+        customData?: {
+          userId?: string;
+        };
+        settings?: {
+          displayMode?: 'overlay' | 'inline';
+          theme?: 'light' | 'dark';
+          locale?: string;
+          allowQuantity?: boolean;
+          showAddTax?: boolean;
+          showDiscount?: boolean;
+          showPaymentTerms?: boolean;
+          showSubscriptionTerms?: boolean;
+          showTrialTerms?: boolean;
+        };
+        success?: (data: any) => void;
+        close?: () => void;
       }) => void;
     };
   }
