@@ -14,20 +14,23 @@ import Upgrade from './pages/Upgrade';
 import AccountCenter from './pages/AccountCenter';
 import Pricing from './pages/Pricing';
 import Checkout from './pages/Checkout';
-import TermsOfService from './pages/TermsOfService'; // Import new page
-import PrivacyNotice from './pages/PrivacyNotice';   // Import new page
-import RefundPolicy from './pages/RefundPolicy';     // Import new page
-import NotFound from './pages/NotFound'; // Import NotFound page
+import TermsOfService from './pages/TermsOfService';
+import PrivacyNotice from './pages/PrivacyNotice';
+import RefundPolicy from './pages/RefundPolicy';
+import NotFound from './pages/NotFound';
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from './integrations/supabase/auth';
 import { ThemeProvider } from './components/theme-provider';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useScrollToTop } from './hooks/use-scroll-to-top'; // Import the new hook
 
 const queryClient = new QueryClient();
 
 function App() {
+  useScrollToTop(); // Call the hook here to ensure scroll to top on route change
+
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
       <AuthProvider>
@@ -52,10 +55,10 @@ function App() {
                   <Route path="/account" element={<AccountCenter />} />
                   <Route path="/pricing" element={<Pricing />} />
                   <Route path="/checkout" element={<Checkout />} />
-                  <Route path="/terms-of-service" element={<TermsOfService />} /> {/* New route */}
-                  <Route path="/privacy-notice" element={<PrivacyNotice />} />     {/* New route */}
-                  <Route path="/refund-policy" element={<RefundPolicy />} />       {/* New route */}
-                  <Route path="*" element={<NotFound />} /> {/* Catch-all for 404 */}
+                  <Route path="/terms-of-service" element={<TermsOfService />} />
+                  <Route path="/privacy-notice" element={<PrivacyNotice />} />
+                  <Route path="/refund-policy" element={<RefundPolicy />} />
+                  <Route path="*" element={<NotFound />} />
                 </Routes>
               </main>
               <Footer />
