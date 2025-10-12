@@ -1,18 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { Loader2, GitCompare, PlusCircle, XCircle, MessageSquare, RefreshCw, Youtube } from 'lucide-react';
+import { Loader2, GitCompare, PlusCircle, XCircle, MessageSquare, RefreshCw, Youtube, Download } from 'lucide-react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom'; // Import useNavigate
 import MultiComparisonDataDisplay from '@/components/MultiComparisonDataDisplay';
 import MultiComparisonChatDialog from '@/components/MultiComparisonChatDialog';
 import { useAuth } from '@/integrations/supabase/auth';
 import { Skeleton } from '@/components/ui/skeleton';
+import html2pdf from 'html2pdf.js'; // Import html2pdf
 
 // New interfaces for multi-comparison
 interface MultiComparisonVideo {
@@ -71,6 +72,7 @@ const fetchAnonUsage = async () => {
 
 const CreateMultiComparison = () => {
   const location = useLocation();
+  const navigate = useNavigate(); // Initialize useNavigate
   const initialMultiComparison = location.state?.multiComparison as MultiComparisonResult | undefined;
   const forceRecompareFromNav = location.state?.forceRecompare as boolean | undefined;
 
@@ -91,6 +93,7 @@ const CreateMultiComparison = () => {
   const [error, setError] = useState<string | null>(null);
   const [isChatDialogOpen, setIsChatDialogOpen] = useState(false);
   const [comparisonsToday, setComparisonsToday] = useState<number>(0);
+  const comparisonReportRef = useRef<HTMLDivElement>(null); // Ref for PDF download
   const queryClient = useQueryClient();
 
   const isPaidTier = subscriptionStatus === 'active' && subscriptionPlanId !== 'free';
@@ -196,16 +199,20 @@ const CreateMultiComparison = () => {
       // Only open chat immediately if the flag is true AND the dialog is not already open
       if (location.state?.openChat && !isChatDialogOpen) {
         setIsChatDialogOpen(true);
+        // Clear the openChat flag from location.state to prevent re-opening on subsequent renders
+        navigate(location.pathname, { replace: true, state: { ...location.state, openChat: false } });
       }
 
       if (forceRecompareFromNav) {
         const validVideoLinks = initialMultiComparison.videos.map(video => video.original_video_link);
         const validQuestions = initialMultiComparison.custom_comparative_qa_results.filter(q => q.question.trim() !== "");
         createMultiComparisonMutation.mutate({ videoLinks: validVideoLinks, customComparativeQuestions: validQuestions, forceRecompare: true });
+        // Clear forceRecompare flag
+        navigate(location.pathname, { replace: true, state: { ...location.state, forceRecompare: false } });
       }
     }
     // Dependencies for this useEffect are now more focused
-  }, [initialMultiComparison, forceRecompareFromNav, createMultiComparisonMutation, isChatDialogOpen, location.state?.openChat]);
+  }, [initialMultiComparison, forceRecompareFromNav, createMultiComparisonMutation, isChatDialogOpen, navigate, location.pathname, location.state]);
 
   const handleAddVideoLink = () => {
     setVideoLinks([...videoLinks, '']);
@@ -255,6 +262,46 @@ const CreateMultiComparison = () => {
       const validVideoLinks = multiComparisonResult.videos.map(video => video.original_video_link);
       const validQuestions = multiComparisonResult.custom_comparative_qa_results.filter(q => q.question.trim() !== "");
       createMultiComparisonMutation.mutate({ videoLinks: validVideoLinks, customComparativeQuestions: validQuestions, forceRecompare: true });
+    }
+  };
+
+  const handleDownloadPdf = () => {
+    if (comparisonReportRef.current && multiComparisonResult) {
+      const element = comparisonReportRef.current;
+      const opt = {
+        margin: 1,
+        filename: `SentiVibe_MultiComparisonReport_${multiComparisonResult.title.replace(/[^a-z0-9]/gi, '_')}.pdf`,
+        image: { type: 'jpeg' as 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, logging: true, dpi: 192, letterRendering: true },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' as 'portrait' }
+      };
+
+      const tempDiv = document.createElement('div');
+      tempDiv.style.position = 'relative';
+      tempDiv.style.width = element.offsetWidth + 'px';
+      tempDiv.style.height = element.offsetHeight + 'px';
+      tempDiv.innerHTML = element.innerHTML;
+
+      if (!isPaidTier) {
+        const watermark = document.createElement('div');
+        watermark.style.position = 'absolute';
+        watermark.style.top = '50%';
+        watermark.style.left = '50%';
+        watermark.style.transform = 'translate(-50%, -50%) rotate(-45deg)';
+        watermark.style.fontSize = '48px';
+        watermark.style.fontWeight = 'bold';
+        watermark.style.color = 'rgba(0, 0, 0, 0.1)';
+        watermark.style.zIndex = '1000';
+        watermark.style.pointerEvents = 'none';
+        watermark.textContent = 'SentiVibe - Free Tier';
+        tempDiv.appendChild(watermark);
+      }
+
+      document.body.appendChild(tempDiv);
+
+      html2pdf().from(tempDiv).set(opt).save().then(() => {
+        document.body.removeChild(tempDiv);
+      });
     }
   };
 
@@ -423,11 +470,14 @@ const CreateMultiComparison = () => {
             <Button onClick={() => setIsChatDialogOpen(true)} className="flex items-center gap-2">
               <MessageSquare className="h-4 w-4" /> Chat with AI
             </Button>
+            <Button onClick={handleDownloadPdf} className="flex items-center gap-2">
+              <Download className="h-4 w-4" /> Download Report PDF
+            </Button>
             <Button asChild>
               <Link to={`/multi-comparison/${multiComparisonResult.slug}`}>View Full Multi-Comparison Blog Post</Link>
             </Button>
           </div>
-          <Card className="mb-6">
+          <Card ref={comparisonReportRef} className="mb-6">
             <CardHeader>
               <div className="flex flex-wrap justify-center items-center gap-4 mb-2">
                 {multiComparisonResult.videos.map((video, index) => (

@@ -1,16 +1,18 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Youtube, MessageSquare, BarChart, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Youtube, MessageSquare, BarChart, RefreshCw, Download } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import MultiComparisonDataDisplay from '@/components/MultiComparisonDataDisplay';
 import MultiComparisonChatDialog from '@/components/MultiComparisonChatDialog';
+import html2pdf from 'html2pdf.js'; // Import html2pdf
+import { useAuth } from '@/integrations/supabase/auth'; // Import useAuth
 
 interface MultiComparisonVideo {
   blog_post_id: string;
@@ -86,6 +88,9 @@ const MultiComparisonDetail = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const [isChatDialogOpen, setIsChatDialogOpen] = useState(false);
+  const comparisonReportRef = useRef<HTMLDivElement>(null); // Ref for PDF download
+  const { subscriptionStatus, subscriptionPlanId } = useAuth(); // Get subscription info
+  const isPaidTier = subscriptionStatus === 'active' && subscriptionPlanId !== 'free';
 
   const { data: multiComparison, isLoading, error } = useQuery<MultiComparison | null, Error>({
     queryKey: ['multiComparison', slug],
@@ -189,6 +194,67 @@ const MultiComparisonDetail = () => {
     }
   }, [multiComparison]);
 
+  const contentWithoutDuplicateTitle = (markdownContent: string, title: string): string => {
+    const lines = markdownContent.split('\n');
+    if (lines.length > 0 && lines[0].startsWith('#')) {
+      const firstLineTitle = lines[0].substring(1).trim();
+      if (title.includes(firstLineTitle) || firstLineTitle.includes(title)) {
+        return lines.slice(1).join('\n').trim();
+      }
+    }
+    return markdownContent;
+  };
+
+  const formattedMultiComparisonResultForChat = multiComparison ? {
+    id: multiComparison.id,
+    title: multiComparison.title,
+    meta_description: multiComparison.meta_description,
+    keywords: multiComparison.keywords || [],
+    comparison_data_json: multiComparison.comparison_data_json,
+    custom_comparative_qa_results: multiComparison.custom_comparative_qa_results || [],
+    videos: multiComparison.videos || [],
+  } : null;
+
+  const handleDownloadPdf = () => {
+    if (comparisonReportRef.current && multiComparison) {
+      const element = comparisonReportRef.current;
+      const opt = {
+        margin: 1,
+        filename: `SentiVibe_MultiComparison_${multiComparison.title.replace(/[^a-z0-9]/gi, '_')}.pdf`,
+        image: { type: 'jpeg' as 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, logging: true, dpi: 192, letterRendering: true },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' as 'portrait' }
+      };
+
+      const tempDiv = document.createElement('div');
+      tempDiv.style.position = 'relative';
+      tempDiv.style.width = element.offsetWidth + 'px';
+      tempDiv.style.height = element.offsetHeight + 'px';
+      tempDiv.innerHTML = element.innerHTML;
+
+      if (!isPaidTier) {
+        const watermark = document.createElement('div');
+        watermark.style.position = 'absolute';
+        watermark.style.top = '50%';
+        watermark.style.left = '50%';
+        watermark.style.transform = 'translate(-50%, -50%) rotate(-45deg)';
+        watermark.style.fontSize = '48px';
+        watermark.style.fontWeight = 'bold';
+        watermark.style.color = 'rgba(0, 0, 0, 0.1)';
+        watermark.style.zIndex = '1000';
+        watermark.style.pointerEvents = 'none';
+        watermark.textContent = 'SentiVibe - Free Tier';
+        tempDiv.appendChild(watermark);
+      }
+
+      document.body.appendChild(tempDiv);
+
+      html2pdf().from(tempDiv).set(opt).save().then(() => {
+        document.body.removeChild(tempDiv);
+      });
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="container mx-auto p-4 max-w-3xl">
@@ -222,27 +288,6 @@ const MultiComparisonDetail = () => {
     );
   }
 
-  const contentWithoutDuplicateTitle = (markdownContent: string, title: string): string => {
-    const lines = markdownContent.split('\n');
-    if (lines.length > 0 && lines[0].startsWith('#')) {
-      const firstLineTitle = lines[0].substring(1).trim();
-      if (title.includes(firstLineTitle) || firstLineTitle.includes(title)) {
-        return lines.slice(1).join('\n').trim();
-      }
-    }
-    return markdownContent;
-  };
-
-  const formattedMultiComparisonResultForChat = multiComparison ? {
-    id: multiComparison.id,
-    title: multiComparison.title,
-    meta_description: multiComparison.meta_description,
-    keywords: multiComparison.keywords || [],
-    comparison_data_json: multiComparison.comparison_data_json,
-    custom_comparative_qa_results: multiComparison.custom_comparative_qa_results || [],
-    videos: multiComparison.videos || [],
-  } : null;
-
   return (
     <div className="container mx-auto p-4 max-w-3xl">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-2 flex-wrap">
@@ -269,9 +314,12 @@ const MultiComparisonDetail = () => {
               <MessageSquare className="h-4 w-4" /> Chat with AI
             </Button>
           )}
+          <Button onClick={handleDownloadPdf} className="flex items-center gap-2">
+            <Download className="h-4 w-4" /> Download Report PDF
+          </Button>
         </div>
       </div>
-      <Card className="mb-6">
+      <Card ref={comparisonReportRef} className="mb-6">
         <CardHeader>
           <div className="flex flex-wrap justify-center items-center gap-4 mb-2"> {/* Reduced mb to make space for instruction */}
             {multiComparison.videos && multiComparison.videos.map((video, index) => (

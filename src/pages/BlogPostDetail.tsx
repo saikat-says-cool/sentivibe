@@ -1,14 +1,17 @@
-import { useEffect } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Youtube, MessageSquare, BarChart, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Youtube, MessageSquare, BarChart, RefreshCw, Download } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
+import VideoChatDialog from '@/components/VideoChatDialog'; // Import VideoChatDialog
+import html2pdf from 'html2pdf.js'; // Import html2pdf
+import { useAuth } from '@/integrations/supabase/auth'; // Import useAuth
 
 interface AiAnalysisResult {
   overall_sentiment: string;
@@ -66,6 +69,11 @@ const fetchBlogPostBySlug = async (slug: string): Promise<BlogPost | null> => {
 const BlogPostDetail = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
+  const [isChatDialogOpen, setIsChatDialogOpen] = useState(false); // State for chat dialog
+  const analysisReportRef = useRef<HTMLDivElement>(null); // Ref for PDF download
+  const { subscriptionStatus, subscriptionPlanId } = useAuth(); // Get subscription info
+  const isPaidTier = subscriptionStatus === 'active' && subscriptionPlanId !== 'free';
+
   console.log("Current URL slug from useParams:", slug);
 
   const { data: blogPost, isLoading, error } = useQuery<BlogPost | null, Error>({
@@ -184,6 +192,57 @@ const BlogPostDetail = () => {
     }
   }, [blogPost]);
 
+  const contentWithoutDuplicateTitle = (markdownContent: string, title: string): string => {
+    const lines = markdownContent.split('\n');
+    if (lines.length > 0 && lines[0].startsWith('#')) {
+      const firstLineTitle = lines[0].substring(1).trim();
+      if (title.includes(firstLineTitle) || firstLineTitle.includes(title)) {
+        return lines.slice(1).join('\n').trim();
+      }
+    }
+    return markdownContent;
+  };
+
+  const handleDownloadPdf = () => {
+    if (analysisReportRef.current && blogPost) {
+      const element = analysisReportRef.current;
+      const opt = {
+        margin: 1,
+        filename: `SentiVibe_BlogPost_${blogPost.title.replace(/[^a-z0-9]/gi, '_')}.pdf`,
+        image: { type: 'jpeg' as 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, logging: true, dpi: 192, letterRendering: true },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' as 'portrait' }
+      };
+
+      const tempDiv = document.createElement('div');
+      tempDiv.style.position = 'relative';
+      tempDiv.style.width = element.offsetWidth + 'px';
+      tempDiv.style.height = element.offsetHeight + 'px';
+      tempDiv.innerHTML = element.innerHTML;
+
+      if (!isPaidTier) {
+        const watermark = document.createElement('div');
+        watermark.style.position = 'absolute';
+        watermark.style.top = '50%';
+        watermark.style.left = '50%';
+        watermark.style.transform = 'translate(-50%, -50%) rotate(-45deg)';
+        watermark.style.fontSize = '48px';
+        watermark.style.fontWeight = 'bold';
+        watermark.style.color = 'rgba(0, 0, 0, 0.1)';
+        watermark.style.zIndex = '1000';
+        watermark.style.pointerEvents = 'none';
+        watermark.textContent = 'SentiVibe - Free Tier';
+        tempDiv.appendChild(watermark);
+      }
+
+      document.body.appendChild(tempDiv);
+
+      html2pdf().from(tempDiv).set(opt).save().then(() => {
+        document.body.removeChild(tempDiv);
+      });
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="container mx-auto p-4 max-w-3xl">
@@ -218,17 +277,6 @@ const BlogPostDetail = () => {
     );
   }
 
-  const contentWithoutDuplicateTitle = (markdownContent: string, title: string): string => {
-    const lines = markdownContent.split('\n');
-    if (lines.length > 0 && lines[0].startsWith('#')) {
-      const firstLineTitle = lines[0].substring(1).trim();
-      if (title.includes(firstLineTitle) || firstLineTitle.includes(title)) {
-        return lines.slice(1).join('\n').trim();
-      }
-    }
-    return markdownContent;
-  };
-
   return (
     <div className="container mx-auto p-4 max-w-3xl">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-2 flex-wrap">
@@ -252,14 +300,17 @@ const BlogPostDetail = () => {
             <RefreshCw className="h-4 w-4" /> Refresh Analysis
           </Button>
           <Button
-            onClick={() => navigate('/analyze-video', { state: { blogPost: blogPost, openChat: true } })}
+            onClick={() => setIsChatDialogOpen(true)} // Directly set state to open chat
             className="flex items-center gap-2"
           >
             <MessageSquare className="h-4 w-4" /> Chat with AI
           </Button>
+          <Button onClick={handleDownloadPdf} className="flex items-center gap-2">
+            <Download className="h-4 w-4" /> Download Report PDF
+          </Button>
         </div>
       </div>
-      <Card className="mb-6">
+      <Card ref={analysisReportRef} className="mb-6">
         <CardHeader>
           {blogPost.thumbnail_url && (
             <img
@@ -340,6 +391,13 @@ const BlogPostDetail = () => {
           </CardContent>
         )}
       </Card>
+      {blogPost && (
+        <VideoChatDialog
+          isOpen={isChatDialogOpen}
+          onOpenChange={setIsChatDialogOpen}
+          initialBlogPost={blogPost}
+        />
+      )}
     </div>
   );
 };

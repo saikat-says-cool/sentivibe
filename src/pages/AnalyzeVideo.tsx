@@ -14,7 +14,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { ChevronDown } from "lucide-react";
 import html2pdf from 'html2pdf.js';
 import { Textarea } from "@/components/ui/textarea";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom"; // Import useNavigate
 import VideoChatDialog from "@/components/VideoChatDialog";
 import { useAuth } from '@/integrations/supabase/auth';
 
@@ -95,6 +95,7 @@ const fetchAnonUsage = async () => {
 
 const AnalyzeVideo = () => {
   const location = useLocation();
+  const navigate = useNavigate(); // Initialize useNavigate
   const initialBlogPost = location.state?.blogPost as BlogPost | undefined;
   const openChatImmediately = location.state?.openChat as boolean | undefined;
   const forceReanalyzeFromNav = location.state?.forceReanalyze as boolean | undefined;
@@ -242,13 +243,17 @@ const AnalyzeVideo = () => {
       // Only open chat immediately if the flag is true AND the dialog is not already open
       if (openChatImmediately && !isChatDialogOpen) {
         setIsChatDialogOpen(true);
+        // Clear the openChat flag from location.state to prevent re-opening on subsequent renders
+        navigate(location.pathname, { replace: true, state: { ...location.state, openChat: false } });
       }
       if (forceReanalyzeFromNav) {
         analyzeVideoMutation.mutate({ videoLink: initialBlogPost.original_video_link, customQuestions: [], forceReanalyze: true });
+        // Clear forceReanalyze flag
+        navigate(location.pathname, { replace: true, state: { ...location.state, forceReanalyze: false } });
       }
     }
     // Dependencies for this useEffect are now more focused
-  }, [initialBlogPost, openChatImmediately, forceReanalyzeFromNav, analyzeVideoMutation, isChatDialogOpen]);
+  }, [initialBlogPost, openChatImmediately, forceReanalyzeFromNav, analyzeVideoMutation, isChatDialogOpen, navigate, location.pathname, location.state]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

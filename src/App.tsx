@@ -7,13 +7,12 @@ import MyAnalyses from './pages/MyAnalyses';
 import BlogPostDetail from './pages/BlogPostDetail';
 import CreateMultiComparison from './pages/CreateMultiComparison';
 import MultiComparisonLibrary from './pages/MultiComparisonLibrary';
-import ComparisonDetail from './pages/ComparisonDetail';
 import MultiComparisonDetail from './pages/MultiComparisonDetail';
 import AboutUs from './pages/AboutUs';
 import HowItWorks from './pages/HowItWorks';
 import Upgrade from './pages/Upgrade';
 import AccountCenter from './pages/AccountCenter';
-import Pricing from './pages/Pricing'; // Import the new Pricing page
+import Pricing from './pages/Pricing';
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from './integrations/supabase/auth';
 import { ThemeProvider } from './components/theme-provider';
@@ -41,13 +40,13 @@ function App() {
                   <Route path="/blog/:slug" element={<BlogPostDetail />} />
                   <Route path="/create-multi-comparison" element={<CreateMultiComparison />} />
                   <Route path="/multi-comparison-library" element={<MultiComparisonLibrary />} />
-                  <Route path="/comparison/:slug" element={<ComparisonDetail />} />
+                  {/* Removed the ComparisonDetail route as the file has been deleted */}
                   <Route path="/multi-comparison/:slug" element={<MultiComparisonDetail />} />
                   <Route path="/about-us" element={<AboutUs />} />
                   <Route path="/how-it-works" element={<HowItWorks />} />
                   <Route path="/upgrade" element={<Upgrade />} />
                   <Route path="/account" element={<AccountCenter />} />
-                  <Route path="/pricing" element={<Pricing />} /> {/* New Pricing Route */}
+                  <Route path="/pricing" element={<Pricing />} />
                 </Routes>
               </main>
               <Footer />
