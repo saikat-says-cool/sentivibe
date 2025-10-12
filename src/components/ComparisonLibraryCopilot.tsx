@@ -10,11 +10,9 @@ import {
 import { Button } from '@/components/ui/button';
 import { GitCompare } from 'lucide-react';
 import ChatInterface from './ChatInterface';
-import { useMutation, useQuery } from '@tanstack/react-query'; // Added useQuery
+import { useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Link } from 'react-router-dom';
-import { useAuth } from '@/integrations/supabase/auth'; // Import useAuth
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"; // Import Alert components
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface MultiComparison {
   id: string;
@@ -37,89 +35,15 @@ interface ComparisonLibraryCopilotProps {
   comparisons: MultiComparison[]; // Now expects MultiComparison type
 }
 
-// Define tier limits for library copilot queries (matching backend for consistency)
-const UNAUTHENTICATED_LIMITS = {
-  dailyQueries: 5,
-};
-
-const AUTHENTICATED_FREE_TIER_LIMITS = {
-  dailyQueries: 10,
-};
-
-const PAID_TIER_LIMITS = {
-  dailyQueries: 100,
-};
-
-// Function to fetch anonymous usage
-const fetchAnonUsage = async () => {
-  const { data, error } = await supabase.functions.invoke('get-anon-usage');
-  if (error) {
-    console.error("Error fetching anon usage:", error);
-    throw new Error(error.message || "Failed to fetch anonymous usage data.");
-  }
-  return data;
-};
-
 const ComparisonLibraryCopilot: React.FC<ComparisonLibraryCopilotProps> = ({ comparisons }) => {
-  const { user, subscriptionStatus, subscriptionPlanId } = useAuth(); // Get auth and subscription info
+  // Removed unused: user, subscriptionStatus, subscriptionPlanId from useAuth()
+  // Removed unused: isPaidTier
 
   const [isOpen, setIsOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
-  const [queriesToday, setQueriesToday] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
 
-  const isPaidTier = subscriptionStatus === 'active' && subscriptionPlanId !== 'free';
-  const isAuthenticatedFreeTier = user && !isPaidTier; // Authenticated but not paid
-  const isUnauthenticated = !user; // Not logged in
-
-  let currentLimits;
-  if (isPaidTier) {
-    currentLimits = PAID_TIER_LIMITS;
-  } else if (isAuthenticatedFreeTier) {
-    currentLimits = AUTHENTICATED_FREE_TIER_LIMITS;
-  } else { // Unauthenticated
-    currentLimits = UNAUTHENTICATED_LIMITS;
-  }
-
-  // Fetch anonymous usage if not authenticated
-  const { data: anonUsage, refetch: refetchAnonUsage } = useQuery({
-    queryKey: ['anonUsageComparisonCopilot'],
-    queryFn: fetchAnonUsage,
-    enabled: isUnauthenticated, // Only fetch if user is not logged in
-    refetchOnWindowFocus: false,
-  });
-
-  // Fetch daily copilot query count for authenticated users
-  const { data: authenticatedCopilotQueriesCount } = useQuery<number, Error>({
-    queryKey: ['dailyCopilotQueriesCount', user?.id],
-    queryFn: async () => {
-      if (!user?.id) return 0;
-      const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-      const { count, error } = await supabase
-        .from('copilot_queries_log')
-        .select('id', { count: 'exact', head: true })
-        .gte('created_at', twentyFourHoursAgo)
-        .eq('user_id', user.id);
-
-      if (error) {
-        console.error("Error fetching daily copilot query count for authenticated user:", error);
-        return 0;
-      }
-      return count || 0;
-    },
-    enabled: !!user && !isUnauthenticated, // Only fetch if user is logged in
-    refetchOnWindowFocus: false,
-  });
-
   useEffect(() => {
-    const updateQueriesToday = async () => {
-      if (isUnauthenticated) {
-        setQueriesToday(anonUsage?.copilot_queries_count || 0);
-      } else if (user) {
-        setQueriesToday(authenticatedCopilotQueriesCount || 0);
-      }
-    };
-
     if (isOpen) {
       setChatMessages([
         {
@@ -128,21 +52,15 @@ const ComparisonLibraryCopilot: React.FC<ComparisonLibraryCopilotProps> = ({ com
           text: "Hello! I'm your SentiVibe Comparison Copilot. I can help you find video comparisons or suggest new comparison ideas. Tell me what you're looking for!",
         },
       ]);
-      updateQueriesToday(); // Fetch initial count when dialog opens
       setError(null); // Clear error when dialog opens
     } else {
       setChatMessages([]);
       setError(null); // Clear error when dialog closes
     }
-  }, [isOpen, user, anonUsage, isUnauthenticated, authenticatedCopilotQueriesCount]); // Depend on user, anonUsage, isUnauthenticated, and authenticatedCopilotQueriesCount
+  }, [isOpen]);
 
   const copilotChatMutation = useMutation({
     mutationFn: async (userQuery: string) => {
-      // Check limit before sending to backend
-      if (queriesToday >= currentLimits.dailyQueries) {
-        throw new Error(`Daily Comparison Library Copilot query limit (${currentLimits.dailyQueries}) exceeded. ${isPaidTier ? 'You have reached your paid tier limit.' : 'Upgrade to a paid tier for more queries.'}`);
-      }
-
       const newUserMessage: Message = {
         id: Date.now().toString(),
         sender: 'user',
@@ -197,12 +115,6 @@ const ComparisonLibraryCopilot: React.FC<ComparisonLibraryCopilotProps> = ({ com
             : msg
         )
       );
-      // Update queriesToday after a successful query
-      if (isUnauthenticated) {
-        refetchAnonUsage(); // Refetch anon usage to get updated count
-      } else {
-        setQueriesToday(prev => prev + 1); // For authenticated users, update local state
-      }
     },
     onError: (err: Error) => {
       console.error("Comparison Library Copilot Chat Error:", err);
@@ -212,7 +124,7 @@ const ComparisonLibraryCopilot: React.FC<ComparisonLibraryCopilotProps> = ({ com
             ? { ...msg, text: `Error: ${(err as Error).message}. Please try again.` }
             : msg
         )
-      )
+      );
       setError((err as Error).message); // Set error state on mutation error
     },
   });
@@ -224,13 +136,13 @@ const ComparisonLibraryCopilot: React.FC<ComparisonLibraryCopilotProps> = ({ com
     }
   };
 
-  const isCopilotDisabled = copilotChatMutation.isPending || queriesToday >= currentLimits.dailyQueries;
+  // Simplified disabled logic: only disable if copilot mutation is pending
+  const isCopilotDisabled = copilotChatMutation.isPending;
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button className="flex items-center gap-2">
-          {/* Removed the extra <span> wrapper. Button should handle its children directly. */}
           <GitCompare className="h-4 w-4" /> Comparison Copilot
         </Button>
       </DialogTrigger>
@@ -245,25 +157,12 @@ const ComparisonLibraryCopilot: React.FC<ComparisonLibraryCopilotProps> = ({ com
         </DialogHeader>
         {error && (
           <Alert variant="destructive" className="mb-4">
-            <AlertTitle>Query Limit Reached</AlertTitle>
+            <AlertTitle>Copilot Error</AlertTitle>
             <AlertDescription>
               {error}
-              {!isPaidTier && (
-                <span className="ml-2 text-blue-500">
-                  <Link to="/upgrade" className="underline">Upgrade to a paid tier</Link> for more queries.
-                </span>
-              )}
             </AlertDescription>
           </Alert>
         )}
-        <p className="text-sm text-muted-foreground mb-2">
-          Queries remaining today: {Math.max(0, currentLimits.dailyQueries - queriesToday)}/{currentLimits.dailyQueries}
-          {!isPaidTier && queriesToday >= currentLimits.dailyQueries && (
-            <span className="ml-2 text-blue-500">
-              <Link to="/upgrade" className="underline">Upgrade to a paid tier</Link> for more queries.
-            </span>
-          )}
-        </p>
         <div className="flex-1 overflow-hidden">
           <ChatInterface
             messages={chatMessages}
