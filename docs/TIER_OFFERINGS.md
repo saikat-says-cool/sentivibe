@@ -27,12 +27,12 @@ This tier provides access to core SentiVibe functionalities with specific daily 
     *   **Explore Comparison Library:** Yes (view all publicly available multi-video comparisons)
     *   **View Blog Post Detail (Single Video):** Yes
     *   **View Multi-Comparison Detail:** Yes
-    *   **Chat with AI (Single Video Analysis):** Yes (Unlimited messages per session)
-    *   **Chat with AI (Comparison Analysis):** Yes (Unlimited messages per session)
-    *   **Library Copilot:** Yes (Unlimited queries per day)
-    *   **Comparison Library Copilot:** Yes (Unlimited queries per day)
-    *   **Custom Questions (per analysis/comparison):** Unlimited questions, unlimited AI-generated answer length.
-    *   **"My Analyses" Page:** No (Access to personal analysis history is a feature for Paid Tier users.)
+    *   **Chat with AI (Single Video Analysis):** Yes (**Unlimited** messages per session)
+    *   **Chat with AI (Comparison Analysis):** Yes (**Unlimited** messages per session)
+    *   **Library Copilot:** Yes (**Unlimited** queries per day)
+    *   **Comparison Library Copilot:** Yes (**Unlimited** queries per day)
+    *   **Custom Questions (per analysis/comparison):** **Unlimited** questions, **unlimited** AI-generated answer length.
+    *   **"My Analyses" Page:** Yes (Access to personal analysis history is now available for **all authenticated users**.)
 
 *   **Usage Limits (per 24-hour rolling period):**
     *   **Single Video Analyses:** Limited to **1 analysis** per day (IP-based for unauthenticated, User-ID based for authenticated).
@@ -42,7 +42,7 @@ This tier provides access to core SentiVibe functionalities with specific daily 
     *   **Google Ads:** Google Ads will be displayed prominently on all pages accessible to Free Tier users to generate advertising revenue.
 
 *   **Data Persistence & Reporting:**
-    *   **"My Analyses" History:** Analyses performed by Free Tier users are **not saved** to a personal, persistent history.
+    *   **"My Analyses" History:** Analyses performed by Free Tier users are **now saved** to a personal, persistent history, accessible via the "My Analyses" page.
     *   **PDF Export:** Available, but all PDF reports will be **watermarked** with "Free Tier - SentiVibe" or similar branding.
 
 ### 2.2. Paid Tier Offerings

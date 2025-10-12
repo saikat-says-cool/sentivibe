@@ -1,7 +1,7 @@
 # SentiVibe Product Documentation
 
 ## 1. Product Overview
-**SentiVibe** is an innovative web application designed to empower users with deep insights into public sentiment surrounding YouTube videos. By leveraging advanced AI, SentiVibe analyzes video comments to extract overall sentiment, emotional tones, key themes, and actionable summary insights. Beyond static reports, it now offers a **context-aware conversational AI** that can answer follow-up questions, drawing from the video analysis, top comments, external up-to-date information, and its own general knowledge. It also features **programmatic SEO**, automatically generating and publishing SEO-optimized blog posts for each video analysis, and organizing them in a searchable **Video Analysis Library**. The application now supports **multi-video comparisons**, allowing users to analyze and compare audience sentiment across several videos, complete with dedicated comparative insights and blog posts. It's an essential tool for content creators, marketers, researchers, and anyone interested in understanding audience reactions to online video content. The application now operates with a **public-first approach**, allowing unauthenticated users to access core analysis and library features, with enhanced theming options and a **simplified tiered offering system** to manage access and features.
+**SentiVibe** is an innovative web application designed to empower users with deep insights into public sentiment surrounding YouTube videos. By leveraging advanced AI, SentiVibe analyzes video comments to extract overall sentiment, emotional tones, key themes, and actionable summary insights. Beyond static reports, it now offers a **context-aware conversational AI** that can answer follow-up questions, drawing from the video analysis, top comments, and its own general knowledge. It also features **programmatic SEO**, automatically generating and publishing SEO-optimized blog posts for each video analysis, and organizing them in a searchable **Video Analysis Library**. The application now supports **multi-video comparisons**, allowing users to analyze and compare audience sentiment across several videos, complete with dedicated comparative insights and blog posts. It's an essential tool for content creators, marketers, researchers, and anyone interested in understanding audience reactions to online video content. The application now operates with a **public-first approach**, allowing unauthenticated users to access core analysis and library features, with enhanced theming options and a **simplified tiered offering system** to manage access and features.
 
 **Mission:** To decode the voice of the crowd—transforming unstructured online reactions into clear, actionable insight.
 **Tagline:** “See what the crowd really feels.”
@@ -13,11 +13,11 @@
 
 ### 2.1. Secure User Authentication & Simplified Tiered Offerings
 *   **Public Access:** Core features like video analysis and the analysis library are now accessible to **all users, even without logging in, under a Free Tier with specific daily limits for analyses and comparisons.**
-*   **Personalized Experience:** Users can securely sign up and log in to access personalized features like "My Analyses" history (available in Paid Tier) and the new **Account Center**.
-*   **Protected Content:** User-specific analysis history is protected, ensuring only authenticated users can access their own saved reports (Paid Tier feature).
+*   **Personalized Experience:** Users can securely sign up and log in to access personalized features like "My Analyses" history (available for **all authenticated users**) and the new **Account Center**.
+*   **Protected Content:** User-specific analysis history is protected, ensuring only authenticated users can access their own saved reports.
 *   **Simplified Tiered System:** SentiVibe now operates with a simplified two-tier offering system:
-    *   **Free Tier (Authenticated or Unauthenticated):** Limited daily analyses and comparisons. All other features (custom questions, AI chat, copilots) are unlimited. Watermarked PDF reports and ad-supported.
-    *   **Paid Tier:** Significantly higher daily analysis and comparison limits. All other features (custom questions, AI chat, copilots) are unlimited. Unwatermarked PDF reports, ad-free experience, and full access to "My Analyses" history.
+    *   **Free Tier (Authenticated or Unauthenticated):** Limited daily analyses and comparisons. All other features (custom questions, AI chat, copilots) are **unlimited**. Watermarked PDF reports and ad-supported.
+    *   **Paid Tier:** Significantly higher daily analysis and comparison limits. All other features (custom questions, AI chat, copilots) are **unlimited**. Unwatermarked PDF reports, ad-free experience, and full access to "My Analyses" history.
 *   **Profile Management (Future-ready):** A user profile system is in place, ready for future enhancements like personalized dashboards.
 
 ### 2.2. AI-Powered YouTube Video Analysis
@@ -91,9 +91,8 @@
     *   **Video Analysis Report / Comparison Report:** All details from the initial analysis or comparison (sentiment, themes, summary, structured comparison data).
     *   **Exact Top Comments:** The raw text of the top 10 most popular comments for the single video, or for *each* video in a multi-comparison, allowing for deep dives into audience feedback.
     *   **Community Q&A:** The AI has access to all pre-generated answers for custom questions (single video or comparative), allowing it to reference or elaborate on them during the chat.
-    *   **External Search Results:** Up-to-date information about the video's or comparison's broader topic, fetched *once at the start of each new analysis/comparison chat session* to provide relevant, current context for the chat.
-    *   **Pre-existing Knowledge:** The AI leverages its vast general knowledge for time-independent questions that aren't covered by the video, comparison, or external search.
-*   **Cost-Optimized External Context:** To ensure efficiency, external search for broader context is performed only once per video analysis or comparison chat session from the frontend, reducing repeated Google Search API calls.
+    *   **Pre-existing Knowledge:** The AI leverages its vast general knowledge for time-independent questions that aren't covered by the video or comparison. **External search results are no longer used for chat context.**
+*   **Cost-Optimized External Context:** **External search for broader context has been removed from chat functions to optimize costs and improve reliability.**
 *   **Chat Message Limits:** **The number of AI responses per chat session is now unlimited for all tiers.**
 
 ### 2.6. Interactive & Clear Analysis Reports
@@ -130,7 +129,7 @@
     *   Click "Analyze a Video" in the header or on the landing page.
     *   In the input field, paste the full URL of the YouTube video you wish to analyze. Remember: **The video must have at least 50 comments for a proper sentiment analysis.**
     *   **Add Custom Questions (Unlimited):** Use the "Add Another Question" button to add one or more custom questions. For each question, type your query and specify the desired word count for the AI's answer.
-    *   **Initiate Analysis:** Click the "Analyze Comments & Get Answers" button. If the video has been analyzed before, the report will load almost instantly. If the existing analysis is stale (older than 30 days) or if you navigate from a blog post with a "Refresh Analysis" flag, a full re-analysis will occur. Any new custom questions you've added will be processed and merged with existing community questions. Otherwise, the application will display a loading state while the AI processes the data, fetches initial external context, and generates answers to your custom questions.
+    *   **Initiate Analysis:** Click the "Analyze Comments & Get Answers" button. If the video has been analyzed before, the report will load almost instantly. If the existing analysis is stale (older than 30 days) or if you navigate from a blog post with a "Refresh Analysis" flag, a full re-analysis will occur. Any new custom questions you've added will be processed and merged with existing community questions. Otherwise, the application will display a loading state while the AI processes the data and generates answers to your custom questions.
 3.  **Create a Multi-Video Comparison:**
     *   Click "Compare Videos" in the header or on the landing page.
     *   In the input fields, paste the full URLs of at least two YouTube videos you wish to compare.
@@ -151,7 +150,7 @@
 14. **Use Library Copilot (Unlimited):** On both the "Analysis Library" and "My Analyses" pages, click the "Library Copilot" button to open an AI chat that helps you find specific analyses from your collection, providing direct links to the blog posts. **It will also suggest new, related analysis topics or video ideas based on the user's query and the existing library content.**
 15. **Explore the Comparison Library:** Navigate to the "Comparison Library" from the header or landing page. Here, you can browse all past multi-video comparisons, search by comparison title, video titles, or keywords.
 16. **Use Comparison Library Copilot (Unlimited):** On the "Comparison Library" page, click the "Comparison Copilot" button to open an AI chat that helps you find specific comparisons from your collection, providing direct links to the blog posts. **It will also suggest new, related comparative analysis topics or video pairs based on your query and the existing library content.**
-17. **Sign Up / Log In (Optional):** If you wish to access your personal analysis history, sign up or log in. You can then access your personal analyses via the "My Analyses" link in the header (Paid Tier feature).
+17. **Sign Up / Log In (Optional):** If you wish to access your personal analysis history, sign up or log in. You can then access your personal analyses via the "My Analyses" link in the header.
 18. **View Pricing:** The pricing details are available on the <Link to="/upgrade">Upgrade page</Link>.
 19. **Manage Account:** Authenticated users can visit the new "Account" page to view and update their profile information and check their subscription status.
 20. **Toggle Theme:** Use the moon/sun icon in the header to switch between dark, system, or any of the **new Emerald, Crimson, Yellow, Cyan, Deep Blue, Forest Green, and Purple Haze themes**.
@@ -166,7 +165,7 @@ SentiVibe provides immense value by:
 *   **Informing Strategy:** Helps content creators understand what resonates with their audience, marketers to gauge campaign reception, and researchers to analyze public opinion with a more complete picture.
 *   **Providing Actionable Data:** The weighted analysis ensures that the most impactful opinions are prioritized, and the AI can elaborate on these, including providing direct answers to custom questions.
 *   **Professional Reporting:** Enables easy sharing of findings with high-quality PDF reports, now with a professional branded header and a dedicated section for community Q&A. **Watermarking for free tiers encourages upgrades.**
-*   **Cost-Effective Intelligence:** Streamlined external search ensures you get the necessary up-to-date information without incurring excessive API costs.
+*   **Cost-Effective Intelligence:** **External search for chat context has been removed to optimize costs and improve reliability.**
 *   **Boosting SEO & Content Strategy:** Automatically generates valuable, SEO-optimized content, expanding your digital footprint and making your insights discoverable to a wider audience through search engines. The searchable libraries further enhance content discoverability within the app, **ensuring no duplicate blog posts for the same video or comparison.** Comprehensive SEO features like dynamic meta tags, structured data, Open Graph tags, and proper alt text ensure maximum visibility and crawlability.
 *   **Seamless Workflow:** The ability to initiate AI chat directly from a saved blog post, now within a consistent pop-up dialog, creates a more integrated and efficient user workflow, allowing for immediate follow-up questions on past analyses. The `LibraryCopilot` and `ComparisonLibraryCopilot` further enhance discoverability within a user's own analyses **and now proactively suggest new analysis topics, fostering continuous content exploration. All copilot queries are now unlimited for all tiers.**
 *   **Modern & Intuitive Experience:** A sleek, responsive, and themeable user interface that aligns with modern design principles and your distinct brand identity, **now with multiple vibrant theme options.**
