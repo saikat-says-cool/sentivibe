@@ -6,7 +6,7 @@ import { ArrowDown, ArrowUp, Minus } from 'lucide-react';
 interface SentimentDelta {
   video_a_sentiment: string;
   video_b_sentiment: string;
-  delta_description: string;
+  delta_description: string | { theme: string; weight: string; explanation: string }; // Updated to reflect possible object type
 }
 
 interface EmotionalTone {
@@ -53,14 +53,25 @@ const ComparisonDataDisplay: React.FC<ComparisonDataDisplayProps> = ({ data }) =
     }
   };
 
-  const getDeltaIcon = (deltaDescription: string) => {
-    if (deltaDescription.toLowerCase().includes('increase') || deltaDescription.toLowerCase().includes('positive shift')) {
+  const getDeltaIcon = (deltaDescription: string | { theme: string; weight: string; explanation: string }) => {
+    const descriptionText = typeof deltaDescription === 'object' 
+      ? deltaDescription.explanation || '' 
+      : deltaDescription;
+
+    if (descriptionText.toLowerCase().includes('increase') || descriptionText.toLowerCase().includes('positive shift')) {
       return <ArrowUp className="h-4 w-4 text-green-500 inline-block mr-1" />;
     }
-    if (deltaDescription.toLowerCase().includes('decline') || deltaDescription.toLowerCase().includes('negative shift')) {
+    if (descriptionText.toLowerCase().includes('decline') || descriptionText.toLowerCase().includes('negative shift')) {
       return <ArrowDown className="h-4 w-4 text-red-500 inline-block mr-1" />;
     }
     return <Minus className="h-4 w-4 text-gray-500 inline-block mr-1" />;
+  };
+
+  const renderDeltaDescription = (deltaDescription: string | { theme: string; weight: string; explanation: string }) => {
+    if (typeof deltaDescription === 'object') {
+      return deltaDescription.explanation || JSON.stringify(deltaDescription);
+    }
+    return deltaDescription;
   };
 
   return (
@@ -78,7 +89,7 @@ const ComparisonDataDisplay: React.FC<ComparisonDataDisplayProps> = ({ data }) =
               Video B overall sentiment: {getSentimentBadge(data.sentiment_delta.video_b_sentiment)}
             </p>
             <p className="font-semibold flex items-center">
-              {getDeltaIcon(data.sentiment_delta.delta_description)} {data.sentiment_delta.delta_description}
+              {getDeltaIcon(data.sentiment_delta.delta_description)} {renderDeltaDescription(data.sentiment_delta.delta_description)}
             </p>
           </CardContent>
         </Card>
