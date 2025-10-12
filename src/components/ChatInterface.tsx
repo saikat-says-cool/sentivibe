@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Send, Loader2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm'; // For GitHub Flavored Markdown
+import { useLoadingMessages } from '@/hooks/use-loading-messages'; // Import the new hook
 
 interface Message {
   id: string;
@@ -38,6 +39,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ messages, onSendMessage, 
     }
   };
 
+  const loadingMessage = useLoadingMessages('chat', isLoading);
+
   return (
     <div className="flex flex-col h-full bg-background border rounded-lg shadow-sm">
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -59,11 +62,11 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ messages, onSendMessage, 
             </div>
           </div>
         ))}
-        {isLoading && messages[messages.length - 1]?.sender === 'user' && (
+        {isLoading && (
           <div className="flex justify-start">
             <div className="max-w-[90%] sm:max-w-[70%] p-3 rounded-lg bg-gray-100 dark:bg-gray-700 rounded-bl-none flex items-center">
               <Loader2 className="mr-2 h-4 w-4 animate-spin text-gray-500 dark:text-gray-400" />
-              <span className="text-gray-500 dark:text-gray-400">Thinking...</span>
+              <span className="text-gray-500 dark:text-gray-400">{loadingMessage}</span>
             </div>
           </div>
         )}

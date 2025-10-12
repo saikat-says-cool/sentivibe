@@ -19,6 +19,7 @@ import VideoChatDialog from "@/components/VideoChatDialog";
 import { useAuth } from '@/integrations/supabase/auth';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { useLoadingMessages } from '@/hooks/use-loading-messages'; // Import the new hook
 
 interface AiAnalysisResult {
   overall_sentiment: string;
@@ -360,6 +361,8 @@ const AnalyzeVideo = () => {
 
   const areCustomQuestionInputsDisabled = analyzeVideoMutation.isPending;
 
+  const loadingMessage = useLoadingMessages('analysis', analyzeVideoMutation.isPending);
+
   return (
     <div className="container mx-auto p-4 max-w-3xl">
       <Card className="mb-6">
@@ -472,7 +475,7 @@ const AnalyzeVideo = () => {
           <Skeleton className="h-4 w-1/2" />
           <div className="flex items-center space-x-2 mt-4">
             <Loader2 className="h-4 w-4 animate-spin" />
-            <span className="text-sm text-gray-500">Fetching external context and generating analysis...</span>
+            <span className="text-sm text-gray-500">{loadingMessage}</span>
           </div>
         </Card>
       )}

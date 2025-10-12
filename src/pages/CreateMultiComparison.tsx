@@ -16,6 +16,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import html2pdf from 'html2pdf.js';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { useLoadingMessages } from '@/hooks/use-loading-messages'; // Import the new hook
 
 // New interfaces for multi-comparison
 interface MultiComparisonVideo {
@@ -337,6 +338,8 @@ const CreateMultiComparison = () => {
 
   const areCustomQuestionInputsDisabled = createMultiComparisonMutation.isPending;
 
+  const loadingMessage = useLoadingMessages('comparison', createMultiComparisonMutation.isPending);
+
   return (
     <div className="container mx-auto p-4 max-w-3xl">
       <Card className="mb-6">
@@ -475,7 +478,7 @@ const CreateMultiComparison = () => {
           <Skeleton className="h-4 w-1/2" />
           <div className="flex items-center space-x-2 mt-4">
             <Loader2 className="h-4 w-4 animate-spin" />
-            <span className="text-sm text-gray-500">Fetching video data, performing AI multi-comparison, and generating insights...</span>
+            <span className="text-sm text-gray-500">{loadingMessage}</span>
           </div>
         </Card>
       )}
