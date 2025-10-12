@@ -12,40 +12,5 @@ interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
 
-// Explicitly augment the Window interface for Paddle Billing (V2)
-interface Window {
-  Paddle: {
-    Initialize: (options: { // Corrected to 'Initialize' (capital 'I')
-      environment: 'sandbox' | 'production';
-      token: string;
-      seller?: {
-        id: string;
-      };
-    }) => Promise<void>;
-    Checkout: {
-      open: (options: {
-        items: Array<{ priceId: string; quantity?: number }>;
-        customer?: {
-          email?: string;
-          id?: string;
-        };
-        customData?: {
-          userId?: string;
-        };
-        settings?: {
-          displayMode?: 'overlay' | 'inline';
-          theme?: 'light' | 'dark';
-          locale?: string;
-          allowQuantity?: boolean;
-          showAddTax?: boolean;
-          showDiscount?: boolean;
-          showPaymentTerms?: boolean;
-          showSubscriptionTerms?: boolean;
-          showTrialTerms?: boolean;
-        };
-        success?: (data: any) => void;
-        close?: () => void;
-      }) => void;
-    };
-  }
-}
+// Removed explicit augmentation of the Window interface for Paddle
+// as direct client-side SDK interaction is no longer needed for checkout.

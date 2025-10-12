@@ -1,4 +1,3 @@
-/// <reference lib="deno.env" />
 declare const Deno: {
   env: {
     get(key: string): string | undefined;
@@ -9,7 +8,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 // @ts-ignore
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 // @ts-ignore
-import CryptoJS from 'https://esm.sh/crypto-js@4.2.0';
+import { createHmac } from 'https://deno.land/std@0.190.0/node/crypto.ts'; // For HMAC-SHA256
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -41,30 +40,26 @@ serve(async (req: Request) => {
       });
     }
 
-    // Paddle Classic webhooks are x-www-form-urlencoded and include a p_signature header
-    const signature = req.headers.get('X-Paddle-Signature');
-    if (!signature) {
-      return new Response(JSON.stringify({ error: 'No Paddle signature found.' }), {
+    // Paddle Billing (V2) webhooks use 'Paddle-Signature' header and JSON body
+    const paddleSignature = req.headers.get('Paddle-Signature');
+    if (!paddleSignature) {
+      return new Response(JSON.stringify({ error: 'No Paddle-Signature header found.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 401,
       });
     }
 
-    const textBody = await req.text(); // Read raw body for signature verification
+    const requestBody = await req.text(); // Read raw body for signature verification
 
-    // Verify the webhook signature
-    // Paddle Classic signature verification involves sorting parameters and hashing
-    const payload = new URLSearchParams(textBody);
-    const sortedParams = Array.from(payload.entries())
-      .filter(([key]) => key !== 'p_signature') // Exclude the signature itself
-      .sort(([keyA], [keyB]) => keyA.localeCompare(keyB))
-      .map(([, value]) => value); // Get only values in sorted order
+    // Verify the webhook signature (HMAC-SHA256 for Paddle V2)
+    const [timestamp, hmacSignature] = paddleSignature.split(';').map(s => s.split('=')[1]);
+    const signedPayload = `${timestamp}:${requestBody}`;
 
-    const signString = sortedParams.join('');
-    const hmac = CryptoJS.HmacSHA256(signString, webhookSecret);
-    const generatedSignature = CryptoJS.enc.Base64.stringify(hmac);
+    const hmac = createHmac('sha256', webhookSecret);
+    hmac.update(signedPayload);
+    const generatedHmac = hmac.digest('hex');
 
-    if (generatedSignature !== signature) {
+    if (generatedHmac !== hmacSignature) {
       console.warn('Webhook signature mismatch. Request potentially tampered with.');
       return new Response(JSON.stringify({ error: 'Invalid webhook signature.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -72,43 +67,49 @@ serve(async (req: Request) => {
       });
     }
 
-    // Parse the payload into a usable object
-    const webhookData: Record<string, string> = {};
-    for (const [key, value] of payload.entries()) {
-      webhookData[key] = value;
+    const webhookData = JSON.parse(requestBody);
+    const eventType = webhookData.event_type;
+    const data = webhookData.data; // The actual event data
+
+    console.log(`Received Paddle V2 webhook: ${eventType}`);
+
+    // Extract relevant data for subscription management
+    const userId = data.custom_data?.userId; // Custom data passed during checkout
+    // Removed 'subscriptionId' as it was declared but never read.
+    const status = data.status; // e.g., 'active', 'canceled', 'past_due'
+    const priceId = data.items?.[0]?.price?.id; // The price ID of the subscribed product
+    const nextBillDate = data.current_billing_period?.ends_at; // ISO 8601 format
+
+    if (!userId) {
+      console.warn('Webhook received without a userId in custom_data. Cannot update subscription in DB.');
+      return new Response(JSON.stringify({ message: 'Webhook processed, but no user ID for DB update.' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
+      });
     }
-
-    const alertName = webhookData.alert_name;
-    const userId = webhookData.passthrough ? JSON.parse(webhookData.passthrough).userId : null;
-    const paddleSubscriptionId = webhookData.subscription_id;
-    const paddlePlanId = webhookData.plan_id; // This is Paddle's plan ID, not our 'free'/'paid_monthly'
-    const paddleStatus = webhookData.status;
-    const nextBillDate = webhookData.next_bill_date; // YYYY-MM-DD format
-
-    console.log(`Received Paddle webhook: ${alertName} for user: ${userId || 'N/A'} (Paddle Sub ID: ${paddleSubscriptionId})`);
 
     let subscriptionStatus: string;
     let subscriptionPlanId: string; // Our internal plan ID
 
     // Map Paddle status to our internal status
-    switch (paddleStatus) {
+    switch (status) {
       case 'active':
       case 'trialing':
         subscriptionStatus = 'active';
         break;
+      case 'canceled':
+        subscriptionStatus = 'cancelled';
+        break;
       case 'past_due':
         subscriptionStatus = 'past_due';
-        break;
-      case 'cancelled':
-        subscriptionStatus = 'cancelled';
         break;
       default:
         subscriptionStatus = 'inactive'; // Or a more specific default
     }
 
-    // Map Paddle plan ID to our internal plan ID (assuming a single paid plan for now)
-    // You might need more complex logic here if you have multiple Paddle plans
-    subscriptionPlanId = (paddlePlanId === Deno.env.get('VITE_PADDLE_PRODUCT_ID')) ? 'paid_monthly' : 'free';
+    // Map Paddle price ID to our internal plan ID (assuming VITE_PADDLE_PRODUCT_ID is your paid plan's price ID)
+    // @ts-ignore
+    subscriptionPlanId = (priceId === Deno.env.get('VITE_PADDLE_PRODUCT_ID')) ? 'paid_monthly' : 'free';
 
     const subscriptionUpdate: {
       status: string;
@@ -122,22 +123,14 @@ serve(async (req: Request) => {
     };
 
     if (nextBillDate) {
-      // Paddle's next_bill_date is YYYY-MM-DD, convert to ISO string for TIMESTAMP WITH TIME ZONE
-      subscriptionUpdate.current_period_end = new Date(nextBillDate).toISOString();
+      subscriptionUpdate.current_period_end = nextBillDate; // Already ISO 8601
     }
 
-    if (!userId) {
-      console.warn('Webhook received without a userId in passthrough. Cannot update subscription in DB.');
-      return new Response(JSON.stringify({ message: 'Webhook processed, but no user ID for DB update.' }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200,
-      });
-    }
-
-    switch (alertName) {
-      case 'subscription_created':
-      case 'subscription_updated':
-      case 'subscription_payment_succeeded':
+    switch (eventType) {
+      case 'subscription.activated':
+      case 'subscription.updated':
+      case 'subscription.past_due':
+      case 'subscription.trialing':
         {
           const { error: upsertError } = await supabaseAdmin
             .from('subscriptions')
@@ -151,11 +144,11 @@ serve(async (req: Request) => {
             console.error('Error upserting subscription:', upsertError);
             throw new Error(`Failed to update subscription: ${upsertError.message}`);
           }
-          console.log(`Subscription for user ${userId} ${alertName === 'subscription_created' ? 'created' : 'updated'} successfully.`);
+          console.log(`Subscription for user ${userId} ${eventType} successfully.`);
         }
         break;
 
-      case 'subscription_cancelled':
+      case 'subscription.canceled':
         {
           const { error: updateError } = await supabaseAdmin
             .from('subscriptions')
@@ -176,7 +169,7 @@ serve(async (req: Request) => {
         break;
 
       default:
-        console.log(`Unhandled Paddle alert: ${alertName}`);
+        console.log(`Unhandled Paddle V2 event: ${eventType}`);
         break;
     }
 
