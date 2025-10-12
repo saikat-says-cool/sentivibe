@@ -85,7 +85,7 @@ serve(async (req: Request) => {
       });
     }
 
-    const maxTokens = Math.ceil(finalDesiredWordCount * 1.5); 
+    const maxTokens = 2000; // Increased max_tokens for chat
 
     // Base instructions for all personas, emphasizing completeness
     const baseInstructions = `

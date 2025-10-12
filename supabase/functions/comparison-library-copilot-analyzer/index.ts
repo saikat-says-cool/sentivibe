@@ -124,17 +124,14 @@ serve(async (req: Request) => {
     for (const currentLongcatApiKey of longcatApiKeys) {
       longcatResponse = await fetch(longcatApiUrl, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${currentLongcatApiKey}`,
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Authorization': `Bearer ${currentLongcatApiKey}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
           model: "LongCat-Flash-Chat",
           messages: [
             { role: "system", content: systemPrompt },
             { role: "user", content: userMessageContent },
           ],
-          max_tokens: 750, // Increased tokens to accommodate recommendations
+          max_tokens: 2000, // Increased max_tokens for copilot
           temperature: 0.5, // Slightly higher temperature for more creative recommendations
           stream: false,
         }),

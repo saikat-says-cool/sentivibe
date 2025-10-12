@@ -503,7 +503,7 @@ serve(async (req: Request) => {
           body: JSON.stringify({
             model: "LongCat-Flash-Chat",
             messages: [{ "role": "system", "content": "You are SentiVibe AI, an expert in multi-video comparative analysis. Your task is to meticulously compare multiple YouTube video analyses and extract key quantitative and qualitative commonalities, unique aspects, and overall trends in audience sentiment, emotional tones, and themes. Present your findings in a structured JSON format as specified, ensuring accuracy and conciseness. Focus on highlighting overarching patterns and significant divergences across the videos." }, { "role": "user", "content": coreMultiComparisonPrompt }],
-            max_tokens: 2000,
+            max_tokens: 8000, // Increased max_tokens
             temperature: 0.7,
             response_format: { type: "json_object" }
           }),
@@ -564,7 +564,7 @@ serve(async (req: Request) => {
           body: JSON.stringify({
             model: "LongCat-Flash-Chat",
             messages: [{ "role": "system", "content": "You are SentiVibe AI, an expert SEO content strategist and writer specializing in multi-video comparative analysis. Your task is to generate a high-quality, detailed, and SEO-optimized blog post in Markdown format comparing multiple YouTube video analyses. The content must be engaging, insightful, and directly leverage the provided multi-comparison data. Ensure the output is a valid, well-formed JSON object, strictly adhering to the provided schema, and ready for immediate publication. Avoid generic phrases or fluff; focus on actionable insights and clear, professional language. The blog post should be compelling and provide genuine value to the reader, encouraging them to explore SentiVibe further." }, { "role": "user", "content": blogPostMultiComparisonPrompt }],
-            max_tokens: 3000,
+            max_tokens: 8000, // Increased max_tokens
             temperature: 0.7,
             response_format: { type: "json_object" }
           }),
@@ -626,7 +626,7 @@ serve(async (req: Request) => {
             body: JSON.stringify({
               model: "LongCat-Flash-Chat",
               messages: [{ "role": "system", "content": "You are SentiVibe AI, an insightful and precise AI assistant specializing in multi-video comparative analysis. Your task is to answer specific user questions about a comparison between multiple YouTube video analyses. Your answers must be accurate, directly derived from the provided context, and strictly adhere to the requested word count. If the information is not present, indicate that. Ensure the answer is comprehensive within the word limit, providing a complete and well-structured response." }, { "role": "user", "content": customComparativeQuestionPrompt }],
-              max_tokens: Math.ceil(qa.wordCount * 1.5),
+              max_tokens: 8000, // Increased max_tokens
               temperature: 0.5,
               stream: false,
             }),
