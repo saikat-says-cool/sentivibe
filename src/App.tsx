@@ -13,7 +13,11 @@ import HowItWorks from './pages/HowItWorks';
 import Upgrade from './pages/Upgrade';
 import AccountCenter from './pages/AccountCenter';
 import Pricing from './pages/Pricing';
-import Checkout from './pages/Checkout'; // Import the new Checkout page
+import Checkout from './pages/Checkout';
+import TermsOfService from './pages/TermsOfService'; // Import new page
+import PrivacyNotice from './pages/PrivacyNotice';   // Import new page
+import RefundPolicy from './pages/RefundPolicy';     // Import new page
+import NotFound from './pages/NotFound'; // Import NotFound page
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from './integrations/supabase/auth';
 import { ThemeProvider } from './components/theme-provider';
@@ -47,7 +51,11 @@ function App() {
                   <Route path="/upgrade" element={<Upgrade />} />
                   <Route path="/account" element={<AccountCenter />} />
                   <Route path="/pricing" element={<Pricing />} />
-                  <Route path="/checkout" element={<Checkout />} /> {/* New checkout route */}
+                  <Route path="/checkout" element={<Checkout />} />
+                  <Route path="/terms-of-service" element={<TermsOfService />} /> {/* New route */}
+                  <Route path="/privacy-notice" element={<PrivacyNotice />} />     {/* New route */}
+                  <Route path="/refund-policy" element={<RefundPolicy />} />       {/* New route */}
+                  <Route path="*" element={<NotFound />} /> {/* Catch-all for 404 */}
                 </Routes>
               </main>
               <Footer />
