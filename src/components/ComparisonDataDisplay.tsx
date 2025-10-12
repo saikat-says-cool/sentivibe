@@ -6,7 +6,7 @@ import { ArrowDown, ArrowUp, Minus } from 'lucide-react';
 interface SentimentDelta {
   video_a_sentiment: string;
   video_b_sentiment: string;
-  delta_description: string | { theme: string; weight: string; explanation: string } | null | undefined; // Explicitly allow null/undefined
+  delta_description: string | { theme: string; weight: string; explanation: string } | null | undefined;
 }
 
 interface EmotionalTone {
@@ -53,27 +53,35 @@ const ComparisonDataDisplay: React.FC<ComparisonDataDisplayProps> = ({ data }) =
     }
   };
 
-  // More robust handling for delta_description
-  const renderDeltaDescription = (deltaDescription: SentimentDelta['delta_description']): React.ReactNode => {
+  // This function MUST always return a string.
+  const renderDeltaDescription = (deltaDescription: SentimentDelta['delta_description']): string => {
     if (deltaDescription === null || deltaDescription === undefined) {
-      return ''; // Return empty string for null/undefined
+      return ''; // Explicitly return empty string for null/undefined
     }
-    // Check if it's an object and has the 'explanation' property
-    if (typeof deltaDescription === 'object' && deltaDescription !== null && 'explanation' in deltaDescription) {
-      return deltaDescription.explanation || JSON.stringify(deltaDescription); // Fallback to JSON string if explanation is empty
+    if (typeof deltaDescription === 'object') {
+      // If it's an object, try to get 'explanation', otherwise stringify the whole object
+      if ('explanation' in deltaDescription && typeof deltaDescription.explanation === 'string') {
+        return deltaDescription.explanation;
+      }
+      // Fallback to stringifying the entire object if 'explanation' is missing or not a string
+      try {
+        return JSON.stringify(deltaDescription);
+      } catch (e) {
+        console.error("Failed to stringify delta_description object:", deltaDescription, e);
+        return 'Invalid description object';
+      }
     }
     // For any other type (string, number, boolean), convert to string
     return String(deltaDescription);
   };
 
-  // More robust handling for delta_description in icon logic
+  // This function can return ReactNode (which includes null or ReactElement)
   const getDeltaIcon = (deltaDescription: SentimentDelta['delta_description']): React.ReactNode => {
     if (deltaDescription === null || deltaDescription === undefined) {
       return null; // No icon for null/undefined
     }
-    const descriptionText = typeof deltaDescription === 'object' && deltaDescription !== null && 'explanation' in deltaDescription
-      ? deltaDescription.explanation || ''
-      : String(deltaDescription); // Ensure it's a string for comparison
+    // Use the same logic as renderDeltaDescription to get a string representation for comparison
+    const descriptionText = renderDeltaDescription(deltaDescription); // Always get a string here
 
     if (descriptionText.toLowerCase().includes('increase') || descriptionText.toLowerCase().includes('positive shift')) {
       return <ArrowUp className="h-4 w-4 text-green-500 inline-block mr-1" />;
