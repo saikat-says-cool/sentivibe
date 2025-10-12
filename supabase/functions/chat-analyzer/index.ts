@@ -58,7 +58,8 @@ serve(async (req: Request) => {
     // User and subscription data are no longer fetched as no limits are enforced based on them in this function.
     // const { data: { user } } = await supabaseClient.auth.getUser(); 
 
-    const { userMessage, chatMessages, analysisResult, externalContext, desiredWordCount, selectedPersona, customQaResults } = await req.json();
+    // Removed externalContext from destructuring
+    const { userMessage, chatMessages, analysisResult, desiredWordCount, selectedPersona, customQaResults } = await req.json();
 
     if (!userMessage || !analysisResult) {
       return new Response(JSON.stringify({ error: 'User message and analysis result are required.' }), {
@@ -94,8 +95,7 @@ serve(async (req: Request) => {
     1.  **Completeness:** Always provide a complete, coherent, and well-formed response. **Never cut off sentences or thoughts.** If you need to shorten a response to meet a word count, do so by summarizing or being more concise, not by abruptly ending a sentence.
     2.  **Information Hierarchy:**
         *   **Primary:** Prioritize information directly from the 'Video Analysis Context' (including sentiment, themes, summary, and raw comments) for video-specific questions.
-        *   **Secondary:** Augment with the 'Recent External Information' for up-to-date or broader context, relating it back to the video's topic when relevant.
-        *   **Tertiary:** For general, time-independent questions not covered by the above, leverage your own pre-existing knowledge.
+        *   **Secondary:** For general, time-independent questions not covered by the above, leverage your own pre-existing knowledge.
     3.  **Word Count:** Adhere strictly to the user's requested response length (approximately ${finalDesiredWordCount} words). This is a hard constraint. If a comprehensive answer exceeds this, provide the most critical information concisely.
     4.  **Formatting:**
         *   **Hyperlinks:** Whenever you mention a URL or a resource that can be linked, format it as a **Markdown hyperlink**: \`[Link Text](URL)\`. This is mandatory.
@@ -149,9 +149,8 @@ serve(async (req: Request) => {
     Top Comments (by popularity):
     ${analysisResult.comments.slice(0, 10).map((comment: string, index: number) => `${index + 1}. ${comment}`).join('\n')}
     --- End Video Analysis Context ---
-    ${externalContext ? `\n\n--- Recent External Information ---\n${externalContext}\n--- End External Information ---` : ''}
     ${customQaContext}
-    `;
+    `; // Removed externalContext
 
     // Convert chatMessages to the format expected by Longcat AI
     const conversationHistory = chatMessages.map((msg: any) => ({
@@ -187,7 +186,7 @@ serve(async (req: Request) => {
       if (longcatResponse.ok) {
         break;
       } else if (longcatResponse.status === 429) {
-        console.warn(`Longcat AI API key hit rate limit for chat. Trying next key.`);
+        console.warn(`Longcat AI API key hit quota limit for chat. Trying next key.`);
         continue;
       }
       break;

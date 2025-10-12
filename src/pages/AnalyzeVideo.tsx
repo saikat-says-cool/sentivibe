@@ -102,7 +102,6 @@ const AnalyzeVideo = () => {
   const { user, subscriptionStatus, subscriptionPlanId } = useAuth();
 
   const [videoLink, setVideoLink] = useState("");
-  // Default word count for new questions, now unlimited by tier
   const [customQuestions, setCustomQuestions] = useState<CustomQuestion[]>([{ question: "", wordCount: 200 }]); 
   const [analysisResult, setAnalysisResult] = useState<AnalysisResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -112,15 +111,15 @@ const AnalyzeVideo = () => {
   const queryClient = useQueryClient();
 
   const isPaidTier = subscriptionStatus === 'active' && subscriptionPlanId !== 'free';
-  const isAuthenticatedFreeTier = user && !isPaidTier; // Authenticated but not paid
-  const isUnauthenticated = !user; // Not logged in
+  const isAuthenticatedFreeTier = user && !isPaidTier;
+  const isUnauthenticated = !user;
 
   let currentLimits;
   if (isPaidTier) {
     currentLimits = PAID_TIER_LIMITS;
   } else if (isAuthenticatedFreeTier) {
     currentLimits = AUTHENTICATED_FREE_TIER_LIMITS;
-  } else { // Unauthenticated
+  } else {
     currentLimits = UNAUTHENTICATED_LIMITS;
   }
 
@@ -128,7 +127,7 @@ const AnalyzeVideo = () => {
   const { data: anonUsage, refetch: refetchAnonUsage } = useQuery({
     queryKey: ['anonUsage'],
     queryFn: fetchAnonUsage,
-    enabled: isUnauthenticated, // Only fetch if user is not logged in
+    enabled: isUnauthenticated,
     refetchOnWindowFocus: false,
   });
 
@@ -143,7 +142,6 @@ const AnalyzeVideo = () => {
 
       if (invokeError) {
         console.error("Supabase Function Invoke Error:", invokeError);
-        // Check if the error is a FunctionsHttpError with a 403 status
         if (invokeError.name === 'FunctionsHttpError' && invokeError.context?.status === 403) {
           try {
             const errorBody = await invokeError.context.json();
@@ -164,11 +162,9 @@ const AnalyzeVideo = () => {
       if (data.blogPostSlug) {
         queryClient.invalidateQueries({ queryKey: ['blogPost', data.blogPostSlug] });
       }
-      // Refetch anon usage if unauthenticated, otherwise update authenticated count
       if (isUnauthenticated) {
         refetchAnonUsage();
       } else {
-        // For authenticated users, update local state and refetch from DB to be accurate
         queryClient.invalidateQueries({ queryKey: ['dailyAnalysesCount', user?.id] });
       }
     },
@@ -196,7 +192,7 @@ const AnalyzeVideo = () => {
       }
       return count || 0;
     },
-    enabled: !!user && !isUnauthenticated, // Only fetch if user is logged in
+    enabled: !!user && !isUnauthenticated,
     refetchOnWindowFocus: false,
   });
 
@@ -232,13 +228,11 @@ const AnalyzeVideo = () => {
       setAnalysisResult(loadedAnalysis);
       setVideoLink(initialBlogPost.original_video_link || "");
 
-      // Initialize custom questions from loaded blog post, now unlimited by tier
       const initialLoadedQuestions = initialBlogPost.custom_qa_results?.map(qa => ({
         question: qa.question,
-        wordCount: qa.wordCount // No max limit enforced here
-      })) || [{ question: "", wordCount: 200 }]; // Default word count for new questions
+        wordCount: qa.wordCount
+      })) || [{ question: "", wordCount: 200 }];
       setCustomQuestions(initialLoadedQuestions);
-
 
       if (openChatImmediately) {
         setIsChatDialogOpen(true);
@@ -247,21 +241,9 @@ const AnalyzeVideo = () => {
         analyzeVideoMutation.mutate({ videoLink: initialBlogPost.original_video_link, customQuestions: [], forceReanalyze: true });
       }
     } else {
-      // Reset custom questions to default for new analysis, now unlimited by tier
-      setCustomQuestions([{ question: "", wordCount: 200 }]); // Default word count for new questions
+      setCustomQuestions([{ question: "", wordCount: 200 }]);
     }
-  }, [initialBlogPost, openChatImmediately, forceReanalyzeFromNav, analyzeVideoMutation]); // Removed currentLimits from dependencies
-
-  // Add this console log to inspect the full analysisResult
-  useEffect(() => {
-    if (analysisResult) {
-      console.log("Full analysisResult:", analysisResult);
-      // Also log the specific aiAnalysis part
-      console.log("analysisResult.aiAnalysis:", analysisResult.aiAnalysis);
-      // And customQaResults
-      console.log("analysisResult.customQaResults:", analysisResult.customQaResults);
-    }
-  }, [analysisResult]);
+  }, [initialBlogPost, openChatImmediately, forceReanalyzeFromNav, analyzeVideoMutation]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -278,8 +260,7 @@ const AnalyzeVideo = () => {
   };
 
   const handleAddQuestion = () => {
-    // Custom questions are now unlimited, no tier check needed here
-    setCustomQuestions([...customQuestions, { question: "", wordCount: 200 }]); // Default word count for new questions
+    setCustomQuestions([...customQuestions, { question: "", wordCount: 200 }]);
   };
 
   const handleRemoveQuestion = (index: number) => {
@@ -307,14 +288,13 @@ const AnalyzeVideo = () => {
         jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' as 'portrait' }
       };
 
-      // Create a temporary div to render the content with watermark if needed
       const tempDiv = document.createElement('div');
-      tempDiv.style.position = 'relative'; // Needed for absolute positioning of watermark
-      tempDiv.style.width = element.offsetWidth + 'px'; // Match original width
-      tempDiv.style.height = element.offsetHeight + 'px'; // Match original height
-      tempDiv.innerHTML = element.innerHTML; // Copy content
+      tempDiv.style.position = 'relative';
+      tempDiv.style.width = element.offsetWidth + 'px';
+      tempDiv.style.height = element.offsetHeight + 'px';
+      tempDiv.innerHTML = element.innerHTML;
 
-      if (!isPaidTier) { // Apply watermark for both unauthenticated and authenticated free tiers
+      if (!isPaidTier) {
         const watermark = document.createElement('div');
         watermark.style.position = 'absolute';
         watermark.style.top = '50%';
@@ -322,18 +302,16 @@ const AnalyzeVideo = () => {
         watermark.style.transform = 'translate(-50%, -50%) rotate(-45deg)';
         watermark.style.fontSize = '48px';
         watermark.style.fontWeight = 'bold';
-        watermark.style.color = 'rgba(0, 0, 0, 0.1)'; // Light gray, semi-transparent
+        watermark.style.color = 'rgba(0, 0, 0, 0.1)';
         watermark.style.zIndex = '1000';
-        watermark.style.pointerEvents = 'none'; // Ensure it doesn't interfere with content
+        watermark.style.pointerEvents = 'none';
         watermark.textContent = 'SentiVibe - Free Tier';
         tempDiv.appendChild(watermark);
       }
 
-      // Append to body temporarily for html2pdf to render it
       document.body.appendChild(tempDiv);
 
       html2pdf().from(tempDiv).set(opt).save().then(() => {
-        // Remove the temporary div after PDF generation
         document.body.removeChild(tempDiv);
       });
     }
@@ -341,18 +319,8 @@ const AnalyzeVideo = () => {
 
   const isAnalysisLimitReached = analysesToday >= currentLimits.dailyAnalyses;
 
-  // --- DEBUG LOGS ---
-  useEffect(() => {
-    console.log("AnalyzeVideo Debug:");
-    console.log("  analyzeVideoMutation.isPending:", analyzeVideoMutation.isPending);
-    console.log("  analysesToday:", analysesToday);
-    console.log("  currentLimits.dailyAnalyses:", currentLimits.dailyAnalyses);
-    console.log("  isAnalysisLimitReached:", isAnalysisLimitReached);
-    console.log("  isUnauthenticated:", isUnauthenticated);
-    console.log("  isAuthenticatedFreeTier:", isAuthenticatedFreeTier);
-    console.log("  isPaidTier:", isPaidTier);
-  }, [analyzeVideoMutation.isPending, analysesToday, currentLimits.dailyAnalyses, isAnalysisLimitReached, isUnauthenticated, isAuthenticatedFreeTier, isPaidTier]);
-  // --- END DEBUG LOGS ---
+  // Determine if custom question inputs should be disabled
+  const areCustomQuestionInputsDisabled = analyzeVideoMutation.isPending || isAnalysisLimitReached;
 
   return (
     <div className="container mx-auto p-4 max-w-3xl">
@@ -402,7 +370,7 @@ const AnalyzeVideo = () => {
                     value={qa.question}
                     onChange={(e) => handleQuestionChange(index, 'question', e.target.value)}
                     className="mt-1 min-h-[60px]"
-                    disabled={analyzeVideoMutation.isPending || isAnalysisLimitReached}
+                    disabled={areCustomQuestionInputsDisabled}
                   />
                 </div>
                 <div className="w-24">
@@ -411,21 +379,20 @@ const AnalyzeVideo = () => {
                     id={`wordCount-${index}`}
                     type="number"
                     min="50"
-                    // Max attribute removed as custom question word count is now unlimited
                     step="50"
                     value={qa.wordCount}
                     onChange={(e) => handleQuestionChange(index, 'wordCount', e.target.value)}
                     className="mt-1"
-                    disabled={analyzeVideoMutation.isPending || isAnalysisLimitReached}
+                    disabled={areCustomQuestionInputsDisabled}
                   />
                 </div>
-                {customQuestions.length > 0 && ( // Always allow removing if there's at least one question
+                {customQuestions.length > 0 && (
                   <Button
                     type="button"
                     variant="ghost"
                     size="icon"
                     onClick={() => handleRemoveQuestion(index)}
-                    disabled={analyzeVideoMutation.isPending || isAnalysisLimitReached}
+                    disabled={areCustomQuestionInputsDisabled}
                     className="self-end sm:self-auto"
                   >
                     <XCircle className="h-5 w-5 text-red-500" />
@@ -437,12 +404,11 @@ const AnalyzeVideo = () => {
               type="button"
               variant="outline"
               onClick={handleAddQuestion}
-              disabled={analyzeVideoMutation.isPending || isAnalysisLimitReached} // Only disable if analysis pending or daily limit reached
+              disabled={areCustomQuestionInputsDisabled}
               className="w-full flex items-center gap-2"
             >
               <PlusCircle className="h-4 w-4" /> Add Another Question
             </Button>
-            {/* Removed tier-specific message for custom question limits as they are now unlimited */}
 
             <Button type="submit" className="w-full" disabled={analyzeVideoMutation.isPending || isAnalysisLimitReached}>
               {analyzeVideoMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

@@ -77,7 +77,6 @@ const CreateMultiComparison = () => {
   const { user, subscriptionStatus, subscriptionPlanId } = useAuth();
 
   const [videoLinks, setVideoLinks] = useState<string[]>(['', '']);
-  // Default word count for new questions, now unlimited by tier
   const [customComparativeQuestions, setCustomComparativeQuestions] = useState<CustomComparativeQuestion[]>([{ question: "", wordCount: 200 }]);
   const [multiComparisonResult, setMultiComparisonResult] = useState<MultiComparisonResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -86,15 +85,15 @@ const CreateMultiComparison = () => {
   const queryClient = useQueryClient();
 
   const isPaidTier = subscriptionStatus === 'active' && subscriptionPlanId !== 'free';
-  const isAuthenticatedFreeTier = user && !isPaidTier; // Authenticated but not paid
-  const isUnauthenticated = !user; // Not logged in
+  const isAuthenticatedFreeTier = user && !isPaidTier;
+  const isUnauthenticated = !user;
 
   let currentLimits;
   if (isPaidTier) {
     currentLimits = MULTICOMP_PAID_TIER_LIMITS;
   } else if (isAuthenticatedFreeTier) {
     currentLimits = MULTICOMP_AUTHENTICATED_FREE_TIER_LIMITS;
-  } else { // Unauthenticated
+  } else {
     currentLimits = MULTICOMP_UNAUTHENTICATED_LIMITS;
   }
 
@@ -102,7 +101,7 @@ const CreateMultiComparison = () => {
   const { data: anonUsage, refetch: refetchAnonUsage } = useQuery({
     queryKey: ['anonUsageMultiComp'],
     queryFn: fetchAnonUsage,
-    enabled: isUnauthenticated, // Only fetch if user is not logged in
+    enabled: isUnauthenticated,
     refetchOnWindowFocus: false,
   });
 
@@ -117,7 +116,6 @@ const CreateMultiComparison = () => {
 
       if (invokeError) {
         console.error("Supabase Function Invoke Error (multi-video-comparator):", invokeError);
-        // Check if the error is a FunctionsHttpError with a 403 status
         if (invokeError.name === 'FunctionsHttpError' && invokeError.context?.status === 403) {
           try {
             const errorBody = await invokeError.context.json();
@@ -137,7 +135,6 @@ const CreateMultiComparison = () => {
       if (data.slug) {
         queryClient.invalidateQueries({ queryKey: ['multiComparison', data.slug] });
       }
-      // Refetch anon usage if unauthenticated, otherwise update authenticated count
       if (isUnauthenticated) {
         refetchAnonUsage();
       } else {
@@ -168,7 +165,7 @@ const CreateMultiComparison = () => {
       }
       return count || 0;
     },
-    enabled: !!user && !isUnauthenticated, // Only fetch if user is logged in
+    enabled: !!user && !isUnauthenticated,
     refetchOnWindowFocus: false,
   });
 
@@ -184,13 +181,12 @@ const CreateMultiComparison = () => {
     if (initialMultiComparison) {
       setMultiComparisonResult(initialMultiComparison);
       setVideoLinks(initialMultiComparison.videos.map(video => video.original_video_link));
-      // Initialize custom questions from loaded multi-comparison, now unlimited by tier
       const initialLoadedQuestions = initialMultiComparison.custom_comparative_qa_results.length > 0 
         ? initialMultiComparison.custom_comparative_qa_results.map(qa => ({
             question: qa.question,
-            wordCount: qa.wordCount // No max limit enforced here
+            wordCount: qa.wordCount
           }))
-        : [{ question: "", wordCount: 200 }]; // Default word count for new questions
+        : [{ question: "", wordCount: 200 }];
       setCustomComparativeQuestions(initialLoadedQuestions);
       
       if (forceRecompareFromNav) {
@@ -199,10 +195,9 @@ const CreateMultiComparison = () => {
         createMultiComparisonMutation.mutate({ videoLinks: validVideoLinks, customComparativeQuestions: validQuestions, forceRecompare: true });
       }
     } else {
-      // Reset custom questions to default for new comparison, now unlimited by tier
-      setCustomComparativeQuestions([{ question: "", wordCount: 200 }]); // Default word count for new questions
+      setCustomComparativeQuestions([{ question: "", wordCount: 200 }]);
     }
-  }, [initialMultiComparison, forceRecompareFromNav, createMultiComparisonMutation]); // Removed currentLimits from dependencies
+  }, [initialMultiComparison, forceRecompareFromNav, createMultiComparisonMutation]);
 
   const handleAddVideoLink = () => {
     setVideoLinks([...videoLinks, '']);
@@ -219,8 +214,7 @@ const CreateMultiComparison = () => {
   };
 
   const handleAddQuestion = () => {
-    // Custom questions are now unlimited, no tier check needed here
-    setCustomComparativeQuestions([...customComparativeQuestions, { question: "", wordCount: 200 }]); // Default word count for new questions
+    setCustomComparativeQuestions([...customComparativeQuestions, { question: "", wordCount: 200 }]);
   };
 
   const handleRemoveQuestion = (index: number) => {
@@ -258,18 +252,8 @@ const CreateMultiComparison = () => {
 
   const isComparisonLimitReached = comparisonsToday >= currentLimits.dailyComparisons;
 
-  // --- DEBUG LOGS ---
-  useEffect(() => {
-    console.log("CreateMultiComparison Debug:");
-    console.log("  createMultiComparisonMutation.isPending:", createMultiComparisonMutation.isPending);
-    console.log("  comparisonsToday:", comparisonsToday);
-    console.log("  currentLimits.dailyComparisons:", currentLimits.dailyComparisons);
-    console.log("  isComparisonLimitReached:", isComparisonLimitReached);
-    console.log("  isUnauthenticated:", isUnauthenticated);
-    console.log("  isAuthenticatedFreeTier:", isAuthenticatedFreeTier);
-    console.log("  isPaidTier:", isPaidTier);
-  }, [createMultiComparisonMutation.isPending, comparisonsToday, currentLimits.dailyComparisons, isComparisonLimitReached, isUnauthenticated, isAuthenticatedFreeTier, isPaidTier]);
-  // --- END DEBUG LOGS ---
+  // Determine if custom question inputs should be disabled
+  const areCustomQuestionInputsDisabled = createMultiComparisonMutation.isPending || isComparisonLimitReached;
 
   return (
     <div className="container mx-auto p-4 max-w-3xl">
@@ -297,7 +281,7 @@ const CreateMultiComparison = () => {
                     disabled={createMultiComparisonMutation.isPending || isComparisonLimitReached}
                   />
                 </div>
-                {videoLinks.length > 2 && ( // Allow removing only if more than 2 links
+                {videoLinks.length > 2 && (
                   <Button
                     type="button"
                     variant="ghost"
@@ -345,7 +329,7 @@ const CreateMultiComparison = () => {
                     value={qa.question}
                     onChange={(e) => handleQuestionChange(index, 'question', e.target.value)}
                     className="mt-1"
-                    disabled={createMultiComparisonMutation.isPending || isComparisonLimitReached}
+                    disabled={areCustomQuestionInputsDisabled}
                   />
                 </div>
                 <div className="w-24">
@@ -354,21 +338,20 @@ const CreateMultiComparison = () => {
                     id={`comp-wordCount-${index}`}
                     type="number"
                     min="50"
-                    // Max attribute removed as custom question word count is now unlimited
                     step="50"
                     value={qa.wordCount}
                     onChange={(e) => handleQuestionChange(index, 'wordCount', e.target.value)}
                     className="mt-1"
-                    disabled={createMultiComparisonMutation.isPending || isComparisonLimitReached}
+                    disabled={areCustomQuestionInputsDisabled}
                   />
                 </div>
-                {customComparativeQuestions.length > 0 && ( // Always allow removing if there's at least one question
+                {customComparativeQuestions.length > 0 && (
                   <Button
                     type="button"
                     variant="ghost"
                     size="icon"
                     onClick={() => handleRemoveQuestion(index)}
-                    disabled={createMultiComparisonMutation.isPending || isComparisonLimitReached}
+                    disabled={areCustomQuestionInputsDisabled}
                     className="self-end sm:self-auto"
                   >
                     <XCircle className="h-5 w-5 text-red-500" />
@@ -380,12 +363,11 @@ const CreateMultiComparison = () => {
               type="button"
               variant="outline"
               onClick={handleAddQuestion}
-              disabled={createMultiComparisonMutation.isPending || isComparisonLimitReached} // Only disable if comparison pending or daily limit reached
+              disabled={areCustomQuestionInputsDisabled}
               className="w-full flex items-center gap-2"
             >
               <PlusCircle className="h-4 w-4" /> Add Another Comparative Question
             </Button>
-            {/* Removed tier-specific message for custom comparative question limits as they are now unlimited */}
 
             <Button type="submit" className="w-full" disabled={createMultiComparisonMutation.isPending || isComparisonLimitReached}>
               {createMultiComparisonMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -498,7 +480,7 @@ const CreateMultiComparison = () => {
                         {video.raw_comments_for_chat && video.raw_comments_for_chat.length > 0 ? (
                           <ul className="list-disc list-inside space-y-1 text-sm text-gray-600 dark:text-gray-400">
                             {video.raw_comments_for_chat.slice(0, 10).map((comment, commentIndex) => (
-                              <li key={commentIndex}>{comment}</li>
+                              <li key={commentIndex}>{String(comment)}</li>
                             ))}
                           </ul>
                         ) : (

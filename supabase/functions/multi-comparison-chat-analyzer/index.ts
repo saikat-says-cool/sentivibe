@@ -56,7 +56,8 @@ serve(async (req: Request) => {
     // User and subscription data are no longer fetched as no limits are enforced based on them in this function.
     // const { data: { user } } = await supabaseClient.auth.getUser();
 
-    const { userMessage, chatMessages, multiComparisonResult, externalContext, desiredWordCount, selectedPersona } = await req.json();
+    // Removed externalContext from destructuring
+    const { userMessage, chatMessages, multiComparisonResult, desiredWordCount, selectedPersona } = await req.json();
 
     if (!userMessage || !multiComparisonResult) {
       return new Response(JSON.stringify({ error: 'User message and multi-comparison result are required.' }), {
@@ -92,8 +93,7 @@ serve(async (req: Request) => {
     1.  **Completeness:** Always provide a complete, coherent, and well-formed response. **Never cut off sentences or thoughts.** If you need to shorten a response to meet a word count, do so by summarizing or being more concise, not by abruptly ending a sentence.
     2.  **Information Hierarchy:**
         *   **Primary:** Prioritize information directly from the 'Multi-Comparison Analysis Context' (including structured comparison data, individual video analyses, and raw comments) for video-specific questions.
-        *   **Secondary:** Augment with the 'Recent External Information' for up-to-date or broader context, relating it back to the multi-comparison when relevant.
-        *   **Tertiary:** For general, time-independent questions not covered by the above, leverage your own pre-existing knowledge.
+        *   **Secondary:** For general, time-independent questions not covered by the above, leverage your own pre-existing knowledge.
     3.  **Word Count:** Adhere strictly to the user's requested response length (approximately ${finalDesiredWordCount} words). This is a hard constraint. If a comprehensive answer exceeds this, provide the most critical information concisely.
     4.  **Formatting:**
         *   **Hyperlinks:** Whenever you mention a URL or a resource that can be linked, format it as a **Markdown hyperlink**: \`[Link Text](URL)\`. This is mandatory.
@@ -156,9 +156,8 @@ serve(async (req: Request) => {
 
     ${individualVideoContexts}
     --- End Multi-Comparison Analysis Context ---
-    ${externalContext ? `\n\n--- Recent External Information ---\n${externalContext}\n--- End External Information ---` : ''}
     ${customComparativeQaContext}
-    `;
+    `; // Removed externalContext
 
     // Convert chatMessages to the format expected by Longcat AI
     const conversationHistory = chatMessages.map((msg: any) => ({

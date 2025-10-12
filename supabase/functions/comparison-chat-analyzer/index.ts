@@ -32,7 +32,9 @@ function getApiKeys(baseName: string): string[] {
   return keys;
 }
 
-serve(async (req) => {
+// Tier limits are no longer enforced in this function, so these constants are unused.
+
+serve(async (req: Request) => { // Explicitly typed 'req' as Request
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -51,7 +53,7 @@ serve(async (req) => {
       }
     );
 
-    const { userMessage, chatMessages, comparisonResult, externalContext, desiredWordCount, selectedPersona } = await req.json();
+    const { userMessage, chatMessages, comparisonResult, desiredWordCount, selectedPersona } = await req.json(); // Removed externalContext
 
     if (!userMessage || !comparisonResult) {
       return new Response(JSON.stringify({ error: 'User message and comparison result are required.' }), {
@@ -79,8 +81,7 @@ serve(async (req) => {
     1.  **Completeness:** Always provide a complete, coherent, and well-formed response. **Never cut off sentences or thoughts.** If you need to shorten a response to meet a word count, do so by summarizing or being more concise, not by abruptly ending a sentence.
     2.  **Information Hierarchy:**
         *   **Primary:** Prioritize information directly from the 'Comparison Analysis Context' (including structured comparison data, individual video analyses, and raw comments) for video-specific questions.
-        *   **Secondary:** Augment with the 'Recent External Information' for up-to-date or broader context, relating it back to the comparison when relevant.
-        *   **Tertiary:** For general, time-independent questions not covered by the above, leverage your own pre-existing knowledge.
+        *   **Secondary:** For general, time-independent questions not covered by the above, leverage your own pre-existing knowledge.
     3.  **Word Count:** Adhere strictly to the user's requested response length (approximately ${desiredWordCount} words). This is a hard constraint. If a comprehensive answer exceeds this, provide the most critical information concisely.
     4.  **Formatting:**
         *   **Hyperlinks:** Whenever you mention a URL or a resource that can be linked, format it as a **Markdown hyperlink**: \`[Link Text](URL)\`. This is mandatory.
@@ -141,9 +142,8 @@ serve(async (req) => {
     Structured Comparison Data:
     ${JSON.stringify(comparisonResult.comparisonData, null, 2)}
     --- End Comparison Analysis Context ---
-    ${externalContext ? `\n\n--- Recent External Information ---\n${externalContext}\n--- End External Information ---` : ''}
     ${customComparativeQaContext}
-    `;
+    `; // Removed externalContext
 
     // Convert chatMessages to the format expected by Longcat AI
     const conversationHistory = chatMessages.map((msg: any) => ({
@@ -202,9 +202,9 @@ serve(async (req) => {
       status: 200,
     });
 
-  } catch (error) {
-    console.error('Edge Function error (comparison-chat-analyzer):', error.message);
-    return new Response(JSON.stringify({ error: error.message }), {
+  } catch (error: unknown) { // Explicitly typed 'error' as unknown
+    console.error('Edge Function error (comparison-chat-analyzer):', (error as Error).message); // Cast to Error
+    return new Response(JSON.stringify({ error: (error as Error).message }), { // Cast to Error
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 500,
     });

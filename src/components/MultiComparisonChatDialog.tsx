@@ -18,9 +18,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input"; // Input is now explicitly needed
+import { Input } from "@/components/ui/input";
 import { useAuth } from '@/integrations/supabase/auth';
-// import { Link } from 'react-router-dom'; // Removed as it's no longer used
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface MultiComparisonVideo {
@@ -60,9 +59,6 @@ interface MultiComparisonChatDialogProps {
   initialMultiComparisonResult: MultiComparisonResultForChat | null;
 }
 
-// Tier limits for chat are now removed from the frontend and backend Edge Functions.
-// These constants are no longer needed.
-
 const MultiComparisonChatDialog: React.FC<MultiComparisonChatDialogProps> = ({
   isOpen,
   onOpenChange,
@@ -71,13 +67,10 @@ const MultiComparisonChatDialog: React.FC<MultiComparisonChatDialogProps> = ({
   const { user, subscriptionStatus, subscriptionPlanId } = useAuth();
 
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
-  // Default desired word count, no longer tied to tier limits
   const [desiredWordCount, setDesiredWordCount] = useState<number>(300); 
   const [selectedPersona, setSelectedPersona] = useState<string>("friendly");
-  const [currentExternalContext, setCurrentExternalContext] = useState<string | null>(null);
+  // Removed currentExternalContext and setCurrentExternalContext as they are no longer used
   const [error, setError] = useState<string | null>(null);
-
-  // const isPaidTier = subscriptionStatus === 'active' && subscriptionPlanId !== 'free'; // Removed as it's no longer used
 
   useEffect(() => {
     if (isOpen) {
@@ -90,8 +83,7 @@ const MultiComparisonChatDialog: React.FC<MultiComparisonChatDialogProps> = ({
             text: `Multi-video comparison for ${videoTitles} loaded. What would you like to know about it?`,
           },
         ]);
-        const searchQuery = `${initialMultiComparisonResult.title} multi-video comparison`;
-        fetchExternalContextMutation.mutate(searchQuery);
+        // Removed fetchExternalContextMutation.mutate(searchQuery);
       } else {
         setChatMessages([
           {
@@ -101,35 +93,16 @@ const MultiComparisonChatDialog: React.FC<MultiComparisonChatDialogProps> = ({
           },
         ]);
       }
-      // Reset desired word count to a default, no longer tied to tier's max
       setDesiredWordCount(300); 
-      setError(null); // Clear error when dialog opens
+      setError(null);
     } else {
       setChatMessages([]);
-      setCurrentExternalContext(null);
-      setError(null); // Clear error when dialog closes
+      setError(null);
     }
   }, [isOpen, initialMultiComparisonResult, user, subscriptionStatus, subscriptionPlanId]);
 
-  const fetchExternalContextMutation = useMutation({
-    mutationFn: async (query: string) => {
-      const { data, error: invokeError } = await supabase.functions.invoke('fetch-external-context', {
-        body: { query },
-      });
-      if (invokeError) {
-        console.error("Supabase Fetch External Context Function Invoke Error:", invokeError);
-        throw new Error(invokeError.message || "Failed to fetch external context.");
-      }
-      return data.externalSearchResults;
-    },
-    onSuccess: (data) => {
-      setCurrentExternalContext(data);
-    },
-    onError: (err: Error) => {
-      console.error("Error fetching external context for multi-comparison chat:", err);
-      setError(`Failed to fetch external context: ${(err as Error).message}`);
-    },
-  });
+  // Removed fetchExternalContextMutation as it's no longer used
+  // const fetchExternalContextMutation = useMutation({ ... });
 
   const chatMutation = useMutation({
     mutationFn: async (userMessageText: string) => {
@@ -158,8 +131,8 @@ const MultiComparisonChatDialog: React.FC<MultiComparisonChatDialogProps> = ({
           userMessage: userMessageText,
           chatMessages: [...chatMessages, newUserMessage],
           multiComparisonResult: initialMultiComparisonResult,
-          externalContext: currentExternalContext,
-          desiredWordCount: desiredWordCount, // Still pass desiredWordCount to AI
+          // Removed externalContext: currentExternalContext,
+          desiredWordCount: desiredWordCount,
           selectedPersona: selectedPersona,
         },
       });
@@ -195,13 +168,13 @@ const MultiComparisonChatDialog: React.FC<MultiComparisonChatDialogProps> = ({
 
   const handleSendMessage = (messageText: string) => {
     if (messageText.trim() && initialMultiComparisonResult) {
-      setError(null); // Clear previous errors
+      setError(null);
       chatMutation.mutate(messageText);
     }
   };
 
-  // Simplified disabled logic: only disable if no comparison result or mutation is pending
-  const isChatDisabled = !initialMultiComparisonResult || chatMutation.isPending || fetchExternalContextMutation.isPending;
+  // Simplified disabled logic: removed fetchExternalContextMutation.isPending
+  const isChatDisabled = !initialMultiComparisonResult || chatMutation.isPending;
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -234,19 +207,17 @@ const MultiComparisonChatDialog: React.FC<MultiComparisonChatDialogProps> = ({
               </SelectContent>
             </Select>
           </div>
-          {/* Re-enabling "Response Word Count" input */}
           <div className="flex items-center space-x-2">
             <Label htmlFor="desired-word-count" className="text-sm">Response Word Count:</Label>
             <Input
               id="desired-word-count"
               type="number"
               min="50"
-              // Max attribute removed as custom question word count is now unlimited
               step="50"
               value={desiredWordCount}
               onChange={(e) => setDesiredWordCount(Number(e.target.value))}
               className="w-[100px]"
-              disabled={isChatDisabled} // Only disable if chat is generally disabled
+              disabled={isChatDisabled}
             />
           </div>
         </div>
@@ -261,8 +232,8 @@ const MultiComparisonChatDialog: React.FC<MultiComparisonChatDialogProps> = ({
         <div className="flex-1 overflow-hidden">
           <ChatInterface
             messages={chatMessages}
-            onSendMessage={handleSendMessage}
-            isLoading={chatMutation.isPending || fetchExternalContextMutation.isPending}
+            onSendMessage={handleSendMessage} {/* Corrected comment placement */}
+            isLoading={chatMutation.isPending}
             disabled={isChatDisabled}
           />
         </div>

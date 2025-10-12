@@ -414,20 +414,20 @@ serve(async (req: Request) => {
     // --- Removed Custom Comparative Question Limits Enforcement ---
     // All custom comparative questions are now unlimited in count and word count.
 
-    // --- Step 2: Fetch External Context (only if regenerating multi-comparison or new questions) ---
-    let externalContext = '';
-    if (shouldRegenerateMultiComparison || (customComparativeQuestions && customComparativeQuestions.length > 0)) {
-      const externalContextQuery = `${videoTitles.join(' ')} multi-video comparison`;
-      const fetchExternalContextResponse = await supabaseClient.functions.invoke('fetch-external-context', {
-        body: { query: externalContextQuery },
-      });
+    // --- Step 2: Fetch External Context (only if regenerating multi-comparison or new questions) --- (REMOVED)
+    let externalContext = ''; // externalContext will now always be empty
+    // if (shouldRegenerateMultiComparison || (customComparativeQuestions && customComparativeQuestions.length > 0)) {
+    //   const externalContextQuery = `${videoTitles.join(' ')} multi-video comparison`;
+    //   const fetchExternalContextResponse = await supabaseClient.functions.invoke('fetch-external-context', {
+    //     body: { query: externalContextQuery },
+    //   });
 
-      if (fetchExternalContextResponse.error) {
-        console.warn("Error fetching external context for multi-comparison:", fetchExternalContextResponse.error);
-      } else {
-        externalContext = fetchExternalContextResponse.data.externalSearchResults;
-      }
-    }
+    //   if (fetchExternalContextResponse.error) {
+    //     console.warn("Error fetching external context for multi-comparison:", fetchExternalContextResponse.error);
+    //   } else {
+    //     externalContext = fetchExternalContextResponse.data.externalSearchResults;
+    //   }
+    // }
 
     // --- Step 3: Longcat AI Calls for Multi-Comparative Insights (if regenerating) ---
     const formatAnalysisForAI = (blogPost: any, index: number) => `
@@ -446,7 +446,7 @@ serve(async (req: Request) => {
     `;
 
     const combinedAnalysisContext = analyzedBlogPosts.map((bp, i) => formatAnalysisForAI(bp, i)).join('\n') +
-      (externalContext ? `\n\n--- Recent External Information ---\n${externalContext}\n--- End External Information ---` : '');
+      (externalContext ? `\n\n--- Recent External Information ---\n${externalContext}\n--- End External Information ---` : ''); // externalContext will be empty
 
     if (shouldRegenerateMultiComparison) {
       // --- AI Call for Core Multi-Comparison Data ---

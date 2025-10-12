@@ -46,7 +46,7 @@ function stripMarkdownFences(content: string): string {
   return content;
 }
 
-serve(async (req) => {
+serve(async (req: Request) => { // Explicitly typed 'req' as Request
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -169,8 +169,11 @@ serve(async (req) => {
       });
     }
 
-    // --- Step 2: Fetch External Context ---
-    const longcatApiKeys = getApiKeys('LONGCAT_AI_API_KEY');
+    // --- Step 2: Fetch External Context --- (REMOVED)
+    let externalContext = ''; // externalContext will now always be empty
+
+    // --- Step 3: Longcat AI Calls for Comparative Insights ---
+    const longcatApiKeys = getApiKeys('LONGCAT_AI_API_KEY'); // Re-declared here for clarity, as it's still needed for Longcat AI calls
     if (longcatApiKeys.length === 0) {
       return new Response(JSON.stringify({ error: 'Longcat AI API key(s) not configured' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -178,20 +181,6 @@ serve(async (req) => {
       });
     }
 
-    const externalContextQuery = `${blogPostA.title} vs ${blogPostB.title} comparison`;
-    const fetchExternalContextResponse = await supabaseClient.functions.invoke('fetch-external-context', {
-      body: { query: externalContextQuery },
-    });
-
-    let externalContext = '';
-    if (fetchExternalContextResponse.error) {
-      console.warn("Error fetching external context for comparison:", fetchExternalContextResponse.error);
-      // Continue without external context if there's an error
-    } else {
-      externalContext = fetchExternalContextResponse.data.externalSearchResults;
-    }
-
-    // --- Step 3: Longcat AI Calls for Comparative Insights ---
     const longcatApiUrl = "https://api.longcat.chat/openai/v1/chat/completions";
 
     const formatAnalysisForAI = (blogPost: any, label: string) => `
@@ -212,7 +201,7 @@ serve(async (req) => {
     const combinedAnalysisContext = 
       formatAnalysisForAI(blogPostA, 'A') + 
       formatAnalysisForAI(blogPostB, 'B') +
-      (externalContext ? `\n\n--- Recent External Information ---\n${externalContext}\n--- End External Information ---` : '');
+      (externalContext ? `\n\n--- Recent External Information ---\n${externalContext}\n--- End External Information ---` : ''); // externalContext will be empty
 
     // --- AI Call for Core Comparison Data (Sentiment Delta, Emotional Tones, Themes, Weighted Influence, Keyword Diff) ---
     const coreComparisonPrompt = `
@@ -445,9 +434,9 @@ serve(async (req) => {
       status: 200,
     });
 
-  } catch (error) {
-    console.error('Edge Function error (video-comparator):', error.message);
-    return new Response(JSON.stringify({ error: error.message }), {
+  } catch (error: unknown) { // Explicitly typed 'error' as unknown
+    console.error('Edge Function error (video-comparator):', (error as Error).message); // Cast to Error
+    return new Response(JSON.stringify({ error: (error as Error).message }), { // Cast to Error
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 500,
     });

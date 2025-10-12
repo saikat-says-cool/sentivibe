@@ -18,9 +18,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input"; // Input is now explicitly needed
+import { Input } from "@/components/ui/input";
 import { useAuth } from '@/integrations/supabase/auth';
-// import { Link } from 'react-router-dom'; // Removed as it's no longer used
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface AiAnalysisResult {
@@ -87,9 +86,6 @@ interface VideoChatDialogProps {
   initialBlogPost?: BlogPost | null;
 }
 
-// Tier limits for chat are now removed from the frontend and backend Edge Functions.
-// These constants are no longer needed.
-
 const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
   isOpen,
   onOpenChange,
@@ -99,14 +95,11 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
   const { user, subscriptionStatus, subscriptionPlanId } = useAuth();
 
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
-  // Default desired word count, no longer tied to tier limits
   const [desiredWordCount, setDesiredWordCount] = useState<number>(300); 
   const [selectedPersona, setSelectedPersona] = useState<string>("friendly");
-  const [currentExternalContext, setCurrentExternalContext] = useState<string | null>(null);
+  // Removed currentExternalContext state as it's no longer used
   const [currentAnalysisResult, setCurrentAnalysisResult] = useState<AnalysisResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
-
-  // const isPaidTier = subscriptionStatus === 'active' && subscriptionPlanId !== 'free'; // Removed as it's no longer used
 
   useEffect(() => {
     if (isOpen) {
@@ -145,8 +138,7 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
             text: `Analysis for "${analysisToUse.videoTitle}" loaded. What would you like to know about it?`,
           },
         ]);
-        const searchQuery = `${analysisToUse.videoTitle} ${analysisToUse.videoTags.join(' ')}`;
-        fetchExternalContextMutation.mutate(searchQuery);
+        // Removed fetchExternalContextMutation.mutate(searchQuery);
       } else {
         setChatMessages([
           {
@@ -156,36 +148,18 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
           },
         ]);
       }
-      // Reset desired word count to a default, no longer tied to tier's max
       setDesiredWordCount(300); 
-      setError(null); // Clear error when dialog opens
+      setError(null);
     } else {
       setChatMessages([]);
-      setCurrentExternalContext(null);
+      // Removed setCurrentExternalContext(null);
       setCurrentAnalysisResult(null);
-      setError(null); // Clear error when dialog closes
+      setError(null);
     }
   }, [isOpen, initialAnalysisResult, initialBlogPost, user, subscriptionStatus, subscriptionPlanId]);
 
-  const fetchExternalContextMutation = useMutation({
-    mutationFn: async (query: string) => {
-      const { data, error: invokeError } = await supabase.functions.invoke('fetch-external-context', {
-        body: { query },
-      });
-      if (invokeError) {
-        console.error("Supabase Fetch External Context Function Invoke Error:", invokeError);
-        throw new Error(invokeError.message || "Failed to fetch external context.");
-      }
-      return data.externalSearchResults;
-    },
-    onSuccess: (data) => {
-      setCurrentExternalContext(data);
-    },
-    onError: (err: Error) => {
-      console.error("Error fetching external context for chat:", err);
-      setError(`Failed to fetch external context: ${(err as Error).message}`);
-    },
-  });
+  // Removed fetchExternalContextMutation as it's no longer used
+  // const fetchExternalContextMutation = useMutation({ ... });
 
   const chatMutation = useMutation({
     mutationFn: async (userMessageText: string) => {
@@ -214,8 +188,8 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
           userMessage: userMessageText,
           chatMessages: [...chatMessages, newUserMessage],
           analysisResult: currentAnalysisResult,
-          externalContext: currentExternalContext,
-          desiredWordCount: desiredWordCount, // Still pass desiredWordCount to AI
+          // Removed externalContext: currentExternalContext,
+          desiredWordCount: desiredWordCount,
           selectedPersona: selectedPersona,
           customQaResults: currentAnalysisResult.customQaResults,
         },
@@ -252,13 +226,13 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
 
   const handleSendMessage = (messageText: string) => {
     if (messageText.trim() && currentAnalysisResult) {
-      setError(null); // Clear previous errors
+      setError(null);
       chatMutation.mutate(messageText);
     }
   };
 
-  // Simplified disabled logic: only disable if no analysis result or mutation is pending
-  const isChatDisabled = !currentAnalysisResult || chatMutation.isPending || fetchExternalContextMutation.isPending;
+  // Simplified disabled logic: removed fetchExternalContextMutation.isPending
+  const isChatDisabled = !currentAnalysisResult || chatMutation.isPending;
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -291,19 +265,17 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
               </SelectContent>
             </Select>
           </div>
-          {/* Re-enabling "Response Word Count" input */}
           <div className="flex items-center space-x-2">
             <Label htmlFor="desired-word-count" className="text-sm">Response Word Count:</Label>
             <Input
               id="desired-word-count"
               type="number"
               min="50"
-              // Max attribute removed as custom question word count is now unlimited
               step="50"
               value={desiredWordCount}
               onChange={(e) => setDesiredWordCount(Number(e.target.value))}
               className="w-[100px]"
-              disabled={isChatDisabled} // Only disable if chat is generally disabled
+              disabled={isChatDisabled}
             />
           </div>
         </div>
@@ -319,7 +291,8 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
           <ChatInterface
             messages={chatMessages}
             onSendMessage={handleSendMessage}
-            isLoading={chatMutation.isPending || fetchExternalContextMutation.isPending}
+            // Removed fetchExternalContextMutation.isPending from isLoading
+            isLoading={chatMutation.isPending}
             disabled={isChatDisabled}
           />
         </div>
