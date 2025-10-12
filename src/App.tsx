@@ -12,7 +12,8 @@ import MultiComparisonDetail from './pages/MultiComparisonDetail';
 import AboutUs from './pages/AboutUs';
 import HowItWorks from './pages/HowItWorks';
 import Upgrade from './pages/Upgrade';
-import AccountCenter from './pages/AccountCenter'; // Added import
+import AccountCenter from './pages/AccountCenter';
+import Pricing from './pages/Pricing'; // Import the new Pricing page
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from './integrations/supabase/auth';
 import { ThemeProvider } from './components/theme-provider';
@@ -45,7 +46,8 @@ function App() {
                   <Route path="/about-us" element={<AboutUs />} />
                   <Route path="/how-it-works" element={<HowItWorks />} />
                   <Route path="/upgrade" element={<Upgrade />} />
-                  <Route path="/account" element={<AccountCenter />} /> {/* Added route */}
+                  <Route path="/account" element={<AccountCenter />} />
+                  <Route path="/pricing" element={<Pricing />} /> {/* New Pricing Route */}
                 </Routes>
               </main>
               <Footer />

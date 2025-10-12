@@ -78,3 +78,4 @@ This tier provides an unrestricted, personalized, and ad-free experience, unlock
     4.  Return an error response if a limit is exceeded, prompting the user to upgrade.
 *   **Frontend UI:** The user interface will dynamically adapt based on the user's tier. This includes displaying upgrade prompts, usage counters for daily analyses/comparisons, and hiding/showing premium features like "My Analyses."
 *   **Payment Gateway:** Integration with a payment gateway (e.g., Stripe) will be required to handle subscriptions. Webhooks from the payment gateway will update the `public.subscriptions` table.
+*   **Pricing Page:** A dedicated `/pricing` page has been created to clearly list all tier offerings and their respective features.

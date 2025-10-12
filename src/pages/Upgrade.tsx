@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { Separator } from '@/components/ui/separator'; // Import Separator
 
 const Upgrade = () => {
   return (
@@ -26,6 +27,7 @@ const Upgrade = () => {
                 <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-500 mr-2" /> Unlimited Copilot Queries</li>
                 <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-500 mr-2" /> Watermarked PDF Reports</li>
                 <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-500 mr-2" /> Ads displayed</li>
+                <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-500 mr-2" /> Access to "My Analyses" History</li>
               </ul>
             </div>
 
@@ -47,8 +49,10 @@ const Upgrade = () => {
             </div>
           </div>
 
-          <p className="mt-8 text-sm text-gray-500">
-            Ready to take your video insights to the next level? Upgrade today!
+          <Separator className="my-8" /> {/* Added separator */}
+
+          <p className="text-sm text-gray-500">
+            For a detailed breakdown of all features and limits, please visit our dedicated <Link to="/pricing" className="text-blue-500 hover:underline">Pricing Page</Link>.
           </p>
         </CardContent>
       </Card>
