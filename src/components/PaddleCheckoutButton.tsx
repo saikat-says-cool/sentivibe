@@ -26,10 +26,12 @@ const PaddleCheckoutButton: React.FC<PaddleCheckoutButtonProps> = ({
     }
 
     const customerEmail = user?.email || undefined;
+    const passthroughData = user?.id ? JSON.stringify({ userId: user.id }) : undefined; // Pass user ID
 
     window.Paddle.Checkout.open({
       product: productId,
       customer_email: customerEmail,
+      passthrough: passthroughData, // Include passthrough data
       successCallback: (data: any) => {
         console.log("Paddle Checkout Success:", data);
         toast.success("Subscription successful! Thank you for upgrading.");
@@ -40,7 +42,7 @@ const PaddleCheckoutButton: React.FC<PaddleCheckoutButtonProps> = ({
         console.log("Paddle Checkout Closed.");
         toast.info("Checkout closed. You can upgrade anytime!");
       },
-      // You can add more options here, e.g., passthrough data, coupon codes, etc.
+      // You can add more options here, e.g., coupon codes, etc.
       // theme: 'dark', // Or 'light'
     });
   };
