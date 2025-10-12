@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -49,14 +49,20 @@ interface BlogPost {
 
 const PAGE_SIZE = 9; // Number of items per page
 
-const fetchBlogPosts = async (page: number, pageSize: number): Promise<{ data: BlogPost[], totalCount: number }> => {
+const fetchBlogPosts = async (page: number, pageSize: number, searchTerm: string): Promise<{ data: BlogPost[], totalCount: number }> => {
   const start = (page - 1) * pageSize;
   const end = start + pageSize - 1;
 
-  // Fetch paginated data
-  const { data, error, count } = await supabase
+  let query = supabase
     .from('blog_posts')
-    .select('*', { count: 'exact' })
+    .select('*', { count: 'exact' });
+
+  if (searchTerm) {
+    const lowerCaseSearchTerm = `%${searchTerm.toLowerCase()}%`;
+    query = query.or(`title.ilike.${lowerCaseSearchTerm},creator_name.ilike.${lowerCaseSearchTerm},meta_description.ilike.${lowerCaseSearchTerm},keywords.cs.{"${searchTerm}"}`);
+  }
+
+  const { data, error, count } = await query
     .order('published_at', { ascending: false })
     .range(start, end);
 
@@ -69,11 +75,12 @@ const fetchBlogPosts = async (page: number, pageSize: number): Promise<{ data: B
 const VideoAnalysisLibrary = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [filteredPosts, setFilteredPosts] = useState<BlogPost[]>([]);
+  // filteredPosts is no longer needed as filtering is done server-side
+  // const [filteredPosts, setFilteredPosts] = useState<BlogPost[]>([]);
 
   const { data, isLoading, error } = useQuery<{ data: BlogPost[], totalCount: number }, Error>({
-    queryKey: ['blogPosts', currentPage],
-    queryFn: () => fetchBlogPosts(currentPage, PAGE_SIZE),
+    queryKey: ['blogPosts', currentPage, searchTerm], // Add searchTerm to queryKey
+    queryFn: () => fetchBlogPosts(currentPage, PAGE_SIZE, searchTerm), // Pass searchTerm
     refetchOnWindowFocus: false,
   });
 
@@ -81,22 +88,28 @@ const VideoAnalysisLibrary = () => {
   const totalCount = data?.totalCount || 0;
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
-  useEffect(() => {
-    if (blogPosts) {
-      const lowerCaseSearchTerm = searchTerm.toLowerCase();
-      const results = blogPosts.filter(post =>
-        post.title.toLowerCase().includes(lowerCaseSearchTerm) ||
-        (post.creator_name && post.creator_name.toLowerCase().includes(lowerCaseSearchTerm)) ||
-        (post.meta_description && post.meta_description.toLowerCase().includes(lowerCaseSearchTerm)) ||
-        (post.keywords && post.keywords.some(keyword => keyword.toLowerCase().includes(lowerCaseSearchTerm)))
-      );
-      setFilteredPosts(results);
-    }
-  }, [searchTerm, blogPosts]);
+  // Removed client-side filtering useEffect as filtering is now server-side
+  // useEffect(() => {
+  //   if (blogPosts) {
+  //     const lowerCaseSearchTerm = searchTerm.toLowerCase();
+  //     const results = blogPosts.filter(post =>
+  //       post.title.toLowerCase().includes(lowerCaseSearchTerm) ||
+  //       (post.creator_name && post.creator_name.toLowerCase().includes(lowerCaseSearchTerm)) ||
+  //       (post.meta_description && post.meta_description.toLowerCase().includes(lowerCaseSearchTerm)) ||
+  //       (post.keywords && post.keywords.some(keyword => keyword.toLowerCase().includes(lowerCaseSearchTerm)))
+  //     );
+  //     setFilteredPosts(results);
+  //   }
+  // }, [searchTerm, blogPosts]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-    setSearchTerm(''); // Clear search when changing page
+    // No need to clear search term here, as it's part of the query key
+  };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1); // Reset to first page on new search
   };
 
   if (isLoading) {
@@ -137,9 +150,9 @@ const VideoAnalysisLibrary = () => {
       <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-2 mb-6">
         <Input
           type="text"
-          placeholder="Search by title, creator, or keywords (current page)..."
+          placeholder="Search by title, creator, or keywords (across all analyses)..."
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={handleSearchChange} // Use new handler
           className="flex-1"
         />
         <Button variant="outline" size="icon" className="sm:hidden">
@@ -150,12 +163,12 @@ const VideoAnalysisLibrary = () => {
         )}
       </div>
 
-      {filteredPosts.length === 0 && (
-        <p className="text-center text-gray-500 dark:text-gray-400">No analysis found matching your criteria on this page.</p>
+      {blogPosts.length === 0 && (
+        <p className="text-center text-gray-500 dark:text-gray-400">No analysis found matching your criteria.</p>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredPosts.map((post) => (
+        {blogPosts.map((post) => (
           <Link to={`/blog/${post.slug}`} key={post.id}>
             <Card className="h-full flex flex-col hover:shadow-lg transition-shadow duration-200">
               <CardHeader className="p-0">

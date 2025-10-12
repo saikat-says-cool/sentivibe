@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -44,12 +44,11 @@ interface MultiComparison {
 
 const PAGE_SIZE = 9; // Number of items per page
 
-const fetchMultiComparisons = async (page: number, pageSize: number): Promise<{ data: MultiComparison[], totalCount: number }> => {
+const fetchMultiComparisons = async (page: number, pageSize: number, searchTerm: string): Promise<{ data: MultiComparison[], totalCount: number }> => {
   const start = (page - 1) * pageSize;
   const end = start + pageSize - 1;
 
-  // Fetch paginated data and count
-  const { data, error, count } = await supabase
+  let query = supabase
     .from('multi_comparisons')
     .select(`
       *,
@@ -57,7 +56,17 @@ const fetchMultiComparisons = async (page: number, pageSize: number): Promise<{ 
         video_order,
         blog_posts (title, thumbnail_url, original_video_link)
       )
-    `, { count: 'exact' })
+    `, { count: 'exact' });
+
+  if (searchTerm) {
+    const lowerCaseSearchTerm = `%${searchTerm.toLowerCase()}%`;
+    // Search in multi_comparisons fields directly
+    query = query.or(`title.ilike.${lowerCaseSearchTerm},meta_description.ilike.${lowerCaseSearchTerm},keywords.cs.{"${searchTerm}"}`);
+    // Note: Searching within nested `blog_posts` titles would require a more complex Supabase query (e.g., RPC function or multiple queries)
+    // For now, search is limited to the top-level multi_comparisons fields.
+  }
+
+  const { data, error, count } = await query
     .order('created_at', { ascending: false })
     .range(start, end);
 
@@ -88,11 +97,12 @@ const fetchMultiComparisons = async (page: number, pageSize: number): Promise<{ 
 const MultiComparisonLibrary = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [filteredComparisons, setFilteredComparisons] = useState<MultiComparison[]>([]);
+  // filteredComparisons is no longer needed as filtering is done server-side
+  // const [filteredComparisons, setFilteredComparisons] = useState<MultiComparison[]>([]);
 
   const { data, isLoading, error } = useQuery<{ data: MultiComparison[], totalCount: number }, Error>({
-    queryKey: ['multiComparisons', currentPage],
-    queryFn: () => fetchMultiComparisons(currentPage, PAGE_SIZE),
+    queryKey: ['multiComparisons', currentPage, searchTerm], // Add searchTerm to queryKey
+    queryFn: () => fetchMultiComparisons(currentPage, PAGE_SIZE, searchTerm), // Pass searchTerm
     refetchOnWindowFocus: false,
   });
 
@@ -100,22 +110,28 @@ const MultiComparisonLibrary = () => {
   const totalCount = data?.totalCount || 0;
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
-  useEffect(() => {
-    if (multiComparisons) {
-      const lowerCaseSearchTerm = searchTerm.toLowerCase();
-      const results = multiComparisons.filter(comp =>
-        comp.title.toLowerCase().includes(lowerCaseSearchTerm) ||
-        (comp.meta_description && comp.meta_description.toLowerCase().includes(lowerCaseSearchTerm)) ||
-        (comp.keywords && comp.keywords.some(keyword => keyword.toLowerCase().includes(lowerCaseSearchTerm))) ||
-        (comp.videos && comp.videos.some(video => video.title.toLowerCase().includes(lowerCaseSearchTerm)))
-      );
-      setFilteredComparisons(results);
-    }
-  }, [searchTerm, multiComparisons]);
+  // Removed client-side filtering useEffect as filtering is now server-side
+  // useEffect(() => {
+  //   if (multiComparisons) {
+  //     const lowerCaseSearchTerm = searchTerm.toLowerCase();
+  //     const results = multiComparisons.filter(comp =>
+  //       comp.title.toLowerCase().includes(lowerCaseSearchTerm) ||
+  //       (comp.meta_description && comp.meta_description.toLowerCase().includes(lowerCaseSearchTerm)) ||
+  //       (comp.keywords && comp.keywords.some(keyword => keyword.toLowerCase().includes(lowerCaseSearchTerm))) ||
+  //       (comp.videos && comp.videos.some(video => video.title.toLowerCase().includes(lowerCaseSearchTerm)))
+  //     );
+  //     setFilteredComparisons(results);
+  //   }
+  // }, [searchTerm, multiComparisons]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-    setSearchTerm(''); // Clear search when changing page
+    // No need to clear search term here, as it's part of the query key
+  };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1); // Reset to first page on new search
   };
 
   if (isLoading) {
@@ -156,9 +172,9 @@ const MultiComparisonLibrary = () => {
       <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-2 mb-6">
         <Input
           type="text"
-          placeholder="Search comparisons by title, video titles, or keywords (current page)..."
+          placeholder="Search comparisons by title, video titles, or keywords (across all comparisons)..."
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={handleSearchChange} // Use new handler
           className="flex-1"
         />
         <Button variant="outline" size="icon" className="sm:hidden">
@@ -169,12 +185,12 @@ const MultiComparisonLibrary = () => {
         )}
       </div>
 
-      {filteredComparisons.length === 0 && (
-        <p className="text-center text-gray-500 dark:text-gray-400">No comparisons found matching your criteria on this page.</p>
+      {multiComparisons.length === 0 && (
+        <p className="text-center text-gray-500 dark:text-gray-400">No comparisons found matching your criteria.</p>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredComparisons.map((comp) => (
+        {multiComparisons.map((comp) => (
           <Link to={`/multi-comparison/${comp.slug}`} key={comp.id}>
             <Card className="h-full flex flex-col hover:shadow-lg transition-shadow duration-200">
               <CardHeader className="p-0 relative">
