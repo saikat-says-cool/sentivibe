@@ -386,7 +386,8 @@ const AnalyzeVideo = () => {
                     value={qa.question}
                     onChange={(e) => handleQuestionChange(index, 'question', e.target.value)}
                     className="mt-1 min-h-[60px]"
-                    disabled={analyzeVideoMutation.isPending || customQuestions.length > currentLimits.maxCustomQuestions}
+                    // Only disable when analysis is pending
+                    disabled={analyzeVideoMutation.isPending} 
                   />
                 </div>
                 <div className="w-24">
@@ -400,7 +401,8 @@ const AnalyzeVideo = () => {
                     value={qa.wordCount}
                     onChange={(e) => handleQuestionChange(index, 'wordCount', e.target.value)}
                     className="mt-1"
-                    disabled={analyzeVideoMutation.isPending || customQuestions.length > currentLimits.maxCustomQuestions}
+                    // Only disable when analysis is pending
+                    disabled={analyzeVideoMutation.isPending} 
                   />
                 </div>
                 {customQuestions.length > 1 && (
@@ -409,7 +411,8 @@ const AnalyzeVideo = () => {
                     variant="ghost"
                     size="icon"
                     onClick={() => handleRemoveQuestion(index)}
-                    disabled={analyzeVideoMutation.isPending || customQuestions.length > currentLimits.maxCustomQuestions}
+                    // Only disable when analysis is pending
+                    disabled={analyzeVideoMutation.isPending} 
                     className="self-end sm:self-auto"
                   >
                     <XCircle className="h-5 w-5 text-red-500" />

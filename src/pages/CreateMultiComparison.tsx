@@ -338,7 +338,8 @@ const CreateMultiComparison = () => {
                     value={qa.question}
                     onChange={(e) => handleQuestionChange(index, 'question', e.target.value)}
                     className="mt-1"
-                    disabled={createMultiComparisonMutation.isPending || customComparativeQuestions.length > currentLimits.maxCustomQuestions}
+                    // Only disable when analysis is pending
+                    disabled={createMultiComparisonMutation.isPending} 
                   />
                 </div>
                 <div className="w-24">
@@ -352,7 +353,8 @@ const CreateMultiComparison = () => {
                     value={qa.wordCount}
                     onChange={(e) => handleQuestionChange(index, 'wordCount', e.target.value)}
                     className="mt-1"
-                    disabled={createMultiComparisonMutation.isPending || customComparativeQuestions.length > currentLimits.maxCustomQuestions}
+                    // Only disable when analysis is pending
+                    disabled={createMultiComparisonMutation.isPending} 
                   />
                 </div>
                 {customComparativeQuestions.length > 1 && (
@@ -361,7 +363,8 @@ const CreateMultiComparison = () => {
                     variant="ghost"
                     size="icon"
                     onClick={() => handleRemoveQuestion(index)}
-                    disabled={createMultiComparisonMutation.isPending || customComparativeQuestions.length > currentLimits.maxCustomQuestions}
+                    // Only disable when analysis is pending
+                    disabled={createMultiComparisonMutation.isPending} 
                     className="self-end sm:self-auto"
                   >
                     <XCircle className="h-5 w-5 text-red-500" />
