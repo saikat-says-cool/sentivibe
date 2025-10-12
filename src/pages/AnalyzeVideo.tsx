@@ -151,13 +151,14 @@ const AnalyzeVideo = () => {
 
       if (invokeError) {
         console.error("Supabase Function Invoke Error:", invokeError);
-        if (invokeError.name === 'FunctionsHttpError' && invokeError.context?.status === 403) {
+        // Check if the error is a FunctionsHttpError with a 403 or 400 status
+        if (invokeError.name === 'FunctionsHttpError' && (invokeError.context?.status === 403 || invokeError.context?.status === 400)) {
           try {
             const errorBody = await invokeError.context.json();
-            throw new Error(errorBody.error || "Daily limit exceeded. Please upgrade.");
+            throw new Error(errorBody.error || invokeError.message || "An unexpected error occurred with the analysis function.");
           } catch (jsonError) {
-            console.error("Failed to parse 403 error response:", jsonError);
-            throw new Error(invokeError.message || "Daily limit exceeded. Please upgrade.");
+            console.error("Failed to parse error response:", jsonError);
+            throw new Error(invokeError.message || "An unexpected error occurred with the analysis function.");
           }
         }
         throw new Error(invokeError.message || "Failed to invoke analysis function.");
