@@ -1,4 +1,3 @@
-/// <reference lib="deno.ns" />
 // @ts-ignore
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 // @ts-ignore
@@ -111,7 +110,9 @@ serve(async (req: Request) => { // Explicitly typed 'req' as Request
     let currentLimits;
     let userSubscriptionId: string | null = null;
 
-    const clientIp = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
+    // Extract client IP, handling x-forwarded-for which can be a comma-separated list
+    const xForwardedFor = req.headers.get('x-forwarded-for');
+    const clientIp = xForwardedFor ? xForwardedFor.split(',')[0].trim() : req.headers.get('x-real-ip') || 'unknown';
     const now = new Date();
 
     if (user) {
@@ -625,7 +626,7 @@ serve(async (req: Request) => { // Explicitly typed 'req' as Request
     return new Response(JSON.stringify({
       message: `Successfully analyzed video and generated insights.`,
       videoTitle: blogPostData.title,
-      videoDescription: blogPostData.meta_description, // Changed from videoDetails?.description
+      videoDescription: blogPostData.meta_description,
       videoThumbnailUrl: blogPostData.thumbnail_url,
       videoTags: blogPostData.keywords,
       creatorName: blogPostData.creator_name,
