@@ -9,7 +9,10 @@
     <!-- Paddle.js script for client-side checkout -->
     <script src="https://cdn.paddle.com/paddle/paddle.js"></script>
     <script type="module" type="text/javascript">
-      Paddle.Setup({ vendor: parseInt(import.meta.env.VITE_PADDLE_VENDOR_ID) });
+      Paddle.Setup({ 
+        vendor: parseInt(import.meta.env.VITE_PADDLE_VENDOR_ID),
+        token: import.meta.env.VITE_PADDLE_CLIENT_SIDE_TOKEN // Added client-side token
+      });
     </script>
   </head>
 
