@@ -86,6 +86,7 @@ const BlogPostDetail = () => {
 
   useEffect(() => {
     const head = document.head;
+    const domain = "https://sentivibe.online"; // Use the new domain
 
     // Function to create or update a meta tag
     const updateMetaTag = (name: string, content: string, property?: string) => {
@@ -116,7 +117,7 @@ const BlogPostDetail = () => {
       updateMetaTag('og:title', blogPost.title, 'og:title');
       updateMetaTag('og:description', blogPost.meta_description, 'og:description');
       updateMetaTag('og:image', blogPost.thumbnail_url, 'og:image');
-      updateMetaTag('og:url', `${window.location.origin}/blog/${blogPost.slug}`, 'og:url');
+      updateMetaTag('og:url', `${domain}/blog/${blogPost.slug}`, 'og:url');
       updateMetaTag('og:type', 'article', 'og:type');
       updateMetaTag('og:site_name', 'SentiVibe', 'og:site_name');
 
@@ -140,12 +141,12 @@ const BlogPostDetail = () => {
               "name": "SentiVibe",
               "logo": {
                 "@type": "ImageObject",
-                "url": `${window.location.origin}/logo.png`
+                "url": `${domain}/logo.png`
               }
             },
             "mainEntityOfPage": {
               "@type": "WebPage",
-              "@id": `${window.location.origin}/blog/${blogPost.slug}`
+              "@id": `${domain}/blog/${blogPost.slug}`
             }
           },
           {
@@ -153,7 +154,7 @@ const BlogPostDetail = () => {
             "name": "SentiVibe - YouTube Comment Sentiment Analyzer",
             "applicationCategory": "AI Tool",
             "operatingSystem": "Web",
-            "url": `${window.location.origin}`,
+            "url": `${domain}`,
             "description": "AI tool to analyze YouTube comments for sentiment and insights.",
             "offers": {
               "@type": "Offer",
@@ -174,7 +175,7 @@ const BlogPostDetail = () => {
 
     } else {
       // Reset to default if no blog post is loaded
-      document.title = "SentiVibe - Video Analysis Library";
+      document.title = "SentiVibe - Video Analysis Library"; // Consistent fallback title
       updateMetaTag('description', 'Unlock the true sentiment behind YouTube comments. Analyze, understand, and gain insights into audience reactions with AI-powered sentiment analysis.');
 
       // Remove OG tags

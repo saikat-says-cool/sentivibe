@@ -100,6 +100,7 @@ const MultiComparisonDetail = () => {
 
   useEffect(() => {
     const head = document.head;
+    const domain = "https://sentivibe.online"; // Use the new domain
 
     const updateMetaTag = (name: string, content: string, property?: string) => {
       let tag = document.querySelector(`meta[${property ? `property="${property}"` : `name="${name}"`}]`);
@@ -123,7 +124,7 @@ const MultiComparisonDetail = () => {
       updateMetaTag('og:title', multiComparison.title, 'og:title');
       updateMetaTag('og:description', multiComparison.meta_description, 'og:description');
       updateMetaTag('og:image', multiComparison.overall_thumbnail_url || '', 'og:image');
-      updateMetaTag('og:url', `${window.location.origin}/multi-comparison/${multiComparison.slug}`, 'og:url');
+      updateMetaTag('og:url', `${domain}/multi-comparison/${multiComparison.slug}`, 'og:url');
       updateMetaTag('og:type', 'article', 'og:type');
       updateMetaTag('og:site_name', 'SentiVibe', 'og:site_name');
 
@@ -146,12 +147,12 @@ const MultiComparisonDetail = () => {
               "name": "SentiVibe",
               "logo": {
                 "@type": "ImageObject",
-                "url": `${window.location.origin}/logo.png`
+                "url": `${domain}/logo.png`
               }
             },
             "mainEntityOfPage": {
               "@type": "WebPage",
-              "@id": `${window.location.origin}/multi-comparison/${multiComparison.slug}`
+              "@id": `${domain}/multi-comparison/${multiComparison.slug}`
             }
           },
           {
@@ -159,7 +160,7 @@ const MultiComparisonDetail = () => {
             "name": "SentiVibe - YouTube Comment Sentiment Analyzer",
             "applicationCategory": "AI Tool",
             "operatingSystem": "Web",
-            "url": `${window.location.origin}`,
+            "url": `${domain}`,
             "description": "AI tool to analyze YouTube comments for sentiment and insights.",
             "offers": {
               "@type": "Offer",
@@ -179,7 +180,7 @@ const MultiComparisonDetail = () => {
       scriptTag.textContent = JSON.stringify(schemaData);
 
     } else {
-      document.title = "SentiVibe - Multi-Comparison Library";
+      document.title = "SentiVibe - Multi-Comparison Library"; // Consistent fallback title
       updateMetaTag('description', 'Compare multiple YouTube video sentiments and insights with AI-powered analysis.');
       removeMetaTag('og:title', 'og:title');
       removeMetaTag('og:description', 'og:description');

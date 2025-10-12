@@ -157,6 +157,7 @@ The project follows a standard React application structure with specific directo
     *   Handles cases where no posts are found or an error occurs during fetching.
     *   **SEO:** `img` tags for thumbnails include descriptive `alt` attributes.
     *   **`LibraryCopilot` Integration:** Renders the **enhanced** `LibraryCopilot` component, passing the fetched `blogPosts` for AI-powered search and topic recommendations. **Copilot queries are now unlimited for all tiers.**
+*   **Pagination:** Implements pagination to handle large datasets, fetching only a subset of data per page.
 
 ### 4.7. `BlogPostDetail.tsx`
 *   **Purpose:** Displays the full content of a single, SEO-optimized blog post.
@@ -219,6 +220,7 @@ The project follows a standard React application structure with specific directo
     *   `Skeleton` components provide loading state visuals.
     *   Handles cases where no posts are found or an error occurs during fetching.
     *   **`ComparisonLibraryCopilot` Integration:** Renders the AI copilot for searching comparisons and suggesting new topics. **Copilot queries are now unlimited for all tiers.**
+*   **Pagination:** Implements pagination to handle large datasets, fetching only a subset of data per page.
 
 ### 4.10. `MultiComparisonDetail.tsx` (Multi-Comparison Blog Post Detail Page)
 *   **Purpose:** Displays the full content of a single, SEO-optimized multi-video comparison blog post.
@@ -259,7 +261,7 @@ The project follows a standard React application structure with specific directo
 *   **Props:** Accepts `isOpen`, `onOpenChange`, `initialAnalysisResult` (for new analyses from `AnalyzeVideo`), and `initialBlogPost` (for analyses loaded from `BlogPostDetail`).
 *   **Internal State:** Manages `chatMessages`, `desiredWordCount`, `selectedPersona`, `currentAnalysisResult`, and `error`.
 *   **Tier-based Limits:** **All chat messages and desired word counts are now unlimited for all tiers.**
-*   **Context Initialization:** On dialog open, it checks `initialAnalysisResult` or `initialBlogPost` to set `currentAnalysisResult`. If `initialBlogPost` is provided, it reconstructs the `AnalysisResponse` object from the blog post data, including `ai_analysis_json`, `raw_comments_for_chat`, and **`custom_qa_results`**.
+*   **Context Initialization:** On dialog open, it checks `initialAnalysisResult` or `initialBlogPost` to set `currentAnalysisResult`. If `initialBlogPost` is provided, it reconstructs the `AnalysisResponse` object from the blog post data, including `ai_analysis_json`, `raw_comments_for_chat`, and **`customQaResults`**.
 *   **External Context Fetching:** **Removed. External context is no longer fetched for chat.**
 *   **Chat Mutation:** Uses an internal `chatMutation` (calling `chat-analyzer` Edge Function) to send user messages and receive AI responses. The `customQaResults` are now passed as part of the `analysisResult` to the `chat-analyzer` Edge Function.
 *   **AI Controls:** Provides a `Select` component for users to choose `selectedPersona` and an `Input` for `desiredWordCount`, which are passed to the `chat-analyzer` Edge Function.
@@ -296,7 +298,7 @@ The project follows a standard React application structure with specific directo
 
 ### 4.17. `Upgrade.tsx` (Upgrade Page)
 *   **Purpose:** Informs users about the benefits of upgrading to a paid tier.
-*   **UI:** Displays a comparison of features and limits between the Free Tier and Paid Tier, with a call to action to upgrade. **This page has been updated to reflect the simplified tier structure.**
+*      **UI:** Displays a comparison of features and limits between the Free Tier and Paid Tier, with a call to action to upgrade. **This page has been updated to reflect the simplified tier structure.**
 
 ### 4.18. `AccountCenter.tsx` (Account Center Page)
 *   **Purpose:** Provides a dedicated page for authenticated users to view and manage their profile information and subscription details.
@@ -443,8 +445,8 @@ This Deno-based serverless function is the core backend logic for video analysis
     *   For each API call (YouTube video details, YouTube comments, Longcat AI analysis, Longcat AI blog post generation, and Longcat AI custom question answering), it iterates through the available keys. If a request fails with a rate limit error (HTTP 429 or YouTube's `quotaExceeded` 403), it attempts the request again with the next key in the list.
 *   **YouTube Data API Calls (if new/re-analysis):** Fetches video `snippet` (title, description, thumbnail, tags, `channelTitle`) and top-level comments (`maxResults=100`).
 *   **Comment Processing (if new/re-analysis):** Maps comments to include `text` and `likeCount`, enforces a minimum of 50 comments, and sorts them by `likeCount`.
-*   **Longcat AI API Call (Analysis - if new/re-analysis):** Constructs a `longcatPrompt` including video details, tags, and weighted comments. Instructs the AI to prioritize comments with higher like counts. Sends a `POST` request to Longcat AI, requesting a `json_object` response for sentiment analysis.
-*   **Longcat AI API Call (Blog Post Generation - if new/re-analysis):** After successful sentiment analysis, a *second* `POST` request is made to Longcat AI for blog post generation.
+*   **Longcat AI API Call (Sentiment Analysis):** Constructs a `longcatPrompt` including video details, tags, and weighted comments. Instructs the AI to prioritize comments with higher like counts. Sends a `POST` request to Longcat AI, requesting a `json_object` response for sentiment analysis.
+*   **Longcat AI API Call (Blog Post Generation):** After successful sentiment analysis, a *second* `POST` request is made to Longcat AI for blog post generation.
 *   **Longcat AI API Call (Custom Questions - always if new questions):** If `customQuestions` are provided, the function iterates through each question. For each, it constructs a specific prompt including the full video analysis context and the user's question, instructing the AI to generate an answer of the specified `wordCount`. These answers are collected into `customQaResults`.
 *   **Response:** Returns a `200 OK` response with video details, comments, the AI analysis result, the `blogPostSlug`, the `originalVideoLink`, the `customQaResults`, and the `lastReanalyzedAt` timestamp for frontend display.
 *   **Error Handling:** Includes comprehensive `try-catch` blocks, **returning 403 status for daily analysis limit exceedances.**
