@@ -8,7 +8,7 @@
     <link rel="icon" type="image/svg+xml" href="/logo.svg" />
     <!-- Paddle.js script for client-side checkout -->
     <script src="https://cdn.paddle.com/paddle/paddle.js"></script>
-    <script type="text/javascript">
+    <script type="module" type="text/javascript">
       Paddle.Setup({ vendor: parseInt(import.meta.env.VITE_PADDLE_VENDOR_ID) });
     </script>
   </head>
