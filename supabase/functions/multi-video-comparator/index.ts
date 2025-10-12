@@ -109,9 +109,17 @@ serve(async (req: Request) => {
     let currentLimits;
     let userSubscriptionId: string | null = null;
 
-    // Extract client IP, handling x-forwarded-for which can be a comma-separated list
+    // Refined IP extraction logic
     const xForwardedFor = req.headers.get('x-forwarded-for');
-    const clientIp = xForwardedFor ? xForwardedFor.split(',')[0].trim() : req.headers.get('x-real-ip') || 'unknown';
+    let clientIp = req.headers.get('x-real-ip'); // Prioritize x-real-ip
+    if (!clientIp) {
+      if (xForwardedFor) {
+        clientIp = xForwardedFor.split(',')[0].trim(); // Take the first IP from x-forwarded-for
+      }
+    }
+    if (!clientIp) {
+      clientIp = 'unknown'; // Fallback
+    }
     const now = new Date();
 
     if (user) {

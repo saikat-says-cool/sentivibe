@@ -27,9 +27,17 @@ serve(async (req: Request) => { // Explicitly typed 'req' as Request
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
     );
 
-    // Extract client IP, handling x-forwarded-for which can be a comma-separated list
-    const xForwardedFor = req.headers.get('x-forwarded-for');
-    const clientIp = xForwardedFor ? xForwardedFor.split(',')[0].trim() : req.headers.get('x-real-ip') || 'unknown';
+    // Refined IP extraction logic
+    let clientIp = req.headers.get('x-real-ip'); // Prioritize x-real-ip
+    if (!clientIp) {
+      const xForwardedFor = req.headers.get('x-forwarded-for');
+      if (xForwardedFor) {
+        clientIp = xForwardedFor.split(',')[0].trim(); // Take the first IP from x-forwarded-for
+      }
+    }
+    if (!clientIp) {
+      clientIp = 'unknown'; // Fallback
+    }
 
     let { data: anonUsage, error: anonError } = await supabaseClient
       .from('anon_usage')
