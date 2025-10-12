@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { useAuth } from '@/integrations/supabase/auth';
+// Removed useAuth import as it's no longer needed for chat message initialization
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface AiAnalysisResult {
@@ -92,7 +92,7 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
   initialAnalysisResult,
   initialBlogPost,
 }) => {
-  const { user, subscriptionStatus, subscriptionPlanId } = useAuth();
+  // Removed user, subscriptionStatus, subscriptionPlanId from useAuth() as they are not relevant for chat message initialization
 
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
   const [desiredWordCount, setDesiredWordCount] = useState<number>(300); 
@@ -101,65 +101,57 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
   const [currentAnalysisResult, setCurrentAnalysisResult] = useState<AnalysisResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Effect to set the current analysis result based on props
   useEffect(() => {
-    if (isOpen) {
-      let analysisToUse: AnalysisResponse | null = null;
+    let analysisToUse: AnalysisResponse | null = null;
+    if (initialAnalysisResult) {
+      analysisToUse = initialAnalysisResult;
+    } else if (initialBlogPost && initialBlogPost.ai_analysis_json) {
+      analysisToUse = {
+        videoTitle: initialBlogPost.title,
+        videoDescription: initialBlogPost.meta_description || '',
+        videoThumbnailUrl: initialBlogPost.thumbnail_url || '',
+        videoTags: initialBlogPost.keywords || [],
+        creatorName: initialBlogPost.creator_name || 'Unknown Creator',
+        videoSubtitles: '',
+        comments: initialBlogPost.ai_analysis_json.raw_comments_for_chat || [],
+        aiAnalysis: {
+          overall_sentiment: initialBlogPost.ai_analysis_json.overall_sentiment || 'N/A',
+          emotional_tones: initialBlogPost.ai_analysis_json.emotional_tones || [],
+          key_themes: initialBlogPost.ai_analysis_json.key_themes || [],
+          summary_insights: initialBlogPost.ai_analysis_json.summary_insights || 'No insights available.',
+        },
+        blogPostSlug: initialBlogPost.slug,
+        originalVideoLink: initialBlogPost.original_video_link,
+        customQaResults: initialBlogPost.custom_qa_results,
+      };
+    }
+    setCurrentAnalysisResult(analysisToUse);
+  }, [initialAnalysisResult, initialBlogPost]);
 
-      if (initialAnalysisResult) {
-        analysisToUse = initialAnalysisResult;
-      } else if (initialBlogPost && initialBlogPost.ai_analysis_json) {
-        analysisToUse = {
-          videoTitle: initialBlogPost.title,
-          videoDescription: initialBlogPost.meta_description || '',
-          videoThumbnailUrl: initialBlogPost.thumbnail_url || '',
-          videoTags: initialBlogPost.keywords || [],
-          creatorName: initialBlogPost.creator_name || 'Unknown Creator',
-          videoSubtitles: '',
-          comments: initialBlogPost.ai_analysis_json.raw_comments_for_chat || [],
-          aiAnalysis: {
-            overall_sentiment: initialBlogPost.ai_analysis_json.overall_sentiment || 'N/A',
-            emotional_tones: initialBlogPost.ai_analysis_json.emotional_tones || [],
-            key_themes: initialBlogPost.ai_analysis_json.key_themes || [],
-            summary_insights: initialBlogPost.ai_analysis_json.summary_insights || 'No insights available.',
-          },
-          blogPostSlug: initialBlogPost.slug,
-          originalVideoLink: initialBlogPost.original_video_link,
-          customQaResults: initialBlogPost.custom_qa_results,
-        };
-      }
-      
-      setCurrentAnalysisResult(analysisToUse);
-
-      if (analysisToUse) {
+  // Effect to manage chat messages based on dialog open state and current analysis result
+  useEffect(() => {
+    if (isOpen && currentAnalysisResult) {
+      const initialMessageText = `Analysis for "${currentAnalysisResult.videoTitle}" loaded. What would you like to know about it?`;
+      // Only initialize if chatMessages is empty or the context has changed
+      if (chatMessages.length === 0 || chatMessages[0]?.text !== initialMessageText) {
         setChatMessages([
           {
             id: 'ai-initial-loaded',
             sender: 'ai',
-            text: `Analysis for "${analysisToUse.videoTitle}" loaded. What would you like to know about it?`,
-          },
-        ]);
-        // Removed fetchExternalContextMutation.mutate(searchQuery);
-      } else {
-        setChatMessages([
-          {
-            id: 'ai-initial-empty',
-            sender: 'ai',
-            text: "Hello! I'm ready to chat about a video analysis. Please ensure an analysis is loaded.",
+            text: initialMessageText,
           },
         ]);
       }
       setDesiredWordCount(300); 
       setError(null);
-    } else {
+    } else if (!isOpen) { // Cleanup when closing
       setChatMessages([]);
-      // Removed setCurrentExternalContext(null);
-      setCurrentAnalysisResult(null);
       setError(null);
     }
-  }, [isOpen, initialAnalysisResult, initialBlogPost, user, subscriptionStatus, subscriptionPlanId]);
+  }, [isOpen, currentAnalysisResult]); // Dependencies: isOpen and currentAnalysisResult
 
   // Removed fetchExternalContextMutation as it's no longer used
-  // const fetchExternalContextMutation = useMutation({ ... });
 
   const chatMutation = useMutation({
     mutationFn: async (userMessageText: string) => {
@@ -271,7 +263,6 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
               id="desired-word-count"
               type="number"
               min="50"
-              // Removed max attribute as word count is now unlimited
               step="50"
               value={desiredWordCount}
               onChange={(e) => setDesiredWordCount(Number(e.target.value))}
@@ -291,7 +282,6 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
         <div className="flex-1 overflow-hidden">
           <ChatInterface
             messages={chatMessages}
-            // Removed fetchExternalContextMutation.isPending from isLoading
             onSendMessage={handleSendMessage}
             isLoading={chatMutation.isPending}
             disabled={isChatDisabled}

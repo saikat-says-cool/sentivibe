@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { useAuth } from '@/integrations/supabase/auth';
+// Removed useAuth import as it's no longer needed for chat message initialization
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface MultiComparisonVideo {
@@ -64,7 +64,7 @@ const MultiComparisonChatDialog: React.FC<MultiComparisonChatDialogProps> = ({
   onOpenChange,
   initialMultiComparisonResult,
 }) => {
-  const { user, subscriptionStatus, subscriptionPlanId } = useAuth();
+  // Removed user, subscriptionStatus, subscriptionPlanId from useAuth() as they are not relevant for chat message initialization
 
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
   const [desiredWordCount, setDesiredWordCount] = useState<number>(300); 
@@ -73,36 +73,28 @@ const MultiComparisonChatDialog: React.FC<MultiComparisonChatDialogProps> = ({
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (isOpen) {
-      if (initialMultiComparisonResult) {
-        const videoTitles = initialMultiComparisonResult.videos.map(v => `"${v.title}"`).join(', ');
+    if (isOpen && initialMultiComparisonResult) {
+      const videoTitles = initialMultiComparisonResult.videos.map(v => `"${v.title}"`).join(', ');
+      const initialMessageText = `Multi-video comparison for ${videoTitles} loaded. What would you like to know about it?`;
+      // Only initialize if chatMessages is empty or the context has changed
+      if (chatMessages.length === 0 || chatMessages[0]?.text !== initialMessageText) {
         setChatMessages([
           {
             id: 'ai-initial-loaded',
             sender: 'ai',
-            text: `Multi-video comparison for ${videoTitles} loaded. What would you like to know about it?`,
-          },
-        ]);
-        // Removed fetchExternalContextMutation.mutate(searchQuery);
-      } else {
-        setChatMessages([
-          {
-            id: 'ai-initial-empty',
-            sender: 'ai',
-            text: "Hello! I'm ready to chat about a multi-video comparison. Please ensure a comparison is loaded.",
+            text: initialMessageText,
           },
         ]);
       }
       setDesiredWordCount(300); 
       setError(null);
-    } else {
+    } else if (!isOpen) { // Cleanup when closing
       setChatMessages([]);
       setError(null);
     }
-  }, [isOpen, initialMultiComparisonResult, user, subscriptionStatus, subscriptionPlanId]);
+  }, [isOpen, initialMultiComparisonResult]); // Removed useAuth dependencies as they are not relevant for chat message initialization
 
   // Removed fetchExternalContextMutation as it's no longer used
-  // const fetchExternalContextMutation = useMutation({ ... });
 
   const chatMutation = useMutation({
     mutationFn: async (userMessageText: string) => {
@@ -213,7 +205,6 @@ const MultiComparisonChatDialog: React.FC<MultiComparisonChatDialogProps> = ({
               id="desired-word-count"
               type="number"
               min="50"
-              // Removed max attribute as word count is now unlimited
               step="50"
               value={desiredWordCount}
               onChange={(e) => setDesiredWordCount(Number(e.target.value))}
@@ -233,7 +224,6 @@ const MultiComparisonChatDialog: React.FC<MultiComparisonChatDialogProps> = ({
         <div className="flex-1 overflow-hidden">
           <ChatInterface
             messages={chatMessages}
-            // Corrected comment placement
             onSendMessage={handleSendMessage}
             isLoading={chatMutation.isPending}
             disabled={isChatDisabled}

@@ -18,7 +18,6 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-// Removed unused 'Link' import
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { MessageSquare } from 'lucide-react';
 
@@ -59,63 +58,34 @@ const ComparisonChatDialog: React.FC<ComparisonChatDialogProps> = ({
   onOpenChange,
   initialComparisonResult,
 }) => {
-  // Removed unused subscriptionStatus and subscriptionPlanId from useAuth()
-
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
   const [desiredWordCount, setDesiredWordCount] = React.useState<number>(300);
   const [selectedPersona, setSelectedPersona] = React.useState<string>("friendly");
-  const [currentExternalContext, setCurrentExternalContext] = React.useState<string | null>(null);
+  // Removed currentExternalContext state as external context is no longer used
   const [error, setError] = React.useState<string | null>(null);
 
   useEffect(() => {
-    if (isOpen) {
-      if (initialComparisonResult) {
+    if (isOpen && initialComparisonResult) {
+      const initialMessageText = `Comparison for "${initialComparisonResult.videoATitle}" vs "${initialComparisonResult.videoBTitle}" loaded. What would you like to know about it?`;
+      // Only initialize if chatMessages is empty or the context has changed
+      if (chatMessages.length === 0 || chatMessages[0]?.text !== initialMessageText) {
         setChatMessages([
           {
             id: 'ai-initial-loaded',
             sender: 'ai',
-            text: `Comparison for "${initialComparisonResult.videoATitle}" vs "${initialComparisonResult.videoBTitle}" loaded. What would you like to know about it?`,
-          },
-        ]);
-        const searchQuery = `${initialComparisonResult.videoATitle} vs ${initialComparisonResult.videoBTitle} comparison`;
-        fetchExternalContextMutation.mutate(searchQuery);
-      } else {
-        setChatMessages([
-          {
-            id: 'ai-initial-empty',
-            sender: 'ai',
-            text: "Hello! I'm ready to chat about a video comparison. Please ensure a comparison is loaded.",
+            text: initialMessageText,
           },
         ]);
       }
       setDesiredWordCount(300);
       setError(null);
-    } else {
+    } else if (!isOpen) { // Cleanup when closing
       setChatMessages([]);
-      setCurrentExternalContext(null);
       setError(null);
     }
-  }, [isOpen, initialComparisonResult]);
+  }, [isOpen, initialComparisonResult]); // Removed useAuth dependencies as they are not relevant for chat message initialization
 
-  const fetchExternalContextMutation = useMutation({
-    mutationFn: async (query: string) => {
-      const { data, error: invokeError } = await supabase.functions.invoke('fetch-external-context', {
-        body: { query },
-      });
-      if (invokeError) {
-        console.error("Supabase Fetch External Context Function Invoke Error:", invokeError);
-        throw new Error(invokeError.message || "Failed to fetch external context.");
-      }
-      return data.externalSearchResults;
-    },
-    onSuccess: (data) => {
-      setCurrentExternalContext(data);
-    },
-    onError: (err: Error) => {
-      console.error("Error fetching external context for comparison chat:", err);
-      setError(`Failed to fetch external context: ${err.message}`);
-    },
-  });
+  // Removed fetchExternalContextMutation as external context is no longer used
 
   const chatMutation = useMutation({
     mutationFn: async (userMessageText: string) => {
@@ -144,7 +114,7 @@ const ComparisonChatDialog: React.FC<ComparisonChatDialogProps> = ({
           userMessage: userMessageText,
           chatMessages: [...chatMessages, newUserMessage],
           comparisonResult: initialComparisonResult,
-          externalContext: currentExternalContext,
+          // Removed externalContext: currentExternalContext,
           desiredWordCount: desiredWordCount,
           selectedPersona: selectedPersona,
         },
@@ -186,7 +156,8 @@ const ComparisonChatDialog: React.FC<ComparisonChatDialogProps> = ({
     }
   };
 
-  const isChatDisabled = !initialComparisonResult || chatMutation.isPending || fetchExternalContextMutation.isPending;
+  // Simplified disabled logic: removed fetchExternalContextMutation.isPending
+  const isChatDisabled = !initialComparisonResult || chatMutation.isPending;
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -245,7 +216,7 @@ const ComparisonChatDialog: React.FC<ComparisonChatDialogProps> = ({
           <ChatInterface
             messages={chatMessages}
             onSendMessage={handleSendMessage}
-            isLoading={chatMutation.isPending || fetchExternalContextMutation.isPending}
+            isLoading={chatMutation.isPending}
             disabled={isChatDisabled}
           />
         </div>
