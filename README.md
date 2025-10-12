@@ -10,7 +10,7 @@ SentiVibe is an innovative web application that leverages advanced AI to provide
 *   **Multi-Video Comparison:** Compare audience sentiment and engagement across two or more YouTube videos to identify commonalities and unique aspects.
 *   **Unlimited Custom Questions:** Ask as many custom questions as you like for both single video analyses and multi-video comparisons, with AI-generated answers integrated into your reports.
 *   **Context-Aware AI Chat:** Engage in unlimited, dynamic conversations with our AI about any video analysis or comparison, leveraging video data, top comments, and pre-generated Q&A.
-*   **AI Copilots:** Utilize AI assistants in the Analysis and Comparison Libraries to semantically search your reports and get proactive recommendations for new analysis topics.
+*   **AI Copilots:** Utilize AI assistants in the Analysis and Comparison Libraries to semantically search your reports and get proactive recommendations for new analysis topics. Copilot queries are now unlimited.
 *   **Programmatic SEO:** Automatically generate and publish SEO-optimized blog posts for every analysis and comparison.
 *   **Analysis & Comparison Libraries:** Browse and search a public collection of all generated video analyses and comparisons.
 *   **Professional PDF Reports:** Download comprehensive reports, with watermarking for free-tier users.

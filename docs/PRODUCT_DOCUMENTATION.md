@@ -33,7 +33,7 @@
     *   **Video Tags:** To understand the video's categorization and keywords.
     *   **Comments:** Fetches up to 100 comments for analysis.
     *   **Creator Name:** Identifies the YouTube channel/creator.
-*   **Weighted Sentiment Analysis:** The AI model is specifically instructed to give **significantly more weight to comments with higher "Likes" counts**. This ensures that the analysis reflects the sentiment of the most popular and influential opinions within the comment section.
+*   **Weighted Sentiment Analysis:** The AI model is specifically instructed to give **significantly more weight to comments that have a higher "Likes" counts**. This ensures that the analysis reflects the sentiment of the most popular and influential opinions within the comment section.
 *   **Detailed AI Insights:** The analysis provides:
     *   **Overall Sentiment:** A general classification (e.g., positive, negative, neutral).
     *   **Emotional Tones:** Identifies prevalent emotions (e.g., joy, anger, surprise, sadness).
@@ -99,7 +99,7 @@
 *   **Structured Display:** Analysis results are presented in a clean, easy-to-read card format.
 *   **Visual Cues:** Uses **Positive Green**, **Negative Red**, and **Neutral Gray** badges to highlight sentiment, emotional tones, and key themes for quick comprehension.
 *   **Raw Comment Snippets:** Displays the top 10 most popular comments (by like count) to give users a direct glimpse into the source data.
-*   **Loading Indicators:** Provides clear visual feedback during the analysis process, including fetching external context and generating custom answers, with skeleton loaders and spinning icons in **Accent Blue**.
+*   **Loading Indicators:** Provides clear visual feedback during the analysis process, including generating custom answers, with skeleton loaders and spinning icons in **Accent Blue**.
 *   **Error Handling:** Displays user-friendly alerts for any issues encountered during analysis (e.g., invalid link, insufficient comments, API errors), including specific messages for **tier-based daily analysis/comparison limit exceedances.**
 *   **Formatted Chat Responses:** AI responses in *all* chat interfaces (including the main video analysis chat and the Library Copilot) are now rendered with proper Markdown formatting, including **underlined hyperlinks**, improving readability and presentation.
 *   **Enhanced Navigation:**
