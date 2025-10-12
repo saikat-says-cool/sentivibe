@@ -18,10 +18,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { useAuth } from '@/integrations/supabase/auth'; // Import useAuth
-import { Link } from 'react-router-dom'; // Import Link for upgrade prompt
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"; // Import Alert components
+// Input is no longer needed for desiredWordCount, but kept if used elsewhere
+// import { Input } from "@/components/ui/input"; 
+import { useAuth } from '@/integrations/supabase/auth';
+// import { Link } from 'react-router-dom'; // Removed as it's no longer used
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface MultiComparisonVideo {
   blog_post_id: string;
@@ -60,49 +61,24 @@ interface MultiComparisonChatDialogProps {
   initialMultiComparisonResult: MultiComparisonResultForChat | null;
 }
 
-// Define tier limits for chat (matching backend for consistency)
-const UNAUTHENTICATED_LIMITS = {
-  chatMessageLimit: 5, // Max AI responses per session
-  maxResponseWordCount: 100,
-};
-
-const AUTHENTICATED_FREE_TIER_LIMITS = {
-  chatMessageLimit: 10, // Max AI responses per session
-  maxResponseWordCount: 150,
-};
-
-const PAID_TIER_LIMITS = {
-  chatMessageLimit: 100, // Max AI responses per session
-  maxResponseWordCount: 500,
-};
+// Tier limits for chat are now removed from the frontend and backend Edge Functions.
+// These constants are no longer needed.
 
 const MultiComparisonChatDialog: React.FC<MultiComparisonChatDialogProps> = ({
   isOpen,
   onOpenChange,
   initialMultiComparisonResult,
 }) => {
-  const { user, subscriptionStatus, subscriptionPlanId } = useAuth(); // Get auth and subscription info
+  const { user, subscriptionStatus, subscriptionPlanId } = useAuth();
 
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
-  const [desiredWordCount, setDesiredWordCount] = useState<number>(300);
+  // Default desired word count, no longer tied to tier limits
+  const [desiredWordCount, setDesiredWordCount] = useState<number>(300); 
   const [selectedPersona, setSelectedPersona] = useState<string>("friendly");
   const [currentExternalContext, setCurrentExternalContext] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null); // Define error state
+  const [error, setError] = useState<string | null>(null);
 
-  const isPaidTier = subscriptionStatus === 'active' && subscriptionPlanId !== 'free';
-  const isAuthenticatedFreeTier = user && !isPaidTier; // Authenticated but not paid
-  const isUnauthenticated = !user; // Not logged in
-
-  let currentLimits;
-  if (isPaidTier) {
-    currentLimits = PAID_TIER_LIMITS;
-  } else if (isAuthenticatedFreeTier) {
-    currentLimits = AUTHENTICATED_FREE_TIER_LIMITS;
-  } else if (isUnauthenticated) { // Explicitly use isUnauthenticated
-    currentLimits = UNAUTHENTICATED_LIMITS;
-  } else { // Fallback, though should not be reached if auth logic is sound
-    currentLimits = UNAUTHENTICATED_LIMITS; // Default to most restrictive
-  }
+  // const isPaidTier = subscriptionStatus === 'active' && subscriptionPlanId !== 'free'; // Removed as it's no longer used
 
   useEffect(() => {
     if (isOpen) {
@@ -126,15 +102,15 @@ const MultiComparisonChatDialog: React.FC<MultiComparisonChatDialogProps> = ({
           },
         ]);
       }
-      // Reset desired word count to current tier's max when dialog opens
-      setDesiredWordCount(currentLimits.maxResponseWordCount);
+      // Reset desired word count to a default, no longer tied to tier's max
+      setDesiredWordCount(300); 
       setError(null); // Clear error when dialog opens
     } else {
       setChatMessages([]);
       setCurrentExternalContext(null);
       setError(null); // Clear error when dialog closes
     }
-  }, [isOpen, initialMultiComparisonResult, currentLimits.maxResponseWordCount, user, subscriptionStatus, subscriptionPlanId]); // Add currentLimits to dependencies
+  }, [isOpen, initialMultiComparisonResult, user, subscriptionStatus, subscriptionPlanId]);
 
   const fetchExternalContextMutation = useMutation({
     mutationFn: async (query: string) => {
@@ -184,7 +160,7 @@ const MultiComparisonChatDialog: React.FC<MultiComparisonChatDialogProps> = ({
           chatMessages: [...chatMessages, newUserMessage],
           multiComparisonResult: initialMultiComparisonResult,
           externalContext: currentExternalContext,
-          desiredWordCount: desiredWordCount,
+          desiredWordCount: desiredWordCount, // Still pass desiredWordCount to AI
           selectedPersona: selectedPersona,
         },
       });
@@ -214,26 +190,19 @@ const MultiComparisonChatDialog: React.FC<MultiComparisonChatDialogProps> = ({
             : msg
         )
       );
-      setError(`Failed to get AI response: ${(err as Error).message}`); // Set error state on chat mutation error
+      setError(`Failed to get AI response: ${(err as Error).message}`);
     },
   });
 
   const handleSendMessage = (messageText: string) => {
     if (messageText.trim() && initialMultiComparisonResult) {
-      // Count AI messages in current session to check limit
-      const aiMessageCount = chatMessages.filter(msg => msg.sender === 'ai').length;
-      if (aiMessageCount >= currentLimits.chatMessageLimit) {
-        setError(`Chat message limit (${currentLimits.chatMessageLimit} AI responses) exceeded for this session. ${isPaidTier ? 'You have reached your paid tier limit.' : 'Upgrade to a paid tier for more chat messages.'}`);
-        return;
-      }
       setError(null); // Clear previous errors
       chatMutation.mutate(messageText);
     }
   };
 
+  // Simplified disabled logic: only disable if no comparison result or mutation is pending
   const isChatDisabled = !initialMultiComparisonResult || chatMutation.isPending || fetchExternalContextMutation.isPending;
-  const aiResponsesInSession = chatMessages.filter(msg => msg.sender === 'ai').length;
-  const isChatLimitReached = aiResponsesInSession >= currentLimits.chatMessageLimit;
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -252,7 +221,7 @@ const MultiComparisonChatDialog: React.FC<MultiComparisonChatDialogProps> = ({
             <Select
               value={selectedPersona}
               onValueChange={setSelectedPersona}
-              disabled={isChatDisabled || isChatLimitReached}
+              disabled={isChatDisabled}
             >
               <SelectTrigger id="persona-select" className="w-[140px]">
                 <SelectValue placeholder="Select persona" />
@@ -266,48 +235,38 @@ const MultiComparisonChatDialog: React.FC<MultiComparisonChatDialogProps> = ({
               </SelectContent>
             </Select>
           </div>
-          <div className="flex items-center space-x-2">
+          {/* Removed "Response Word Count" input as it's no longer tier-limited */}
+          {/* <div className="flex items-center space-x-2">
             <Label htmlFor="desired-word-count" className="text-sm">Response Word Count:</Label>
             <Input
               id="desired-word-count"
               type="number"
               min="50"
-              max={currentLimits.maxResponseWordCount} // Dynamically set max based on tier
+              max={currentLimits.maxResponseWordCount}
               step="50"
               value={desiredWordCount}
               onChange={(e) => setDesiredWordCount(Number(e.target.value))}
               className="w-[100px]"
               disabled={isChatDisabled || isChatLimitReached}
             />
-          </div>
+          </div> */}
         </div>
         {error && (
           <Alert variant="destructive" className="mb-4">
-            <AlertTitle>Chat Limit Reached</AlertTitle>
+            <AlertTitle>Chat Error</AlertTitle> {/* Changed title from "Chat Limit Reached" */}
             <AlertDescription>
               {error}
-              {!isPaidTier && (
-                <span className="ml-2 text-blue-500">
-                  <Link to="/upgrade" className="underline">Upgrade to a paid tier</Link> for more chat messages.
-                </span>
-              )}
+              {/* Removed upgrade prompt as limits are no longer enforced here */}
             </AlertDescription>
           </Alert>
         )}
-        <p className="text-sm text-muted-foreground mb-2">
-          AI responses remaining: {Math.max(0, currentLimits.chatMessageLimit - aiResponsesInSession)}/{currentLimits.chatMessageLimit}
-          {!isPaidTier && isChatLimitReached && (
-            <span className="ml-2 text-blue-500">
-              <Link to="/upgrade" className="underline">Upgrade to a paid tier</Link> for more chat messages.
-            </span>
-          )}
-        </p>
+        {/* Removed "AI responses remaining" display */}
         <div className="flex-1 overflow-hidden">
           <ChatInterface
             messages={chatMessages}
             onSendMessage={handleSendMessage}
             isLoading={chatMutation.isPending || fetchExternalContextMutation.isPending}
-            disabled={isChatDisabled || isChatLimitReached}
+            disabled={isChatDisabled}
           />
         </div>
       </DialogContent>
