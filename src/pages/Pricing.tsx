@@ -2,7 +2,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-// Removed: import { Separator } from '@/components/ui/separator';
 
 const Pricing = () => {
   return (
@@ -23,6 +22,9 @@ const Pricing = () => {
                 <p className="text-muted-foreground">Perfect for trying out SentiVibe and occasional use.</p>
               </CardHeader>
               <CardContent className="flex-grow flex flex-col justify-between">
+                <p className="text-sm text-muted-foreground mb-4">
+                  This tier applies to **unauthenticated users** (visitors without an account) and **authenticated but unpaid users** (those who have signed up but do not have an active paid subscription).
+                </p>
                 <ul className="space-y-3 text-gray-700 dark:text-gray-300 mb-6">
                   <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" /> 1 Single Video Analysis/day</li>
                   <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" /> 1 Multi-Video Comparison/day</li>
@@ -31,7 +33,7 @@ const Pricing = () => {
                   <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" /> Unlimited Copilot Queries</li>
                   <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" /> Watermarked PDF Reports</li>
                   <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" /> Ads displayed</li>
-                  <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" /> Access to "My Analyses" History</li>
+                  <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" /> Access to "My Analyses" History (for authenticated users)</li>
                 </ul>
                 <Button asChild variant="outline" className="w-full mt-auto">
                   <Link to="/login">Sign In / Sign Up (Free)</Link>
@@ -46,6 +48,9 @@ const Pricing = () => {
                 <p className="text-muted-foreground">For power users and professionals seeking comprehensive insights.</p>
               </CardHeader>
               <CardContent className="flex-grow flex flex-col justify-between">
+                <p className="text-sm text-muted-foreground mb-4">
+                  This tier is exclusively for **authenticated users with an active paid subscription**. It removes daily usage limitations for core features and provides an ad-free experience.
+                </p>
                 <ul className="space-y-3 text-gray-700 dark:text-gray-300 mb-6">
                   <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" /> 50 Single Video Analyses/day</li>
                   <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" /> 20 Multi-Video Comparisons/day</li>
