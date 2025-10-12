@@ -46,23 +46,17 @@ interface MultiComparisonResult {
   videos: MultiComparisonVideo[];
 }
 
-// Define tier limits (matching backend for consistency)
+// Define simplified tier limits (only daily comparisons remain)
 const UNAUTHENTICATED_LIMITS = {
   dailyComparisons: 1,
-  maxCustomQuestions: 1,
-  maxCustomQuestionWordCount: 100,
 };
 
 const AUTHENTICATED_FREE_TIER_LIMITS = {
-  dailyComparisons: 2,
-  maxCustomQuestions: 2,
-  maxCustomQuestionWordCount: 150,
+  dailyComparisons: 1,
 };
 
 const PAID_TIER_LIMITS = {
-  dailyComparisons: 20,
-  maxCustomQuestions: 5,
-  maxCustomQuestionWordCount: 500,
+  dailyComparisons: 20, // Effectively unlimited
 };
 
 // Function to fetch anonymous usage
@@ -83,6 +77,7 @@ const CreateMultiComparison = () => {
   const { user, subscriptionStatus, subscriptionPlanId } = useAuth();
 
   const [videoLinks, setVideoLinks] = useState<string[]>(['', '']);
+  // Default word count for new questions, now unlimited by tier
   const [customComparativeQuestions, setCustomComparativeQuestions] = useState<CustomComparativeQuestion[]>([{ question: "", wordCount: 200 }]);
   const [multiComparisonResult, setMultiComparisonResult] = useState<MultiComparisonResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -189,12 +184,14 @@ const CreateMultiComparison = () => {
     if (initialMultiComparison) {
       setMultiComparisonResult(initialMultiComparison);
       setVideoLinks(initialMultiComparison.videos.map(video => video.original_video_link));
-      setCustomComparativeQuestions(initialMultiComparison.custom_comparative_qa_results.length > 0 
+      // Initialize custom questions from loaded multi-comparison, now unlimited by tier
+      const initialLoadedQuestions = initialMultiComparison.custom_comparative_qa_results.length > 0 
         ? initialMultiComparison.custom_comparative_qa_results.map(qa => ({
             question: qa.question,
-            wordCount: Math.min(qa.wordCount, currentLimits.maxCustomQuestionWordCount)
-          })).slice(0, currentLimits.maxCustomQuestions)
-        : [{ question: "", wordCount: currentLimits.maxCustomQuestionWordCount }]);
+            wordCount: qa.wordCount // No max limit enforced here
+          }))
+        : [{ question: "", wordCount: 200 }]; // Default word count for new questions
+      setCustomComparativeQuestions(initialLoadedQuestions);
       
       if (forceRecompareFromNav) {
         const validVideoLinks = initialMultiComparison.videos.map(video => video.original_video_link);
@@ -202,10 +199,10 @@ const CreateMultiComparison = () => {
         createMultiComparisonMutation.mutate({ videoLinks: validVideoLinks, customComparativeQuestions: validQuestions, forceRecompare: true });
       }
     } else {
-      // Reset custom questions to default for new comparison, respecting current tier limits
-      setCustomComparativeQuestions([{ question: "", wordCount: currentLimits.maxCustomQuestionWordCount }]);
+      // Reset custom questions to default for new comparison, now unlimited by tier
+      setCustomComparativeQuestions([{ question: "", wordCount: 200 }]); // Default word count for new questions
     }
-  }, [initialMultiComparison, forceRecompareFromNav, createMultiComparisonMutation, currentLimits.maxCustomQuestionWordCount, currentLimits.maxCustomQuestions]);
+  }, [initialMultiComparison, forceRecompareFromNav, createMultiComparisonMutation]); // Removed currentLimits from dependencies
 
   const handleAddVideoLink = () => {
     setVideoLinks([...videoLinks, '']);
@@ -222,11 +219,8 @@ const CreateMultiComparison = () => {
   };
 
   const handleAddQuestion = () => {
-    if (customComparativeQuestions.length < currentLimits.maxCustomQuestions) {
-      setCustomComparativeQuestions([...customComparativeQuestions, { question: "", wordCount: currentLimits.maxCustomQuestionWordCount }]);
-    } else {
-      setError(`You can only add a maximum of ${currentLimits.maxCustomQuestions} custom comparative question(s) on your current plan.`);
-    }
+    // Custom questions are now unlimited, no tier check needed here
+    setCustomComparativeQuestions([...customComparativeQuestions, { question: "", wordCount: 200 }]); // Default word count for new questions
   };
 
   const handleRemoveQuestion = (index: number) => {
@@ -236,9 +230,9 @@ const CreateMultiComparison = () => {
   const handleQuestionChange = (index: number, field: keyof CustomComparativeQuestion, value: string | number) => {
     const newQuestions = [...customComparativeQuestions];
     if (field === 'wordCount') {
-      newQuestions[index][field] = Math.min(Number(value), currentLimits.maxCustomQuestionWordCount);
+      (newQuestions[index] as CustomComparativeQuestion).wordCount = Number(value);
     } else {
-      newQuestions[index][field] = value as string;
+      (newQuestions[index] as CustomComparativeQuestion).question = value as string;
     }
     setCustomComparativeQuestions(newQuestions);
   };
@@ -338,8 +332,7 @@ const CreateMultiComparison = () => {
                     value={qa.question}
                     onChange={(e) => handleQuestionChange(index, 'question', e.target.value)}
                     className="mt-1"
-                    // Only disable when analysis is pending
-                    disabled={createMultiComparisonMutation.isPending} 
+                    disabled={createMultiComparisonMutation.isPending}
                   />
                 </div>
                 <div className="w-24">
@@ -348,23 +341,21 @@ const CreateMultiComparison = () => {
                     id={`comp-wordCount-${index}`}
                     type="number"
                     min="50"
-                    max={currentLimits.maxCustomQuestionWordCount}
+                    // Max attribute removed as custom question word count is now unlimited
                     step="50"
                     value={qa.wordCount}
                     onChange={(e) => handleQuestionChange(index, 'wordCount', e.target.value)}
                     className="mt-1"
-                    // Only disable when analysis is pending
-                    disabled={createMultiComparisonMutation.isPending} 
+                    disabled={createMultiComparisonMutation.isPending}
                   />
                 </div>
-                {customComparativeQuestions.length > 1 && (
+                {customComparativeQuestions.length > 0 && ( // Always allow removing if there's at least one question
                   <Button
                     type="button"
                     variant="ghost"
                     size="icon"
                     onClick={() => handleRemoveQuestion(index)}
-                    // Only disable when analysis is pending
-                    disabled={createMultiComparisonMutation.isPending} 
+                    disabled={createMultiComparisonMutation.isPending}
                     className="self-end sm:self-auto"
                   >
                     <XCircle className="h-5 w-5 text-red-500" />
@@ -376,16 +367,12 @@ const CreateMultiComparison = () => {
               type="button"
               variant="outline"
               onClick={handleAddQuestion}
-              disabled={createMultiComparisonMutation.isPending || isComparisonLimitReached || customComparativeQuestions.length >= currentLimits.maxCustomQuestions}
+              disabled={createMultiComparisonMutation.isPending || isComparisonLimitReached} // Only disable if comparison pending or daily limit reached
               className="w-full flex items-center gap-2"
             >
               <PlusCircle className="h-4 w-4" /> Add Another Comparative Question
             </Button>
-            {!isPaidTier && customComparativeQuestions.length >= currentLimits.maxCustomQuestions && (
-              <p className="text-sm text-red-500 mt-1">
-                You can only ask {currentLimits.maxCustomQuestions} custom comparative question(s) on the free tier. <Link to="/upgrade" className="underline">Upgrade</Link> to ask more.
-              </p>
-            )}
+            {/* Removed tier-specific message for custom comparative question limits as they are now unlimited */}
 
             <Button type="submit" className="w-full" disabled={createMultiComparisonMutation.isPending || isComparisonLimitReached}>
               {createMultiComparisonMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

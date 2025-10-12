@@ -70,23 +70,17 @@ interface AnalysisResponse {
   lastReanalyzedAt?: string;
 }
 
-// Define tier limits (matching backend for consistency)
+// Define simplified tier limits (only daily analyses remain)
 const UNAUTHENTICATED_LIMITS = {
-  dailyAnalyses: 2,
-  maxCustomQuestions: 1,
-  maxCustomQuestionWordCount: 100,
+  dailyAnalyses: 1,
 };
 
 const AUTHENTICATED_FREE_TIER_LIMITS = {
-  dailyAnalyses: 5,
-  maxCustomQuestions: 2,
-  maxCustomQuestionWordCount: 150,
+  dailyAnalyses: 1,
 };
 
 const PAID_TIER_LIMITS = {
-  dailyAnalyses: 50,
-  maxCustomQuestions: 5,
-  maxCustomQuestionWordCount: 500,
+  dailyAnalyses: 50, // Effectively unlimited
 };
 
 // Function to fetch anonymous usage
@@ -108,7 +102,8 @@ const AnalyzeVideo = () => {
   const { user, subscriptionStatus, subscriptionPlanId } = useAuth();
 
   const [videoLink, setVideoLink] = useState("");
-  const [customQuestions, setCustomQuestions] = useState<CustomQuestion[]>([{ question: "", wordCount: 200 }]);
+  // Default word count for new questions, now unlimited by tier
+  const [customQuestions, setCustomQuestions] = useState<CustomQuestion[]>([{ question: "", wordCount: 200 }]); 
   const [analysisResult, setAnalysisResult] = useState<AnalysisResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isChatDialogOpen, setIsChatDialogOpen] = useState(false);
@@ -237,12 +232,12 @@ const AnalyzeVideo = () => {
       setAnalysisResult(loadedAnalysis);
       setVideoLink(initialBlogPost.original_video_link || "");
 
-      // Initialize custom questions from loaded blog post, respecting current tier limits
+      // Initialize custom questions from loaded blog post, now unlimited by tier
       const initialLoadedQuestions = initialBlogPost.custom_qa_results?.map(qa => ({
         question: qa.question,
-        wordCount: Math.min(qa.wordCount, currentLimits.maxCustomQuestionWordCount)
-      })) || [{ question: "", wordCount: currentLimits.maxCustomQuestionWordCount }];
-      setCustomQuestions(initialLoadedQuestions.slice(0, currentLimits.maxCustomQuestions));
+        wordCount: qa.wordCount // No max limit enforced here
+      })) || [{ question: "", wordCount: 200 }]; // Default word count for new questions
+      setCustomQuestions(initialLoadedQuestions);
 
 
       if (openChatImmediately) {
@@ -252,10 +247,10 @@ const AnalyzeVideo = () => {
         analyzeVideoMutation.mutate({ videoLink: initialBlogPost.original_video_link, customQuestions: [], forceReanalyze: true });
       }
     } else {
-      // Reset custom questions to default for new analysis, respecting current tier limits
-      setCustomQuestions([{ question: "", wordCount: currentLimits.maxCustomQuestionWordCount }]);
+      // Reset custom questions to default for new analysis, now unlimited by tier
+      setCustomQuestions([{ question: "", wordCount: 200 }]); // Default word count for new questions
     }
-  }, [initialBlogPost, openChatImmediately, forceReanalyzeFromNav, analyzeVideoMutation, currentLimits.maxCustomQuestions, currentLimits.maxCustomQuestionWordCount]);
+  }, [initialBlogPost, openChatImmediately, forceReanalyzeFromNav, analyzeVideoMutation]); // Removed currentLimits from dependencies
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -272,11 +267,8 @@ const AnalyzeVideo = () => {
   };
 
   const handleAddQuestion = () => {
-    if (customQuestions.length < currentLimits.maxCustomQuestions) {
-      setCustomQuestions([...customQuestions, { question: "", wordCount: currentLimits.maxCustomQuestionWordCount }]);
-    } else {
-      setError(`You can only add a maximum of ${currentLimits.maxCustomQuestions} custom question(s) on your current plan.`);
-    }
+    // Custom questions are now unlimited, no tier check needed here
+    setCustomQuestions([...customQuestions, { question: "", wordCount: 200 }]); // Default word count for new questions
   };
 
   const handleRemoveQuestion = (index: number) => {
@@ -286,9 +278,9 @@ const AnalyzeVideo = () => {
   const handleQuestionChange = (index: number, field: keyof CustomQuestion, value: string | number) => {
     const newQuestions = [...customQuestions];
     if (field === 'wordCount') {
-      newQuestions[index][field] = Math.min(Number(value), currentLimits.maxCustomQuestionWordCount);
+      (newQuestions[index] as CustomQuestion).wordCount = Number(value);
     } else {
-      newQuestions[index][field] = value as string;
+      (newQuestions[index] as CustomQuestion).question = value as string;
     }
     setCustomQuestions(newQuestions);
   };
@@ -386,8 +378,7 @@ const AnalyzeVideo = () => {
                     value={qa.question}
                     onChange={(e) => handleQuestionChange(index, 'question', e.target.value)}
                     className="mt-1 min-h-[60px]"
-                    // Only disable when analysis is pending
-                    disabled={analyzeVideoMutation.isPending} 
+                    disabled={analyzeVideoMutation.isPending}
                   />
                 </div>
                 <div className="w-24">
@@ -396,23 +387,21 @@ const AnalyzeVideo = () => {
                     id={`wordCount-${index}`}
                     type="number"
                     min="50"
-                    max={currentLimits.maxCustomQuestionWordCount}
+                    // Max attribute removed as custom question word count is now unlimited
                     step="50"
                     value={qa.wordCount}
                     onChange={(e) => handleQuestionChange(index, 'wordCount', e.target.value)}
                     className="mt-1"
-                    // Only disable when analysis is pending
-                    disabled={analyzeVideoMutation.isPending} 
+                    disabled={analyzeVideoMutation.isPending}
                   />
                 </div>
-                {customQuestions.length > 1 && (
+                {customQuestions.length > 0 && ( // Always allow removing if there's at least one question
                   <Button
                     type="button"
                     variant="ghost"
                     size="icon"
                     onClick={() => handleRemoveQuestion(index)}
-                    // Only disable when analysis is pending
-                    disabled={analyzeVideoMutation.isPending} 
+                    disabled={analyzeVideoMutation.isPending}
                     className="self-end sm:self-auto"
                   >
                     <XCircle className="h-5 w-5 text-red-500" />
@@ -424,16 +413,12 @@ const AnalyzeVideo = () => {
               type="button"
               variant="outline"
               onClick={handleAddQuestion}
-              disabled={analyzeVideoMutation.isPending || isAnalysisLimitReached || customQuestions.length >= currentLimits.maxCustomQuestions}
+              disabled={analyzeVideoMutation.isPending || isAnalysisLimitReached} // Only disable if analysis pending or daily limit reached
               className="w-full flex items-center gap-2"
             >
               <PlusCircle className="h-4 w-4" /> Add Another Question
             </Button>
-            {!isPaidTier && customQuestions.length >= currentLimits.maxCustomQuestions && (
-              <p className="text-sm text-red-500 mt-1">
-                You can only ask {currentLimits.maxCustomQuestions} custom question(s) on the free tier. <Link to="/upgrade" className="underline">Upgrade</Link> to ask more.
-              </p>
-            )}
+            {/* Removed tier-specific message for custom question limits as they are now unlimited */}
 
             <Button type="submit" className="w-full" disabled={analyzeVideoMutation.isPending || isAnalysisLimitReached}>
               {analyzeVideoMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
