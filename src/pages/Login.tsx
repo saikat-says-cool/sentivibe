@@ -1,12 +1,12 @@
 import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/integrations/supabase/auth'; // Changed from useSession
+import { useAuth } from '@/integrations/supabase/auth';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
-  const { session, isLoading } = useAuth(); // Changed from useSession
+  const { session, isLoading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -27,7 +27,7 @@ const Login = () => {
         </h2>
         <Auth
           supabaseClient={supabase}
-          providers={[]} // No third-party providers for now, can be added later
+          providers={[]}
           appearance={{
             theme: ThemeSupa,
             variables: {
@@ -39,8 +39,11 @@ const Login = () => {
               },
             },
           }}
-          theme="light" // Using light theme, can be dynamic later
+          theme="light"
           redirectTo={window.location.origin + '/'}
+          magicLink={true} // Ensure magic link is enabled if desired
+          // The 'signUp' prop for passing initial data is not supported by this Auth component.
+          // First name and last name will be null in profiles table until user updates them in AccountCenter.
         />
       </div>
     </div>
