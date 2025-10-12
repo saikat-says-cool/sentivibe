@@ -232,7 +232,8 @@ const MultiComparisonChatDialog: React.FC<MultiComparisonChatDialogProps> = ({
         <div className="flex-1 overflow-hidden">
           <ChatInterface
             messages={chatMessages}
-            onSendMessage={handleSendMessage} {/* Corrected comment placement */}
+            // Corrected comment placement
+            onSendMessage={handleSendMessage}
             isLoading={chatMutation.isPending}
             disabled={isChatDisabled}
           />
