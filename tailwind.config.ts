@@ -1,7 +1,6 @@
 import type { Config } from "tailwindcss";
 
 export default {
-  // Removed darkMode: ["class"], as we are no longer toggling dark mode
   content: [
     "./pages/**/*.{ts,tsx}",
     "./components/**/*.{ts,tsx}",
@@ -19,8 +18,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['Jura', 'sans-serif'], // Changed to Jura
-        heading: ['Jura', 'sans-serif'], // Changed to Jura
+        sans: ['AR One Sans', 'sans-serif'], // Changed to AR One Sans
+        heading: ['AR One Sans', 'sans-serif'], // Changed to AR One Sans
       },
       colors: {
         border: "hsl(var(--border))",

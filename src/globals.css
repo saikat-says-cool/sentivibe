@@ -56,7 +56,7 @@
   /* Removed all .dark and .dark.theme-* blocks */
   
   body {
-    @apply bg-background text-foreground font-sans bg-gradient-to-br from-[var(--body-gradient-start)] to-[var(--body-gradient-end)];
+    @apply bg-background text-foreground; /* Removed font-sans here */
   }
 
   /* Custom rule to underline links within prose content */
