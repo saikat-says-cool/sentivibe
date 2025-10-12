@@ -193,26 +193,27 @@ serve(async (req: Request) => {
       }
 
       if (shouldPerformIndividualReanalysis) {
-        // Pass isInternalCall: true to youtube-analyzer
         const youtubeAnalyzerResponse = await supabaseClient.functions.invoke('youtube-analyzer', {
-          body: { videoLink: videoLink, customQuestions: [], forceReanalyze: true, isInternalCall: true },
+          body: { videoLink: videoLink, customQuestions: [], forceReanalyze: true, isInternalCall: true }, // Pass isInternalCall: true
         });
 
         if (youtubeAnalyzerResponse.error) {
           console.error(`Error invoking youtube-analyzer for ${videoId}:`, youtubeAnalyzerResponse.error);
-          // Check if the error is a FunctionsHttpError with a 400 or 403 status
-          if (youtubeAnalyzerResponse.error.name === 'FunctionsHttpError' && (youtubeAnalyzerResponse.error.context?.status === 400 || youtubeAnalyzerResponse.error.context?.status === 403)) {
+          const errorContextResponse = youtubeAnalyzerResponse.error.context as Response; // Cast to Response
+
+          if (errorContextResponse && (errorContextResponse.status === 400 || errorContextResponse.status === 403)) {
             try {
-              const errorBody = await youtubeAnalyzerResponse.error.context.json();
+              const errorBody = await errorContextResponse.json();
               if (errorBody && errorBody.error) {
-                // Propagate the specific error message from youtube-analyzer
                 throw new Error(`Failed to analyze video ${videoId}: ${errorBody.error}`);
               }
             } catch (jsonError) {
-              console.error(`Failed to parse youtube-analyzer error response for ${videoId}:`, jsonError);
+              console.error(`Failed to parse youtube-analyzer error response body for ${videoId}:`, jsonError);
+              // If JSON parsing fails, still provide a more specific error than generic FunctionsHttpError message
+              throw new Error(`Failed to analyze video ${videoId}: youtube-analyzer returned status ${errorContextResponse.status} but its error message could not be parsed.`);
             }
           }
-          // Fallback to generic error if specific message couldn't be extracted
+          // Fallback for other types of FunctionsHttpError or non-FunctionsHttpError
           throw new Error(`Failed to analyze video ${videoId}: ${youtubeAnalyzerResponse.error.message}`);
         }
         const { data: updatedBlogPost, error: refetchError } = await supabaseClient
