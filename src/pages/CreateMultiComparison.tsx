@@ -209,6 +209,11 @@ const CreateMultiComparison = () => {
     }
   }, [initialMultiComparison, forceRecompareFromNav, createMultiComparisonMutation, isChatDialogOpen, navigate, location.pathname, location.state]);
 
+  // Set SEO-optimized browser tab title
+  useEffect(() => {
+    document.title = "Create Multi-Video Comparison - SentiVibe";
+  }, []);
+
   const handleAddVideoLink = () => {
     setVideoLinks([...videoLinks, '']);
   };

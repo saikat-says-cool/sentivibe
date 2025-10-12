@@ -9,6 +9,7 @@ import { Link } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
 import LibraryCopilot from '@/components/LibraryCopilot';
 import PaginationControls from '@/components/PaginationControls'; // Import PaginationControls
+import { useEffect } from 'react'; // Import useEffect
 
 interface AiAnalysisResult {
   overall_sentiment: string;
@@ -75,8 +76,6 @@ const fetchBlogPosts = async (page: number, pageSize: number, searchTerm: string
 const VideoAnalysisLibrary = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  // filteredPosts is no longer needed as filtering is done server-side
-  // const [filteredPosts, setFilteredPosts] = useState<BlogPost[]>([]);
 
   const { data, isLoading, error } = useQuery<{ data: BlogPost[], totalCount: number }, Error>({
     queryKey: ['blogPosts', currentPage, searchTerm], // Add searchTerm to queryKey
@@ -88,29 +87,19 @@ const VideoAnalysisLibrary = () => {
   const totalCount = data?.totalCount || 0;
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
-  // Removed client-side filtering useEffect as filtering is now server-side
-  // useEffect(() => {
-  //   if (blogPosts) {
-  //     const lowerCaseSearchTerm = searchTerm.toLowerCase();
-  //     const results = blogPosts.filter(post =>
-  //       post.title.toLowerCase().includes(lowerCaseSearchTerm) ||
-  //       (post.creator_name && post.creator_name.toLowerCase().includes(lowerCaseSearchTerm)) ||
-  //       (post.meta_description && post.meta_description.toLowerCase().includes(lowerCaseSearchTerm)) ||
-  //       (post.keywords && post.keywords.some(keyword => keyword.toLowerCase().includes(lowerCaseSearchTerm)))
-  //     );
-  //     setFilteredPosts(results);
-  //   }
-  // }, [searchTerm, blogPosts]);
-
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-    // No need to clear search term here, as it's part of the query key
   };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
     setCurrentPage(1); // Reset to first page on new search
   };
+
+  // Set SEO-optimized browser tab title
+  useEffect(() => {
+    document.title = "Analysis Library - SentiVibe";
+  }, []);
 
   if (isLoading) {
     return (

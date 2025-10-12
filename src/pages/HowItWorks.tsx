@@ -1,7 +1,13 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Youtube, GitCompare, MessageSquare, FileText, Search } from 'lucide-react';
+import { useEffect } from 'react'; // Import useEffect
 
 const HowItWorks = () => {
+  // Set SEO-optimized browser tab title
+  useEffect(() => {
+    document.title = "How SentiVibe Works";
+  }, []);
+
   return (
     <div className="container mx-auto p-4 max-w-3xl">
       <Card className="mb-6">

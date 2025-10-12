@@ -1,8 +1,14 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
+import { useEffect } from 'react'; // Import useEffect
 
 const Checkout = () => {
+  // Set SEO-optimized browser tab title
+  useEffect(() => {
+    document.title = "Checkout - SentiVibe";
+  }, []);
+
   return (
     <div className="container mx-auto p-4 max-w-2xl min-h-[calc(100vh-12rem)] flex items-center justify-center">
       <Card className="w-full text-center">

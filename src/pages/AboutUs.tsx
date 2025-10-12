@@ -1,6 +1,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useEffect } from 'react'; // Import useEffect
 
 const AboutUs = () => {
+  // Set SEO-optimized browser tab title
+  useEffect(() => {
+    document.title = "About Us - SentiVibe";
+  }, []);
+
   return (
     <div className="container mx-auto p-4 max-w-3xl">
       <Card className="mb-6">

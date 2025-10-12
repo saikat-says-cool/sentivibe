@@ -2,8 +2,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useEffect } from 'react'; // Import useEffect
 
 const Pricing = () => {
+  // Set SEO-optimized browser tab title
+  useEffect(() => {
+    document.title = "Pricing Plans - SentiVibe";
+  }, []);
+
   return (
     <div className="container mx-auto p-4 max-w-5xl">
       <Card className="mb-8">

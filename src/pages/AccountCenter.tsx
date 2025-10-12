@@ -60,6 +60,11 @@ const AccountCenter = () => {
     }
   }, [profile]);
 
+  // Set SEO-optimized browser tab title
+  useEffect(() => {
+    document.title = "Account Center - SentiVibe";
+  }, []);
+
   const updateProfileMutation = useMutation({
     mutationFn: async (newProfileData: { first_name: string; last_name: string }) => {
       if (!user) throw new Error("User not authenticated.");

@@ -15,6 +15,11 @@ const Login = () => {
     }
   }, [session, navigate]);
 
+  // Set SEO-optimized browser tab title
+  useEffect(() => {
+    document.title = "Login / Sign Up - SentiVibe";
+  }, []);
+
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }

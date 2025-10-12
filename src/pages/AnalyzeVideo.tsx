@@ -250,6 +250,11 @@ const AnalyzeVideo = () => {
     }
   }, [initialBlogPost, openChatImmediately, forceReanalyzeFromNav, analyzeVideoMutation, isChatDialogOpen, navigate, location.pathname, location.state]);
 
+  // Set SEO-optimized browser tab title
+  useEffect(() => {
+    document.title = "Analyze YouTube Video - SentiVibe";
+  }, []);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (videoLink.trim()) {

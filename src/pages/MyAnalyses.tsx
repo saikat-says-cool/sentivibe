@@ -91,6 +91,11 @@ const MyAnalyses = () => {
     }
   }, [searchTerm, blogPosts]);
 
+  // Set SEO-optimized browser tab title
+  useEffect(() => {
+    document.title = "My Analyses - SentiVibe";
+  }, []);
+
   if (isAuthLoading) {
     return (
       <div className="container mx-auto p-4 max-w-4xl text-center">
@@ -101,6 +106,7 @@ const MyAnalyses = () => {
   }
 
   if (!user) {
+    // This case should be handled by useEffect redirect, but as a fallback
     return (
       <div className="container mx-auto p-4 max-w-4xl text-center text-gray-500 dark:text-gray-400">
         <h2 className="text-2xl font-bold mb-4">Access Denied</h2>
@@ -118,6 +124,10 @@ const MyAnalyses = () => {
     return (
       <div className="container mx-auto p-4 max-w-4xl">
         <h1 className="text-3xl font-bold mb-6">My Analysis History</h1>
+        <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-2 mb-6">
+          <Skeleton className="flex-1 h-10" />
+          <Skeleton className="h-10 w-10 sm:w-auto px-4" />
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[...Array(6)].map((_, i) => (
             <Card key={i}>

@@ -3,8 +3,14 @@ import { Button } from '@/components/ui/button';
 import { CheckCircle2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Separator } from '@/components/ui/separator'; // Import Separator
+import { useEffect } from 'react'; // Import useEffect
 
 const Upgrade = () => {
+  // Set SEO-optimized browser tab title
+  useEffect(() => {
+    document.title = "Upgrade to Paid Tier - SentiVibe";
+  }, []);
+
   return (
     <div className="container mx-auto p-4 max-w-4xl">
       <Card className="mb-6">
