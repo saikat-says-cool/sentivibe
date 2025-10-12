@@ -13,6 +13,7 @@ import HowItWorks from './pages/HowItWorks';
 import Upgrade from './pages/Upgrade';
 import AccountCenter from './pages/AccountCenter';
 import Pricing from './pages/Pricing';
+import Checkout from './pages/Checkout'; // Import the new Checkout page
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from './integrations/supabase/auth';
 import { ThemeProvider } from './components/theme-provider';
@@ -40,13 +41,13 @@ function App() {
                   <Route path="/blog/:slug" element={<BlogPostDetail />} />
                   <Route path="/create-multi-comparison" element={<CreateMultiComparison />} />
                   <Route path="/multi-comparison-library" element={<MultiComparisonLibrary />} />
-                  {/* Removed the ComparisonDetail route as the file has been deleted */}
                   <Route path="/multi-comparison/:slug" element={<MultiComparisonDetail />} />
                   <Route path="/about-us" element={<AboutUs />} />
                   <Route path="/how-it-works" element={<HowItWorks />} />
                   <Route path="/upgrade" element={<Upgrade />} />
                   <Route path="/account" element={<AccountCenter />} />
                   <Route path="/pricing" element={<Pricing />} />
+                  <Route path="/checkout" element={<Checkout />} /> {/* New checkout route */}
                 </Routes>
               </main>
               <Footer />
