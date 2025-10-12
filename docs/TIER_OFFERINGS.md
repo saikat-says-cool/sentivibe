@@ -1,18 +1,14 @@
 # SentiVibe Tier Offerings & Monetization Strategy
 
-This document outlines the monetization strategy for SentiVibe, distinguishing between a Free Tier (further split by authentication status) and a Paid Tier. The goal is to provide significant value upfront to attract users and monetize through advertising for the free tier, while offering an enhanced, unrestricted experience for paid subscribers.
+This document outlines the simplified monetization strategy for SentiVibe, distinguishing between a Free Tier and a Paid Tier. The goal is to provide significant value upfront to attract users and monetize through advertising for the free tier, while offering an enhanced, unrestricted experience for paid subscribers.
 
 ## 1. Tier Definitions
 
-### 1.1. Unauthenticated User Tier
-*   **User Types:** Visitors who have not signed up.
+### 1.1. Free Tier (Authenticated or Unauthenticated)
+*   **User Types:** Visitors who have not signed up, and users who have signed up but do not have an active paid subscription.
 *   **Primary Goal:** User acquisition, product demonstration, and ad-based monetization.
 
-### 1.2. Authenticated Free Tier
-*   **User Types:** Users who have signed up but do not have an active paid subscription.
-*   **Primary Goal:** Encourage sign-ups, demonstrate enhanced value, and ad-based monetization.
-
-### 1.3. Paid Tier
+### 1.2. Paid Tier
 *   **User Types:** Authenticated and Paid Users (users who have signed up and have an active paid subscription).
 *   **Primary Goal:** Direct subscription revenue, providing full access and an enhanced user experience.
 
@@ -20,9 +16,9 @@ This document outlines the monetization strategy for SentiVibe, distinguishing b
 
 ## 2. Tier Offerings & Limitations
 
-### 2.1. Unauthenticated User Tier Offerings
+### 2.1. Free Tier Offerings
 
-This tier provides access to core SentiVibe functionalities with specific usage limitations designed to manage API costs and encourage sign-up.
+This tier provides access to core SentiVibe functionalities with specific daily usage limitations for analyses and comparisons, designed to manage API costs and encourage upgrading. All other features are unlimited.
 
 *   **Core Feature Access:**
     *   **Analyze a Single Video:** Yes
@@ -31,64 +27,36 @@ This tier provides access to core SentiVibe functionalities with specific usage 
     *   **Explore Comparison Library:** Yes (view all publicly available multi-video comparisons)
     *   **View Blog Post Detail (Single Video):** Yes
     *   **View Multi-Comparison Detail:** Yes
-    *   **Chat with AI (Single Video Analysis):** Yes
-    *   **Chat with AI (Comparison Analysis):** Yes
-    *   **Library Copilot:** Yes (for searching public libraries and getting new topic recommendations)
-    *   **Comparison Library Copilot:** Yes (for searching public libraries and getting new comparative topic recommendations)
-    *   **"My Analyses" Page:** No (Access to personal analysis history is a feature for authenticated users.)
+    *   **Chat with AI (Single Video Analysis):** Yes (Unlimited messages per session)
+    *   **Chat with AI (Comparison Analysis):** Yes (Unlimited messages per session)
+    *   **Library Copilot:** Yes (Unlimited queries per day)
+    *   **Comparison Library Copilot:** Yes (Unlimited queries per day)
+    *   **Custom Questions (per analysis/comparison):** Unlimited questions, unlimited AI-generated answer length.
+    *   **"My Analyses" Page:** No (Access to personal analysis history is a feature for Paid Tier users.)
 
-*   **Usage Limits (per 24-hour rolling period, IP-based):**
-    *   **Single Video Analyses:** Limited to **2 analyses** per day.
-    *   **Multi-Video Comparisons:** Limited to **1 comparison** per day.
-    *   **AI Chat Messages (per analysis/comparison session):** Limited to **5 messages** per individual chat session.
-    *   **Library Copilot Queries:** Limited to **5 queries** per day.
-    *   **Comparison Library Copilot Queries:** Limited to **5 queries** per day.
-    *   **Custom Questions (per analysis/comparison):** Max **1 custom question** per analysis or comparison, with a maximum AI-generated answer length of **100 words**.
+*   **Usage Limits (per 24-hour rolling period):**
+    *   **Single Video Analyses:** Limited to **1 analysis** per day (IP-based for unauthenticated, User-ID based for authenticated).
+    *   **Multi-Video Comparisons:** Limited to **1 comparison** per day (IP-based for unauthenticated, User-ID based for authenticated).
 
 *   **Monetization:**
-    *   **Google Ads:** Google Ads will be displayed prominently on all pages accessible to Unauthenticated users to generate advertising revenue.
+    *   **Google Ads:** Google Ads will be displayed prominently on all pages accessible to Free Tier users to generate advertising revenue.
 
 *   **Data Persistence & Reporting:**
-    *   **"My Analyses" History:** Analyses performed by Unauthenticated users are **not saved** to a personal, persistent history.
+    *   **"My Analyses" History:** Analyses performed by Free Tier users are **not saved** to a personal, persistent history.
     *   **PDF Export:** Available, but all PDF reports will be **watermarked** with "Free Tier - SentiVibe" or similar branding.
 
-### 2.2. Authenticated Free Tier Offerings
-
-This tier provides enhanced access and features compared to unauthenticated users, encouraging account creation.
-
-*   **Core Feature Access:**
-    *   **All features available in the Unauthenticated User Tier.**
-    *   **"My Analyses" Page:** Yes (Access to a personal, persistent history of all their analyses and comparisons).
-
-*   **Usage Limits (per 24-hour rolling period, User-ID based):**
-    *   **Single Video Analyses:** Limited to **5 analyses** per day.
-    *   **Multi-Video Comparisons:** Limited to **2 comparisons** per day.
-    *   **AI Chat Messages (per analysis/comparison session):** Limited to **10 messages** per individual chat session.
-    *   **Library Copilot Queries:** Limited to **10 queries** per day.
-    *   **Comparison Library Copilot Queries:** Limited to **10 queries** per day.
-    *   **Custom Questions (per analysis/comparison):** Max **2 custom questions** per analysis or comparison, with a maximum AI-generated answer length of **150 words** per answer.
-
-*   **Monetization:**
-    *   **Google Ads:** Google Ads will be displayed prominently on all pages accessible to Authenticated Free Tier users.
-
-*   **Data Persistence & Reporting:**
-    *   **"My Analyses" History:** All analyses and comparisons performed by Authenticated Free Tier users are saved to their personal history, accessible anytime.
-    *   **PDF Export:** Available, but all PDF reports will be **watermarked** with "Free Tier - SentiVibe" or similar branding.
-
-### 2.3. Paid Tier Offerings
+### 2.2. Paid Tier Offerings
 
 This tier provides an unrestricted, personalized, and ad-free experience, unlocking the full capabilities of SentiVibe.
 
 *   **Core Feature Access:**
-    *   **All features available in the Authenticated Free Tier.**
+    *   **All features available in the Free Tier.**
+    *   **"My Analyses" Page:** Yes (Access to a personal, persistent history of all their analyses and comparisons).
 
 *   **Usage Limits (per 24-hour rolling period, User-ID based):**
     *   **Single Video Analyses:** **50 analyses** per day (designed to be effectively unlimited for typical usage).
     *   **Multi-Video Comparisons:** **20 comparisons** per day (designed to be effectively unlimited for typical usage).
-    *   **AI Chat Messages (per analysis/comparison session):** **100 messages** per individual chat session (designed to be effectively unlimited).
-    *   **Library Copilot Queries:** **100 queries** per day (designed to be effectively unlimited).
-    *   **Comparison Library Copilot Queries:** **100 queries** per day (designed to be effectively unlimited).
-    *   **Custom Questions (per analysis/comparison):** Max **5 custom questions** per analysis or comparison, with a maximum AI-generated answer length of **500 words** per answer.
+    *   **All other features are UNLIMITED:** Custom questions (count and word count), AI chat messages (per session), Daily Copilot Queries.
 
 *   **Monetization:**
     *   **Subscription Revenue:** Direct revenue from monthly or annual subscriptions.
@@ -103,10 +71,10 @@ This tier provides an unrestricted, personalized, and ad-free experience, unlock
 ## 3. Conceptual Implementation Notes
 
 *   **Subscription Management:** The `public.subscriptions` table tracks user payment status.
-*   **Backend Enforcement:** All usage limits and feature access differentiations are enforced within Supabase Edge Functions. Each relevant Edge Function will:
+*   **Backend Enforcement:** Daily analysis and comparison limits are enforced within Supabase Edge Functions. Each relevant Edge Function will:
     1.  Check `auth.uid()` to determine if the user is authenticated.
     2.  If authenticated, query the `public.subscriptions` table to verify an active paid subscription.
-    3.  Apply the appropriate Unauthenticated, Authenticated Free, or Paid Tier limits based on the user's status.
+    3.  Apply the appropriate Free or Paid Tier daily limits based on the user's status.
     4.  Return an error response if a limit is exceeded, prompting the user to upgrade.
-*   **Frontend UI:** The user interface will dynamically adapt based on the user's tier. This includes displaying upgrade prompts, usage counters, and hiding/showing premium features like "My Analyses."
+*   **Frontend UI:** The user interface will dynamically adapt based on the user's tier. This includes displaying upgrade prompts, usage counters for daily analyses/comparisons, and hiding/showing premium features like "My Analyses."
 *   **Payment Gateway:** Integration with a payment gateway (e.g., Stripe) will be required to handle subscriptions. Webhooks from the payment gateway will update the `public.subscriptions` table.

@@ -1,7 +1,7 @@
 # SentiVibe Technical Documentation
 
 ## 1. Introduction
-This document provides a comprehensive technical overview of the SentiVibe application, detailing its architecture, core components, data flow, Supabase integration, and external API interactions. SentiVibe is a React-based web application designed to perform AI-powered sentiment analysis on YouTube video comments, engage in context-aware conversations about the analysis, and automatically generate SEO-optimized blog posts for each analysis, which are then stored and made discoverable in a dedicated library. It now also supports **user-defined custom questions** that are answered by AI and included in the analysis report, and features a **staleness-freshness logic** to ensure analyses remain up-to-date. The application has been extended to support **multi-video comparisons**, including dedicated comparative insights, blog posts, and a robust staleness/freshness mechanism. The application now operates with a **public-first approach**, allowing unauthenticated users to access core analysis and library features, with enhanced theming options and a **fully implemented tiered offering system** to manage access and features.
+This document provides a comprehensive technical overview of the SentiVibe application, detailing its architecture, core components, data flow, Supabase integration, and external API interactions. SentiVibe is a React-based web application designed to perform AI-powered sentiment analysis on YouTube video comments, engage in context-aware conversations about the analysis, and automatically generate SEO-optimized blog posts for each analysis, which are then stored and made discoverable in a dedicated library. It now also supports **user-defined custom questions** that are answered by AI and included in the analysis report, and features a **staleness-freshness logic** to ensure analyses remain up-to-date. The application has been extended to support **multi-video comparisons**, including dedicated comparative insights, blog posts, and a robust staleness/freshness mechanism. The application now operates with a **public-first approach**, allowing unauthenticated users to access core analysis and library features, with enhanced theming options and a **simplified tiered offering system** to manage access and features.
 
 ## 2. Tech Stack
 The application is built using the following technologies:
@@ -33,17 +33,17 @@ The project follows a standard React application structure with specific directo
     *   `src/components/`: Reusable UI components.
         *   `src/components/Header.tsx`: Global application header with the **SentiVibe wordmark**, a **theme toggle**, and **public links to 'Analyze a Video', 'Analysis Library', 'Compare Videos', 'Comparison Library'**. Now includes an "Upgrade" button for authenticated free users and an "Account" link.
         *   `src/components/ModeToggle.tsx`: Component for switching between themes.
-        *   `src/components/ChatInterface.tsx`: Generic chat UI component, now with `disabled` prop for tier limits.
+        *   `src/components/ChatInterface.tsx`: Generic chat UI component, now with `disabled` prop.
         *   `src/components/ProtectedRoute.tsx`: Component for protecting routes (now less critical due to public-first strategy, but still present for `MyAnalyses`).
         *   `src/components/Footer.tsx`: Application footer, now including the **brand ethics disclosure**.
         *   `src/components/theme-provider.tsx`: Theme context provider, **updated to support new themes**.
-        *   `src/components/VideoChatDialog.tsx`: **Updated component for the centralized AI chat pop-up for single video analyses, now passing custom Q&A results as context, allowing precise word count control, and enforcing tier-based chat message limits and max response word count.**
-        *   `src/components/LibraryCopilot.tsx`: **Enhanced AI assistant for searching the analysis library and recommending new analysis topics, now enforcing tier-based daily query limits.**
+        *   `src/components/VideoChatDialog.tsx`: **Updated component for the centralized AI chat pop-up for single video analyses, now passing custom Q&A results as context, allowing precise word count control, and with chat message limits and max response word count removed.**
+        *   `src/components/LibraryCopilot.tsx`: **Enhanced AI assistant for searching the analysis library and recommending new analysis topics, with daily query limits removed.**
         *   `src/components/ComparisonDataDisplay.tsx`: **New component to display structured comparison data for two videos.**
         *   `src/components/MultiComparisonDataDisplay.tsx`: **New component to display structured comparison data for multiple videos.**
-        *   `src/components/ComparisonChatDialog.tsx`: **New component for the centralized AI chat pop-up for two-video comparisons, now enforcing tier-based chat message limits and max response word count.**
-        *   `src/components/MultiComparisonChatDialog.tsx`: **New component for the centralized AI chat pop-up for multi-video comparisons, now enforcing tier-based chat message limits and max response word count.**
-        *   `src/components/ComparisonLibraryCopilot.tsx`: **New AI assistant for searching the comparison library and recommending new comparative analysis topics, now enforcing tier-based daily query limits.**
+        *   `src/components/ComparisonChatDialog.tsx`: **New component for the centralized AI chat pop-up for two-video comparisons, with chat message limits and max response word count removed.**
+        *   `src/components/MultiComparisonChatDialog.tsx`: **New component for the centralized AI chat pop-up for multi-video comparisons, with chat message limits and max response word count removed.**
+        *   `src/components/ComparisonLibraryCopilot.tsx`: **New AI assistant for searching the comparison library and recommending new comparative analysis topics, with daily query limits removed.**
         *   `src/components/ui/`: Shadcn/ui components (e.g., Button, Card, Input, Badge, Alert, Skeleton, Collapsible).
     *   `src/hooks/`: Custom React hooks.
         *   `src/hooks/use-mobile.tsx`: Hook for detecting mobile viewport.
@@ -51,32 +51,31 @@ The project follows a standard React application structure with specific directo
     *   `src/pages/`: Application pages/views.
         *   `src/pages/Index.tsx`: **Updated landing page, now featuring direct calls to action for analyzing videos, comparing videos, and exploring both analysis and comparison libraries.**
         *   `src/pages/Login.tsx`: User authentication page, styled to integrate with the new color palette.
-        *   `src/pages/AnalyzeVideo.tsx`: **Significantly updated main page for YouTube video analysis, now featuring dynamic custom question input fields with word limits, displaying AI-generated answers, including a 'Refresh Analysis' button and 'Last Full Analysis' timestamp, a disclaimer about the 50-comment minimum, and enforcing tier-based daily analysis limits and custom question limits. Also explicitly lists top 10 comments.**
+        *   `src/pages/AnalyzeVideo.tsx`: **Significantly updated main page for YouTube video analysis, now featuring dynamic custom question input fields with unlimited questions and word limits, displaying AI-generated answers, including a 'Refresh Analysis' button and 'Last Full Analysis' timestamp, a disclaimer about the 50-comment minimum, and enforcing tier-based daily analysis limits. Also explicitly lists top 10 comments.**
         *   `src/pages/VideoAnalysisLibrary.tsx`: **Updated page to list and search generated blog posts (video analyses), with updated BlogPost interface, and integrating the enhanced `LibraryCopilot`.**
-        *   `src/pages/MyAnalyses.tsx`: **Updated page to list a user's own analyses, now integrating the enhanced `LibraryCopilot` and with updated BlogPost interface. Access is restricted to Paid Tier users.**
+        *   `src/pages/MyAnalyses.tsx`: **Updated page to list a user's own analyses, now integrating the enhanced `LibraryCopilot`. Access is restricted to Paid Tier users.**
         *   `src/pages/BlogPostDetail.tsx`: **Updated page to display the full content of a single generated blog post, including the new custom Q&A section, a 'Go to Video Analysis' button, a 'Refresh Analysis' button, the 'Last Full Analysis' timestamp, and explicitly lists top 10 comments.**
-        *   `src/pages/CreateMultiComparison.tsx`: **New page for initiating multi-video comparisons, allowing input of multiple video links and custom comparative questions. Displays the multi-comparison analysis results, links to individual video analyses, and includes a 'Refresh Comparison' button and 'Last Compared' timestamp. Enforces tier-based daily comparison limits and custom comparative question limits.**
+        *   `src/pages/CreateMultiComparison.tsx`: **New page for initiating multi-video comparisons, allowing input of multiple video links and custom comparative questions with unlimited questions and word limits. Displays the multi-comparison analysis results, links to individual video analyses, and includes a 'Refresh Comparison' button and 'Last Compared' timestamp. Enforces tier-based daily comparison limits.**
         *   `src/pages/MultiComparisonLibrary.tsx`: **New page to list and search generated multi-video comparison blog posts, integrating the `ComparisonLibraryCopilot`. Displays the first video thumbnail with a "+X more" badge for multi-video comparisons.**
         *   `src/pages/MultiComparisonDetail.tsx`: **New page to display the full content of a single generated multi-video comparison blog post. Includes links to individual video analyses, a 'Go to Multi-Comparison Analysis' button, a 'Refresh Comparison' button, the 'Last Full Comparison' timestamp, and explicitly lists top 10 comments for each video.**
         *   `src/pages/ComparisonDetail.tsx`: (Legacy, but still present) Page for displaying two-video comparisons.
-        *   `src/pages/NotFound.tsx`: 404 error page.
-        *   `src/pages/Upgrade.tsx`: Page detailing the benefits of upgrading to a paid tier.
+        *   `src/pages/Upgrade.tsx`: **Updated page detailing the benefits of upgrading to a paid tier, reflecting the simplified tier structure.**
         *   `src/pages/AccountCenter.tsx`: **New page for authenticated users to manage their profile and view subscription details.**
     *   `src/integrations/`: Supabase-related client-side files.
         *   `src/integrations/supabase/client.ts`: Supabase client initialization.
         *   `src/integrations/supabase/auth.tsx`: **Updated AuthProvider to fetch and expose `subscriptionStatus` and `subscriptionPlanId` via the `useAuth` hook.**
     *   `supabase/`: Supabase-related backend files.
         *   `supabase/functions/`: Supabase Edge Functions.
-            *   `supabase/functions/youtube-analyzer/index.ts`: **Significantly updated Edge Function for video analysis, now implementing staleness-freshness logic, processing custom questions, making additional AI calls for answers, and storing these Q&A results in the database, even for cached videos. It also handles a `forceReanalyze` flag, explicitly stores top 10 comments, and enforces tier-based daily analysis limits and custom question limits. AI prompts have been extensively engineered for high-quality, production-grade responses for sentiment analysis, blog post generation, and custom Q&A, and the authentication check has been removed to allow unauthenticated access.**
+            *   `supabase/functions/youtube-analyzer/index.ts`: **Significantly updated Edge Function for video analysis, now implementing staleness-freshness logic, processing custom questions (unlimited), making additional AI calls for answers, and storing these Q&A results in the database, even for cached videos. It also handles a `forceReanalyze` flag, explicitly stores top 10 comments, and enforces tier-based daily analysis limits. AI prompts have been extensively engineered for high-quality, production-grade responses for sentiment analysis, blog post generation, and custom Q&A, and the authentication check has been removed to allow unauthenticated access.**
             *   `supabase/functions/fetch-external-context/index.ts`: Edge Function for performing a one-time Google Custom Search, now with API key rotation.
-            *   `supabase/functions/chat-analyzer/index.ts`: **Updated Edge Function for handling AI chat conversations for single videos, now incorporating custom Q&A results into the AI's context, using a desired word count for response length, and enforcing tier-based chat message limits and max response word count. AI prompts have been extensively engineered for high-quality, production-grade responses, including a strict information hierarchy, precise word count adherence, and mandatory Markdown hyperlink formatting. The authentication check has been removed to allow unauthenticated access.**
-            *   `supabase/functions/library-copilot-analyzer/index.ts`: **Enhanced Edge Function for handling AI chat for the Library Copilot, now performing semantic search, proactively recommending new analysis topics, and enforcing tier-based daily query limits. AI prompts have been extensively engineered for high-quality, production-grade responses, including precise matching, clear recommendations, and mandatory Markdown hyperlink formatting. The authentication check has been removed to allow unauthenticated access.**
+            *   `supabase/functions/chat-analyzer/index.ts`: **Updated Edge Function for handling AI chat conversations for single videos, now incorporating custom Q&A results into the AI's context, using a desired word count for response length, and with chat message limits and max response word count removed. AI prompts have been extensively engineered for high-quality, production-grade responses, including a strict information hierarchy, precise word count adherence, and mandatory Markdown hyperlink formatting. The authentication check has been removed to allow unauthenticated access.**
+            *   `supabase/functions/library-copilot-analyzer/index.ts`: **Enhanced Edge Function for handling AI chat for the Library Copilot, now performing semantic search, proactively recommending new analysis topics, and with daily query limits removed. AI prompts have been extensively engineered for high-quality, production-grade responses, including precise matching, clear recommendations, and mandatory Markdown hyperlink formatting. The authentication check has been removed to allow unauthenticated access.**
             *   `supabase/functions/video-comparator/index.ts`: (Legacy, but still present) Edge Function for two-video comparisons.
-            *   `supabase/functions/comparison-chat-analyzer/index.ts`: **New Edge Function for handling AI chat conversations for two-video comparisons, now enforcing tier-based chat message limits and max response word count.**
-            *   `supabase/functions/multi-video-comparator/index.ts`: **New Edge Function for multi-video comparisons, implementing robust staleness/freshness logic, orchestrating individual video analysis refreshes, generating comparative insights, handling custom comparative questions, and enforcing tier-based daily comparison limits and custom comparative question limits.**
-            *   `supabase/functions/multi-comparison-chat-analyzer/index.ts`: **New Edge Function for handling AI chat conversations for multi-video comparisons, now enforcing tier-based chat message limits and max response word count.**
-            *   `supabase/functions/comparison-library-copilot-analyzer/index.ts`: **New Edge Function for handling AI chat for the Comparison Library Copilot, performing semantic search, recommending new comparative analysis topics, and enforcing tier-based daily query limits.**
-            *   `supabase/functions/get-anon-usage/index.ts`: **New Edge Function to retrieve anonymous user usage data for IP-based rate limiting.**
+            *   `supabase/functions/comparison-chat-analyzer/index.ts`: **New Edge Function for handling AI chat conversations for two-video comparisons, with chat message limits and max response word count removed.**
+            *   `supabase/functions/multi-video-comparator/index.ts`: **New Edge Function for multi-video comparisons, implementing robust staleness/freshness logic, orchestrating individual video analysis refreshes, generating comparative insights, handling custom comparative questions (unlimited), and enforcing tier-based daily comparison limits.**
+            *   `supabase/functions/multi-comparison-chat-analyzer/index.ts`: **New Edge Function for handling AI chat conversations for multi-video comparisons, with chat message limits and max response word count removed.**
+            *   `supabase/functions/comparison-library-copilot-analyzer/index.ts`: **New Edge Function for handling AI chat for the Comparison Library Copilot, performing semantic search, recommending new comparative analysis topics, and with daily query limits removed.**
+            *   `supabase/functions/get-anon-usage/index.ts`: **New Edge Function to retrieve anonymous user usage data for IP-based rate limiting, now only tracking analyses and comparisons.**
         *   `supabase/migrations/`: Database migration files.
 *   `tailwind.config.ts`: Tailwind CSS configuration, including custom fonts (`Jura`) and the new brand color palette.
 *   `.env`: Environment variables (e.g., Supabase URLs, API keys).
@@ -119,13 +118,13 @@ The project follows a standard React application structure with specific directo
 
 ### 4.5. `AnalyzeVideo.tsx` (Video Analysis Page)
 *   **State Management:** Manages `videoLink` input, `customQuestions` (an array of objects, each with `question` and `wordCount`), `analysisResult`, `error`, `isChatDialogOpen`, and `analysesToday` states using `useState`.
-*   **Tier-based Limits:** Dynamically sets `currentLimits` (daily analyses, max custom questions, max custom question word count) based on `useAuth`'s `user`, `subscriptionStatus`, and `subscriptionPlanId`.
+*   **Tier-based Limits:** Dynamically sets `currentLimits` (daily analyses) based on `useAuth`'s `user`, `subscriptionStatus`, and `subscriptionPlanId`.
 *   **Anonymous Usage Tracking:** Uses `useQuery` to fetch `anonUsage` from the `get-anon-usage` Edge Function for unauthenticated users.
 *   **Authenticated Usage Tracking:** Uses `useQuery` to fetch `dailyAnalysesCount` from `public.blog_posts` for authenticated users.
-*   **Dynamic Custom Questions:** Provides UI to add/remove multiple custom question input fields, each with a corresponding word count input. **The number of fields and max word count are constrained by `currentLimits`.**
+*   **Dynamic Custom Questions:** Provides UI to add/remove multiple custom question input fields, each with a corresponding word count input. **Custom questions are now unlimited in count and word count for all tiers.**
 *   **Initial Load from Blog Post:** Uses `useLocation` to check for `blogPost` data passed via navigation state. If present, it reconstructs the `analysisResult` from the `blogPost` (including `ai_analysis_json`, `raw_comments_for_chat`, `custom_qa_results`, and `last_reanalyzed_at`), sets `analysisResult`, and conditionally opens the `VideoChatDialog` based on the `openChat` flag. It also checks for a `forceReanalyze` flag from navigation to trigger an immediate re-analysis.
 *   **Supabase Edge Function Invocation:**
-    *   **`analyzeVideoMutation`:** Uses `useMutation` to call the `youtube-analyzer` Supabase Edge Function. The payload now includes the `customQuestions` array and an optional `forceReanalyze` boolean flag. `onSuccess` updates `analysisResult` and invalidates relevant TanStack Query caches. **Handles 403 errors from the Edge Function to display tier-specific limit messages.**
+    *   **`analyzeVideoMutation`:** Uses `useMutation` to call the `youtube-analyzer` Supabase Edge Function. The payload now includes the `customQuestions` array and an optional `forceReanalyze` boolean flag. **Handles 403 errors from the Edge Function to display tier-specific daily analysis limit messages.**
 *   **UI Elements:**
     *   `Input` for video link submission, `Textarea` for custom questions, `Input` for word count.
     *   **Includes a prominent disclaimer:** "Important: The video must have at least 50 comments for a proper sentiment analysis. Analysis may take up to 30 seconds."
@@ -133,7 +132,7 @@ The project follows a standard React application structure with specific directo
     *   `Button` to trigger analysis, showing a `Loader2` icon (styled with `text-accent`) when pending. **Disabled if `isAnalysisLimitReached`.**
     *   `Card` components to structure the input form and display results.
     *   `Skeleton` components provide a loading state visual for analysis.
-    *   `Alert` component displays any errors from the analysis process, **including tier-based limit exceedance messages.**
+    *   `Alert` component displays any errors from the analysis process, **including tier-based daily analysis limit exceedance messages.**
     *   `Badge` components are used to display sentiment (using `sentiment-positive`, `sentiment-negative`, `sentiment-neutral` classes), emotional tones, and key themes.
     *   `Collapsible` component is prepared for subtitles (though currently empty).
     *   Displays a "View Blog Post" `Button` with a `Link` to `/blog/${analysisResult.blogPostSlug}` after a successful analysis.
@@ -157,7 +156,7 @@ The project follows a standard React application structure with specific directo
     *   `Skeleton` components provide loading state visuals.
     *   Handles cases where no posts are found or an error occurs during fetching.
     *   **SEO:** `img` tags for thumbnails include descriptive `alt` attributes.
-    *   **`LibraryCopilot` Integration:** Renders the **enhanced** `LibraryCopilot` component, passing the fetched `blogPosts` for AI-powered search and topic recommendations.
+    *   **`LibraryCopilot` Integration:** Renders the **enhanced** `LibraryCopilot` component, passing the fetched `blogPosts` for AI-powered search and topic recommendations. **Copilot queries are now unlimited for all tiers.**
 
 ### 4.7. `BlogPostDetail.tsx`
 *   **Purpose:** Displays the full content of a single, SEO-optimized blog post.
@@ -187,18 +186,18 @@ The project follows a standard React application structure with specific directo
 ### 4.8. `CreateMultiComparison.tsx` (Multi-Video Comparison Page)
 *   **Purpose:** Allows users to input multiple YouTube video links and custom comparative questions to generate a multi-video comparison analysis.
 *   **State Management:** Manages `videoLinks` (array of strings), `customComparativeQuestions` (array of objects), `multiComparisonResult`, `error`, `isChatDialogOpen`, and `comparisonsToday`.
-*   **Tier-based Limits:** Dynamically sets `currentLimits` (daily comparisons, max custom questions, max custom question word count) based on `useAuth`'s `user`, `subscriptionStatus`, and `subscriptionPlanId`.
+*   **Tier-based Limits:** Dynamically sets `currentLimits` (daily comparisons) based on `useAuth`'s `user`, `subscriptionStatus`, and `subscriptionPlanId`.
 *   **Anonymous Usage Tracking:** Uses `useQuery` to fetch `anonUsage` from the `get-anon-usage` Edge Function for unauthenticated users.
 *   **Authenticated Usage Tracking:** Uses `useQuery` to fetch `dailyComparisonsCount` from `public.multi_comparisons` for authenticated users.
 *   **Initial Load from Navigation:** Uses `useLocation` to check for an `initialMultiComparison` object passed via navigation state. If present, it pre-fills the `videoLinks` and `customComparativeQuestions` fields and sets the `multiComparisonResult`. It also handles a `forceRecompare` flag to trigger an immediate re-comparison.
 *   **Supabase Edge Function Invocation:**
-    *   **`createMultiComparisonMutation`:** Uses `useMutation` to call the `multi-video-comparator` Supabase Edge Function. The payload includes `videoLinks`, `customComparativeQuestions`, and an optional `forceRecompare` flag. **Handles 403 errors from the Edge Function to display tier-specific limit messages.**
+    *   **`createMultiComparisonMutation`:** Uses `useMutation` to call the `multi-video-comparator` Supabase Edge Function. The payload includes `videoLinks`, `customComparativeQuestions`, and an optional `forceRecompare` flag. **Handles 403 errors from the Edge Function to display tier-specific daily comparison limit messages.**
 *   **UI Elements:**
     *   Dynamic input fields for `videoLinks` (minimum 2, with add/remove buttons).
-    *   Dynamic input fields for `customComparativeQuestions` (with question and word count, and add/remove buttons). **The number of fields and max word count are constrained by `currentLimits`.**
+    *   Dynamic input fields for `customComparativeQuestions` (with question and word count). **Custom comparative questions are now unlimited in count and word count for all tiers.**
     *   **Displays current usage:** "Comparisons today: X/Y" with a link to `/upgrade` if not on a paid tier.
     *   `Button` to trigger the comparison, showing a `Loader2` icon when pending. **Disabled if `isComparisonLimitReached`.**
-    *   `Alert` component displays any errors, **including tier-based limit exceedance messages.**
+    *   `Alert` component displays any errors, **including tier-based daily comparison limit exceedance messages.**
     *   **Display of Individual Video Thumbnails:** Shows a row of clickable thumbnails for each video in the comparison, each linking to its respective `BlogPostDetail.tsx` page. A clear instruction "Click on any video thumbnail above to view its individual analysis." is provided.
     *   **`Last Compared` Timestamp:** Displays the `last_compared_at` date from `multiComparisonResult`.
     *   **"Refresh Comparison" Button:** Triggers `handleRefreshComparison` to force a full re-comparison.
@@ -218,7 +217,8 @@ The project follows a standard React application structure with specific directo
     *   **Thumbnail Display:** Displays the first video's thumbnail. If there are more videos, a `Badge` with "+X more" is overlaid to indicate a multi-video comparison.
     *   Each `Card` is wrapped in a `Link` to navigate to the `MultiComparisonDetail.tsx` page.
     *   `Skeleton` components provide loading state visuals.
-    *   **`ComparisonLibraryCopilot` Integration:** Renders the AI copilot for searching comparisons and suggesting new topics.
+    *   Handles cases where no posts are found or an error occurs during fetching.
+    *   **`ComparisonLibraryCopilot` Integration:** Renders the AI copilot for searching comparisons and suggesting new topics. **Copilot queries are now unlimited for all tiers.**
 
 ### 4.10. `MultiComparisonDetail.tsx` (Multi-Comparison Blog Post Detail Page)
 *   **Purpose:** Displays the full content of a single, SEO-optimized multi-video comparison blog post.
@@ -243,7 +243,7 @@ The project follows a standard React application structure with specific directo
 *   **Data Fetching:** Uses `useQuery` to fetch `blog_posts` where `author_id` matches the current user's ID, ordered by `created_at`. The `BlogPost` interface has been updated to include `custom_qa_results` and `last_reanalyzed_at`.
 *   **Search Functionality:** Similar client-side search as `VideoAnalysisLibrary.tsx`.
 *   **UI Elements:** Displays user-specific analyses in `Card` components, linked to `BlogPostDetail.tsx`.
-*   **`LibraryCopilot` Integration:** Renders the **enhanced** `LibraryCopilot` component, passing the user's `blogPosts` for AI-powered search and topic recommendations within their personal history.
+*   **`LibraryCopilot` Integration:** Renders the **enhanced** `LibraryCopilot` component, passing the user's `blogPosts` for AI-powered search and topic recommendations within their personal history. **Copilot queries are now unlimited for all tiers.**
 
 ### 4.12. `ChatInterface.tsx` (Generic Chat UI)
 *   A reusable component designed to display a list of messages and provide an input field for sending new messages.
@@ -251,68 +251,54 @@ The project follows a standard React application structure with specific directo
 *   Includes a loading indicator (`Loader2` styled with `text-muted-foreground`) when `isLoading` is true.
 *   Automatically scrolls to the bottom of the chat on new messages.
 *   Handles message input and sending via `onSendMessage` prop.
-*   **Includes a `disabled` prop to prevent input when chat limits are reached.**
+*   **Includes a `disabled` prop to prevent input when a chat mutation is pending or no analysis/comparison is loaded.**
 *   **Markdown Rendering:** Integrates `react-markdown` with `remarkGfm` to correctly render Markdown formatting in AI responses, including **underlined hyperlinks**, improving readability. The `prose dark:prose-invert` Tailwind classes are applied to ensure consistent typography.
 
 ### 4.13. `VideoChatDialog.tsx` (Single Video Chat Dialog)
 *   **Purpose:** Centralizes the AI conversational chat experience for single video analyses into a reusable pop-up dialog.
 *   **Props:** Accepts `isOpen`, `onOpenChange`, `initialAnalysisResult` (for new analyses from `AnalyzeVideo`), and `initialBlogPost` (for analyses loaded from `BlogPostDetail`).
 *   **Internal State:** Manages `chatMessages`, `desiredWordCount`, `selectedPersona`, `currentExternalContext`, `currentAnalysisResult`, and `error`.
-*   **Tier-based Limits:** Dynamically sets `currentLimits` (chat message limit, max response word count) based on `useAuth`'s `user`, `subscriptionStatus`, and `subscriptionPlanId`.
+*   **Tier-based Limits:** **All chat messages and desired word counts are now unlimited for all tiers.**
 *   **Context Initialization:** On dialog open, it checks `initialAnalysisResult` or `initialBlogPost` to set `currentAnalysisResult`. If `initialBlogPost` is provided, it reconstructs the `AnalysisResponse` object from the blog post data, including `ai_analysis_json`, `raw_comments_for_chat`, and **`custom_qa_results`**.
 *   **External Context Fetching:** Uses an internal `fetchExternalContextMutation` (calling `fetch-external-context` Edge Function) to get up-to-date external information based on the video's title and tags, *once per dialog open*.
-*   **Chat Mutation:** Uses an internal `chatMutation` (calling `chat-analyzer` Edge Function) to send user messages and receive AI responses. The `customQaResults` are now passed as part of the `analysisResult` to the `chat-analyzer` Edge Function. **Enforces tier-based chat message limits and max response word count.**
-*   **AI Controls:** Provides a `Select` component for users to choose `selectedPersona` and an `Input` for `desiredWordCount`, which are passed to the `chat-analyzer` Edge Function. **The `max` attribute of the `Input` is dynamically set by `currentLimits.maxResponseWordCount`.**
-*   **UI:** Renders the `ChatInterface` component within the dialog. **Displays remaining AI responses and upgrade prompts if limits are reached.**
+*   **Chat Mutation:** Uses an internal `chatMutation` (calling `chat-analyzer` Edge Function) to send user messages and receive AI responses. The `customQaResults` are now passed as part of the `analysisResult` to the `chat-analyzer` Edge Function.
+*   **AI Controls:** Provides a `Select` component for users to choose `selectedPersona` and an `Input` for `desiredWordCount`, which are passed to the `chat-analyzer` Edge Function.
+*   **UI:** Renders the `ChatInterface` component within the dialog.
 
 ### 4.14. `MultiComparisonChatDialog.tsx` (Multi-Video Comparison Chat Dialog)
 *   **Purpose:** Centralizes the AI conversational chat experience for multi-video comparisons into a reusable pop-up dialog.
 *   **Props:** Accepts `isOpen`, `onOpenChange`, and `initialMultiComparisonResult`.
 *   **Internal State:** Manages `chatMessages`, `desiredWordCount`, `selectedPersona`, `currentExternalContext`, and `error`.
-*   **Tier-based Limits:** Dynamically sets `currentLimits` (chat message limit, max response word count) based on `useAuth`'s `user`, `subscriptionStatus`, and `subscriptionPlanId`.
+*   **Tier-based Limits:** **All chat messages and desired word counts are now unlimited for all tiers.**
 *   **Context Initialization:** On dialog open, it sets `initialMultiComparisonResult` and fetches external context based on the comparison title.
 *   **External Context Fetching:** Uses `fetchExternalContextMutation` to get external information.
-*   **Chat Mutation:** Uses `chatMutation` (calling `multi-comparison-chat-analyzer` Edge Function) to send user messages and receive AI responses. The `multiComparisonResult` (including `custom_comparative_qa_results` and `raw_comments_for_chat` for each video) is passed as context. **Enforces tier-based chat message limits and max response word count.**
-*   **AI Controls:** Provides `Select` for `selectedPersona` and `Input` for `desiredWordCount`. **The `max` attribute of the `Input` is dynamically set by `currentLimits.maxResponseWordCount`.**
-*   **UI:** Renders the `ChatInterface` component. **Displays remaining AI responses and upgrade prompts if limits are reached.**
+*   **Chat Mutation:** Uses `chatMutation` (calling `multi-comparison-chat-analyzer` Edge Function) to send user messages and receive AI responses. The `multiComparisonResult` (including `custom_comparative_qa_results` and `raw_comments_for_chat` for each video) is passed as context.
+*   **AI Controls:** Provides `Select` for `selectedPersona` and `Input` for `desiredWordCount`.
+*   **UI:** Renders the `ChatInterface` component.
 
 ### 4.15. `LibraryCopilot.tsx` (Single Video Library Copilot)
 *   **Purpose:** Provides an AI assistant within the single video analysis library pages to help users find specific video analyses **and recommend new analysis topics.**
 *   **Props:** Accepts `blogPosts` (an array of `BlogPost` objects) from the parent page.
-*   **Internal State:** Manages `isOpen` (for the dialog), `chatMessages`, `queriesToday`, and `error`.
-*   **Tier-based Limits:** Dynamically sets `currentLimits` (daily queries) based on `useAuth`'s `user`, `subscriptionStatus`, and `subscriptionPlanId`.
-*   **Anonymous Usage Tracking:** Uses `useQuery` to fetch `anonUsage` from the `get-anon-usage` Edge Function for unauthenticated users.
-*   **Authenticated Usage Tracking:** Uses `useQuery` to fetch `dailyCopilotQueriesCount` from `public.copilot_queries_log` for authenticated users.
-*   **Chat Mutation:** Uses `copilotChatMutation` to invoke the **enhanced** `library-copilot-analyzer` Edge Function, passing the user's query and a simplified list of `blogPostsData`. **Enforces tier-based daily query limits.**
+*   **Internal State:** Manages `isOpen` (for the dialog), `chatMessages`, and `error`.
+*   **Tier-based Limits:** **All copilot queries are now unlimited for all tiers.**
+*   **Chat Mutation:** Uses `copilotChatMutation` to invoke the **enhanced** `library-copilot-analyzer` Edge Function, passing the user's query and a simplified list of `blogPostsData`.
 *   **Markdown Links:** The AI is instructed to respond with clickable Markdown links (`[Title](/blog/slug)`) to relevant blog posts.
-*   **UI:** Displays remaining daily queries and upgrade prompts if limits are reached.
+*   **UI:** Renders the `ChatInterface` component within the dialog.
 
 ### 4.16. `ComparisonLibraryCopilot.tsx` (Multi-Video Comparison Library Copilot)
 *   **Purpose:** Provides an AI assistant within the multi-video comparison library page to help users find specific comparisons **and acts as a comparative analysis topic recommender.**
 *   **Props:** Accepts `comparisons` (an array of `MultiComparison` objects) from the parent page.
-*   **Internal State:** Manages `isOpen` (for the dialog), `chatMessages`, `queriesToday`, and `error`.
-*   **Tier-based Limits:** Dynamically sets `currentLimits` (daily queries) based on `useAuth`'s `user`, `subscriptionStatus`, and `subscriptionPlanId`.
-*   **Anonymous Usage Tracking:** Uses `useQuery` to fetch `anonUsage` from the `get-anon-usage` Edge Function for unauthenticated users.
-*   **Authenticated Usage Tracking:** Uses `useQuery` to fetch `dailyCopilotQueriesCount` from `public.copilot_queries_log` for authenticated users.
-*   **Chat Mutation:** Uses `copilotChatMutation` to invoke the `comparison-library-copilot-analyzer` Edge Function, passing the user's query and a simplified list of `comparisonsData`. **Enforces tier-based daily query limits.**
+*   **Internal State:** Manages `isOpen` (for the dialog), `chatMessages`, and `error`.
+*   **Tier-based Limits:** **All copilot queries are now unlimited for all tiers.**
+*   **Chat Mutation:** Uses `copilotChatMutation` to invoke the `comparison-library-copilot-analyzer` Edge Function, passing the user's query and a simplified list of `comparisonsData`.
 *   **Markdown Links:** The AI is instructed to respond with clickable Markdown links (`[Title](/comparison/slug)`) to relevant comparison blog posts.
-*   **UI:** Displays remaining daily queries and upgrade prompts if limits are reached.
+*   **UI:** Renders the `ChatInterface` component within the dialog.
 
-### 4.17. `ComparisonDataDisplay.tsx` (Two-Video Comparison Data Display)
-*   **Purpose:** A reusable component to display structured comparative insights for two videos.
-*   **Props:** Accepts `data` (an object containing `sentiment_delta`, `emotional_tone_breakdown`, `top_themes_intersection`, etc.).
-*   **UI:** Renders the comparison data in a clear, card-based format with badges and icons.
-
-### 4.18. `MultiComparisonDataDisplay.tsx` (Multi-Video Comparison Data Display)
-*   **Purpose:** A reusable component to display structured comparative insights for multiple videos.
-*   **Props:** Accepts `data` (an object containing `overall_sentiment_trend`, `common_emotional_tones`, `divergent_emotional_tones`, `common_themes`, `unique_themes`, `summary_insights`, `video_summaries`).
-*   **UI:** Renders the multi-comparison data in a clear, card-based format with badges.
-
-### 4.19. `Upgrade.tsx` (Upgrade Page)
+### 4.17. `Upgrade.tsx` (Upgrade Page)
 *   **Purpose:** Informs users about the benefits of upgrading to a paid tier.
-*   **UI:** Displays a comparison of features and limits between the Free Tier and Paid Tier, with a call to action to upgrade.
+*   **UI:** Displays a comparison of features and limits between the Free Tier and Paid Tier, with a call to action to upgrade. **This page has been updated to reflect the simplified tier structure.**
 
-### 4.20. `AccountCenter.tsx` (Account Center Page)
+### 4.18. `AccountCenter.tsx` (Account Center Page)
 *   **Purpose:** Provides a dedicated page for authenticated users to view and manage their profile information and subscription details.
 *   **UI:** Displays user's email, first name, last name, and avatar. Shows current subscription status and plan. Includes a form to update first and last names and a button to sign out. Links to the Upgrade page for free tier users.
 
@@ -329,7 +315,7 @@ The project follows a standard React application structure with specific directo
 *   **Now also fetches the user's `subscriptionStatus` and `subscriptionPlanId` from the `public.subscriptions` table.**
 *   Provides `session` (the current Supabase session), `user`, `isLoading`, `subscriptionStatus`, and `subscriptionPlanId` to child components via the `useAuth` hook.
 
-### 5.3. Database Schema (`public.profiles`, `public.blog_posts`, `public.multi_comparisons`, `public.multi_comparison_videos`, `public.subscriptions`, `public.anon_usage`, `public.copilot_queries_log`)
+### 5.3. Database Schema (`public.profiles`, `public.blog_posts`, `public.multi_comparisons`, `public.multi_comparison_videos`, `public.subscriptions`, `public.anon_usage`)
 *   **Table:** `public.profiles` (Existing)
     *   `id`: UUID, Primary Key, references `auth.users(id)` (CASCADE on delete).
     *   `first_name`: TEXT
@@ -409,24 +395,15 @@ The project follows a standard React application structure with specific directo
     *   `Subscriptions update policy`: `FOR UPDATE TO authenticated USING (auth.uid() = id)`
     *   `Subscriptions delete policy`: `FOR DELETE TO authenticated USING (auth.uid() = id)`
     *   These policies ensure authenticated users can only manage their own subscription data.
-*   **Table:** `public.anon_usage` (New)
+*   **Table:** `public.anon_usage` (Updated)
     *   `ip_address`: TEXT, Primary Key.
     *   `analyses_count`: INTEGER, NOT NULL, defaults to `0`.
     *   `comparisons_count`: INTEGER, NOT NULL, defaults to `0`.
-    *   `copilot_queries_count`: INTEGER, NOT NULL, defaults to `0`.
     *   `last_reset_at`: TIMESTAMP WITH TIME ZONE, NOT NULL, defaults to `NOW()`.
     *   `created_at`: TIMESTAMP WITH TIME ZONE, NOT NULL, defaults to `NOW()`.
     *   `updated_at`: TIMESTAMP WITH TIME ZONE, NOT NULL, defaults to `NOW()`.
 *   **Row Level Security (RLS) for `public.anon_usage`:** Enabled.
     *   `Allow Edge Functions to manage anon usage`: `FOR ALL USING (true)` (This policy is intentionally broad to allow Edge Functions to manage usage based on IP, as `auth.uid()` is not available for unauthenticated requests).
-*   **Table:** `public.copilot_queries_log` (New)
-    *   `id`: UUID, Primary Key, defaults to `gen_random_uuid()`.
-    *   `user_id`: UUID, NOT NULL, references `auth.users(id)` (ON DELETE CASCADE).
-    *   `created_at`: TIMESTAMP WITH TIME ZONE, NOT NULL, defaults to `NOW()`.
-*   **Row Level Security (RLS) for `public.copilot_queries_log`:** Enabled.
-    *   `Users can insert their own copilot query logs`: `FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id)`
-    *   `Users can view their own copilot query logs`: `FOR SELECT TO authenticated USING (auth.uid() = user_id)`
-    *   These policies ensure authenticated users can only log and view their own copilot queries.
 
 ### 5.4. Database Functions & Triggers
 *   **Function:** `public.handle_new_user()` (Existing)
@@ -437,13 +414,13 @@ The project follows a standard React application structure with specific directo
     *   Automatically calls `handle_new_user` whenever a new user is inserted into `auth.users`, ensuring a profile is created for every new signup.
 
 ### 5.5. Supabase Edge Function (`supabase/functions/youtube-analyzer/index.ts`)
-This Deno-based serverless function is the core backend logic for video analysis and blog post generation, **now enhanced with an intelligent caching mechanism, SEO-focused AI prompting, API key rotation, custom question processing, and staleness-freshness logic. AI prompts have been extensively engineered for high-quality, production-grade responses for sentiment analysis, blog post generation, and custom Q&A. It now includes robust tier-based daily analysis limits and custom question limits for unauthenticated, authenticated free, and paid users.**
+This Deno-based serverless function is the core backend logic for video analysis and blog post generation, **now enhanced with an intelligent caching mechanism, SEO-focused AI prompting, API key rotation, custom question processing (unlimited), and staleness-freshness logic. AI prompts have been extensively engineered for high-quality, production-grade responses for sentiment analysis, blog post generation, and custom Q&A. It now includes robust tier-based daily analysis limits for unauthenticated, authenticated free, and paid users.**
 *   **CORS Handling:** Includes `corsHeaders` and handles `OPTIONS` preflight requests.
 *   **Supabase Client Initialization:** Creates a Supabase client within the function, gracefully handling a potentially missing user `Authorization` header for unauthenticated users.
-*   **Tier Determination:** Determines the `currentLimits` (daily analyses, max custom questions, max custom question word count) based on the authenticated `user`'s subscription status or defaults to `UNAUTHENTICATED_LIMITS`.
+*   **Tier Determination:** Determines the `currentLimits` (daily analyses) based on the authenticated `user`'s subscription status or defaults to `UNAUTHENTICATED_LIMITS`.
 *   **Usage Enforcement:**
     *   **Daily Analysis Limit:** Checks `public.blog_posts` for authenticated users or `public.anon_usage` for unauthenticated users to enforce daily analysis limits. Increments counts on successful analysis.
-    *   **Custom Question Limits:** Enforces `maxCustomQuestions` and `maxCustomQuestionWordCount` based on the `currentLimits`.
+    *   **Custom Question Limits:** **Removed. Custom questions are now unlimited.**
 *   **Input Validation:** Checks for `videoLink` and extracts `videoId`. Now also receives `customQuestions` array and an optional `forceReanalyze` boolean flag.
 *   **Analysis Caching & Staleness Logic:**
     *   Upon receiving a `videoLink`, the function first extracts the `videoId`.
@@ -470,16 +447,16 @@ This Deno-based serverless function is the core backend logic for video analysis
 *   **Longcat AI API Call (Blog Post Generation - if new/re-analysis):** After successful sentiment analysis, a *second* `POST` request is made to Longcat AI for blog post generation.
 *   **Longcat AI API Call (Custom Questions - always if new questions):** If `customQuestions` are provided, the function iterates through each question. For each, it constructs a specific prompt including the full video analysis context and the user's question, instructing the AI to generate an answer of the specified `wordCount`. These answers are collected into `customQaResults`.
 *   **Response:** Returns a `200 OK` response with video details, comments, the AI analysis result, the `blogPostSlug`, the `originalVideoLink`, the `customQaResults`, and the `lastReanalyzedAt` timestamp for frontend display.
-*   **Error Handling:** Includes comprehensive `try-catch` blocks, **returning 403 status for limit exceedances.**
+*   **Error Handling:** Includes comprehensive `try-catch` blocks, **returning 403 status for daily analysis limit exceedances.**
 
 ### 5.6. Supabase Edge Function (`supabase/functions/multi-video-comparator/index.ts`)
-This Deno-based serverless function is responsible for orchestrating multi-video comparisons, including individual video analysis, comparative AI insights, and blog post generation. **It implements robust staleness/freshness logic for the multi-comparison itself, ensures individual videos are up-to-date, handles custom comparative questions, and enforces tier-based daily comparison limits and custom comparative question limits.**
+This Deno-based serverless function is responsible for orchestrating multi-video comparisons, including individual video analysis, comparative AI insights, and blog post generation. **It implements robust staleness/freshness logic for the multi-comparison itself, ensures individual videos are up-to-date, handles custom comparative questions (unlimited), and enforces tier-based daily comparison limits.**
 *   **CORS Handling:** Includes `corsHeaders` and handles `OPTIONS` preflight requests.
 *   **Supabase Client Initialization & User Authentication:** Creates a Supabase client within the function, gracefully handling a potentially missing user `Authorization` header.
-*   **Tier Determination:** Determines the `currentLimits` (daily comparisons, max custom questions, max custom question word count) based on the authenticated `user`'s subscription status or defaults to `UNAUTHENTICATED_LIMITS`.
+*   **Tier Determination:** Determines the `currentLimits` (daily comparisons) based on the authenticated `user`'s subscription status or defaults to `UNAUTHENTICATED_LIMITS`.
 *   **Usage Enforcement:**
     *   **Daily Comparison Limit:** Checks `public.multi_comparisons` for authenticated users or `public.anon_usage` for unauthenticated users to enforce daily comparison limits. Increments counts on successful comparison.
-    *   **Custom Comparative Question Limits:** Enforces `maxCustomQuestions` and `maxCustomQuestionWordCount` based on the `currentLimits`.
+    *   **Custom Comparative Question Limits:** **Removed. Custom comparative questions are now unlimited.**
 *   **Input Validation:** Checks for `videoLinks` (minimum 2) and extracts `videoIds`. Also receives `customComparativeQuestions` and an optional `forceRecompare` flag.
 *   **Orchestrate Individual Video Analysis:**
     *   For each `videoLink` provided, it first checks if an analysis for that video exists in `public.blog_posts`.
@@ -505,7 +482,7 @@ This Deno-based serverless function is responsible for orchestrating multi-video
     *   If an `existingMultiComparison` was found and re-generated, it updates the existing entry in `public.multi_comparisons` with new content, insights, Q&A, and updates `last_compared_at` and `updated_at`.
     *   If it's a new multi-comparison, it inserts a new entry into `public.multi_comparisons` and then populates the `public.multi_comparison_videos` junction table to link the constituent `blog_posts`.
 *   **Response:** Returns a `200 OK` response with the full `MultiComparisonResult` object, including the `id`, `title`, `slug`, `meta_description`, `keywords`, `content`, `created_at`, `last_compared_at`, `comparison_data_json`, `custom_comparative_qa_results`, `overall_thumbnail_url`, and a `videos` array (containing `blog_post_id`, `slug`, `title`, `thumbnail_url`, `original_video_link`, and `raw_comments_for_chat` for each video).
-*   **Error Handling:** Includes comprehensive `try-catch` blocks, **returning 403 status for limit exceedances.**
+*   **Error Handling:** Includes comprehensive `try-catch` blocks, **returning 403 status for daily comparison limit exceedances.**
 
 ### 5.7. Supabase Edge Function (`supabase/functions/fetch-external-context/index.ts`)
 This Deno-based serverless function is responsible for fetching external, up-to-date information using Google Custom Search. **It now includes API key rotation.**
@@ -520,13 +497,11 @@ This Deno-based serverless function is responsible for fetching external, up-to-
 *   **Cost Optimization:** This function is called only once per video analysis or comparison session from the frontend, reducing repeated Google Search API calls.
 
 ### 5.8. Supabase Edge Function (`supabase/functions/chat-analyzer/index.ts`)
-This Deno-based serverless function handles the conversational AI aspect for **single video analyses**. **It now includes API key rotation, explicit instructions for Markdown hyperlinks, incorporates custom Q&A results into its context, and enforces tier-based chat message limits and max response word count. AI prompts have been extensively engineered for high-quality, production-grade responses, including a strict information hierarchy, precise word count adherence, and mandatory Markdown hyperlink formatting.**
+This Deno-based serverless function handles the conversational AI aspect for **single video analyses**. **It now includes API key rotation, explicit instructions for Markdown hyperlinks, incorporates custom Q&A results into its context, and with chat message limits and max response word count removed. AI prompts have been extensively engineered for high-quality, production-grade responses, including a strict information hierarchy, precise word count adherence, and mandatory Markdown hyperlink formatting.**
 *   **CORS Handling:** Includes `corsHeaders` and handles `OPTIONS` preflight requests.
 *   **Supabase Client Initialization & User Authentication:** Creates a Supabase client within the function, gracefully handling a potentially missing user `Authorization` header.
-*   **Tier Determination:** Determines the `currentLimits` (chat message limit, max response word count) based on the authenticated `user`'s subscription status or defaults to `UNAUTHENTICATED_LIMITS`.
-*   **Usage Enforcement:**
-    *   **Chat Message Limit:** Enforces `chatMessageLimit` per session.
-    *   **Desired Word Count Limit:** Enforces `maxResponseWordCount`.
+*   **Tier Determination:** **Removed. Chat is now unlimited for all tiers.**
+*   **Usage Enforcement:** **Removed. Chat is now unlimited for all tiers.**
 *   **Input:** Receives `userMessage`, `chatMessages` (conversation history), `analysisResult` (full video analysis including top comments, creator name, thumbnail URL, `aiAnalysis` object, and **`customQaResults`**), `externalContext` (pre-fetched Google search results), `desiredWordCount`, and `selectedPersona` from the frontend.
 *   **API Key Retrieval & Rotation:**
     *   Retrieves a list of `LONGCAT_AI_API_KEY`s using the `getApiKeys` helper function.
@@ -542,16 +517,14 @@ This Deno-based serverless function handles the conversational AI aspect for **s
     *   **User Message:** Includes the current `userMessage`.
 *   **Longcat AI API Call:** Sends the constructed `messages` array to the Longcat AI API.
 *   **Response:** Returns a `200 OK` response with the AI's `aiResponse`.
-*   **Error Handling:** Includes comprehensive `try-catch` blocks, **returning 403 status for limit exceedances.**
+*   **Error Handling:** Includes comprehensive `try-catch` blocks.
 
 ### 5.9. Supabase Edge Function (`supabase/functions/multi-comparison-chat-analyzer/index.ts`)
-This Deno-based serverless function handles the conversational AI aspect for **multi-video comparisons**. **It now includes API key rotation, explicit instructions for Markdown hyperlinks, incorporates custom Q&A results into its context, and enforces tier-based chat message limits and max response word count.**
+This Deno-based serverless function handles the conversational AI aspect for **multi-video comparisons**. **It now includes API key rotation, explicit instructions for Markdown hyperlinks, incorporates custom Q&A results into its context, and with chat message limits and max response word count removed.**
 *   **CORS Handling:** Includes `corsHeaders` and handles `OPTIONS` preflight requests.
 *   **Supabase Client Initialization & User Authentication:** Creates a Supabase client within the function, gracefully handling a potentially missing user `Authorization` header.
-*   **Tier Determination:** Determines the `currentLimits` (chat message limit, max response word count) based on the authenticated `user`'s subscription status or defaults to `UNAUTHENTICATED_LIMITS`.
-*   **Usage Enforcement:**
-    *   **Chat Message Limit:** Enforces `chatMessageLimit` per session.
-    *   **Desired Word Count Limit:** Enforces `maxResponseWord Count`.
+*   **Tier Determination:** **Removed. Chat is now unlimited for all tiers.**
+*   **Usage Enforcement:** **Removed. Chat is now unlimited for all tiers.**
 *   **Input:** Receives `userMessage`, `chatMessages`, `multiComparisonResult` (including structured comparison data, custom comparative Q&A, and raw comments for each video), `externalContext`, `desiredWordCount`, and `selectedPersona`.
 *   **API Key Retrieval & Rotation:** Retrieves `LONGCAT_AI_API_KEY`s and handles rate limits.
 *   **Dynamic `max_tokens`:** Adjusts `max_tokens` based on `finalDesiredWordCount`.
@@ -565,35 +538,33 @@ This Deno-based serverless function handles the conversational AI aspect for **m
     *   **User Message:** Includes the current `userMessage`.
 *   **Longcat AI API Call:** Sends the constructed `messages` array to the Longcat AI API.
 *   **Response:** Returns a `200 OK` response with the AI's `aiResponse`.
-*   **Error Handling:** Includes comprehensive `try-catch` blocks, **returning 403 status for limit exceedances.**
+*   **Error Handling:** Includes comprehensive `try-catch` blocks.
 
 ### 5.10. Supabase Edge Function (`supabase/functions/library-copilot-analyzer/index.ts`)
-This Deno-based serverless function handles the AI-powered search within the single video analysis library **and now acts as an analysis topic recommender. It enforces tier-based daily query limits.**
+This Deno-based serverless function handles the AI-powered search within the single video analysis library **and now acts as an analysis topic recommender. Daily query limits are removed.**
 *   **CORS Handling:** Includes `corsHeaders` and handles `OPTIONS` preflight requests.
 *   **Supabase Client Initialization & User Authentication:** Creates a Supabase client within the function, gracefully handling a potentially missing user `Authorization` header.
-*   **Tier Determination:** Determines the `currentLimits` (daily queries) based on the authenticated `user`'s subscription status or defaults to `UNAUTHENTICATED_LIMITS`.
-*   **Usage Enforcement:**
-    *   **Daily Query Limit:** Checks `public.copilot_queries_log` for authenticated users or `public.anon_usage` for unauthenticated users to enforce daily query limits. Logs queries for authenticated users and increments counts for unauthenticated users.
+*   **Tier Determination:** **Removed. Copilot queries are now unlimited for all tiers.**
+*   **Usage Enforcement:** **Removed. Copilot queries are now unlimited for all tiers.**
 *   **Input:** Receives `userQuery` and `blogPostsData` (a simplified list of blog posts) from the frontend.
 *   **API Key Retrieval & Rotation:** Retrieves a list of `LONGCAT_AI_API_KEY`s and iterates through them for API calls.
 *   **`systemPrompt`:** Explicitly instructs the AI to identify relevant blog posts and provide their titles with **Markdown links in the format `[Title of Blog Post](/blog/slug-of-blog-post)`**. **It also now instructs the AI to suggest 1 to 3 new, related analysis topics or video ideas based on the user's query and the existing library content.**
 *   **Longcat AI API Call:** Sends the formatted blog post data and user query to the Longcat AI API.
 *   **Response:** Returns a `200 OK` response with the AI's `aiResponse` containing the recommendations with clickable Markdown links and new topic suggestions.
-*   **Error Handling:** Includes comprehensive `try-catch` blocks, **returning 403 status for limit exceedances.**
+*   **Error Handling:** Includes comprehensive `try-catch` blocks.
 
 ### 5.11. Supabase Edge Function (`supabase/functions/comparison-library-copilot-analyzer/index.ts`)
-This Deno-based serverless function handles the AI-powered search within the multi-video comparison library **and acts as a comparative analysis topic recommender. It enforces tier-based daily query limits.**
+This Deno-based serverless function handles the AI-powered search within the multi-video comparison library **and acts as a comparative analysis topic recommender. Daily query limits are removed.**
 *   **CORS Handling:** Includes `corsHeaders` and handles `OPTIONS` preflight requests.
 *   **Supabase Client Initialization & User Authentication:** Creates a Supabase client within the function, gracefully handling a potentially missing user `Authorization` header.
-*   **Tier Determination:** Determines the `currentLimits` (daily queries) based on the authenticated `user`'s subscription status or defaults to `UNAUTHENTICATED_LIMITS`.
-*   **Usage Enforcement:**
-    *   **Daily Query Limit:** Checks `public.copilot_queries_log` for authenticated users or `public.anon_usage` for unauthenticated users to enforce daily query limits. Logs queries for authenticated users and increments counts for unauthenticated users.
+*   **Tier Determination:** **Removed. Copilot queries are now unlimited for all tiers.**
+*   **Usage Enforcement:** **Removed. Copilot queries are now unlimited for all tiers.**
 *   **Input:** Receives `userQuery` and `comparisonsData` (a simplified list of multi-comparisons) from the frontend.
 *   **API Key Retrieval & Rotation:** Retrieves `LONGCAT_AI_API_KEY`s and handles rate limits.
 *   **`systemPrompt`:** Explicitly instructs the AI to identify relevant comparison blog posts and provide their titles with **Markdown links in the format `[Title of Comparison Blog Post](/multi-comparison/slug-of-comparison-blog-post)`**. **It also instructs the AI to suggest 1 to 3 new, related comparative analysis topics or video pairs based on the user's query and the existing library content.**
 *   **Longcat AI API Call:** Sends the formatted comparison data and user query to the Longcat AI API.
 *   **Response:** Returns a `200 OK` response with the AI's `aiResponse` containing the recommendations with clickable Markdown links and new topic suggestions.
-*   **Error Handling:** Includes comprehensive `try-catch` blocks, **returning 403 status for limit exceedances.**
+*   **Error Handling:** Includes comprehensive `try-catch` blocks.
 
 ### 5.12. Supabase Edge Function (`supabase/functions/get-anon-usage/index.ts`)
 This Deno-based serverless function is used by the frontend to retrieve the current daily usage counts for unauthenticated users based on their IP address.
@@ -602,7 +573,7 @@ This Deno-based serverless function is used by the frontend to retrieve the curr
 *   **IP Address Retrieval:** Extracts the client's IP address from request headers.
 *   **Usage Retrieval:** Queries the `public.anon_usage` table for the given IP.
 *   **Reset Logic:** If no usage is found or the `last_reset_at` timestamp is older than 24 hours, it returns reset counts (0 for all).
-*   **Response:** Returns a `200 OK` response with `analyses_count`, `comparisons_count`, `copilot_queries_count`, and the `FREE_TIER_LIMITS`.
+*   **Response:** Returns a `200 OK` response with `analyses_count`, `comparisons_count`, and the `FREE_TIER_LIMITS`.
 *   **Error Handling:** Includes `try-catch` blocks.
 
 ## 6. Styling and Branding
