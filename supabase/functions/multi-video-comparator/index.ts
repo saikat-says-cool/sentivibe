@@ -32,21 +32,21 @@ function getApiKeys(baseName: string): string[] {
   return keys;
 }
 
+// Define simplified tier limits for multi-comparisons
+const MULTICOMP_UNAUTHENTICATED_LIMITS = {
+  dailyComparisons: 1, // 1 comparison per day for unauthenticated users
+};
+
+const MULTICOMP_AUTHENTICATED_FREE_TIER_LIMITS = {
+  dailyComparisons: 1, // 1 comparison per day for authenticated free users
+};
+
+const MULTICOMP_PAID_TIER_LIMITS = {
+  dailyComparisons: 20, // 20 comparisons per day for paid users (effectively unlimited)
+};
+
 // Define staleness threshold (e.g., 30 days)
 const STALENESS_THRESHOLD_DAYS = 30;
-
-// Define simplified tier limits for multi-comparisons
-const UNAUTHENTICATED_LIMITS = {
-  dailyComparisons: 1, // Simplified: 1 comparison per day for free tier
-};
-
-const AUTHENTICATED_FREE_TIER_LIMITS = {
-  dailyComparisons: 1, // Simplified: 1 comparison per day for free tier
-};
-
-const PAID_TIER_LIMITS = {
-  dailyComparisons: 20, // Effectively unlimited
-};
 
 // Helper function to strip markdown code block fences
 function stripMarkdownFences(content: string): string {
@@ -122,15 +122,15 @@ serve(async (req: Request) => {
 
       if (subscriptionError && subscriptionError.code !== 'PGRST116') {
         console.error("Error fetching subscription for user:", user.id, subscriptionError);
-        currentLimits = AUTHENTICATED_FREE_TIER_LIMITS; // Fallback
+        currentLimits = MULTICOMP_AUTHENTICATED_FREE_TIER_LIMITS; // Fallback
       } else if (subscriptionData && subscriptionData.status === 'active' && subscriptionData.plan_id !== 'free') {
-        currentLimits = PAID_TIER_LIMITS;
+        currentLimits = MULTICOMP_PAID_TIER_LIMITS;
       } else {
-        currentLimits = AUTHENTICATED_FREE_TIER_LIMITS;
+        currentLimits = MULTICOMP_AUTHENTICATED_FREE_TIER_LIMITS;
       }
     } else {
       userSubscriptionId = null;
-      currentLimits = UNAUTHENTICATED_LIMITS;
+      currentLimits = MULTICOMP_UNAUTHENTICATED_LIMITS;
     }
 
     const longcatApiKeys = getApiKeys('LONGCAT_AI_API_KEY'); // Declared here
@@ -335,7 +335,7 @@ serve(async (req: Request) => {
 
         if (count !== null && count >= currentLimits.dailyComparisons) {
           return new Response(JSON.stringify({ 
-            error: `Daily multi-comparison limit (${currentLimits.dailyComparisons}) exceeded. ${currentLimits === PAID_TIER_LIMITS ? 'You have reached your paid tier limit.' : 'Upgrade to a paid tier for more comparisons.'}` 
+            error: `Daily multi-comparison limit (${currentLimits.dailyComparisons}) exceeded. ${currentLimits === MULTICOMP_PAID_TIER_LIMITS ? 'You have reached your paid tier limit.' : 'Upgrade to a paid tier for more comparisons.'}` 
           }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             status: 403,
@@ -371,9 +371,9 @@ serve(async (req: Request) => {
           }
         }
 
-        if (currentComparisonsCount >= UNAUTHENTICATED_LIMITS.dailyComparisons) {
+        if (currentComparisonsCount >= MULTICOMP_UNAUTHENTICATED_LIMITS.dailyComparisons) {
           return new Response(JSON.stringify({ 
-            error: `Daily multi-comparison limit (${UNAUTHENTICATED_LIMITS.dailyComparisons}) exceeded for your IP address. Upgrade to a paid tier for more comparisons.` 
+            error: `Daily multi-comparison limit (${MULTICOMP_UNAUTHENTICATED_LIMITS.dailyComparisons}) exceeded for your IP address. Upgrade to a paid tier for more comparisons.` 
           }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             status: 403,

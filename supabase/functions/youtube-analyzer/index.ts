@@ -33,21 +33,21 @@ function getApiKeys(baseName: string): string[] {
   return keys;
 }
 
+// Define simplified tier limits
+const YOUTUBE_UNAUTHENTICATED_LIMITS = {
+  dailyAnalyses: 1, // 1 analysis per day for unauthenticated users
+};
+
+const YOUTUBE_AUTHENTICATED_FREE_TIER_LIMITS = {
+  dailyAnalyses: 1, // 1 analysis per day for authenticated free users
+};
+
+const YOUTUBE_PAID_TIER_LIMITS = {
+  dailyAnalyses: 50, // 50 analyses per day for paid users (effectively unlimited)
+};
+
 // Define staleness threshold (e.g., 30 days)
 const STALENESS_THRESHOLD_DAYS = 30;
-
-// Define simplified tier limits
-const UNAUTHENTICATED_LIMITS = {
-  dailyAnalyses: 1, // Simplified: 1 analysis per day for free tier
-};
-
-const AUTHENTICATED_FREE_TIER_LIMITS = {
-  dailyAnalyses: 1, // Simplified: 1 analysis per day for free tier
-};
-
-const PAID_TIER_LIMITS = {
-  dailyAnalyses: 50, // Effectively unlimited
-};
 
 serve(async (req: Request) => {
   // Handle CORS preflight request
@@ -87,17 +87,17 @@ serve(async (req: Request) => {
       if (subscriptionError && subscriptionError.code !== 'PGRST116') { // PGRST116 means no rows found
         console.error("Error fetching subscription for user:", user.id, subscriptionError);
         // Fallback to authenticated free tier if there's an error fetching subscription
-        currentLimits = AUTHENTICATED_FREE_TIER_LIMITS;
+        currentLimits = YOUTUBE_AUTHENTICATED_FREE_TIER_LIMITS;
       } else if (subscriptionData && subscriptionData.status === 'active' && subscriptionData.plan_id !== 'free') {
-        currentLimits = PAID_TIER_LIMITS;
+        currentLimits = YOUTUBE_PAID_TIER_LIMITS;
       } else {
         // User is authenticated but has a 'free' plan or no active paid subscription
-        currentLimits = AUTHENTICATED_FREE_TIER_LIMITS;
+        currentLimits = YOUTUBE_AUTHENTICATED_FREE_TIER_LIMITS;
       }
     } else {
       // Unauthenticated user
       userSubscriptionId = null; // Explicitly null for anon users
-      currentLimits = UNAUTHENTICATED_LIMITS;
+      currentLimits = YOUTUBE_UNAUTHENTICATED_LIMITS;
     }
 
     const longcatApiKeys = getApiKeys('LONGCAT_AI_API_KEY'); // Declared here
@@ -169,7 +169,7 @@ serve(async (req: Request) => {
 
         if (count !== null && count >= currentLimits.dailyAnalyses) {
           return new Response(JSON.stringify({ 
-            error: `Daily analysis limit (${currentLimits.dailyAnalyses}) exceeded. ${currentLimits === PAID_TIER_LIMITS ? 'You have reached your paid tier limit.' : 'Upgrade to a paid tier for more analyses.'}` 
+            error: `Daily analysis limit (${currentLimits.dailyAnalyses}) exceeded. ${currentLimits === YOUTUBE_PAID_TIER_LIMITS ? 'You have reached your paid tier limit.' : 'Upgrade to a paid tier for more analyses.'}` 
           }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             status: 403,
@@ -205,9 +205,9 @@ serve(async (req: Request) => {
           }
         }
 
-        if (currentAnalysesCount >= UNAUTHENTICATED_LIMITS.dailyAnalyses) { // Always use UNAUTHENTICATED_LIMITS for anon
+        if (currentAnalysesCount >= YOUTUBE_UNAUTHENTICATED_LIMITS.dailyAnalyses) { // Always use YOUTUBE_UNAUTHENTICATED_LIMITS for anon
           return new Response(JSON.stringify({ 
-            error: `Daily analysis limit (${UNAUTHENTICATED_LIMITS.dailyAnalyses}) exceeded for your IP address. Upgrade to a paid tier for more analyses.` 
+            error: `Daily analysis limit (${YOUTUBE_UNAUTHENTICATED_LIMITS.dailyAnalyses}) exceeded for your IP address. Upgrade to a paid tier for more analyses.` 
           }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             status: 403,
