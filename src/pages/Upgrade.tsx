@@ -1,15 +1,16 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { CheckCircle2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { Separator } from '@/components/ui/separator'; // Import Separator
 import { useEffect } from 'react'; // Import useEffect
+import PaddleCheckoutButton from '@/components/PaddleCheckoutButton'; // Import PaddleCheckoutButton
 
 const Upgrade = () => {
   // Set SEO-optimized browser tab title
   useEffect(() => {
     document.title = "Upgrade to Paid Tier - SentiVibe";
   }, []);
+
+  const paddleProductId = import.meta.env.VITE_PADDLE_PRODUCT_ID;
 
   return (
     <div className="container mx-auto p-4 max-w-4xl">
@@ -49,13 +50,16 @@ const Upgrade = () => {
                 <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-200 mr-2" /> Ad-Free Experience</li>
                 <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-200 mr-2" /> Access to "My Analyses" History</li>
               </ul>
-              <Button asChild variant="secondary" className="mt-6 w-full">
-                <Link to="/checkout">Upgrade Now</Link> {/* Placeholder for actual checkout */}
-              </Button>
+              <div className="text-2xl font-bold text-accent mb-4">
+                $14.99 / month
+              </div>
+              <PaddleCheckoutButton productId={paddleProductId} className="w-full mt-auto" variant="secondary">
+                Upgrade Now
+              </PaddleCheckoutButton>
             </div>
           </div>
 
-          <Separator className="my-8" /> {/* Added separator */}
+          <div className="my-8 h-px bg-border" /> {/* Replaced Separator with a div for consistency */}
 
           <p className="text-sm text-gray-500">
             For a detailed breakdown of all features and limits, please visit our dedicated <Link to="/pricing" className="text-blue-500 hover:underline">Pricing Page</Link>.

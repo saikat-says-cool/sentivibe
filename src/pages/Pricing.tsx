@@ -3,12 +3,15 @@ import { Button } from '@/components/ui/button';
 import { CheckCircle2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useEffect } from 'react'; // Import useEffect
+import PaddleCheckoutButton from '@/components/PaddleCheckoutButton'; // Import PaddleCheckoutButton
 
 const Pricing = () => {
   // Set SEO-optimized browser tab title
   useEffect(() => {
     document.title = "Pricing Plans - SentiVibe";
   }, []);
+
+  const paddleProductId = import.meta.env.VITE_PADDLE_PRODUCT_ID;
 
   return (
     <div className="container mx-auto p-4 max-w-5xl">
@@ -70,9 +73,9 @@ const Pricing = () => {
                 <div className="text-2xl font-bold text-accent mb-4">
                   $14.99 / month
                 </div>
-                <Button asChild className="w-full mt-auto">
-                  <Link to="/upgrade">Upgrade Now</Link>
-                </Button>
+                <PaddleCheckoutButton productId={paddleProductId} className="w-full mt-auto">
+                  Upgrade Now
+                </PaddleCheckoutButton>
               </CardContent>
             </Card>
           </div>
