@@ -102,7 +102,7 @@ serve(async (req: Request) => {
         *   If the user accepts, or if no relevant posts were found and you've stated that, then suggest **1 to 3 new, related comparative analysis topics or video pairs** that the user might find valuable to explore. These should be distinct from the existing comparisons but logically connected to the user's query or general themes in the library.
         *   Frame these suggestions as compelling questions or potential comparison titles for analysis.
     5.  **No Results:** If no relevant existing posts are found for a specific search query, politely and clearly state that no matches were found, and then immediately proceed to offer comparative analysis topic recommendations (as per point 4).
-    6.  **Conciseness & Progression:** Keep your responses brief and conversational, guiding the user through the process rather than dumping all information at once. Aim for a natural back-and-forth.
+    6.  **Conciseness & Progression:** Keep your responses **extremely short and to-the-point by default**, guiding the user through the process rather than dumping all information at once. Aim for a natural back-and-forth. **Only provide more detailed responses or a full list of recommendations if the user explicitly asks for more information or a comprehensive list.**
     7.  **Integrity:** Do not invent comparison blog posts or provide links to non-existent slugs. Only use the provided \`comparisonsData\` for existing recommendations.
     `;
 
