@@ -102,7 +102,7 @@ We may update this Privacy Notice from time to time. The updated version will be
 
 ## 10. Contact Information
 
-If you have questions or comments about this Privacy Notice, please contact us at [your-support-email@sentivibe.online].
+If you have questions or comments about this Privacy Notice, please contact us at inquiries@sentivibe.online.
   `;
 
   return (

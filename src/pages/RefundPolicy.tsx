@@ -28,11 +28,19 @@ We may offer a refund in the following limited circumstances, at our sole discre
 
 Refund requests based on dissatisfaction with the service, change of mind, or failure to utilize the service will generally not be granted.
 
+## 3. Non-Refundable Services
+
+The following services are explicitly non-refundable:
+
+*   Any usage of the Free Tier.
+*   Partial usage of a subscription period.
+*   Services where the issue is due to user error, incompatibility with third-party software/hardware, or internet connectivity problems on the user's end.
+
 ## 4. How to Request a Refund
 
 To request a refund, you must:
 
-1.  Contact our support team at [your-support-email@sentivibe.online] within **7 days** of the purchase date.
+1.  Contact our support team at inquiries@sentivibe.online within **7 days** of the purchase date.
 2.  Provide your account email, transaction ID, and a detailed explanation of the reason for your refund request, including any relevant screenshots or error messages.
 
 All refund requests will be reviewed on a case-by-case basis.
@@ -52,7 +60,7 @@ We reserve the right to modify this Refund Policy at any time. Any changes will 
 
 ## 7. Contact Information
 
-If you have any questions about our Refund Policy, please contact us at [your-support-email@sentivibe.online].
+If you have any questions about our Refund Policy, please contact us at inquiries@sentivibe.online.
   `;
 
   return (

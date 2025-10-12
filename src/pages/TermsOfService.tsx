@@ -58,11 +58,11 @@ You agree to indemnify, defend, and hold harmless SentiVibe, its affiliates, off
 
 ## 9. Governing Law
 
-These Terms shall be governed by and construed in accordance with the laws of [Your Jurisdiction, e.g., the State of Delaware, USA], without regard to its conflict of law principles.
+These Terms shall be governed by and construed in accordance with the laws of the city of Kolkata, India, without regard to its conflict of law principles.
 
 ## 10. Contact Information
 
-If you have any questions about these Terms, please contact us at [your-support-email@sentivibe.online].
+If you have any questions about these Terms, please contact us at inquiries@sentivibe.online.
   `;
 
   return (
