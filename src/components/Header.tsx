@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/integrations/supabase/auth';
-import { ModeToggle } from './ModeToggle';
+// Removed ModeToggle import
 import MobileNav from './MobileNav';
 
 const Header = () => {
@@ -113,7 +113,7 @@ const Header = () => {
             <Button variant="default" className="ml-4">Upgrade</Button>
           </Link>
         )}
-        <ModeToggle />
+        {/* Removed ModeToggle component */}
       </div>
     </header>
   );

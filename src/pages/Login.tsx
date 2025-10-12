@@ -53,7 +53,7 @@ const Login = () => {
                 colors: {
                   brand: 'hsl(var(--accent))', // Using accent color for brand
                   brandAccent: 'hsl(var(--accent-foreground))', // Using accent-foreground
-                  // Adjust other colors to match SentiVibe dark theme
+                  // Adjust other colors to match SentiVibe light theme
                   defaultButtonBackground: 'hsl(var(--secondary))',
                   defaultButtonBackgroundHover: 'hsl(var(--secondary-foreground))',
                   defaultButtonBorder: 'hsl(var(--border))',
@@ -68,7 +68,7 @@ const Login = () => {
               },
             },
           }}
-          theme="dark" // Set theme to dark
+          theme="light" // Set theme to light
           redirectTo={window.location.origin + '/'}
           magicLink={true}
         />

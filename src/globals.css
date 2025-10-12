@@ -3,26 +3,24 @@
 @tailwind utilities;
 
 @layer base {
-  /* Removed the entire :root block (light mode definitions) */
+  :root { /* This now defines the single light theme */
+    --background: 0 0% 100%; /* Pure White */
+    --foreground: 0 0% 3.9%; /* Crowd Black */
 
-  .dark { /* This now defines the default dark theme */
-    --background: 0 0% 3.9%; /* Crowd Black */
-    --foreground: 0 0% 100%; /* Pure White */
+    --card: 0 0% 100%; /* Pure White */
+    --card-foreground: 0 0% 3.9%; /* Crowd Black */
 
-    --card: 0 0% 3.9%; /* Crowd Black */
-    --card-foreground: 0 0% 100%; /* Pure White */
+    --popover: 0 0% 100%; /* Pure White */
+    --popover-foreground: 0 0% 3.9%; /* Crowd Black */
 
-    --popover: 0 0% 3.9%; /* Crowd Black */
-    --popover-foreground: 0 0% 100%; /* Pure White */
+    --primary: 0 0% 3.9%; /* Crowd Black */
+    --primary-foreground: 0 0% 100%; /* Pure White */
 
-    --primary: 0 0% 100%; /* Pure White */
-    --primary-foreground: 0 0% 3.9%; /* Crowd Black */
+    --secondary: 220 10% 95%; /* Light Gray */
+    --secondary-foreground: 0 0% 3.9%; /* Crowd Black */
 
-    --secondary: 220 10% 15%; /* Dark Gray */
-    --secondary-foreground: 0 0% 100%; /* Pure White */
-
-    --muted: 220 10% 15%; /* Dark Gray */
-    --muted-foreground: 220 10% 60%; /* Medium Gray */
+    --muted: 220 10% 95%; /* Light Gray */
+    --muted-foreground: 220 10% 40%; /* Medium Gray */
 
     --accent: 217.2 91.2% 59.8%; /* Accent Blue #3B82F6 */
     --accent-foreground: 0 0% 100%; /* Pure White */
@@ -30,333 +28,32 @@
     --destructive: 0 62.8% 30.6%; /* Darker Red */
     --destructive-foreground: 0 0% 100%; /* Pure White */
 
-    --border: 220 10% 20%; /* Dark Gray Border */
-    --input: 220 10% 20%; /* Dark Gray Input */
-    --ring: 0 0% 100%; /* Pure White Ring */
+    --border: 220 10% 80%; /* Light Gray Border */
+    --input: 220 10% 90%; /* Light Gray Input */
+    --ring: 0 0% 3.9%; /* Crowd Black Ring */
 
     --radius: 0.375rem; /* Consistent with 6px corner radius */
 
-    /* Sentiment colors (remain the same for all dark themes) */
-    --sentiment-positive: 168 76% 50%; /* Positive Green #2DD4BF */
-    --sentiment-neutral: 220 10% 60%; /* Neutral Gray #9CA3AF */
-    --sentiment-negative: 0 84.2% 60.2%; /* Negative Red #F87171 */
+    /* Sentiment colors (adjusted for light background) */
+    --sentiment-positive: 168 76% 40%; /* Positive Green #2DD4BF (slightly darker for contrast) */
+    --sentiment-neutral: 220 10% 50%; /* Neutral Gray #9CA3AF (slightly darker for contrast) */
+    --sentiment-negative: 0 84.2% 50.2%; /* Negative Red #F87171 (slightly darker for contrast) */
 
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 240 4.8% 10%;
     --sidebar-primary: 224.3 76.3% 48%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-accent: 240 3.7% 90%;
+    --sidebar-accent-foreground: 240 4.8% 10%;
+    --sidebar-border: 240 3.7% 85%;
     --sidebar-ring: 217.2 91.2% 59.8%;
 
-    /* Default Dark Theme Gradients */
+    /* Light Theme Gradients */
     --body-gradient-start: var(--background);
-    --body-gradient-end: 210 20% 10%; /* A very dark, cool gray-blue */
+    --body-gradient-end: 210 20% 95%; /* A very light, cool gray-blue */
   }
 
-  /* Emerald Theme (now only dark mode) */
-  .dark.theme-emerald {
-    --background: 160 10% 10%; /* Dark green background */
-    --foreground: 160 60% 98%; /* Light green foreground */
-
-    --card: 160 10% 15%;
-    --card-foreground: 160 60% 98%;
-
-    --popover: 160 10% 15%;
-    --popover-foreground: 160 60% 98%;
-
-    --primary: 160 70% 60%; /* Lighter emerald for dark mode primary */
-    --primary-foreground: 160 10% 10%;
-
-    --secondary: 160 10% 20%;
-    --secondary-foreground: 160 60% 98%;
-
-    --muted: 160 10% 25%;
-    --muted-foreground: 160 10% 60%;
-
-    --accent: 160 70% 50%;
-    --accent-foreground: 160 10% 10%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 160 10% 30%;
-    --input: 160 10% 30%;
-    --ring: 160 70% 60%;
-
-    --sidebar-background: 160 10% 15%;
-    --sidebar-foreground: 160 60% 95%;
-    --sidebar-primary: 160 70% 55%;
-    --sidebar-primary-foreground: 160 10% 10%;
-    --sidebar-accent: 160 10% 20%;
-    --sidebar-accent-foreground: 160 60% 95%;
-    --sidebar-border: 160 10% 25%;
-    --sidebar-ring: 160 70% 55%;
-
-    /* Emerald Dark Theme Gradients */
-    --body-gradient-start: var(--background);
-    --body-gradient-end: 160 15% 15%; /* Darker emerald */
-  }
-
-  /* Crimson Theme (now only dark mode) */
-  .dark.theme-crimson {
-    --background: 0 0% 10%;
-    --foreground: 0 0% 100%;
-
-    --card: 0 0% 15%;
-    --card-foreground: 0 0% 100%;
-
-    --popover: 0 0% 15%;
-    --popover-foreground: 0 0% 100%;
-
-    --primary: 350 80% 60%; /* Lighter Crimson for dark mode */
-    --primary-foreground: 0 0% 10%;
-
-    --secondary: 350 10% 20%;
-    --secondary-foreground: 0 0% 100%;
-
-    --muted: 350 10% 25%;
-    --muted-foreground: 350 10% 60%;
-
-    --accent: 350 80% 70%;
-    --accent-foreground: 0 0% 10%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 350 10% 30%;
-    --input: 350 10% 30%;
-    --ring: 350 80% 60%;
-
-    --sidebar-background: 0 0% 15%;
-    --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 350 80% 55%;
-    --sidebar-primary-foreground: 0 0% 10%;
-    --sidebar-accent: 350 10% 20%;
-    --sidebar-accent-foreground: 0 0% 95%;
-    --sidebar-border: 350 10% 25%;
-    --sidebar-ring: 350 80% 55%;
-
-    /* Crimson Dark Theme Gradients */
-    --body-gradient-start: var(--background);
-    --body-gradient-end: 350 15% 15%; /* Darker crimson */
-  }
-
-  /* Yellow Theme (now only dark mode) */
-  .dark.theme-yellow {
-    --background: 48 100% 10%; /* Dark yellow/brown background */
-    --foreground: 48 100% 98%; /* Light yellow foreground */
-
-    --card: 48 100% 15%;
-    --card-foreground: 48 100% 98%;
-
-    --popover: 48 100% 15%;
-    --popover-foreground: 48 100% 98%;
-
-    --primary: 48 100% 70%; /* Lighter Yellow for dark mode */
-    --primary-foreground: 48 100% 10%;
-
-    --secondary: 48 50% 20%;
-    --secondary-foreground: 48 100% 98%;
-
-    --muted: 48 50% 25%;
-    --muted-foreground: 48 20% 60%;
-
-    --accent: 48 100% 80%;
-    --accent-foreground: 48 100% 10%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 48 50% 30%;
-    --input: 48 50% 30%;
-    --ring: 48 100% 70%;
-
-    --sidebar-background: 48 100% 15%;
-    --sidebar-foreground: 48 100% 95%;
-    --sidebar-primary: 48 100% 65%;
-    --sidebar-primary-foreground: 48 100% 10%;
-    --sidebar-accent: 48 50% 20%;
-    --sidebar-accent-foreground: 48 100% 95%;
-    --sidebar-border: 48 50% 25%;
-    --sidebar-ring: 48 100% 65%;
-
-    /* Yellow Dark Theme Gradients */
-    --body-gradient-start: var(--background);
-    --body-gradient-end: 48 30% 15%; /* Darker yellow */
-  }
-
-  /* Cyan Theme (now only dark mode) */
-  .dark.theme-cyan {
-    --background: 180 100% 10%; /* Dark cyan/teal background */
-    --foreground: 180 60% 98%; /* Light cyan foreground */
-
-    --card: 180 100% 15%;
-    --card-foreground: 180 60% 98%;
-
-    --popover: 180 100% 15%;
-    --popover-foreground: 180 60% 98%;
-
-    --primary: 180 100% 60%; /* Lighter Cyan for dark mode */
-    --primary-foreground: 180 100% 10%;
-
-    --secondary: 180 30% 20%;
-    --secondary-foreground: 180 60% 98%;
-
-    --muted: 180 30% 25%;
-    --muted-foreground: 180 20% 60%;
-
-    --accent: 180 100% 70%;
-    --accent-foreground: 180 100% 10%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 180 30% 30%;
-    --input: 180 30% 30%;
-    --ring: 180 100% 60%;
-
-    --sidebar-background: 180 100% 15%;
-    --sidebar-foreground: 180 60% 95%;
-    --sidebar-primary: 180 100% 55%;
-    --sidebar-primary-foreground: 180 100% 10%;
-    --sidebar-accent: 180 30% 20%;
-    --sidebar-accent-foreground: 180 60% 95%;
-    --sidebar-border: 180 30% 25%;
-    --sidebar-ring: 180 100% 55%;
-
-    /* Cyan Dark Theme Gradients */
-    --body-gradient-start: var(--background);
-    --body-gradient-end: 180 30% 15%; /* Darker cyan */
-  }
-
-  /* New Dark Themes */
-  .dark.theme-deep-blue {
-    --background: 220 20% 10%; /* Very dark blue */
-    --foreground: 210 40% 98%; /* Light blue-gray */
-
-    --card: 220 20% 15%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 220 20% 15%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 220 20% 10%;
-
-    --secondary: 220 15% 20%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 220 15% 25%;
-    --muted-foreground: 210 10% 60%;
-
-    --accent: 217.2 91.2% 59.8%; /* Keep existing accent blue */
-    --accent-foreground: 0 0% 100%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 220 15% 30%;
-    --input: 220 15% 30%;
-    --ring: 210 40% 98%;
-
-    --sidebar-background: 220 20% 15%;
-    --sidebar-foreground: 210 40% 95%;
-    --sidebar-primary: 210 40% 90%;
-    --sidebar-primary-foreground: 220 20% 10%;
-    --sidebar-accent: 220 15% 20%;
-    --sidebar-accent-foreground: 210 40% 95%;
-    --sidebar-border: 220 15% 25%;
-    --sidebar-ring: 210 40% 90%;
-
-    --body-gradient-start: var(--background);
-    --body-gradient-end: 220 25% 15%;
-  }
-
-  .dark.theme-forest-green {
-    --background: 140 10% 10%; /* Very dark green */
-    --foreground: 140 30% 90%; /* Light green-gray */
-
-    --card: 140 10% 15%;
-    --card-foreground: 140 30% 90%;
-
-    --popover: 140 10% 15%;
-    --popover-foreground: 140 30% 90%;
-
-    --primary: 140 30% 90%;
-    --primary-foreground: 140 10% 10%;
-
-    --secondary: 140 10% 20%;
-    --secondary-foreground: 140 30% 90%;
-
-    --muted: 140 10% 25%;
-    --muted-foreground: 140 10% 60%;
-
-    --accent: 160 70% 50%; /* Emerald accent */
-    --accent-foreground: 0 0% 100%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 140 10% 30%;
-    --input: 140 10% 30%;
-    --ring: 140 30% 90%;
-
-    --sidebar-background: 140 10% 15%;
-    --sidebar-foreground: 140 30% 85%;
-    --sidebar-primary: 140 30% 80%;
-    --sidebar-primary-foreground: 140 10% 10%;
-    --sidebar-accent: 140 10% 20%;
-    --sidebar-accent-foreground: 140 30% 85%;
-    --sidebar-border: 140 10% 25%;
-    --sidebar-ring: 140 30% 80%;
-
-    --body-gradient-start: var(--background);
-    --body-gradient-end: 140 15% 15%;
-  }
-
-  .dark.theme-purple-haze {
-    --background: 270 15% 10%; /* Very dark purple */
-    --foreground: 270 30% 90%; /* Light purple-gray */
-
-    --card: 270 15% 15%;
-    --card-foreground: 270 30% 90%;
-
-    --popover: 270 15% 15%;
-    --popover-foreground: 270 30% 90%;
-
-    --primary: 270 30% 90%;
-    --primary-foreground: 270 15% 10%;
-
-    --secondary: 270 10% 20%;
-    --secondary-foreground: 270 30% 90%;
-
-    --muted: 270 10% 25%;
-    --muted-foreground: 270 10% 60%;
-
-    --accent: 270 70% 60%; /* Brighter purple accent */
-    --accent-foreground: 0 0% 100%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 270 10% 30%;
-    --input: 270 10% 30%;
-    --ring: 270 30% 90%;
-
-    --sidebar-background: 270 15% 15%;
-    --sidebar-foreground: 270 30% 85%;
-    --sidebar-primary: 270 30% 80%;
-    --sidebar-primary-foreground: 270 15% 10%;
-    --sidebar-accent: 270 10% 20%;
-    --sidebar-accent-foreground: 270 30% 85%;
-    --sidebar-border: 270 10% 25%;
-    --sidebar-ring: 270 30% 80%;
-
-    --body-gradient-start: var(--background);
-    --body-gradient-end: 270 20% 15%;
-  }
+  /* Removed all .dark and .dark.theme-* blocks */
   
   body {
     @apply bg-background text-foreground font-sans bg-gradient-to-br from-[var(--body-gradient-start)] to-[var(--body-gradient-end)];
@@ -367,7 +64,7 @@
     text-decoration: underline;
   }
 
-  /* New class for PDF light mode override */
+  /* PDF light mode override is now the default, so this class is less critical but kept for explicit overrides */
   .pdf-light-mode {
     background-color: white !important;
     color: black !important;
