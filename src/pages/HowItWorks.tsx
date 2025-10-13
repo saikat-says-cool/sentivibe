@@ -1,6 +1,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useEffect } from 'react';
-import HowItWorksSidebar from '@/components/HowItWorksSidebar'; // Import the sidebar
+import HowItWorksSidebar from '@/components/HowItWorksSidebar';
+import HowItWorksCopilot from '@/components/HowItWorksCopilot'; // Import the new copilot
+
+// Embed documentation content directly
+import productDocumentationContent from '/docs/PRODUCT_DOCUMENTATION.md?raw';
+import technicalDocumentationContent from '/docs/TECHNICAL_DOCUMENTATION.md?raw';
 
 const HowItWorks = () => {
   useEffect(() => {
@@ -9,7 +14,7 @@ const HowItWorks = () => {
 
   return (
     <div className="container mx-auto p-4 max-w-5xl flex flex-col md:flex-row gap-6">
-      <HowItWorksSidebar /> {/* Render sidebar */}
+      <HowItWorksSidebar />
       <Card className="flex-1 mb-6">
         <CardHeader>
           <CardTitle className="text-4xl font-bold text-center mb-4">SentiVibe Hands-on Guide</CardTitle>
@@ -24,6 +29,12 @@ const HowItWorks = () => {
           <p className="text-muted-foreground">
             Each guide is meticulously crafted to ensure you leave no stone unturned in mastering our platform.
           </p>
+          <div className="mt-8 flex justify-center">
+            <HowItWorksCopilot
+              productDocumentation={productDocumentationContent}
+              technicalDocumentation={technicalDocumentationContent}
+            />
+          </div>
         </CardContent>
       </Card>
     </div>
