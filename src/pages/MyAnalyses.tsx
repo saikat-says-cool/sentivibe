@@ -4,13 +4,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Loader2, Search, Youtube } from 'lucide-react';
+import { Loader2, Search, Youtube, Sparkles } from 'lucide-react'; // Added Sparkles icon
 import { Link } from 'react-router-dom';
-import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/integrations/supabase/auth';
 import LibraryCopilot from '@/components/LibraryCopilot';
-// Alert components are no longer needed for the upgrade prompt on this page
-// import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'; 
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'; // Import Alert components
 
 interface AiAnalysisResult {
   overall_sentiment: string;
@@ -63,13 +61,12 @@ const fetchMyBlogPosts = async (userId: string): Promise<BlogPost[]> => {
 };
 
 const MyAnalyses = () => {
-  const { user, isLoading: isAuthLoading } = useAuth(); // Removed subscriptionStatus, subscriptionPlanId as they are not used for access here
+  const { user, isLoading: isAuthLoading, subscriptionStatus, subscriptionPlanId } = useAuth();
   const userId = user?.id;
 
-  // isPaidTier is no longer used for access control on this page
-  // const isPaidTier = subscriptionStatus === 'active' && subscriptionPlanId !== 'free';
+  const isPaidTier = subscriptionStatus === 'active' && subscriptionPlanId !== 'free';
 
-  const { data: blogPosts, isLoading, error } = useQuery<BlogPost[], Error>({
+  const { data: blogPosts } = useQuery<BlogPost[], Error>({
     queryKey: ['myBlogPosts', userId],
     queryFn: () => fetchMyBlogPosts(userId!),
     enabled: !!userId && !isAuthLoading, // Fetch if any user is logged in
@@ -118,42 +115,20 @@ const MyAnalyses = () => {
     );
   }
 
-  // Removed the entire 'if (!isPaidTier)' block, as all authenticated users can now access this page.
-
-  if (isLoading) {
-    return (
-      <div className="container mx-auto p-4 max-w-4xl">
-        <h1 className="text-3xl font-bold mb-6">My Analysis History</h1>
-        <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-2 mb-6">
-          <Skeleton className="flex-1 h-10" />
-          <Skeleton className="h-10 w-10 sm:w-auto px-4" />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[...Array(6)].map((_, i) => (
-            <Card key={i}>
-              <CardContent className="p-4">
-                <Skeleton className="w-full h-40 mb-4" />
-                <Skeleton className="h-6 w-3/4 mb-2" />
-                <Skeleton className="h-4 w-1/2" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="container mx-auto p-4 max-w-4xl text-red-500">
-        Error loading your analysis history: {error.message}
-      </div>
-    );
-  }
-
   return (
     <div className="container mx-auto p-4 max-w-4xl">
       <h1 className="text-3xl font-bold mb-6">My Analysis History</h1>
+
+      {user && !isPaidTier && (
+        <Alert className="mb-6 bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-200">
+          <Sparkles className="h-4 w-4" />
+          <AlertTitle>Unlock More Analyses!</AlertTitle>
+          <AlertDescription>
+            You're on the Free Tier. Upgrade to a Paid Tier to get significantly higher daily analysis and comparison limits, unwatermarked PDF reports, and an ad-free experience. <Link to="/upgrade" className="underline font-semibold">Learn more and upgrade here.</Link>
+          </AlertDescription>
+        </Alert>
+      )}
+
       <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-2 mb-6">
         <Input
           type="text"

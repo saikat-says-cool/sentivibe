@@ -109,7 +109,7 @@ const Header = () => {
         )}
         {showUpgradeButton && (
           <Link to="/upgrade">
-            <Button variant="default" className="ml-4">Upgrade</Button>
+            <Button className="ml-4 bg-accent text-accent-foreground hover:bg-accent/90">Upgrade</Button>
           </Link>
         )}
       </div>
