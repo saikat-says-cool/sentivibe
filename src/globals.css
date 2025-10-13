@@ -55,6 +55,23 @@
 
   /* Removed all .dark and .dark.theme-* blocks */
   
+  html {
+    /* Base font size for smaller screens (default 16px) */
+    font-size: 100%; 
+  }
+
+  @media (min-width: 1280px) { /* For 'xl' breakpoint and up (laptops/desktops) */
+    html {
+      font-size: 105%; /* Slightly larger base font size */
+    }
+  }
+
+  @media (min-width: 1536px) { /* For '2xl' breakpoint and up (large desktops/4K) */
+    html {
+      font-size: 110%; /* Even larger base font size */
+    }
+  }
+
   body {
     @apply bg-background text-foreground; /* Removed font-sans here */
   }
