@@ -49,6 +49,29 @@ const PAID_TIER_LIMITS = {
 // Define staleness threshold (e.g., 30 days)
 const STALENESS_THRESHOLD_DAYS = 30;
 
+// Define categories for tagging
+const CATEGORIES = [
+  "Product Reviews",
+  "Gaming",
+  "Tutorials",
+  "News",
+  "Entertainment",
+  "Vlogs",
+  "Music",
+  "Education",
+  "Comedy",
+  "Science & Tech",
+  "Sports",
+  "Travel",
+  "Food",
+  "DIY",
+  "Fashion",
+  "Beauty",
+  "Finance",
+  "Health",
+  "Documentary",
+];
+
 // Helper function to strip markdown code block fences
 function stripMarkdownFences(content: string): string {
   if (content.startsWith('```json') && content.endsWith('```')) {
@@ -442,7 +465,7 @@ serve(async (req: Request) => { // Explicitly typed 'req' as Request
         1. Have a compelling, SEO-optimized title (max 70 characters) in the format: "${videoDetails.title}: YouTube Comment Sentiment Analysis ({{Year}}) | SentiVibe".
         2. Generate a URL-friendly slug from the title (lowercase, hyphen-separated, **without any leading or trailing slashes or path segments**).
         3. Include a concise meta description (max 160 characters) summarizing the sentiment and insights.
-        4. List 5-10 relevant keywords as an array, combining video tags and analysis themes.
+        4. List 5-10 relevant keywords as an array, combining video tags and analysis themes. **Crucially, also include ONE primary category from the following list that best describes the video's content: ${CATEGORIES.filter(c => c !== "All").join(', ')}. This category should be a distinct element in the keywords array.**
         5. Be structured with an H1 (the title), H2s for sections, and H3s for sub-sections.
         6. Be at least 800 words long.
         7. Discuss the overall sentiment, emotional tones, key themes, and summary insights, leveraging SentiVibe's AI.
@@ -455,7 +478,7 @@ serve(async (req: Request) => { // Explicitly typed 'req' as Request
           "title": "SEO Optimized Blog Post Title",
           "slug": "seo-optimized-blog-post-title",
           "meta_description": "A concise meta description for search engines.",
-          "keywords": ["keyword1", "keyword2", "keyword3"],
+          "keywords": ["keyword1", "keyword2", "keyword3", "Primary Category"],
           "content": "# H1 Title\\n\\nIntroduction...\\n\\n## H2 Section\\n\\nContent...\\n\\n### H3 Sub-section\\n\\nMore content...\\n\\n## Conclusion\\n\\nCall to action..."
         }
       `;
