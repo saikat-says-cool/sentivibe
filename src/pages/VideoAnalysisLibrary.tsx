@@ -10,6 +10,14 @@ import { Skeleton } from '@/components/ui/skeleton';
 import LibraryCopilot from '@/components/LibraryCopilot';
 import PaginationControls from '@/components/PaginationControls'; // Import PaginationControls
 import { useEffect } from 'react'; // Import useEffect
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 
 interface AiAnalysisResult {
   overall_sentiment: string;
@@ -50,7 +58,30 @@ interface BlogPost {
 
 const PAGE_SIZE = 9; // Number of items per page
 
-const fetchBlogPosts = async (page: number, pageSize: number, searchTerm: string): Promise<{ data: BlogPost[], totalCount: number }> => {
+const CATEGORIES = [
+  "All",
+  "Product Reviews",
+  "Gaming",
+  "Tutorials",
+  "News",
+  "Entertainment",
+  "Vlogs",
+  "Music",
+  "Education",
+  "Comedy",
+  "Science & Tech",
+  "Sports",
+  "Travel",
+  "Food",
+  "DIY",
+  "Fashion",
+  "Beauty",
+  "Finance",
+  "Health",
+  "Documentary",
+];
+
+const fetchBlogPosts = async (page: number, pageSize: number, searchTerm: string, category: string): Promise<{ data: BlogPost[], totalCount: number }> => {
   const start = (page - 1) * pageSize;
   const end = start + pageSize - 1;
 
@@ -61,6 +92,10 @@ const fetchBlogPosts = async (page: number, pageSize: number, searchTerm: string
   if (searchTerm) {
     const lowerCaseSearchTerm = `%${searchTerm.toLowerCase()}%`;
     query = query.or(`title.ilike.${lowerCaseSearchTerm},creator_name.ilike.${lowerCaseSearchTerm},meta_description.ilike.${lowerCaseSearchTerm},keywords.cs.{"${searchTerm}"}`);
+  }
+
+  if (category && category !== "All") {
+    query = query.contains('keywords', [category]);
   }
 
   const { data, error, count } = await query
@@ -75,11 +110,12 @@ const fetchBlogPosts = async (page: number, pageSize: number, searchTerm: string
 
 const VideoAnalysisLibrary = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
 
   const { data, isLoading, error } = useQuery<{ data: BlogPost[], totalCount: number }, Error>({
-    queryKey: ['blogPosts', currentPage, searchTerm], // Add searchTerm to queryKey
-    queryFn: () => fetchBlogPosts(currentPage, PAGE_SIZE, searchTerm), // Pass searchTerm
+    queryKey: ['blogPosts', currentPage, searchTerm, selectedCategory], // Add selectedCategory to queryKey
+    queryFn: () => fetchBlogPosts(currentPage, PAGE_SIZE, searchTerm, selectedCategory), // Pass selectedCategory
     refetchOnWindowFocus: false,
   });
 
@@ -94,6 +130,12 @@ const VideoAnalysisLibrary = () => {
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
     setCurrentPage(1); // Reset to first page on new search
+  };
+
+  const handleCategoryChange = (value: string) => {
+    setSelectedCategory(value);
+    setSearchTerm(''); // Clear search term when category changes
+    setCurrentPage(1); // Reset to first page on new category
   };
 
   // Set SEO-optimized browser tab title
@@ -144,6 +186,24 @@ const VideoAnalysisLibrary = () => {
           onChange={handleSearchChange} // Use new handler
           className="flex-1"
         />
+        <div className="flex items-center space-x-2">
+          <Label htmlFor="category-select" className="sr-only">Category</Label>
+          <Select
+            value={selectedCategory}
+            onValueChange={handleCategoryChange}
+          >
+            <SelectTrigger id="category-select" className="w-[180px]">
+              <SelectValue placeholder="Select category" />
+            </SelectTrigger>
+            <SelectContent>
+              {CATEGORIES.map((category) => (
+                <SelectItem key={category} value={category}>
+                  {category}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
         <Button variant="outline" size="icon" className="sm:hidden">
           <Search className="h-4 w-4" />
         </Button>
