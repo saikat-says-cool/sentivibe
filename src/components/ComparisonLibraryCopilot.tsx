@@ -36,11 +36,9 @@ interface ComparisonLibraryCopilotProps {
 }
 
 const ComparisonLibraryCopilot: React.FC<ComparisonLibraryCopilotProps> = ({ comparisons }) => {
-  // Removed unused: user, subscriptionStatus, subscriptionPlanId from useAuth()
-  // Removed unused: isPaidTier
-
   const [isOpen, setIsOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
+  const [deepThinkMode, setDeepThinkMode] = useState<boolean>(false); // New state for DeepThink mode
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -56,6 +54,7 @@ const ComparisonLibraryCopilot: React.FC<ComparisonLibraryCopilotProps> = ({ com
     } else {
       setChatMessages([]);
       setError(null); // Clear error when dialog closes
+      setDeepThinkMode(false); // Reset DeepThink mode when dialog closes
     }
   }, [isOpen]);
 
@@ -88,12 +87,12 @@ const ComparisonLibraryCopilot: React.FC<ComparisonLibraryCopilotProps> = ({ com
         body: {
           userQuery: userQuery,
           comparisonsData: simplifiedComparisons,
+          deepThinkMode: deepThinkMode, // Pass deepThinkMode to the Edge Function
         },
       });
 
       if (invokeError) {
         console.error("Supabase Function Invoke Error (Comparison Library Copilot):", invokeError);
-        // Check if the error is a FunctionsHttpError with a 403 status
         if (invokeError.name === 'FunctionsHttpError' && invokeError.context?.status === 403) {
           try {
             const errorBody = await invokeError.context.json();
@@ -125,18 +124,17 @@ const ComparisonLibraryCopilot: React.FC<ComparisonLibraryCopilotProps> = ({ com
             : msg
         )
       );
-      setError((err as Error).message); // Set error state on mutation error
+      setError((err as Error).message);
     },
   });
 
   const handleSendMessage = (messageText: string) => {
     if (messageText.trim()) {
-      setError(null); // Clear previous errors
+      setError(null);
       copilotChatMutation.mutate(messageText);
     }
   };
 
-  // Simplified disabled logic: only disable if copilot mutation is pending
   const isCopilotDisabled = copilotChatMutation.isPending;
 
   return (
@@ -169,8 +167,8 @@ const ComparisonLibraryCopilot: React.FC<ComparisonLibraryCopilotProps> = ({ com
             onSendMessage={handleSendMessage}
             isLoading={copilotChatMutation.isPending}
             disabled={isCopilotDisabled}
-            deepThinkEnabled={false} // Comparison Library Copilot does not have DeepThink mode
-            onToggleDeepThink={() => {}} // No-op for DeepThink toggle
+            deepThinkEnabled={deepThinkMode}
+            onToggleDeepThink={setDeepThinkMode}
           />
         </div>
       </DialogContent>

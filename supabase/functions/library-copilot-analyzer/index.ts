@@ -55,16 +55,7 @@ serve(async (req: Request) => {
       }
     );
 
-    // User and subscription data are no longer fetched as no limits are enforced based on them in this function.
-    // const { data: { user } } = await supabaseClient.auth.getUser();
-    // const clientIp = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
-    // const now = new Date();
-
-    // --- Daily Query Limit Enforcement Removed ---
-    // All copilot queries are now unlimited.
-    // Removed interaction with 'copilot_queries_log' and 'anon_usage.copilot_queries_count'.
-
-    const { userQuery, blogPostsData } = await req.json();
+    const { userQuery, blogPostsData, deepThinkMode } = await req.json(); // Added deepThinkMode
 
     if (!userQuery || !blogPostsData || !Array.isArray(blogPostsData)) {
       return new Response(JSON.stringify({ error: 'User query and blog posts data are required.' }), {
@@ -72,6 +63,9 @@ serve(async (req: Request) => {
         status: 400,
       });
     }
+
+    // Determine which Longcat AI model to use
+    const aiModel = deepThinkMode ? "LongCat-Flash-Thinking" : "LongCat-Flash-Chat";
 
     // Format blog posts data for the AI prompt
     const formattedBlogPosts = blogPostsData.map((post: any, index: number) => `
@@ -127,7 +121,7 @@ serve(async (req: Request) => {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${currentLongcatApiKey}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: "LongCat-Flash-Chat",
+          model: aiModel, // Use the dynamically selected AI model
           messages: [
             { role: "system", content: systemPrompt },
             { role: "user", content: userMessageContent },
