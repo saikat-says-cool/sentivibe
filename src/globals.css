@@ -59,9 +59,19 @@
     @apply bg-background text-foreground; /* Removed font-sans here */
   }
 
-  /* Custom rule to underline links within prose content */
+  /* Custom rule to ensure prose content is readable */
+  .prose {
+    color: hsl(var(--foreground)); /* Ensure prose body text uses foreground */
+  }
+  .prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {
+    color: hsl(var(--foreground)); /* Ensure headings are dark */
+  }
+  .prose strong {
+    color: hsl(var(--foreground)); /* Ensure strong text is dark */
+  }
   .prose a {
     text-decoration: underline;
+    color: hsl(var(--accent)); /* Links should use accent color */
   }
 
   /* PDF light mode override is now the default, so this class is less critical but kept for explicit overrides */
