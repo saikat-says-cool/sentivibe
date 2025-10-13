@@ -212,7 +212,7 @@ const CreateMultiComparison = () => {
 
   // Set SEO-optimized browser tab title
   useEffect(() => {
-    document.title = "Create Multi-Video Comparison - SentiVibe";
+    document.title = "Compare Videos - SentiVibe: See the Full Picture.";
   }, []);
 
   const handleAddVideoLink = () => {
@@ -350,7 +350,7 @@ const CreateMultiComparison = () => {
       <Card className="mb-6">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <GitCompare className="h-6 w-6 text-accent" /> Create Multi-Video Comparison
+            <GitCompare className="h-6 w-6 text-accent" /> Compare Videos: See the Full Picture
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -410,7 +410,7 @@ const CreateMultiComparison = () => {
 
             <Separator />
 
-            <h3 className="text-lg font-semibold mb-2">Custom Comparative Questions</h3>
+            <h3 className="text-lg font-semibold mb-2">Ask Unlimited Questions. We don't meter your curiosity.</h3>
             {customComparativeQuestions.map((qa, index) => (
               <div key={index} className="flex flex-col sm:flex-row gap-2 items-end">
                 <div className="flex-1">

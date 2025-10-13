@@ -86,7 +86,7 @@ const Header = () => {
             </li>
             <li>
               <Link 
-                to="/how-it-works" /* Updated link */
+                to="/how-it-works" 
                 className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 px-4 py-2 hover:bg-accent hover:text-accent-foreground"
               >
                 How It Works
@@ -104,12 +104,12 @@ const Header = () => {
         </nav>
         {showAuthButtons && (
           <Link to="/login">
-            <Button variant="outline" className="ml-4">Sign In / Sign Up</Button>
+            <Button variant="outline" className="ml-4">Sign In / Get Free Access</Button>
           </Link>
         )}
         {showUpgradeButton && (
           <Link to="/upgrade">
-            <Button className="ml-4 bg-accent text-accent-foreground hover:bg-accent/90">Upgrade</Button>
+            <Button className="ml-4 bg-accent text-accent-foreground hover:bg-accent/90">Unlock Full Experience</Button>
           </Link>
         )}
       </div>

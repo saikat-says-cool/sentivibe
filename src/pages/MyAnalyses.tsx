@@ -90,7 +90,7 @@ const MyAnalyses = () => {
 
   // Set SEO-optimized browser tab title
   useEffect(() => {
-    document.title = "My Analyses - SentiVibe";
+    document.title = "My Analyses - SentiVibe: Your AI Research Partner.";
   }, []);
 
   if (isAuthLoading) {
@@ -122,9 +122,9 @@ const MyAnalyses = () => {
       {user && !isPaidTier && (
         <Alert className="mb-6 bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-200">
           <Sparkles className="h-4 w-4" />
-          <AlertTitle>Unlock More Analyses!</AlertTitle>
+          <AlertTitle>Unlock the Full SentiVibe Experience!</AlertTitle>
           <AlertDescription>
-            You're on the Free Tier. Upgrade to a Paid Tier to get significantly higher daily analysis and comparison limits, unwatermarked PDF reports, and an ad-free experience. <Link to="/upgrade" className="underline font-semibold">Learn more and upgrade here.</Link>
+            You're on the Free Tier. Upgrade to a Paid Tier for significantly higher daily analysis and comparison limits, unwatermarked PDF reports, and an ad-free experience. <Link to="/upgrade" className="underline font-semibold">Learn more and upgrade here.</Link>
           </AlertDescription>
         </Alert>
       )}

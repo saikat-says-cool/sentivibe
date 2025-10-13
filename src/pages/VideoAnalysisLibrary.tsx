@@ -140,7 +140,7 @@ const VideoAnalysisLibrary = () => {
 
   // Set SEO-optimized browser tab title
   useEffect(() => {
-    document.title = "Analysis Library - SentiVibe";
+    document.title = "Analysis Library - SentiVibe: Insights that Build Your Brand.";
   }, []);
 
   if (isLoading) {

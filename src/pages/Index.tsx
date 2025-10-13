@@ -7,10 +7,10 @@ function Index() {
   return (
     <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] text-center px-4 py-8">
       <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight mb-6 text-foreground">
-        Unlock Video Insights with SentiVibe
+        SentiVibe: Your Audience, Understood.
       </h1>
       <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mb-10">
-        Transform any YouTube video into a comprehensive, SEO-optimized blog post, complete with AI-powered analysis, summaries, and custom Q&A. Start exploring the power of video content analysis today!
+        Transform unstructured YouTube comments into a living, interactive intelligence hub. Get dynamic, conversational AI insights, automate SEO-optimized content, and ensure your audience understanding is always fresh and relevant.
       </p>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl w-full">
@@ -18,7 +18,7 @@ function Index() {
           <CardHeader>
             <CardTitle className="text-3xl font-bold mb-2">Analyze a Video</CardTitle>
             <CardDescription className="text-md text-muted-foreground">
-              Paste a YouTube link and let our AI generate a detailed blog post.
+              Don't just get a report, start a conversation. Get dynamic AI insights.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex-grow flex items-center justify-center flex-col">
@@ -37,7 +37,7 @@ function Index() {
           <CardHeader>
             <CardTitle className="text-3xl font-bold mb-2">Compare Videos</CardTitle>
             <CardDescription className="text-md text-muted-foreground">
-              Compare audience sentiment and insights between two or more YouTube videos.
+              See the full picture by comparing sentiment across multiple videos.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex-grow flex items-center justify-center flex-col">
@@ -58,7 +58,7 @@ function Index() {
           <CardHeader>
             <CardTitle className="text-3xl font-bold mb-2">Explore the Library</CardTitle>
             <CardDescription className="text-md text-muted-foreground">
-              Browse a collection of AI-generated video analyses and blog posts.
+              Turn Audience Insight into SEO Power. Every analysis becomes a new asset.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex-grow flex items-center justify-center">
@@ -88,7 +88,7 @@ function Index() {
       </div>
 
       <p className="text-sm text-muted-foreground mt-12 max-w-2xl">
-        No account needed to get started. Experience the full potential of SentiVibe and upgrade for unlimited access and advanced features.
+        Get real value, right now, for free. Experience the full power of our AI, no credit card required.
       </p>
     </div>
   );

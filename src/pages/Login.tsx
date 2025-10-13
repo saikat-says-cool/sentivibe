@@ -19,7 +19,7 @@ const Login = () => {
 
   // Set SEO-optimized browser tab title
   useEffect(() => {
-    document.title = "Login / Sign Up - SentiVibe";
+    document.title = "Login / Sign Up - SentiVibe: Get Real Value, Right Now.";
   }, []);
 
   if (isLoading) {
@@ -30,7 +30,7 @@ const Login = () => {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-md bg-card p-8 rounded-lg shadow-lg border border-border">
         <h2 className="text-2xl font-bold text-center mb-6 text-foreground">
-          Welcome to SentiVibe
+          Welcome to SentiVibe: Your Audience, Understood.
         </h2>
 
         {/* Temporary Alert for Google Auth */}

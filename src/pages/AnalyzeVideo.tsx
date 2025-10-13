@@ -253,7 +253,7 @@ const AnalyzeVideo = () => {
 
   // Set SEO-optimized browser tab title
   useEffect(() => {
-    document.title = "Analyze YouTube Video - SentiVibe";
+    document.title = "Analyze YouTube Video - SentiVibe: Your Audience, Understood.";
   }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -368,7 +368,7 @@ const AnalyzeVideo = () => {
       <Card className="mb-6">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Youtube className="h-6 w-6 text-red-500" /> Analyze YouTube Video
+            <Youtube className="h-6 w-6 text-red-500" /> Analyze a Video: From Comments to Conversation
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -400,13 +400,13 @@ const AnalyzeVideo = () => {
 
             <Separator />
 
-            <h3 className="text-lg font-semibold mb-2">Questions about this video asked by the community</h3>
+            <h3 className="text-lg font-semibold mb-2">Ask Unlimited Questions. We don't meter your curiosity.</h3>
             {customQuestions.map((qa, index) => (
               <div key={index} className="flex flex-col sm:flex-row gap-2 items-end">
                 <div className="flex-1">
                   <Label htmlFor={`question-${index}`}>Question {index + 1}</Label>
                   <Textarea
-                    id={`question-${index}`}
+                    id="question-${index}"
                     placeholder="e.g., What are the main criticisms of this video?"
                     value={qa.question}
                     onChange={(e) => handleQuestionChange(index, 'question', e.target.value)}
@@ -417,7 +417,7 @@ const AnalyzeVideo = () => {
                 <div className="w-24">
                   <Label htmlFor={`wordCount-${index}`}>Word Count</Label>
                   <Input
-                    id={`wordCount-${index}`}
+                    id="wordCount-${index}"
                     type="number"
                     min="50"
                     step="50"
@@ -519,7 +519,7 @@ const AnalyzeVideo = () => {
               {analysisResult.videoThumbnailUrl && (
                 <img
                   src={analysisResult.videoThumbnailUrl}
-                  alt={analysisResult.videoTitle}
+                  alt={`Thumbnail for ${analysisResult.videoTitle}`}
                   className="w-full h-auto rounded-md mb-4 aspect-video object-cover"
                 />
               )}

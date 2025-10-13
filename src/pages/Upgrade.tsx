@@ -7,7 +7,7 @@ import PaddleCheckoutButton from '@/components/PaddleCheckoutButton'; // Import 
 const Upgrade = () => {
   // Set SEO-optimized browser tab title
   useEffect(() => {
-    document.title = "Upgrade to Paid Tier - SentiVibe";
+    document.title = "Upgrade - SentiVibe: Unlock the Full Experience.";
   }, []);
 
   const paddleProductId = import.meta.env.VITE_PADDLE_PRODUCT_ID;
@@ -16,11 +16,11 @@ const Upgrade = () => {
     <div className="container mx-auto p-4 max-w-4xl">
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle className="text-3xl font-bold text-center">Upgrade Your SentiVibe Experience</CardTitle>
+          <CardTitle className="text-3xl font-bold text-center">Unlock the Full SentiVibe Experience!</CardTitle>
         </CardHeader>
         <CardContent className="prose dark:prose-invert max-w-none text-center">
           <p className="text-lg text-muted-foreground mb-6">
-            Unlock the full potential of SentiVibe with a paid subscription!
+            Upgrade to a Paid Tier to enjoy significantly higher daily analysis and comparison limits, unwatermarked PDF reports, and an ad-free experience.
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-left">

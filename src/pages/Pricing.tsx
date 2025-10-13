@@ -8,7 +8,7 @@ import PaddleCheckoutButton from '@/components/PaddleCheckoutButton'; // Import 
 const Pricing = () => {
   // Set SEO-optimized browser tab title
   useEffect(() => {
-    document.title = "Pricing Plans - SentiVibe";
+    document.title = "Pricing Plans - SentiVibe: The Most Generous Insight Tool.";
   }, []);
 
   const paddleProductId = import.meta.env.VITE_PADDLE_PRODUCT_ID;
@@ -17,9 +17,9 @@ const Pricing = () => {
     <div className="container mx-auto p-4 max-w-5xl">
       <Card className="mb-8">
         <CardHeader>
-          <CardTitle className="text-4xl font-bold text-center mb-4">Choose Your SentiVibe Plan</CardTitle>
+          <CardTitle className="text-4xl font-bold text-center mb-4">Experience SentiVibe: Get Real Value, Right Now.</CardTitle>
           <p className="text-lg text-muted-foreground text-center">
-            Unlock deeper insights and more analyses with our flexible plans.
+            We don't meter your curiosity. Ask unlimited questions, on any plan.
           </p>
         </CardHeader>
         <CardContent className="prose dark:prose-invert max-w-none">
@@ -28,7 +28,7 @@ const Pricing = () => {
             <Card className="flex flex-col p-6 shadow-lg border-2 border-gray-200 dark:border-gray-700">
               <CardHeader className="pb-4">
                 <CardTitle className="text-3xl font-bold text-primary">Free Tier</CardTitle>
-                <p className="text-muted-foreground">Perfect for trying out SentiVibe and occasional use.</p>
+                <p className="text-muted-foreground">Experience the full power of our AI, no credit card required.</p>
               </CardHeader>
               <CardContent className="flex-grow flex flex-col justify-between">
                 <p className="text-sm text-muted-foreground mb-4">

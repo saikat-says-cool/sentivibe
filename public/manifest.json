@@ -1,7 +1,7 @@
 {
   "name": "SentiVibe",
   "short_name": "SentiVibe",
-  "description": "AI-powered YouTube Comment Sentiment Analysis",
+  "description": "SentiVibe: Your AI-powered insight platform for YouTube audience understanding and content generation.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",

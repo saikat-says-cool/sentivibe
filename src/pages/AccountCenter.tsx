@@ -62,7 +62,7 @@ const AccountCenter = () => {
 
   // Set SEO-optimized browser tab title
   useEffect(() => {
-    document.title = "Account Center - SentiVibe";
+    document.title = "Account Center - SentiVibe: Your AI Research Partner.";
   }, []);
 
   const updateProfileMutation = useMutation({

@@ -136,7 +136,7 @@ const MultiComparisonLibrary = () => {
 
   // Set SEO-optimized browser tab title
   useEffect(() => {
-    document.title = "Comparison Library - SentiVibe";
+    document.title = "Comparison Library - SentiVibe: See the Full Picture.";
   }, []);
 
   if (isLoading) {
