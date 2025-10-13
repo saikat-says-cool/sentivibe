@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import VideoChatDialog from '@/components/VideoChatDialog'; // Import VideoChatDialog
 import html2pdf from 'html2pdf.js'; // Import html2pdf
 import { useAuth } from '@/integrations/supabase/auth'; // Import useAuth
+import UpgradeCTA from '@/components/UpgradeCTA'; // Import the new CTA component
 
 interface AiAnalysisResult {
   overall_sentiment: string;
@@ -424,6 +425,7 @@ const BlogPostDetail = () => {
           </CardContent>
         )}
       </Card>
+      <UpgradeCTA /> {/* Add the UpgradeCTA here */}
       {blogPost && (
         <VideoChatDialog
           isOpen={isChatDialogOpen}

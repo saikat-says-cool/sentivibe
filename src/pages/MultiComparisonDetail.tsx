@@ -13,6 +13,7 @@ import MultiComparisonDataDisplay from '@/components/MultiComparisonDataDisplay'
 import MultiComparisonChatDialog from '@/components/MultiComparisonChatDialog';
 import html2pdf from 'html2pdf.js'; // Import html2pdf
 import { useAuth } from '@/integrations/supabase/auth'; // Import useAuth
+import UpgradeCTA from '@/components/UpgradeCTA'; // Import the new CTA component
 
 interface MultiComparisonVideo {
   blog_post_id: string;
@@ -449,6 +450,7 @@ const MultiComparisonDetail = () => {
           </CardContent>
         )}
       </Card>
+      <UpgradeCTA /> {/* Add the UpgradeCTA here */}
       {formattedMultiComparisonResultForChat && (
         <MultiComparisonChatDialog
           isOpen={isChatDialogOpen}
