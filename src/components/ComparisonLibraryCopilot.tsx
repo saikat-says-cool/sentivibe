@@ -169,6 +169,8 @@ const ComparisonLibraryCopilot: React.FC<ComparisonLibraryCopilotProps> = ({ com
             onSendMessage={handleSendMessage}
             isLoading={copilotChatMutation.isPending}
             disabled={isCopilotDisabled}
+            deepThinkEnabled={false} // Comparison Library Copilot does not have DeepThink mode
+            onToggleDeepThink={() => {}} // No-op for DeepThink toggle
           />
         </div>
       </DialogContent>

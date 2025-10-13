@@ -168,6 +168,8 @@ const LibraryCopilot: React.FC<LibraryCopilotProps> = ({ blogPosts }) => {
             onSendMessage={handleSendMessage}
             isLoading={copilotChatMutation.isPending}
             disabled={isCopilotDisabled}
+            deepThinkEnabled={false} // Library Copilot does not have DeepThink mode
+            onToggleDeepThink={() => {}} // No-op for DeepThink toggle
           />
         </div>
       </DialogContent>

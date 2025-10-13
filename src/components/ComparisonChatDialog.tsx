@@ -111,6 +111,7 @@ const ComparisonChatDialog: React.FC<ComparisonChatDialogProps> = ({
           comparisonResult: initialComparisonResult,
           desiredWordCount: desiredWordCount,
           selectedPersona: selectedPersona,
+          deepThinkMode: false, // Comparison Chat does not have DeepThink mode
         },
       });
 
@@ -211,6 +212,8 @@ const ComparisonChatDialog: React.FC<ComparisonChatDialogProps> = ({
             onSendMessage={handleSendMessage}
             isLoading={chatMutation.isPending}
             disabled={isChatDisabled}
+            deepThinkEnabled={false} // Comparison Chat does not have DeepThink mode
+            onToggleDeepThink={() => {}} // No-op for DeepThink toggle
           />
         </div>
       </DialogContent>

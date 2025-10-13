@@ -20,6 +20,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+// Removed: import { Switch } from '@/components/ui/switch'; // Import Switch
 
 interface AiAnalysisResult {
   overall_sentiment: string;
@@ -94,6 +95,7 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
   const [desiredWordCount, setDesiredWordCount] = useState<number>(300); 
   const [selectedPersona, setSelectedPersona] = useState<string>("friendly");
+  const [deepThinkMode, setDeepThinkMode] = useState<boolean>(false); // New state for DeepThink mode
   const [currentAnalysisResult, setCurrentAnalysisResult] = useState<AnalysisResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -140,6 +142,7 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
     } else if (!isOpen) {
       setChatMessages([]);
       setError(null);
+      setDeepThinkMode(false); // Reset DeepThink mode when dialog closes
     }
   }, [isOpen, currentAnalysisResult]);
 
@@ -173,6 +176,7 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
           desiredWordCount: desiredWordCount,
           selectedPersona: selectedPersona,
           customQaResults: currentAnalysisResult.customQaResults,
+          deepThinkMode: deepThinkMode, // Pass deepThinkMode to the Edge Function
         },
       });
 
@@ -273,6 +277,8 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
             onSendMessage={handleSendMessage}
             isLoading={chatMutation.isPending}
             disabled={isChatDisabled}
+            deepThinkEnabled={deepThinkMode} // Pass deepThinkMode
+            onToggleDeepThink={setDeepThinkMode} // Pass setter for deepThinkMode
           />
         </div>
       </DialogContent>

@@ -55,11 +55,7 @@ serve(async (req: Request) => {
       }
     );
 
-    // User and subscription data are no longer fetched as no limits are enforced based on them in this function.
-    // const { data: { user } } = await supabaseClient.auth.getUser(); 
-
-    // Removed externalContext from destructuring
-    const { userMessage, chatMessages, analysisResult, desiredWordCount, selectedPersona, customQaResults } = await req.json();
+    const { userMessage, chatMessages, analysisResult, desiredWordCount, selectedPersona, customQaResults, deepThinkMode } = await req.json(); // Added deepThinkMode
 
     if (!userMessage || !analysisResult) {
       return new Response(JSON.stringify({ error: 'User message and analysis result are required.' }), {
@@ -68,13 +64,7 @@ serve(async (req: Request) => {
       });
     }
 
-    // --- Removed Chat Message Limit Enforcement ---
-    // All chat messages are now unlimited.
-
-    // --- Removed Desired Word Count Limit Enforcement ---
-    // All desired word counts are now unlimited.
-    // The desiredWordCount from the frontend will still be used by the AI, but not enforced as a hard limit here.
-    const finalDesiredWordCount = desiredWordCount; // Use as is from frontend
+    const finalDesiredWordCount = desiredWordCount;
 
     // --- Longcat AI API Call ---
     const longcatApiKeys = getApiKeys('LONGCAT_AI_API_KEY');
@@ -85,7 +75,10 @@ serve(async (req: Request) => {
       });
     }
 
-    const maxTokens = 2000; // Increased max_tokens for chat
+    const maxTokens = 2000;
+
+    // Determine which Longcat AI model to use
+    const aiModel = deepThinkMode ? "LongCat-Flash-Thinking" : "LongCat-Flash-Chat";
 
     // Base instructions for all personas, emphasizing completeness
     const baseInstructions = `
@@ -150,7 +143,7 @@ serve(async (req: Request) => {
     ${analysisResult.comments.slice(0, 10).map((comment: string, index: number) => `${index + 1}. ${comment}`).join('\n')}
     --- End Video Analysis Context ---
     ${customQaContext}
-    `; // Removed externalContext
+    `;
 
     // Convert chatMessages to the format expected by Longcat AI
     const conversationHistory = chatMessages.map((msg: any) => ({
@@ -159,9 +152,9 @@ serve(async (req: Request) => {
     }));
 
     const messages = [
-      { role: "system", content: baseInstructions + "\n\n" + personaSpecificInstructions + "\n\n" + fullContext }, // System message with persona and all context
-      ...conversationHistory, // Existing chat history
-      { role: "user", content: userMessage }, // Current user message
+      { role: "system", content: baseInstructions + "\n\n" + personaSpecificInstructions + "\n\n" + fullContext },
+      ...conversationHistory,
+      { role: "user", content: userMessage },
     ];
 
     const longcatApiUrl = "https://api.longcat.chat/openai/v1/chat/completions";
@@ -175,11 +168,11 @@ serve(async (req: Request) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: "LongCat-Flash-Chat",
+          model: aiModel, // Use the dynamically selected AI model
           messages: messages,
           max_tokens: maxTokens,
           temperature: 0.7,
-          stream: false, // Disable streaming
+          stream: false,
         }),
       });
 
