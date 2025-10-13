@@ -535,9 +535,9 @@ serve(async (req: Request) => {
         ${JSON.stringify(coreMultiComparisonData, null, 2)}
 
         The blog post should:
-        1. Have a compelling, SEO-optimized title (max 70 characters) in the format: "Multi-Video Sentiment Comparison: ${videoTitles.slice(0, 2).join(' vs ')}${videoTitles.length > 2 ? ' and more' : ''} ({{Year}}) | SentiVibe".
+        1. Have a compelling, **extremely hooking and click-worthy**, SEO-optimized title (max 70 characters) in the format: "Multi-Video Sentiment Comparison: ${videoTitles.slice(0, 2).join(' vs ')}${videoTitles.length > 2 ? ' and more' : ''} ({{Year}}) | SentiVibe". The title should grab attention on Google SERPs.
         2. Generate a URL-friendly slug from the title (lowercase, hyphen-separated, **without any leading or trailing slashes or path segments**).
-        3. Include a concise meta description (max 160 characters).
+        3. Include a concise, **highly engaging and click-inducing** meta description (max 160 characters). This description should make users want to click from the search results.
         4. List 5-10 relevant keywords as an array, combining keywords from all videos and comparison terms.
         5. Be structured with an H1 (the title), H2s for sections, and H3s for sub-sections.
         6. Be at least 1000 words long.
@@ -563,7 +563,7 @@ serve(async (req: Request) => {
           headers: { 'Authorization': `Bearer ${currentLongcatApiKey}`, 'Content-Type': 'application/json' },
           body: JSON.stringify({
             model: "LongCat-Flash-Chat",
-            messages: [{ "role": "system", "content": "You are SentiVibe AI, an expert SEO content strategist and writer specializing in multi-video comparative analysis. Your task is to generate a high-quality, detailed, and SEO-optimized blog post in Markdown format comparing multiple YouTube video analyses. The content must be engaging, insightful, and directly leverage the provided multi-comparison data. Ensure the output is a valid, well-formed JSON object, strictly adhering to the provided schema, and ready for immediate publication. Avoid generic phrases or fluff; focus on actionable insights and clear, professional language. The blog post should be compelling and provide genuine value to the reader, encouraging them to explore SentiVibe further." }, { "role": "user", "content": blogPostMultiComparisonPrompt }],
+            messages: [{ "role": "system", "content": "You are SentiVibe AI, an expert SEO content strategist and writer specializing in multi-video comparative analysis. Your task is to generate a high-quality, detailed, and SEO-optimized blog post in Markdown format comparing multiple YouTube video analyses. The content must be engaging, insightful, and directly leverage the provided multi-comparison data. Ensure the output is a valid, well-formed JSON object, strictly adhering to the provided schema, and ready for immediate publication. Avoid generic phrases or fluff; focus on actionable insights and clear, professional language. The blog post should be compelling and provide genuine value to the reader, encouraging them to explore SentiVibe further. Crucially, the title and meta description must be extremely hooking and click-worthy for Google SERPs, designed to maximize click-through rates while remaining relevant and within character limits." }, { "role": "user", "content": blogPostMultiComparisonPrompt }],
             max_tokens: 8000, // Increased max_tokens
             temperature: 0.7,
             response_format: { type: "json_object" }
