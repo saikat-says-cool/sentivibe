@@ -18,8 +18,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['Inter', 'sans-serif'], // Changed to Inter
-        heading: ['Inter', 'sans-serif'], // Changed to Inter
+        sans: ['Montserrat', 'sans-serif'], // Changed to Montserrat
+        heading: ['Montserrat', 'sans-serif'], // Changed to Montserrat
       },
       colors: {
         border: "hsl(var(--border))",

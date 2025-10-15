@@ -55,6 +55,7 @@
   }
 
   body {
+    font-family: 'Montserrat', sans-serif; /* Apply Montserrat globally */
     @apply bg-background text-foreground;
   }
 
