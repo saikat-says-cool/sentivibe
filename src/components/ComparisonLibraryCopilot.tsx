@@ -71,14 +71,7 @@ const ComparisonLibraryCopilot: React.FC<ComparisonLibraryCopilotProps> = ({ com
         sender: 'user',
         text: userQuery,
       };
-      setChatMessages((prev) => [...prev, newUserMessage]);
-
-      const aiPlaceholderMessage: Message = {
-        id: Date.now().toString() + '-ai',
-        sender: 'ai',
-        text: '', // Start with empty text for streaming
-      };
-      setChatMessages((prev) => [...prev, aiPlaceholderMessage]);
+      setChatMessages((prev) => [...prev, newUserMessage, { id: Date.now().toString() + '-ai-loading', sender: 'ai', text: '' }]);
 
       const simplifiedComparisons = comparisons.map(comp => ({
         title: comp.title,
@@ -113,38 +106,20 @@ const ComparisonLibraryCopilot: React.FC<ComparisonLibraryCopilotProps> = ({ com
         throw new Error(response.error.message || "Failed to get AI response from copilot.");
       }
       
-      // Handle streaming response
-      const reader = response.data.getReader();
-      const decoder = new TextDecoder();
-      let accumulatedText = '';
-
-      while (true) {
-        const { done, value } = await reader.read();
-        const chunk = decoder.decode(value, { stream: true });
-        accumulatedText += chunk;
-
-        setChatMessages((prev) =>
-          prev.map((msg, index) =>
-            index === prev.length - 1 && msg.sender === 'ai'
-              ? { ...msg, text: accumulatedText }
-              : msg
-          )
-        );
-
-        if (done) break;
-      }
-      return accumulatedText; // Return the full accumulated text on success
+      return response.data.aiResponse;
     },
-    onSuccess: () => {
-      // No need to update messages here, as it's done in the mutationFn
+    onSuccess: (aiResponse) => {
+      setChatMessages((prev) =>
+        prev.map((msg) =>
+          msg.id.endsWith('-ai-loading') ? { ...msg, text: aiResponse, id: Date.now().toString() + '-ai-response' } : msg
+        )
+      );
     },
     onError: (err: Error) => {
       console.error("Comparison Library Copilot Chat Error:", err);
       setChatMessages((prev) =>
-        prev.map((msg, index) =>
-          index === prev.length - 1 && msg.sender === 'ai'
-            ? { ...msg, text: `Error: ${(err as Error).message}. Please try again.` }
-            : msg
+        prev.map((msg) =>
+          msg.id.endsWith('-ai-loading') ? { ...msg, text: `Error: ${(err as Error).message}. Please try again.`, id: Date.now().toString() + '-ai-error' } : msg
         )
       );
       setError((err as Error).message);

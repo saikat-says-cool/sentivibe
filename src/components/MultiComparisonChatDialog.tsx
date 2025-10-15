@@ -93,15 +93,7 @@ const MultiComparisonChatDialog: React.FC<MultiComparisonChatDialogProps> = ({
         text: userMessageText,
       };
       
-      setChatMessages((prev) => [...prev, newUserMessage]);
-
-      const aiMessageId = Date.now().toString() + '-ai';
-      const aiPlaceholderMessage: Message = {
-        id: aiMessageId,
-        sender: 'ai',
-        text: '', // Start with empty text for streaming
-      };
-      setChatMessages((prev) => [...prev, aiPlaceholderMessage]);
+      setChatMessages((prev) => [...prev, newUserMessage, { id: Date.now().toString() + '-ai-loading', sender: 'ai', text: '' }]);
 
       if (!initialMultiComparisonResult) {
         throw new Error("No multi-video comparison loaded to chat about.");
@@ -123,38 +115,20 @@ const MultiComparisonChatDialog: React.FC<MultiComparisonChatDialogProps> = ({
         throw new Error(response.error.message || "Failed to invoke multi-comparison chat function.");
       }
       
-      // Handle streaming response
-      const reader = response.data.getReader();
-      const decoder = new TextDecoder();
-      let accumulatedText = '';
-
-      while (true) {
-        const { done, value } = await reader.read();
-        const chunk = decoder.decode(value, { stream: true });
-        accumulatedText += chunk;
-
-        setChatMessages((prev) =>
-          prev.map((msg, index) =>
-            index === prev.length - 1 && msg.sender === 'ai'
-              ? { ...msg, text: accumulatedText }
-              : msg
-          )
-        );
-
-        if (done) break;
-      }
-      return accumulatedText; // Return the full accumulated text on success
+      return response.data.aiResponse;
     },
-    onSuccess: () => {
-      // No need to update messages here, as it's done in the mutationFn
+    onSuccess: (aiResponse) => {
+      setChatMessages((prev) =>
+        prev.map((msg) =>
+          msg.id.endsWith('-ai-loading') ? { ...msg, text: aiResponse, id: Date.now().toString() + '-ai-response' } : msg
+        )
+      );
     },
     onError: (err: Error) => {
       console.error("Multi-Comparison Chat Error:", err);
       setChatMessages((prev) =>
-        prev.map((msg, index) =>
-          index === prev.length - 1 && msg.sender === 'ai'
-            ? { ...msg, text: `Error: ${(err as Error).message}. Please try again.` }
-            : msg
+        prev.map((msg) =>
+          msg.id.endsWith('-ai-loading') ? { ...msg, text: `Error: ${(err as Error).message}. Please try again.`, id: Date.now().toString() + '-ai-error' } : msg
         )
       );
       setError(`Failed to get AI response: ${(err as Error).message}`);

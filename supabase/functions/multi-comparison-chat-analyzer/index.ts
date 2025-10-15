@@ -211,7 +211,7 @@ serve(async (req: Request) => {
           model: aiModel, // Use the dynamically selected AI model
           messages: messages,
           max_tokens: maxTokens,
-          stream: true, // <--- Changed to true for streaming
+          stream: false, // <--- Reverted to false for non-streaming
         }),
       });
 
@@ -233,55 +233,15 @@ serve(async (req: Request) => {
       });
     }
 
-    // --- Handle streaming response ---
-    const stream = new ReadableStream({
-      async start(controller) {
-        const reader = longcatResponse.body?.getReader();
-        const decoder = new TextDecoder();
+    const longcatData = await longcatResponse.json();
+    if (!longcatData.choices || longcatData.choices.length === 0 || !longcatData.choices[0].message || !longcatData.choices[0].message.content) {
+      console.error('Longcat AI API returned unexpected structure:', longcatData);
+      throw new Error('Longcat AI API returned an empty or malformed response.');
+    }
+    const aiResponseContent = longcatData.choices[0].message.content;
 
-        if (!reader) {
-          controller.error('No readable stream from Longcat AI');
-          return;
-        }
-
-        try {
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-
-            const chunk = decoder.decode(value, { stream: true });
-            const lines = chunk.split('\n').filter(line => line.trim() !== '');
-
-            for (const line of lines) {
-              if (line.startsWith('data:')) {
-                const jsonStr = line.substring(5).trim();
-                if (jsonStr === '[DONE]') {
-                  controller.close();
-                  return;
-                }
-                try {
-                  const data = JSON.parse(jsonStr);
-                  const content = data.choices?.[0]?.delta?.content;
-                  if (content) {
-                    controller.enqueue(new TextEncoder().encode(content));
-                  }
-                } catch (e) {
-                  console.error('Error parsing JSON from Longcat AI stream:', e, jsonStr);
-                }
-              }
-            }
-          }
-        } catch (e) {
-          console.error('Error reading from Longcat AI stream:', e);
-          controller.error(e);
-        } finally {
-          controller.close();
-        }
-      },
-    });
-
-    return new Response(stream, {
-      headers: { ...corsHeaders, 'Content-Type': 'text/plain' }, // Changed to text/plain for streaming
+    return new Response(JSON.stringify({ aiResponse: aiResponseContent }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     });
 
