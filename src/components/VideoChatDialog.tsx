@@ -16,11 +16,11 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+// Removed: import { Switch } from '@/components/ui/switch'; // Import Switch
 
 interface AiAnalysisResult {
   overall_sentiment: string;
@@ -96,6 +96,7 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
   const [desiredWordCount, setDesiredWordCount] = useState<number>(300); 
   const [selectedPersona, setSelectedPersona] = useState<string>("friendly");
+  // Removed: const [deepThinkMode, setDeepThinkMode] = useState<boolean>(false); // New state for DeepThink mode
   const [currentAnalysisResult, setCurrentAnalysisResult] = useState<AnalysisResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -142,6 +143,7 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
     } else if (!isOpen) {
       setChatMessages([]);
       setError(null);
+      // Removed: setDeepThinkMode(false); // Reset DeepThink mode when dialog closes
     }
   }, [isOpen, currentAnalysisResult]);
 
@@ -155,6 +157,14 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
       
       setChatMessages((prev) => [...prev, newUserMessage]);
 
+      const aiMessageId = Date.now().toString() + '-ai';
+      const aiPlaceholderMessage: Message = {
+        id: aiMessageId,
+        sender: 'ai',
+        text: 'Thinking...',
+      };
+      setChatMessages((prev) => [...prev, aiPlaceholderMessage]);
+
       if (!currentAnalysisResult) {
         throw new Error("No video analysis loaded to chat about.");
       }
@@ -166,6 +176,7 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
           analysisResult: currentAnalysisResult,
           desiredWordCount: desiredWordCount,
           selectedPersona: selectedPersona,
+          // Removed: deepThinkMode: deepThinkMode, // Pass deepThinkMode to the Edge Function
         },
       });
 
@@ -177,37 +188,23 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
       return data.aiResponse;
     },
     onSuccess: (aiResponseContent: string) => {
-      setChatMessages((prev) => {
-        // Find the last user message and insert the AI response after it
-        const lastUserMessageIndex = prev.findLastIndex((msg: Message) => msg.sender === 'user');
-        if (lastUserMessageIndex !== -1) {
-          const newMessages = [...prev];
-          newMessages.splice(lastUserMessageIndex + 1, 0, {
-            id: Date.now().toString() + '-ai',
-            sender: 'ai',
-            text: aiResponseContent,
-          });
-          return newMessages;
-        }
-        return [...prev, { id: Date.now().toString() + '-ai', sender: 'ai', text: aiResponseContent }];
-      });
+      setChatMessages((prev) =>
+        prev.map((msg, index) =>
+          index === prev.length - 1 && msg.sender === 'ai' && msg.text === 'Thinking...'
+            ? { ...msg, text: aiResponseContent }
+            : msg
+        )
+      );
     },
     onError: (err: Error) => {
       console.error("Chat Error:", err);
-      setChatMessages((prev) => {
-        // Find the last user message and insert an error message after it
-        const lastUserMessageIndex = prev.findLastIndex((msg: Message) => msg.sender === 'user');
-        if (lastUserMessageIndex !== -1) {
-          const newMessages = [...prev];
-          newMessages.splice(lastUserMessageIndex + 1, 0, {
-            id: Date.now().toString() + '-error',
-            sender: 'ai',
-            text: `Error: ${(err as Error).message}. Please try again.`,
-          });
-          return newMessages;
-        }
-        return [...prev, { id: Date.now().toString() + '-error', sender: 'ai', text: `Error: ${(err as Error).message}. Please try again.` }];
-      });
+      setChatMessages((prev) =>
+        prev.map((msg, index) =>
+          index === prev.length - 1 && msg.sender === 'ai' && msg.text === 'Thinking...'
+            ? { ...msg, text: `Error: ${(err as Error).message}. Please try again.` }
+            : msg
+        )
+      );
       setError(`Failed to get AI response: ${(err as Error).message}`);
     },
   });
@@ -280,6 +277,8 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
             onSendMessage={handleSendMessage}
             isLoading={chatMutation.isPending}
             disabled={isChatDisabled}
+            // Removed: deepThinkEnabled={deepThinkMode} // Pass deepThinkMode
+            // Removed: onToggleDeepThink={setDeepThinkMode} // Pass setter for deepThinkMode
           />
         </div>
       </DialogContent>

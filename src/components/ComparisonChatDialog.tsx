@@ -92,6 +92,14 @@ const ComparisonChatDialog: React.FC<ComparisonChatDialogProps> = ({
       
       setChatMessages((prev) => [...prev, newUserMessage]);
 
+      const aiMessageId = Date.now().toString() + '-ai';
+      const aiPlaceholderMessage: Message = {
+        id: aiMessageId,
+        sender: 'ai',
+        text: 'Thinking...',
+      };
+      setChatMessages((prev) => [...prev, aiPlaceholderMessage]);
+
       if (!initialComparisonResult) {
         throw new Error("No video comparison loaded to chat about.");
       }
@@ -103,6 +111,7 @@ const ComparisonChatDialog: React.FC<ComparisonChatDialogProps> = ({
           comparisonResult: initialComparisonResult,
           desiredWordCount: desiredWordCount,
           selectedPersona: selectedPersona,
+          // Removed: deepThinkMode: false, // Comparison Chat does not have DeepThink mode
         },
       });
 
@@ -114,35 +123,23 @@ const ComparisonChatDialog: React.FC<ComparisonChatDialogProps> = ({
       return data.aiResponse;
     },
     onSuccess: (aiResponseContent: string) => {
-      setChatMessages((prev) => {
-        const lastUserMessageIndex = prev.findLastIndex((msg: Message) => msg.sender === 'user');
-        if (lastUserMessageIndex !== -1) {
-          const newMessages = [...prev];
-          newMessages.splice(lastUserMessageIndex + 1, 0, {
-            id: Date.now().toString() + '-ai',
-            sender: 'ai',
-            text: aiResponseContent,
-          });
-          return newMessages;
-        }
-        return [...prev, { id: Date.now().toString() + '-ai', sender: 'ai', text: aiResponseContent }];
-      });
+      setChatMessages((prev) =>
+        prev.map((msg, index) =>
+          index === prev.length - 1 && msg.sender === 'ai' && msg.text === 'Thinking...'
+            ? { ...msg, text: aiResponseContent }
+            : msg
+        )
+      );
     },
     onError: (err: Error) => {
       console.error("Comparison Chat Error:", err);
-      setChatMessages((prev) => {
-        const lastUserMessageIndex = prev.findLastIndex((msg: Message) => msg.sender === 'user');
-        if (lastUserMessageIndex !== -1) {
-          const newMessages = [...prev];
-          newMessages.splice(lastUserMessageIndex + 1, 0, {
-            id: Date.now().toString() + '-error',
-            sender: 'ai',
-            text: `Error: ${(err as Error).message}. Please try again.`,
-          });
-          return newMessages;
-        }
-        return [...prev, { id: Date.now().toString() + '-error', sender: 'ai', text: `Error: ${(err as Error).message}. Please try again.` }];
-      });
+      setChatMessages((prev) =>
+        prev.map((msg, index) =>
+          index === prev.length - 1 && msg.sender === 'ai' && msg.text === 'Thinking...'
+            ? { ...msg, text: `Error: ${(err as Error).message}. Please try again.` }
+            : msg
+        )
+      );
       setError(`Failed to get AI response: ${(err as Error).message}`);
     },
   });
@@ -215,6 +212,8 @@ const ComparisonChatDialog: React.FC<ComparisonChatDialogProps> = ({
             onSendMessage={handleSendMessage}
             isLoading={chatMutation.isPending}
             disabled={isChatDisabled}
+            // Removed: deepThinkEnabled={false} // Comparison Chat does not have DeepThink mode
+            // Removed: onToggleDeepThink={() => {}} // No-op for DeepThink toggle
           />
         </div>
       </DialogContent>
