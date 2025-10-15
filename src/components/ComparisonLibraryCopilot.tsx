@@ -76,7 +76,7 @@ const ComparisonLibraryCopilot: React.FC<ComparisonLibraryCopilotProps> = ({ com
       const aiPlaceholderMessage: Message = {
         id: Date.now().toString() + '-ai',
         sender: 'ai',
-        text: 'Thinking...',
+        text: '', // Start with empty text for streaming
       };
       setChatMessages((prev) => [...prev, aiPlaceholderMessage]);
 
@@ -89,7 +89,7 @@ const ComparisonLibraryCopilot: React.FC<ComparisonLibraryCopilotProps> = ({ com
         videoBTitle: comp.videoBTitle,
       }));
 
-      const { data, error: invokeError } = await supabase.functions.invoke('comparison-library-copilot-analyzer', {
+      const response = await supabase.functions.invoke('comparison-library-copilot-analyzer', {
         body: {
           userQuery: userQuery,
           comparisonsData: simplifiedComparisons,
@@ -99,35 +99,50 @@ const ComparisonLibraryCopilot: React.FC<ComparisonLibraryCopilotProps> = ({ com
         },
       });
 
-      if (invokeError) {
-        console.error("Supabase Function Invoke Error (Comparison Library Copilot):", invokeError);
-        if (invokeError.name === 'FunctionsHttpError' && invokeError.context?.status === 403) {
+      if (response.error) {
+        console.error("Supabase Function Invoke Error (Comparison Library Copilot):", response.error);
+        if (response.error.name === 'FunctionsHttpError' && response.error.context?.status === 403) {
           try {
-            const errorBody = await invokeError.context.json();
+            const errorBody = await response.error.context.json();
             throw new Error(errorBody.error || "Daily limit exceeded. Please upgrade.");
           } catch (jsonError) {
             console.error("Failed to parse 403 error response:", jsonError);
-            throw new Error(invokeError.message || "Daily limit exceeded. Please upgrade.");
+            throw new Error(response.error.message || "Daily limit exceeded. Please upgrade.");
           }
         }
-        throw new Error(invokeError.message || "Failed to get AI response from copilot.");
+        throw new Error(response.error.message || "Failed to get AI response from copilot.");
       }
-      return data.aiResponse;
+      
+      // Handle streaming response
+      const reader = response.data.getReader();
+      const decoder = new TextDecoder();
+      let accumulatedText = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        const chunk = decoder.decode(value, { stream: true });
+        accumulatedText += chunk;
+
+        setChatMessages((prev) =>
+          prev.map((msg, index) =>
+            index === prev.length - 1 && msg.sender === 'ai'
+              ? { ...msg, text: accumulatedText }
+              : msg
+          )
+        );
+
+        if (done) break;
+      }
+      return accumulatedText; // Return the full accumulated text on success
     },
-    onSuccess: (aiResponseContent: string) => {
-      setChatMessages((prev) =>
-        prev.map((msg, index) =>
-          index === prev.length - 1 && msg.sender === 'ai' && msg.text === 'Thinking...'
-            ? { ...msg, text: aiResponseContent }
-            : msg
-        )
-      );
+    onSuccess: () => {
+      // No need to update messages here, as it's done in the mutationFn
     },
     onError: (err: Error) => {
       console.error("Comparison Library Copilot Chat Error:", err);
       setChatMessages((prev) =>
         prev.map((msg, index) =>
-          index === prev.length - 1 && msg.sender === 'ai' && msg.text === 'Thinking...'
+          index === prev.length - 1 && msg.sender === 'ai'
             ? { ...msg, text: `Error: ${(err as Error).message}. Please try again.` }
             : msg
         )

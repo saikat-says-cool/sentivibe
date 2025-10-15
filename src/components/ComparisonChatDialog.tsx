@@ -9,7 +9,6 @@ import {
 import ChatInterface from './ChatInterface';
 import { useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-// Removed Select, Label, Input, Switch imports as they are now handled in ChatInterface
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { MessageSquare } from 'lucide-react';
 
@@ -53,7 +52,6 @@ const ComparisonChatDialog: React.FC<ComparisonChatDialogProps> = ({
   isPaidTier, // Destructure new prop
 }) => {
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
-  // Removed desiredWordCount state
   const [selectedPersona, setSelectedPersona] = React.useState<string>("friendly"); // Keep state for Edge Function payload
   const [deepThinkMode, setDeepThinkMode] = useState<boolean>(false);
   const [deepSearchMode, setDeepSearchMode] = useState<boolean>(false);
@@ -95,7 +93,7 @@ const ComparisonChatDialog: React.FC<ComparisonChatDialogProps> = ({
       const aiPlaceholderMessage: Message = {
         id: aiMessageId,
         sender: 'ai',
-        text: 'Thinking...',
+        text: '', // Start with empty text for streaming
       };
       setChatMessages((prev) => [...prev, aiPlaceholderMessage]);
 
@@ -103,39 +101,52 @@ const ComparisonChatDialog: React.FC<ComparisonChatDialogProps> = ({
         throw new Error("No video comparison loaded to chat about.");
       }
 
-      const { data, error: invokeError } = await supabase.functions.invoke('comparison-chat-analyzer', {
+      const response = await supabase.functions.invoke('comparison-chat-analyzer', {
         body: {
           userMessage: userMessageText,
           chatMessages: [...chatMessages, newUserMessage],
           comparisonResult: initialComparisonResult,
-          // Removed desiredWordCount from payload
           selectedPersona: selectedPersona,
           deepThinkMode: deepThinkMode,
           deepSearchMode: deepSearchMode,
         },
       });
 
-      if (invokeError) {
-        console.error("Supabase Function Invoke Error (comparison-chat-analyzer):", invokeError);
-        throw new Error(invokeError.message || "Failed to invoke comparison chat function.");
+      if (response.error) {
+        console.error("Supabase Function Invoke Error (comparison-chat-analyzer):", response.error);
+        throw new Error(response.error.message || "Failed to invoke comparison chat function.");
       }
       
-      return data.aiResponse;
+      // Handle streaming response
+      const reader = response.data.getReader();
+      const decoder = new TextDecoder();
+      let accumulatedText = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        const chunk = decoder.decode(value, { stream: true });
+        accumulatedText += chunk;
+
+        setChatMessages((prev) =>
+          prev.map((msg, index) =>
+            index === prev.length - 1 && msg.sender === 'ai'
+              ? { ...msg, text: accumulatedText }
+              : msg
+          )
+        );
+
+        if (done) break;
+      }
+      return accumulatedText; // Return the full accumulated text on success
     },
-    onSuccess: (aiResponseContent: string) => {
-      setChatMessages((prev) =>
-        prev.map((msg, index) =>
-          index === prev.length - 1 && msg.sender === 'ai' && msg.text === 'Thinking...'
-            ? { ...msg, text: aiResponseContent }
-            : msg
-        )
-      );
+    onSuccess: () => {
+      // No need to update messages here, as it's done in the mutationFn
     },
     onError: (err: Error) => {
       console.error("Comparison Chat Error:", err);
       setChatMessages((prev) =>
         prev.map((msg, index) =>
-          index === prev.length - 1 && msg.sender === 'ai' && msg.text === 'Thinking...'
+          index === prev.length - 1 && msg.sender === 'ai'
             ? { ...msg, text: `Error: ${(err as Error).message}. Please try again.` }
             : msg
         )

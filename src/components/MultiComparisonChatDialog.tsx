@@ -10,7 +10,6 @@ import { MessageSquare } from 'lucide-react';
 import ChatInterface from './ChatInterface';
 import { useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-// Removed Select, Label, Input imports as they are now handled in ChatInterface
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface MultiComparisonVideo {
@@ -58,7 +57,6 @@ const MultiComparisonChatDialog: React.FC<MultiComparisonChatDialogProps> = ({
   isPaidTier, // Destructure new prop
 }) => {
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
-  // Removed desiredWordCount state
   const [selectedPersona, setSelectedPersona] = useState<string>("friendly"); // Keep state for Edge Function payload
   const [deepThinkMode, setDeepThinkMode] = useState<boolean>(false);
   const [deepSearchMode, setDeepSearchMode] = useState<boolean>(false);
@@ -101,7 +99,7 @@ const MultiComparisonChatDialog: React.FC<MultiComparisonChatDialogProps> = ({
       const aiPlaceholderMessage: Message = {
         id: aiMessageId,
         sender: 'ai',
-        text: 'Thinking...',
+        text: '', // Start with empty text for streaming
       };
       setChatMessages((prev) => [...prev, aiPlaceholderMessage]);
 
@@ -109,39 +107,52 @@ const MultiComparisonChatDialog: React.FC<MultiComparisonChatDialogProps> = ({
         throw new Error("No multi-video comparison loaded to chat about.");
       }
 
-      const { data, error: invokeError } = await supabase.functions.invoke('multi-comparison-chat-analyzer', {
+      const response = await supabase.functions.invoke('multi-comparison-chat-analyzer', {
         body: {
           userMessage: userMessageText,
           chatMessages: [...chatMessages, newUserMessage],
           multiComparisonResult: initialMultiComparisonResult,
-          // Removed desiredWordCount from payload
           selectedPersona: selectedPersona,
           deepThinkMode: deepThinkMode,
           deepSearchMode: deepSearchMode,
         },
       });
 
-      if (invokeError) {
-        console.error("Supabase Function Invoke Error (multi-comparison-chat-analyzer):", invokeError);
-        throw new Error(invokeError.message || "Failed to invoke multi-comparison chat function.");
+      if (response.error) {
+        console.error("Supabase Function Invoke Error (multi-comparison-chat-analyzer):", response.error);
+        throw new Error(response.error.message || "Failed to invoke multi-comparison chat function.");
       }
       
-      return data.aiResponse;
+      // Handle streaming response
+      const reader = response.data.getReader();
+      const decoder = new TextDecoder();
+      let accumulatedText = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        const chunk = decoder.decode(value, { stream: true });
+        accumulatedText += chunk;
+
+        setChatMessages((prev) =>
+          prev.map((msg, index) =>
+            index === prev.length - 1 && msg.sender === 'ai'
+              ? { ...msg, text: accumulatedText }
+              : msg
+          )
+        );
+
+        if (done) break;
+      }
+      return accumulatedText; // Return the full accumulated text on success
     },
-    onSuccess: (aiResponseContent: string) => {
-      setChatMessages((prev) =>
-        prev.map((msg, index) =>
-          index === prev.length - 1 && msg.sender === 'ai' && msg.text === 'Thinking...'
-            ? { ...msg, text: aiResponseContent }
-            : msg
-        )
-      );
+    onSuccess: () => {
+      // No need to update messages here, as it's done in the mutationFn
     },
     onError: (err: Error) => {
       console.error("Multi-Comparison Chat Error:", err);
       setChatMessages((prev) =>
         prev.map((msg, index) =>
-          index === prev.length - 1 && msg.sender === 'ai' && msg.text === 'Thinking...'
+          index === prev.length - 1 && msg.sender === 'ai'
             ? { ...msg, text: `Error: ${(err as Error).message}. Please try again.` }
             : msg
         )

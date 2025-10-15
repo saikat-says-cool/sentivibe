@@ -66,11 +66,11 @@ const HowItWorksCopilot: React.FC<HowItWorksCopilotProps> = ({ productDocumentat
       const aiPlaceholderMessage: Message = {
         id: Date.now().toString() + '-ai',
         sender: 'ai',
-        text: 'Thinking...',
+        text: '', // Start with empty text for streaming
       };
       setChatMessages((prev) => [...prev, aiPlaceholderMessage]);
 
-      const { data, error: invokeError } = await supabase.functions.invoke('how-it-works-copilot-analyzer', {
+      const response = await supabase.functions.invoke('how-it-works-copilot-analyzer', {
         body: {
           userQuery: userQuery,
           chatMessages: [...chatMessages, newUserMessage],
@@ -82,26 +82,41 @@ const HowItWorksCopilot: React.FC<HowItWorksCopilotProps> = ({ productDocumentat
         },
       });
 
-      if (invokeError) {
-        console.error("Supabase Function Invoke Error (How It Works Copilot):", invokeError);
-        throw new Error(invokeError.message || "Failed to get AI response from assistant.");
+      if (response.error) {
+        console.error("Supabase Function Invoke Error (How It Works Copilot):", response.error);
+        throw new Error(response.error.message || "Failed to get AI response from assistant.");
       }
-      return data.aiResponse;
+      
+      // Handle streaming response
+      const reader = response.data.getReader();
+      const decoder = new TextDecoder();
+      let accumulatedText = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        const chunk = decoder.decode(value, { stream: true });
+        accumulatedText += chunk;
+
+        setChatMessages((prev) =>
+          prev.map((msg, index) =>
+            index === prev.length - 1 && msg.sender === 'ai'
+              ? { ...msg, text: accumulatedText }
+              : msg
+          )
+        );
+
+        if (done) break;
+      }
+      return accumulatedText; // Return the full accumulated text on success
     },
-    onSuccess: (aiResponseContent: string) => {
-      setChatMessages((prev) =>
-        prev.map((msg, index) =>
-          index === prev.length - 1 && msg.sender === 'ai' && msg.text === 'Thinking...'
-            ? { ...msg, text: aiResponseContent }
-            : msg
-        )
-      );
+    onSuccess: () => {
+      // No need to update messages here, as it's done in the mutationFn
     },
     onError: (err: Error) => {
       console.error("How It Works Copilot Chat Error:", err);
       setChatMessages((prev) =>
         prev.map((msg, index) =>
-          index === prev.length - 1 && msg.sender === 'ai' && msg.text === 'Thinking...'
+          index === prev.length - 1 && msg.sender === 'ai'
             ? { ...msg, text: `Error: ${(err as Error).message}. Please try again.` }
             : msg
         )
