@@ -48,6 +48,12 @@ const MULTICOMP_PAID_TIER_LIMITS = {
 // Define staleness threshold (e.g., 30 days)
 const STALENESS_THRESHOLD_DAYS = 30;
 
+// Interface for custom comparative questions
+interface CustomComparativeQuestion {
+  question: string;
+  wordCount: number;
+}
+
 // Helper function to strip markdown code block fences
 function stripMarkdownFences(content: string): string {
   if (content.startsWith('```json') && content.endsWith('```')) {
@@ -308,7 +314,7 @@ serve(async (req: Request) => {
 
     let coreMultiComparisonData: any;
     let generatedMultiComparisonBlogPost: any;
-    let combinedCustomComparativeQaResults: { question: string; wordCount: number; answer: string }[] = [];
+    let combinedCustomComparativeQaResults: (CustomComparativeQuestion & { answer?: string })[] = [];
     let lastComparedAt = now.toISOString();
 
     let shouldRegenerateMultiComparison = false;
@@ -506,7 +512,7 @@ serve(async (req: Request) => {
           body: JSON.stringify({
             model: "LongCat-Flash-Chat",
             messages: [{ "role": "system", "content": "You are SentiVibe AI, an expert in multi-video comparative analysis. Your task is to meticulously compare multiple YouTube video analyses and extract key quantitative and qualitative commonalities, unique aspects, and overall trends in audience sentiment, emotional tones, and themes. Present your findings in a structured JSON format as specified, ensuring accuracy and conciseness. Focus on highlighting overarching patterns and significant divergences across the videos." }, { "role": "user", "content": coreMultiComparisonPrompt }],
-            max_tokens: 8000, // Increased max_tokens
+            max_tokens: 2000, // Adjusted max_tokens for core multi-comparison
             temperature: 0.7,
             response_format: { type: "json_object" }
           }),
@@ -567,7 +573,7 @@ serve(async (req: Request) => {
           body: JSON.stringify({
             model: "LongCat-Flash-Chat",
             messages: [{ "role": "system", "content": "You are SentiVibe AI, an expert SEO content strategist and writer specializing in multi-video comparative analysis. Your task is to generate a high-quality, detailed, and SEO-optimized blog post in Markdown format comparing multiple YouTube video analyses. The content must be engaging, insightful, and directly leverage the provided multi-comparison data. Ensure the output is a valid, well-formed JSON object, strictly adhering to the provided schema, and ready for immediate publication. Avoid generic phrases or fluff; focus on actionable insights and clear, professional language. The blog post should be compelling and provide genuine value to the reader, encouraging them to explore SentiVibe further. Crucially, the title and meta description must be extremely hooking and click-worthy for Google SERPs, designed to maximize click-through rates while remaining relevant and within character limits." }, { "role": "user", "content": blogPostMultiComparisonPrompt }],
-            max_tokens: 8000, // Increased max_tokens
+            max_tokens: 4000, // Adjusted max_tokens for blog post generation
             temperature: 0.7,
             response_format: { type: "json_object" }
           }),
@@ -598,8 +604,9 @@ serve(async (req: Request) => {
         combinedCustomComparativeQaResults = existingMultiComparison.custom_comparative_qa_results || [];
       }
 
-      for (const qa of customComparativeQuestions) {
-        if (qa.question.trim() === "") continue;
+      // Parallelize custom question processing
+      const qaPromises = customComparativeQuestions.map(async (qa: CustomComparativeQuestion) => {
+        if (qa.question.trim() === "") return null; // Skip empty questions
 
         const customComparativeQuestionPrompt = `
           Based on the following analyses of multiple YouTube videos and the core multi-comparison data, answer the user's custom comparative question.
@@ -629,7 +636,7 @@ serve(async (req: Request) => {
             body: JSON.stringify({
               model: "LongCat-Flash-Chat",
               messages: [{ "role": "system", "content": "You are SentiVibe AI, an insightful and precise AI assistant specializing in multi-video comparative analysis. Your task is to answer specific user questions about a comparison between multiple YouTube video analyses. Your answers must be accurate, directly derived from the provided context, and strictly adhere to the requested word count. If the information is not present, indicate that. Ensure the answer is comprehensive within the word limit, providing a complete and well-structured response." }, { "role": "user", "content": customComparativeQuestionPrompt }],
-              max_tokens: 8000, // Increased max_tokens
+              max_tokens: 2000, // Adjusted max_tokens for Q&A
               temperature: 0.5,
               stream: false,
             }),
@@ -642,18 +649,21 @@ serve(async (req: Request) => {
         if (!customQaResponse || !customQaResponse.ok) {
           const errorData = customQaResponse ? await customQaResponse.json() : { message: "No response from Longcat AI" };
           console.error('Longcat AI Custom Multi-Comparative QA API error:', errorData);
-          combinedCustomComparativeQaResults.push({ ...qa, answer: `Error generating answer: ${errorData.message || 'Unknown error'}` });
+          return { ...qa, answer: `Error generating answer: ${errorData.message || 'Unknown error'}` };
         } else {
           const customQaData = await customQaResponse.json();
           if (!customQaData.choices || customQaData.choices.length === 0 || !customQaData.choices[0].message || !customQaData.choices[0].message.content) {
             console.error('Longcat AI Custom Multi-Comparative QA API returned unexpected structure:', customQaData);
-            combinedCustomComparativeQaResults.push({ ...qa, answer: `Error generating answer: AI returned empty or malformed response.` });
+            return { ...qa, answer: `Error generating answer: AI returned empty or malformed response.` };
           } else {
             const answerContent = customQaData.choices[0].message.content;
-            combinedCustomComparativeQaResults.push({ ...qa, answer: answerContent });
+            return { ...qa, answer: answerContent };
           }
         }
-      }
+      });
+
+      const newQaResults = (await Promise.all(qaPromises)).filter(Boolean); // Filter out nulls from skipped questions
+      combinedCustomComparativeQaResults = [...combinedCustomComparativeQaResults, ...newQaResults as (CustomComparativeQuestion & { answer?: string })[]]; // Corrected variable name and concatenation
     }
 
     // Ensure slug is unique (only if new comparison or slug changed during regeneration)
@@ -714,7 +724,7 @@ serve(async (req: Request) => {
 
       if (insertMultiCompError) {
         console.error('Supabase Multi-Comparison Insert Error:', insertMultiCompError);
-        throw new Error(`Failed to save multi-comparison to database: ${insertMultiCompError.message}`);
+        throw new Error(`Failed to save multi-comparison to database: ${insertJunctionError.message}`);
       }
       existingMultiComparison = newMultiComparison;
 

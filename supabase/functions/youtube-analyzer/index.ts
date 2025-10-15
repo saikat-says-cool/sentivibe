@@ -72,6 +72,12 @@ const CATEGORIES = [
   "Documentary",
 ];
 
+// Interface for custom questions
+interface CustomQuestion {
+  question: string;
+  wordCount: number;
+}
+
 // Helper function to strip markdown code block fences
 function stripMarkdownFences(content: string): string {
   if (content.startsWith('```json') && content.endsWith('```')) {
@@ -218,7 +224,7 @@ serve(async (req: Request) => { // Explicitly typed 'req' as Request
     let shouldPerformFullReanalysis = false;
     let shouldProcessNewCustomQuestions = false;
     let blogPostData: any;
-    let combinedCustomQaResults: { question: string; wordCount: number; answer: string }[] = [];
+    let combinedCustomQaResults: (CustomQuestion & { answer?: string })[] = [];
 
     if (existingBlogPost) {
       const lastReanalyzedDate = new Date(existingBlogPost.last_reanalyzed_at);
@@ -236,7 +242,7 @@ serve(async (req: Request) => { // Explicitly typed 'req' as Request
       // Always check for new custom questions, even if analysis is fresh
       if (customQuestions && customQuestions.length > 0) {
         const existingQuestionsSet = new Set(combinedCustomQaResults.map((qa: { question: string }) => qa.question));
-        const newQuestionsToProcess = customQuestions.filter((qa: { question: string }) => qa.question.trim() !== "" && !existingQuestionsSet.has(qa.question));
+        const newQuestionsToProcess = customQuestions.filter((qa: CustomQuestion) => qa.question.trim() !== "" && !existingQuestionsSet.has(qa.question));
         if (newQuestionsToProcess.length > 0) {
           shouldProcessNewCustomQuestions = true;
           console.log(`Processing ${newQuestionsToProcess.length} new custom questions for video ID: ${videoId}.`);
@@ -415,7 +421,7 @@ serve(async (req: Request) => { // Explicitly typed 'req' as Request
           body: JSON.stringify({
             model: "LongCat-Flash-Chat",
             messages: [{ "role": "system", "content": "You are SentiVibe AI, an expert in YouTube comment sentiment analysis. Your task is to meticulously analyze video comments, extract overall sentiment, emotional tones, and key themes, and provide a concise summary. Prioritize comments with higher like counts. Present your findings in a structured JSON format as specified, ensuring accuracy and conciseness." }, { "role": "user", "content": longcatPrompt }],
-            max_tokens: 8000, // Increased max_tokens
+            max_tokens: 2000, // Adjusted max_tokens for analysis
             temperature: 0.7,
             response_format: { type: "json_object" }
           }),
@@ -487,7 +493,7 @@ serve(async (req: Request) => { // Explicitly typed 'req' as Request
           body: JSON.stringify({
             model: "LongCat-Flash-Chat",
             messages: [{ "role": "system", "content": "You are SentiVibe AI, an expert SEO content strategist and writer. Your task is to generate a high-quality, detailed, and SEO-optimized blog post in Markdown format based on a YouTube video sentiment analysis. The content must be engaging, insightful, and directly leverage the provided analysis data. Ensure the output is a valid, well-formed JSON object, strictly adhering to the provided schema, and ready for immediate publication. Avoid generic phrases or fluff; focus on actionable insights and clear, professional language. The blog post should be compelling and provide genuine value to the reader, encouraging them to explore SentiVibe further. Crucially, the title and meta description must be extremely hooking and click-worthy for Google SERPs, designed to maximize click-through rates while remaining relevant and within character limits." }, { "role": "user", "content": blogPostPrompt }],
-            max_tokens: 8000, // Increased max_tokens
+            max_tokens: 4000, // Adjusted max_tokens for blog post generation
             temperature: 0.7,
             response_format: { type: "json_object" }
           }),
@@ -582,10 +588,11 @@ serve(async (req: Request) => { // Explicitly typed 'req' as Request
         combinedCustomQaResults = existingBlogPost.custom_qa_results || [];
       }
 
-      const existingQuestionsSet = new Set(combinedCustomQaResults.map((qa: { question: string }) => qa.question));
-      const newQuestionsToProcess = customQuestions.filter((qa: { question: string }) => qa.question.trim() !== "" && !existingQuestionsSet.has(qa.question));
+      const existingQuestionsSet = new Set(combinedCustomQaResults.map((qa) => qa.question));
+      const newQuestionsToProcess = customQuestions.filter((qa: CustomQuestion) => qa.question.trim() !== "" && !existingQuestionsSet.has(qa.question));
 
-      for (const qa of newQuestionsToProcess) {
+      // Parallelize custom question processing
+      const qaPromises = newQuestionsToProcess.map(async (qa: CustomQuestion) => {
         const customQuestionPrompt = `
           Based on the sentiment analysis of the YouTube video "${blogPostData.title}" by "${blogPostData.creator_name}", answer the user's custom question.
 
@@ -614,7 +621,7 @@ serve(async (req: Request) => { // Explicitly typed 'req' as Request
             body: JSON.stringify({
               model: "LongCat-Flash-Chat",
               messages: [{ "role": "system", "content": "You are SentiVibe AI, an insightful and precise AI assistant. Your task is to answer specific user questions about a YouTube video analysis. Your answers must be accurate, directly derived from the provided context, and strictly adhere to the requested word count. If the information is not present, indicate that. Ensure the answer is comprehensive within the word limit, providing a complete and well-structured response." }, { "role": "user", "content": customQuestionPrompt }],
-              max_tokens: 8000, // Increased max_tokens
+              max_tokens: 2000, // Adjusted max_tokens for Q&A
               temperature: 0.5,
               stream: false,
             }),
@@ -627,18 +634,21 @@ serve(async (req: Request) => { // Explicitly typed 'req' as Request
         if (!customQaResponse || !customQaResponse.ok) {
           const errorData = customQaResponse ? await customQaResponse.json() : { message: "No response from Longcat AI" };
           console.error('Longcat AI Custom QA API error:', errorData);
-          combinedCustomQaResults.push({ ...qa, answer: `Error generating answer: ${errorData.message || 'Unknown error'}` });
+          return { ...qa, answer: `Error generating answer: ${errorData.message || 'Unknown error'}` };
         } else {
           const customQaData = await customQaResponse.json();
           if (!customQaData.choices || customQaData.choices.length === 0 || !customQaData.choices[0].message || !customQaData.choices[0].message.content) {
             console.error('Longcat AI Custom QA API returned unexpected structure:', customQaData);
-            combinedCustomQaResults.push({ ...qa, answer: `Error generating answer: AI returned empty or malformed response.` });
+            return { ...qa, answer: `Error generating answer: AI returned empty or malformed response.` };
           } else {
             const answerContent = customQaData.choices[0].message.content;
-            combinedCustomQaResults.push({ ...qa, answer: answerContent });
+            return { ...qa, answer: answerContent };
           }
         }
-      }
+      });
+
+      const newQaResults = await Promise.all(qaPromises);
+      combinedCustomQaResults = [...combinedCustomQaResults, ...newQaResults];
 
       // Update the blog post with the combined custom QA results
       const { error: updateQaError } = await supabaseClient
