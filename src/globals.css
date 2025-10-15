@@ -4,22 +4,22 @@
 
 @layer base {
   :root { /* This now defines the single dark theme */
-    --background: 220 10% 10%; /* Dark Gray Background */
+    --background: 0 0% 0%; /* Pure Black Background */
     --foreground: 0 0% 98%; /* Light Gray Foreground (effectively white) */
 
-    --card: 220 10% 15%; /* Slightly lighter dark gray for cards */
+    --card: 220 10% 5%; /* Very dark gray for cards, distinct from black background */
     --card-foreground: 0 0% 98%; /* Light Gray */
 
-    --popover: 220 10% 15%; /* Popover background */
+    --popover: 220 10% 5%; /* Popover background, matching card */
     --popover-foreground: 0 0% 98%; /* Light Gray */
 
     --primary: 0 0% 98%; /* Primary text/elements are light */
     --primary-foreground: 220 10% 10%; /* Primary foreground is dark */
 
-    --secondary: 220 10% 25%; /* Secondary elements (medium dark gray) */
+    --secondary: 220 10% 15%; /* Secondary elements (dark gray) */
     --secondary-foreground: 0 0% 98%; /* Light Gray */
 
-    --muted: 220 10% 20%; /* Muted elements (darker gray) */
+    --muted: 220 10% 10%; /* Muted elements (darker gray) */
     --muted-foreground: 0 0% 90%; /* Very light gray for muted text for maximum visibility */
 
     --accent: 174 70% 40%; /* Teal Accent Color */
@@ -28,8 +28,8 @@
     --destructive: 0 62.8% 30.6%; /* Darker Red */
     --destructive-foreground: 0 0% 98%; /* Light Gray */
 
-    --border: 220 10% 25%; /* Darker gray border */
-    --input: 220 10% 20%; /* Darker gray input background */
+    --border: 220 10% 15%; /* Darker gray border */
+    --input: 220 10% 10%; /* Darker gray input background */
     --ring: 174 70% 40%; /* Teal ring color */
 
     --radius: 0.375rem; /* Consistent with 6px corner radius */
@@ -40,13 +40,13 @@
     --sentiment-negative: 0 84.2% 50.2%; /* Red for negative */
 
     /* Sidebar colors (adjusted for new dark theme) */
-    --sidebar-background: 220 10% 15%;
+    --sidebar-background: 220 10% 5%; /* Matching card background */
     --sidebar-foreground: 0 0% 98%;
     --sidebar-primary: 174 70% 40%;
     --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 220 10% 25%;
+    --sidebar-accent: 220 10% 15%; /* Matching secondary background */
     --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 220 10% 20%;
+    --sidebar-border: 220 10% 10%; /* Matching muted background */
     --sidebar-ring: 174 70% 40%;
 
     /* Body gradient (removed as it's not part of the new aesthetic) */
