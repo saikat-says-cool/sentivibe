@@ -51,7 +51,7 @@ serve(async (req: Request) => {
       }
     );
 
-    const { userQuery, chatMessages, productDocumentation, technicalDocumentation, deepThinkMode, deepSearchMode, desiredWordCount, selectedPersona } = await req.json(); // Added deepSearchMode
+    const { userQuery, chatMessages, productDocumentation, technicalDocumentation, deepThinkMode, deepSearchMode, selectedPersona } = await req.json(); // Removed desiredWordCount
 
     if (!userQuery || !productDocumentation || !technicalDocumentation) {
       return new Response(JSON.stringify({ error: 'User query and documentation content are required.' }), {
@@ -60,7 +60,7 @@ serve(async (req: Request) => {
       });
     }
 
-    const finalDesiredWordCount = desiredWordCount;
+    // Removed finalDesiredWordCount
 
     // --- Fetch External Context if DeepSearch is enabled ---
     let externalContext = '';
@@ -87,23 +87,23 @@ serve(async (req: Request) => {
       });
     }
 
-    const maxTokens = 8000; // Increased max_tokens for comprehensive documentation
+    const maxTokens = 8000; // Set a generous max_tokens, let the AI decide length based on prompt
 
     // Determine which Longcat AI model to use
     const aiModel = deepThinkMode ? "LongCat-Flash-Thinking" : "LongCat-Flash-Chat";
 
-    // Base instructions for all personas, emphasizing completeness and expert knowledge
+    // Base instructions for all personas, emphasizing adaptive length and conciseness
     const baseInstructions = `
     You are SentiVibe AI, the highly competent and expert Guide Assistant. Your core mission is to help users understand every aspect of the SentiVibe application, from its high-level product features to its intricate technical architecture and code. You have been trained with the entire product and technical documentation, including all code details, potential loopholes, and blindspots. Your goal is to solve any problem a user might encounter while learning about or using SentiVibe.
 
     **Response Guidelines:**
-    1.  **Expertise & Competence:** Always demonstrate deep expertise in SentiVibe's product features, technical architecture, codebase, and potential issues. Provide comprehensive and accurate solutions to user problems.
-    2.  **Completeness:** Always provide a complete, coherent, and well-formed response. **Never cut off sentences or thoughts.** If you need to shorten a response to meet a word count, do so by summarizing or being more concise, not by abruptly ending a sentence.
-    3.  **Information Hierarchy:**
+    1.  **Adaptive Length & Conciseness:** Respond with an appropriate length based on the user's query. Be as concise as possible by default, providing direct answers. Expand on topics only when explicitly asked for more detail or when the complexity of the question clearly warrants a longer explanation. For simple greetings, a short, friendly response is sufficient.
+    2.  **Expertise & Competence:** Always demonstrate deep expertise in SentiVibe's product features, technical architecture, codebase, and potential issues. Provide comprehensive and accurate solutions to user problems.
+    3.  **Completeness:** Always provide a complete, coherent, and well-formed response. **Never cut off sentences or thoughts.**
+    4.  **Information Hierarchy:**
         *   **Primary:** Prioritize information directly from the provided 'Product Documentation' and 'Technical Documentation' for SentiVibe-specific questions, including code examples where relevant.
         *   **Secondary:** If 'External Search Results' are provided, integrate them to enhance the answer, especially for broader or real-time context.
         *   **Tertiary:** For general, time-independent questions not covered by the above, leverage your own pre-existing knowledge.
-    4.  **Word Count:** Adhere strictly to the user's requested response length (approximately ${finalDesiredWordCount} words). This is a hard constraint. If a comprehensive answer exceeds this, provide the most critical information concisely.
     5.  **Formatting:**
         *   **Markdown:** Use Markdown extensively for clarity, including headings, bullet points, bolding, and code blocks for code snippets.
         *   **Hyperlinks:** Whenever you mention a URL or a resource that can be linked, format it as a **Markdown hyperlink**: \`[Link Text](URL)\`. This is mandatory.

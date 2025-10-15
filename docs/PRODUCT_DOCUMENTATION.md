@@ -89,9 +89,9 @@
 ### 2.5. From Static Report to Living Intelligence
 *   **Interactive Q&A (Dialog-based):** After any video analysis or comparison, or when loading a saved analysis/comparison from the library, users can engage in a chat with SentiVibe AI to ask follow-up questions. This chat now occurs within a **pop-up dialog interface**, providing a consistent experience across the application. **Don't just get a report, start a conversation. Your insights are alive—always fresh, always ready for your follow-up questions. SentiVibe is your AI research partner, not just a data-pulling tool.**
 *   **Customizable AI Persona:** Users can select from various AI personas (e.g., Friendly Assistant, Therapist, Storyteller, Motivational Coach, Argumentative) to tailor the AI's tone and conversational style to their preference.
-*   **Precise Response Length Control:** Users have explicit control over the AI's response length by specifying a **desired word count** for each answer, ensuring the AI provides information at the exact level of detail required. **This is now unlimited for all tiers.**
+*   **Adaptive Response Length (New!):** The AI now intelligently determines the appropriate length for its responses based on the user's query and the context, aiming for conciseness by default and expanding only when explicitly requested or warranted by complexity. **The explicit word count control has been removed from the UI.**
 *   **DeepThink Mode:** A toggle within the chat interface that, when enabled, instructs the AI to use a more powerful model or more extensive processing to generate **more nuanced, detailed, and insightful responses**. This provides a premium AI experience for deeper dives into analysis.
-*   **DeepSearch Mode (New!):** A toggle within the chat interface that, when enabled, instructs the AI to perform a real-time Google Custom Search based on the user's query and the current context. The results of this search are then incorporated into the AI's knowledge base for generating more comprehensive and up-to-date answers.
+*   **DeepSearch Mode:** A toggle within the chat interface that, when enabled, instructs the AI to perform a real-time Google Custom Search based on the user's query and the current context. The results of this search are then incorporated into the AI's knowledge base for generating more comprehensive and up-to-date answers.
 *   **Multi-Source Intelligence:** The AI intelligently synthesizes information from:
     *   **Video Analysis Report / Comparison Report:** All details from the initial analysis or comparison (sentiment, themes, summary, structured comparison data).
     *   **Exact Top Comments:** The raw text of the top 10 most popular comments for the single video, or for *each* video in a multi-comparison, allowing for deep dives into audience feedback.
@@ -124,8 +124,8 @@
 ### 2.8. Responsive & Modern User Interface
 *   **Intuitive Design:** A clean, minimalist interface built with Shadcn/ui components and Tailwind CSS.
 *   **Mobile-Friendly:** The application is designed to be fully responsive, providing an optimal experience across desktops, tablets, and mobile devices.
-*   **Consistent Branding:** Features a sleek **Crowd Black** and **Pure White** theme with **Positive Green**, **Negative Red**, and **Accent Blue** for emotional cues and interactive elements. The application uses the **Jura** font for body text and headings, ensuring a professional and unified brand presence.
-*   **Theme Toggle:** Users can switch between dark, system, and **new Emerald, Crimson, Yellow, Cyan, Deep Blue, Forest Green, and Purple Haze themes** using a dedicated theme toggle.
+*   **Consistent Branding:** Features a sleek **Crowd Black** and **Pure White** theme with **Positive Green**, **Negative Red**, and **Accent Blue** for emotional cues and interactive elements. The application uses the **Montserrat** font for body text and headings, ensuring a professional and unified brand presence.
+*   **Theme Toggle:** The theme is now fixed to a dark mode with teal accents, providing a consistent and modern aesthetic.
 
 ## 3. How to Use SentiVibe
 
@@ -143,7 +143,7 @@
     *   From a multi-video comparison analysis report, click "View Full Multi-Comparison Blog Post" to go to the blog. From the blog, click "Go to Multi-Comparison Analysis" to return to the report.
 8.  **Explore Individual Videos within Multi-Comparison:** On both the multi-comparison analysis report and its blog post, **click on any video thumbnail** to view the individual sentiment analysis and blog post for that specific video.
 9.  **Chat with AI (Unlimited):** Click the "Chat with AI" button (available on both single video and multi-video analysis/blog post pages) to open the **pop-up chat dialog**.
-10. **Customize AI Chat (Unlimited):** Within the chat dialog, use the dropdown to select your preferred **AI Persona** and enter your **Desired Word Count** for the AI's response. **Toggle "DeepThink" mode for more nuanced and detailed responses.** **Toggle "DeepSearch" mode to include real-time external search results in the AI's context.**
+10. **Customize AI Chat (Unlimited):** Within the chat dialog, use the dropdown to select your preferred **AI Persona**. The AI will now intelligently determine the appropriate response length. **Toggle "DeepThink" mode for more nuanced and detailed responses.** **Toggle "DeepSearch" mode to include real-time external search results in the AI's context.**
 11. **Engage with AI:** You can now ask questions about the video, its comments, the pre-generated community answers, or related topics. The AI will use all available context and your chosen persona/length preferences to provide informed answers, including clickable Markdown links.
 12. **Download PDF Report:** To save or share the report, click the "Download Report PDF" button. A PDF file will be generated and downloaded to your device, featuring a branded header and including the community Q&A section. **Note: Free Tier reports will be watermarked.**
 13. **Explore the Analysis Library:** Navigate to the "Analysis Library" from the header or landing page. Here, you can browse all past single video analyses, search by video title, creator, or keywords.
@@ -153,7 +153,6 @@
 17. **Sign Up / Log In (Optional):** If you wish to access your personal analysis history, sign up or log in. You can then access your personal analyses via the "My Analyses" link in the header.
 18. **View Pricing:** The pricing details are available on the new <Link to="/pricing">Pricing page</Link>.
 19. **Manage Account:** Authenticated users can visit the new "Account" page to view and update their profile information and check their subscription status.
-20. **Toggle Theme:** Use the moon/sun icon in the header to switch between dark, system, or any of the **new Emerald, Crimson, Yellow, Cyan, Deep Blue, Forest Green, and Purple Haze themes**.
 
 ## 4. Value Proposition
 SentiVibe provides immense value by:
@@ -161,14 +160,15 @@ SentiVibe provides immense value by:
 *   **Ensuring Data Freshness:** The new staleness logic and user-initiated refresh options ensure that sentiment analysis and comparative insights remain relevant and up-to-date, even for dynamic content.
 *   **Enhanced Reliability:** The API key rotation mechanism ensures continuous operation even if individual free API keys hit their rate limits, providing a more robust and uninterrupted service.
 *   **Gaining Deeper Understanding:** Offers AI-driven insights and interactive conversations that go beyond surface-level reading, incorporating direct audience feedback, broader context, and now, direct answers to user-defined questions for both single videos and comparisons.
-*   **Personalized Interaction:** Users can tailor the AI's conversational style and response detail to match their specific needs and preferences, and get targeted answers to their most pressing questions. **All custom questions, chat messages, and copilot queries are now unlimited for all tiers.**
+*   **Personalized Interaction:** Users can tailor the AI's conversational style and response detail to match their specific needs and preferences. **All custom questions, chat messages, and copilot queries are now unlimited for all tiers.**
 *   **DeepThink Mode:** Provides a premium AI experience within the chat, allowing users to toggle a more powerful AI model for **more nuanced, detailed, and insightful responses**, making the AI feel truly like an expert research partner.
 *   **DeepSearch Mode:** Offers an even deeper level of insight by integrating real-time external search results into the AI's context, allowing for more comprehensive and up-to-date answers to user queries.
+*   **Adaptive AI Responses:** The AI now intelligently adjusts its response length, providing concise answers by default and expanding only when the query demands more detail, enhancing the natural feel of the conversation.
 *   **Informing Strategy:** Helps content creators understand what resonates with their audience, marketers to gauge campaign reception, and researchers to analyze public opinion with a more complete picture.
 *   **Providing Actionable Data:** The weighted analysis ensures that the most impactful opinions are prioritized, and the AI can elaborate on these, including providing direct answers to custom questions.
 *   **Professional Reporting:** Enables easy sharing of findings with high-quality PDF reports, now with a professional branded header and a dedicated section for community Q&A. **Watermarking for free tiers encourages upgrades.**
 *   **Boosting SEO & Content Strategy:** Automatically generates valuable, SEO-optimized content, expanding your digital footprint and making your insights discoverable to a wider audience through search engines. The searchable libraries further enhance content discoverability within the app, **ensuring no duplicate blog posts for the same video or comparison.** Comprehensive SEO features like dynamic meta tags, structured data, Open Graph tags, and proper alt text ensure maximum visibility and crawlability.
 *   **Seamless Workflow:** The ability to initiate AI chat directly from a saved blog post, now within a consistent pop-up dialog, creates a more integrated and efficient user workflow, allowing for immediate follow-up questions on past analyses. The \`LibraryCopilot\` and \`ComparisonLibraryCopilot\` further enhance discoverability within a user's own analyses **and now proactively suggest new analysis topics, fostering continuous content exploration. All copilot queries are now unlimited for all tiers.**
-*   **Modern & Intuitive Experience:** A sleek, responsive, and themeable user interface that aligns with modern design principles and your distinct brand identity, **now with multiple vibrant theme options.**
+*   **Modern & Intuitive Experience:** A sleek, responsive, and themeable user interface that aligns with modern design principles and your distinct brand identity.
 
 SentiVibe is continuously evolving, with a strong foundation laid for future enhancements to further enrich your video analysis, conversational AI, and content generation experience.

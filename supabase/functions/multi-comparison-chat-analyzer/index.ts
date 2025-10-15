@@ -53,7 +53,7 @@ serve(async (req: Request) => {
       }
     );
 
-    const { userMessage, chatMessages, multiComparisonResult, desiredWordCount, selectedPersona, deepThinkMode, deepSearchMode } = await req.json(); // Added deepSearchMode
+    const { userMessage, chatMessages, multiComparisonResult, selectedPersona, deepThinkMode, deepSearchMode } = await req.json(); // Removed desiredWordCount
 
     if (!userMessage || !multiComparisonResult) {
       return new Response(JSON.stringify({ error: 'User message and multi-comparison result are required.' }), {
@@ -62,7 +62,7 @@ serve(async (req: Request) => {
       });
     }
 
-    const finalDesiredWordCount = desiredWordCount;
+    // Removed finalDesiredWordCount
 
     // --- Fetch External Context if DeepSearch is enabled ---
     let externalContext = '';
@@ -89,22 +89,22 @@ serve(async (req: Request) => {
       });
     }
 
-    const maxTokens = 2000;
+    const maxTokens = 2000; // Set a generous max_tokens, let the AI decide length based on prompt
 
     // Determine which Longcat AI model to use
     const aiModel = deepThinkMode ? "LongCat-Flash-Thinking" : "LongCat-Flash-Chat";
 
-    // Base instructions for all personas, emphasizing completeness
+    // Base instructions for all personas, emphasizing adaptive length and conciseness
     const baseInstructions = `
     You are SentiVibe AI, an insightful, factual, and transparent conversational assistant specializing in multi-video comparative analysis. Your core mission is to decode the voice of the crowd, transforming unstructured online reactions into clear, actionable insight by comparing multiple YouTube videos. Maintain a professional clarity with warm confidence and data-science credibility.
     
     **Response Guidelines:**
-    1.  **Completeness:** Always provide a complete, coherent, and well-formed response. **Never cut off sentences or thoughts.** If you need to shorten a response to meet a word count, do so by summarizing or being more concise, not by abruptly ending a sentence.
-    2.  **Information Hierarchy:**
+    1.  **Adaptive Length & Conciseness:** Respond with an appropriate length based on the user's query. Be as concise as possible by default, providing direct answers. Expand on topics only when explicitly asked for more detail or when the complexity of the question clearly warrants a longer explanation. For simple greetings, a short, friendly response is sufficient.
+    2.  **Completeness:** Always provide a complete, coherent, and well-formed response. **Never cut off sentences or thoughts.**
+    3.  **Information Hierarchy:**
         *   **Primary:** Prioritize information directly from the 'Multi-Comparison Analysis Context' (including structured comparison data, individual video analyses, and raw comments) for video-specific questions.
         *   **Secondary:** If 'External Search Results' are provided, integrate them to enhance the answer, especially for broader or real-time context.
         *   **Tertiary:** For general, time-independent questions not covered by the above, leverage your own pre-existing knowledge.
-    3.  **Word Count:** Adhere strictly to the user's requested response length (approximately ${finalDesiredWordCount} words). This is a hard constraint. If a comprehensive answer exceeds this, provide the most critical information concisely.
     4.  **Formatting:**
         *   **Hyperlinks:** Whenever you mention a URL or a resource that can be linked, format it as a **Markdown hyperlink**: \`[Link Text](URL)\`. This is mandatory.
         *   Use bullet points, bolding, and clear paragraph breaks to enhance readability.
