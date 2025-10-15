@@ -42,7 +42,7 @@ const ComparisonLibraryCopilot: React.FC<ComparisonLibraryCopilotProps> = ({ com
   const [deepThinkMode, setDeepThinkMode] = useState<boolean>(false);
   const [deepSearchMode, setDeepSearchMode] = useState<boolean>(false);
   // Removed desiredWordCount state
-  const [selectedPersona, setSelectedPersona] = useState<string>("friendly");
+  const [selectedPersona, setSelectedPersona] = useState<string>("friendly"); // Keep state for Edge Function payload
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -60,7 +60,7 @@ const ComparisonLibraryCopilot: React.FC<ComparisonLibraryCopilotProps> = ({ com
       setError(null); // Clear error when dialog closes
       setDeepThinkMode(false);
       setDeepSearchMode(false);
-      setSelectedPersona("friendly");
+      setSelectedPersona("friendly"); // Reset persona when dialog closes
     }
   }, [isOpen]);
 
@@ -180,11 +180,9 @@ const ComparisonLibraryCopilot: React.FC<ComparisonLibraryCopilotProps> = ({ com
             onToggleDeepThink={setDeepThinkMode}
             deepSearchEnabled={deepSearchMode}
             onToggleDeepSearch={setDeepSearchMode}
-            // Pass default values for persona and word count, as they are no longer user-configurable here
+            // Removed desiredWordCount and onWordCountChange
             selectedPersona={selectedPersona}
             onPersonaChange={setSelectedPersona}
-            desiredWordCount={300} // Default value, AI will adapt
-            onWordCountChange={() => {}} // No-op, as it's not user-configurable
           />
         </div>
       </DialogContent>

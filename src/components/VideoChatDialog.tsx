@@ -10,7 +10,7 @@ import { MessageSquare } from 'lucide-react';
 import ChatInterface from './ChatInterface';
 import { useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-// Removed Select, Label, Input, Switch imports as they are now handled in ChatInterface
+// Removed Select, Label, Input imports as they are now handled in ChatInterface
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface AiAnalysisResult {
@@ -84,8 +84,8 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
   initialBlogPost,
 }) => {
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
-  const [desiredWordCount, setDesiredWordCount] = useState<number>(300); 
-  const [selectedPersona, setSelectedPersona] = useState<string>("friendly");
+  // Removed desiredWordCount state
+  const [selectedPersona, setSelectedPersona] = useState<string>("friendly"); // Keep state for Edge Function payload
   const [deepThinkMode, setDeepThinkMode] = useState<boolean>(false);
   const [deepSearchMode, setDeepSearchMode] = useState<boolean>(false);
   const [currentAnalysisResult, setCurrentAnalysisResult] = useState<AnalysisResponse | null>(null);
@@ -136,8 +136,7 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
       setError(null);
       setDeepThinkMode(false);
       setDeepSearchMode(false);
-      setDesiredWordCount(300);
-      setSelectedPersona("friendly");
+      setSelectedPersona("friendly"); // Reset persona when dialog closes
     }
   }, [isOpen, currentAnalysisResult]);
 
@@ -168,7 +167,7 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
           userMessage: userMessageText,
           chatMessages: [...chatMessages, newUserMessage],
           analysisResult: currentAnalysisResult,
-          desiredWordCount: desiredWordCount,
+          // Removed desiredWordCount from payload
           selectedPersona: selectedPersona,
           customQaResults: currentAnalysisResult.customQaResults,
           deepThinkMode: deepThinkMode,
@@ -243,8 +242,7 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
             onToggleDeepThink={setDeepThinkMode}
             deepSearchEnabled={deepSearchMode}
             onToggleDeepSearch={setDeepSearchMode}
-            desiredWordCount={desiredWordCount}
-            onWordCountChange={setDesiredWordCount}
+            // Removed desiredWordCount and onWordCountChange
             selectedPersona={selectedPersona}
             onPersonaChange={setSelectedPersona}
           />

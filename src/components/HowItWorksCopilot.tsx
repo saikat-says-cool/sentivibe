@@ -32,7 +32,7 @@ const HowItWorksCopilot: React.FC<HowItWorksCopilotProps> = ({ productDocumentat
   const [deepThinkMode, setDeepThinkMode] = useState<boolean>(false);
   const [deepSearchMode, setDeepSearchMode] = useState<boolean>(false);
   // Removed desiredWordCount state
-  const [selectedPersona, setSelectedPersona] = useState<string>("friendly");
+  const [selectedPersona, setSelectedPersona] = useState<string>("friendly"); // Keep state for Edge Function payload
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -50,7 +50,7 @@ const HowItWorksCopilot: React.FC<HowItWorksCopilotProps> = ({ productDocumentat
       setError(null);
       setDeepThinkMode(false);
       setDeepSearchMode(false);
-      setSelectedPersona("friendly");
+      setSelectedPersona("friendly"); // Reset persona when dialog closes
     }
   }, [isOpen]);
 
@@ -154,11 +154,9 @@ const HowItWorksCopilot: React.FC<HowItWorksCopilotProps> = ({ productDocumentat
             onToggleDeepThink={setDeepThinkMode}
             deepSearchEnabled={deepSearchMode}
             onToggleDeepSearch={setDeepSearchMode}
-            // Pass default values for persona and word count, as they are no longer user-configurable here
+            // Removed desiredWordCount and onWordCountChange
             selectedPersona={selectedPersona}
             onPersonaChange={setSelectedPersona}
-            desiredWordCount={300} // Default value, AI will adapt
-            onWordCountChange={() => {}} // No-op, as it's not user-configurable
           />
         </div>
       </DialogContent>

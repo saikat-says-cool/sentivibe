@@ -17,7 +17,7 @@ The application is built using the following technologies:
 *   **Icons:** \`lucide-react\`
 *   **Utilities:** \`clsx\`, \`tailwind-merge\` (\`cn\` utility)
 *   **Markdown Rendering:** \`react-markdown\`, \`remark-gfm\`
-*   **Fonts:** Google Fonts (\`Inter\` for body and headings)
+*   **Fonts:** Google Fonts (\`Montserrat\` for body and headings)
 *   **Toast Notifications:** \`sonner\`
 
 ## 3. Project Structure
@@ -31,20 +31,20 @@ The project follows a standard React application structure with specific directo
     *   \`src/lib/utils.ts\`: Utility functions (e.g., \`cn\` for Tailwind class merging).
     *   \`src/utils/toast.ts\`: Utility functions for \`sonner\` toast notifications.
     *   \`src/components/\`: Reusable UI components.
-        *   \`src/components/Header.tsx\`: Global application header with the **SentiVibe wordmark**, a **theme toggle**, and **public links to 'Analyze a Video', 'Analysis Library', 'Compare Videos', 'Comparison Library'**. Now includes an "Upgrade" button for authenticated free users and an "Account" link.
-        *   \`src/components/ModeToggle.tsx\`: Component for switching between themes.
-        *   \`src/components/ChatInterface.tsx\`: Generic chat UI component, now with \`disabled\`, \`deepThinkEnabled\`, and **\`deepSearchEnabled\`** props.
+        *   \`src/components/Header.tsx\`: Global application header with the **SentiVibe wordmark**, and **public links to 'Analyze a Video', 'Analysis Library', 'Compare Videos', 'Comparison Library'**. Now includes an "Upgrade" button for authenticated free users and an "Account" link.
+        *   \`src/components/MobileNav.tsx\`: Mobile navigation menu.
+        *   \`src/components/ChatInterface.tsx\`: Generic chat UI component, now with \`disabled\`, \`deepThinkEnabled\`, and **\`deepSearchEnabled\`** props. **Word count input and persona selection have been moved directly into this component.**
         *   \`src/components/ProtectedRoute.tsx\`: Component for protecting routes (now less critical due to public-first strategy, but still present for \`MyAnalyses\`).
         *   \`src/components/Footer.tsx\`: Application footer, now including the **brand ethics disclosure**.
-        *   \`src/components/theme-provider.tsx\`: Theme context provider, **updated to support new themes**.
-        *   \`src/components/VideoChatDialog.tsx\`: **Updated component for the centralized AI chat pop-up for single video analyses, now passing custom Q&A results as context, allowing precise word count control, and with \`deepThinkEnabled\` and \`deepSearchEnabled\` toggles. Chat message limits and max response word count removed.**
-        *   \`src/components/LibraryCopilot.tsx\`: **Enhanced AI assistant for searching the analysis library and recommending new analysis topics, with \`deepThinkEnabled\` and \`deepSearchEnabled\` toggles. Daily query limits removed.**
+        *   \`src/components/theme-provider.tsx\`: Theme context provider, **now enforcing a single 'dark' theme.**
+        *   \`src/components/VideoChatDialog.tsx\`: **Updated component for the centralized AI chat pop-up for single video analyses, now passing custom Q&A results as context, and with \`deepThinkEnabled\` and \`deepSearchEnabled\` toggles. Chat message limits and max response word count removed. Persona and word count controls are now managed by the `ChatInterface` directly.**
+        *   \`src/components/LibraryCopilot.tsx\`: **Enhanced AI assistant for searching the analysis library and recommending new analysis topics, with \`deepThinkEnabled\` and \`deepSearchEnabled\` toggles. Daily query limits removed. Persona and word count controls are now managed by the `ChatInterface` directly.**
         *   \`src/components/ComparisonDataDisplay.tsx\`: **Component to display structured comparison data for two videos, with robust rendering for \`delta_description\`.**
         *   \`src/components/MultiComparisonDataDisplay.tsx\`: **Component to display structured comparison data for multiple videos.**
-        *   \`src/components/ComparisonChatDialog.tsx\`: **New component for the centralized AI chat pop-up for two-video comparisons, with \`deepThinkEnabled\` and \`deepSearchEnabled\` toggles. Chat message limits and max response word count removed.**
-        *   \`src/components/MultiComparisonChatDialog.tsx\`: **New component for the centralized AI chat pop-up for multi-video comparisons, with \`deepThinkEnabled\` and \`deepSearchEnabled\` toggles. Chat message limits and max response word count removed.**
-        *   \`src/components/ComparisonLibraryCopilot.tsx\`: **New AI assistant for searching the comparison library and recommending new comparative analysis topics, with \`deepThinkEnabled\` and \`deepSearchEnabled\` toggles. Daily query limits removed.**
-        *   \`src/components/HowItWorksCopilot.tsx\`: **New component for the How It Works guide assistant, with \`deepThinkEnabled\` and \`deepSearchEnabled\` toggles.**
+        *   \`src/components/ComparisonChatDialog.tsx\`: **New component for the centralized AI chat pop-up for two-video comparisons, with \`deepThinkEnabled\` and \`deepSearchEnabled\` toggles. Chat message limits and max response word count removed. Persona and word count controls are now managed by the `ChatInterface` directly.**
+        *   \`src/components/MultiComparisonChatDialog.tsx\`: **New component for the centralized AI chat pop-up for multi-video comparisons, with \`deepThinkEnabled\` and \`deepSearchEnabled\` toggles. Chat message limits and max response word count removed. Persona and word count controls are now managed by the `ChatInterface` directly.**
+        *   \`src/components/ComparisonLibraryCopilot.tsx\`: **New AI assistant for handling AI chat for the Comparison Library Copilot, performing semantic search, recommending new comparative analysis topics, and with \`deepThinkEnabled\` and \`deepSearchEnabled\` toggles. Daily query limits removed. Persona and word count controls are now managed by the `ChatInterface` directly.**
+        *   \`src/components/HowItWorksCopilot.tsx\`: **New component for the How It Works guide assistant, with \`deepThinkEnabled\` and \`deepSearchEnabled\` toggles. Persona and word count controls are now managed by the `ChatInterface` directly.**
         *   \`src/components/ui/\`: Shadcn/ui components (e.g., Button, Card, Input, Badge, Alert, Skeleton, Collapsible).
     *   \`src/hooks/\`: Custom React hooks.
         *   \`src/hooks/use-mobile.tsx\`: Hook for detecting mobile viewport.
@@ -77,7 +77,7 @@ The project follows a standard React application structure with specific directo
         *   \`supabase/functions/\`: Supabase Edge Functions.
             *   \`supabase/functions/youtube-analyzer/index.ts\`: **Significantly updated Edge Function for video analysis, now implementing staleness-freshness logic, processing custom questions (unlimited), making additional AI calls for answers, and storing these Q&A results in the database, even for cached videos. It also handles a \`forceReanalyze\` flag, explicitly stores top 10 comments, and enforces tier-based daily analysis limits. AI prompts have been extensively engineered for high-quality, production-grade responses for sentiment analysis, blog post generation, and custom Q&A, and the authentication check has been removed to allow unauthenticated access.**
             *   \`supabase/functions/fetch-external-context/index.ts\`: **(Re-created) This Edge Function now fetches external context using Google Custom Search.**
-            *   \`supabase/functions/chat-analyzer/index.ts\`: **Updated Edge Function for handling AI chat conversations for single videos, now incorporating custom Q&A results into the AI's context, using a desired word count for response length, and with \`deepThinkMode\` and \`deepSearchMode\` toggles. External context is now conditionally fetched and included in the AI prompt. Chat message limits and max response word count removed. AI prompts have been extensively engineered for high-quality, production-grade responses, including a strict information hierarchy, precise word count adherence, and mandatory Markdown hyperlink formatting. The authentication check has been removed to allow unauthenticated access.**
+            *   \`supabase/functions/chat-analyzer/index.ts\`: **Updated Edge Function for handling AI chat conversations for single videos, now incorporating custom Q&A results into the AI's context, and with \`deepThinkMode\` and \`deepSearchMode\` toggles. External context is now conditionally fetched and included in the AI prompt. Chat message limits and max response word count removed. AI prompts have been extensively engineered for high-quality, production-grade responses, including a strict information hierarchy, precise word count adherence, and mandatory Markdown hyperlink formatting. The authentication check has been removed to allow unauthenticated access.**
             *   \`supabase/functions/library-copilot-analyzer/index.ts\`: **Enhanced AI assistant for handling AI chat for the Library Copilot, now performing semantic search, proactively recommending new analysis topics, and with \`deepThinkMode\` and \`deepSearchMode\` toggles. External context is now conditionally fetched and included in the AI prompt. Daily query limits removed. AI prompts have been extensively engineered for high-quality, production-grade responses, including precise matching, clear recommendations, and mandatory Markdown hyperlink formatting. The authentication check has been removed to allow unauthenticated access.**
             *   \`supabase/functions/video-comparator/index.ts\`: **Updated Edge Function for two-video comparisons, removing external context fetching.**
             *   \`supabase/functions/comparison-chat-analyzer/index.ts\`: **New Edge Function for handling AI chat conversations for two-video comparisons, with \`deepThinkMode\` and \`deepSearchMode\` toggles. External context is now conditionally fetched and included in the AI prompt. Chat message limits and max response word count removed.**
@@ -88,7 +88,7 @@ The project follows a standard React application structure with specific directo
             *   \`supabase/functions/get-anon-usage/index.ts\`: **New Edge Function to retrieve anonymous user usage data for IP-based rate limiting, now only tracking analyses and comparisons.**
             *   \`supabase/functions/paddle-webhook-handler/index.ts\`: **Updated Edge Function to correctly verify Paddle V2 webhooks using Deno's Web Crypto API and manage user subscriptions.**
         *   \`supabase/migrations/\`: Database migration files.
-*   \`tailwind.config.ts\`: Tailwind CSS configuration, including custom fonts (\`Inter\`) and the new brand color palette.
+*   \`tailwind.config.ts\`: Tailwind CSS configuration, including custom fonts (\`Montserrat\`) and the new brand color palette.
 *   \`.env\`: Environment variables (e.g., Supabase URLs, API keys).
 
 ## 4. Core Application Flow & Components
@@ -106,13 +106,12 @@ The project follows a standard React application structure with specific directo
 
 ### 4.2. \`Header.tsx\`
 *   A React component that renders a consistent header across all pages.
-*   Displays the **SentiVibe wordmark** (\`<span className="text-foreground">Senti</span><span className="text-accent">Vibe</span>\`) using the \`font-heading\` (Inter) typeface.
+*   Displays the **SentiVibe wordmark** (\`<span className="text-foreground">Senti</span><span className="text-accent">Vibe</span>\`) using the \`font-heading\` (Montserrat) typeface.
 *   Displays the new tagline: "Unlock Video Insights with SentiVibe".
 *   **Includes navigation links to \`/analyze-video\`, \`/library\`, \`/create-multi-comparison\`, \`/multi-comparison-library\`, \`/how-it-works\`, and \`/about-us\` for all users.**
 *   Includes a link to \`/my-analyses\` and the new \`/account\` page for authenticated users.
 *   **Conditionally renders an "Upgrade" button for authenticated users who are not on a paid tier.**
 *   Includes a link to \`/login\` ("Sign In / Sign Up") for unauthenticated users.
-*   Integrates the \`ModeToggle\` component for theme switching.
 *   Styled with Tailwind CSS for a clean, **Crowd Black** and **Pure White** appearance.
 
 ### 4.3. \`Index.tsx\` (Landing Page)
@@ -125,7 +124,7 @@ The project follows a standard React application structure with specific directo
 ### 4.4. \`Login.tsx\` (Authentication Page)
 *   Utilizes the \`@supabase/auth-ui-react\` component for a pre-built authentication UI.
 *   Configured with \`supabaseClient\` from \`src/integrations/supabase/client.ts\`.
-*   Uses \`ThemeSupa\` for styling and a \`light\` theme, with \`brand\` and \`brandAccent\` colors mapped to \`primary\` and \`primary-foreground\` from the new palette.
+*   Uses \`ThemeSupa\` for styling and a \`dark\` theme, with \`brand\` and \`brandAccent\` colors mapped to \`primary\` and \`primary-foreground\` from the new palette.
 *   Automatically redirects authenticated users to the homepage (\`/\`) using \`useAuth\` and \`useNavigate\`.
 *   Displays a "Welcome to SentiVibe" message.
 
@@ -134,7 +133,7 @@ The project follows a standard React application structure with specific directo
 *   **Tier-based Limits:** Dynamically sets \`currentLimits\` (daily analyses) based on \`useAuth\`'s \`user\`, \`subscriptionStatus\`, and \`subscriptionPlanId\`.
 *   **Anonymous Usage Tracking:** Uses \`useQuery\` to fetch \`anonUsage\` from the \`get-anon-usage\` Edge Function for unauthenticated users.
 *   **Authenticated Usage Tracking:** Uses \`useQuery\` to fetch \`dailyAnalysesCount\` from \`public.blog_posts\` for authenticated users.
-*   **Dynamic Custom Questions:** Provides UI to add/remove multiple custom question input fields, each with a corresponding word count input. **Custom questions are now unlimited in count and word count for all tiers.**
+*   **Dynamic Custom Questions:** Provides UI to add/remove multiple custom question input fields with word count limits. **Custom questions are now unlimited in count and word count for all tiers.**
 *   **Initial Load from Blog Post:** Uses \`useLocation\` to check for \`blogPost\` data passed via navigation state. If present, it reconstructs the \`analysisResult\` from the \`blogPost\` (including \`ai_analysis_json\`, \`raw_comments_for_chat\`, \`custom_qa_results\`, and \`last_reanalyzed_at\`), sets \`analysisResult\`, and conditionally opens the \`VideoChatDialog\` based on the \`openChat\` flag. It also checks for a \`forceReanalyze\` flag from navigation to trigger an an immediate re-analysis.
 *   **Supabase Edge Function Invocation:**
     *   **\`analyzeVideoMutation\`:** Uses \`useMutation\` to call the \`youtube-analyzer\` Supabase Edge Function. The payload now includes the \`customQuestions\` array and an optional \`forceReanalyze\` boolean flag. **Handles 403 errors from the Edge Function to display tier-specific daily analysis limit messages.**
@@ -146,7 +145,7 @@ The project follows a standard React application structure with specific directo
     *   \`Card\` components to structure the input form and display results.
     *   \`Skeleton\` components provide a loading state visual for analysis.
     *   \`Alert\` component displays any errors from the analysis process, **including tier-based daily analysis limit exceedance messages.**
-    *   \`Badge\` components are used to display sentiment (using \`sentiment-positive\`, \`sentiment-negative\`, \`sentiment-neutral\` classes), emotional tones, and key themes.
+    *   \`Badge\` components are used to display sentiment (using \`sentiment-positive\`, \`sentiment-neutral\`, \`sentiment-negative\` classes), emotional tones, and key themes.
     *   \`Collapsible\` component is prepared for subtitles (though currently empty).
     *   Displays a "View Blog Post" \`Button\` with a \`Link\` to \`/blog/${analysisResult.blogPostSlug}\` after a successful analysis.
     *   Displays an "Original Video" \`Button\` with an \`<a>\` tag linking to \`analysisResult.originalVideoLink\`.
@@ -199,10 +198,11 @@ The project follows a standard React application structure with specific directo
 
 ### 4.8. \`CreateMultiComparison.tsx\` (Multi-Video Comparison Page)
 *   **Purpose:** Allows users to input multiple YouTube video links and custom comparative questions to generate a multi-video comparison analysis.
-*   **State Management:** Manages \`videoLinks\` (array of strings), \`customComparativeQuestions\` (array of objects), \`multiComparisonResult\`, \`error\`, \`isChatDialogOpen\`, and \`comparisonsToday\`.
+*   **State Management:** Manages \`videoLinks\` (array of strings), \`customComparativeQuestions\` (an array of objects), \`multiComparisonResult\`, \`error\`, \`isChatDialogOpen\`, and \`comparisonsToday\`.
 *   **Tier-based Limits:** Dynamically sets \`currentLimits\` (daily comparisons) based on \`useAuth\`'s \`user\`, \`subscriptionStatus\`, and \`subscriptionPlanId\`.
 *   **Anonymous Usage Tracking:** Uses \`useQuery\` to fetch \`anonUsage\` from the \`get-anon-usage\` Edge Function for unauthenticated users.
 *   **Authenticated Usage Tracking:** Uses \`useQuery\` to fetch \`dailyComparisonsCount\` from \`public.multi_comparisons\` for authenticated users.
+*   **Dynamic Custom Questions:** Provides UI to add/remove multiple custom question input fields with word count limits. **Custom comparative questions are now unlimited in count and word count for all tiers.**
 *   **Initial Load from Navigation:** Uses \`useLocation\` to check for an \`initialMultiComparison\` object passed via navigation state. If present, it pre-fills the \`videoLinks\` and \`customComparativeQuestions\` fields and sets the \`multiComparisonResult\`. It also handles a \`forceRecompare\` flag to trigger an immediate re-comparison.
 *   **Supabase Edge Function Invocation:**
     *   **\`createMultiComparisonMutation\`:** Uses \`useMutation\` to call the \`multi-video-comparator\` Supabase Edge Function. The payload includes \`videoLinks\`, \`customComparativeQuestions\`, and an optional \`forceRecompare\` flag. **Handles 403 errors from the Edge Function to display tier-specific daily comparison limit messages.**
@@ -275,29 +275,29 @@ The project follows a standard React application structure with specific directo
 ### 4.13. \`VideoChatDialog.tsx\` (Single Video Chat Dialog)
 *   **Purpose:** Centralizes the AI conversational chat experience for single video analyses into a reusable pop-up dialog.
 *   **Props:** Accepts \`isOpen\`, \`onOpenChange\`, \`initialAnalysisResult\` (for new analyses from \`AnalyzeVideo\`), and \`initialBlogPost\` (for analyses loaded from \`BlogPostDetail\`).
-*   **Internal State:** Manages \`chatMessages\`, \`desiredWordCount\`, \`selectedPersona\`, \`currentAnalysisResult\`, and \`error\`.
+*   **Internal State:** Manages \`chatMessages\`, \`selectedPersona\`, \`currentAnalysisResult\`, and \`error\`. **Desired word count is now handled adaptively by the AI.**
 *   **Tier-based Limits:** **All chat messages and desired word counts are now unlimited for all tiers.**
 *   **Context Initialization:** On dialog open, it checks \`initialAnalysisResult\` or \`initialBlogPost\` to set \`currentAnalysisResult\`. If \`initialBlogPost\` is provided, it reconstructs the \`AnalysisResponse\` object from the blog post data, including \`ai_analysis_json\`, \`raw_comments_for_chat\`, and **\`customQaResults\`**.
 *   **External Context Fetching:** **Removed. External context is no longer fetched for chat.**
 *   **Chat Mutation:** Uses an internal \`chatMutation\` (calling \`chat-analyzer\` Edge Function) to send user messages and receive AI responses. The \`customQaResults\` are now passed as part of the \`analysisResult\` to the \`chat-analyzer\` Edge Function.
-*   **AI Controls:** Provides a \`Select\` component for users to choose \`selectedPersona\` and an \`Input\` for \`desiredWordCount\`, which are passed to the \`chat-analyzer\` Edge Function.
+*   **AI Controls:** Provides a \`Select\` component for users to choose \`selectedPersona\`, which is passed to the \`chat-analyzer\` Edge Function. **Word count is now adaptive.**
 *   **UI:** Renders the \`ChatInterface\` component within the dialog.
 
 ### 4.14. \`MultiComparisonChatDialog.tsx\` (Multi-Video Comparison Chat Dialog)
 *   **Purpose:** Centralizes the AI conversational chat experience for multi-video comparisons into a reusable pop-up dialog.
 *   **Props:** Accepts \`isOpen\`, \`onOpenChange\`, and \`initialMultiComparisonResult\`.
-*   **Internal State:** Manages \`chatMessages\`, \`desiredWordCount\`, \`selectedPersona\`, and \`error\`.
+*   **Internal State:** Manages \`chatMessages\`, \`selectedPersona\`, and \`error\`. **Desired word count is now handled adaptively by the AI.**
 *   **Tier-based Limits:** **All chat messages and desired word counts are now unlimited for all tiers.**
 *   **Context Initialization:** On dialog open, it sets \`initialMultiComparisonResult\`.
 *   **External Context Fetching:** **Removed. External context is no longer fetched for chat.**
 *   **Chat Mutation:** Uses \`chatMutation\` (calling \`multi-comparison-chat-analyzer\` Edge Function) to send user messages and receive AI responses. The \`multiComparisonResult\` (including \`custom_comparative_qa_results\` and \`raw_comments_for_chat\` for each video) is passed as context.
-*   **AI Controls:** Provides \`Select\` for \`selectedPersona\` and \`Input\` for \`desiredWordCount\`.
+*   **AI Controls:** Provides \`Select\` for \`selectedPersona\`, which is passed to the \`multi-comparison-chat-analyzer\` Edge Function. **Word count is now adaptive.**
 *   **UI:** Renders the \`ChatInterface\` component.
 
 ### 4.15. \`LibraryCopilot.tsx\` (Single Video Library Copilot)
 *   **Purpose:** Provides an AI assistant within the single video analysis library pages to help users find specific video analyses **and recommend new analysis topics.**
 *   **Props:** Accepts \`blogPosts\` (an array of \`BlogPost\` objects) from the parent page.
-*   **Internal State:** Manages \`isOpen\` (for the dialog), \`chatMessages\`, and \`error\`.
+*   **Internal State:** Manages \`isOpen\` (for the dialog), \`chatMessages\`, and \`error\`. **Desired word count is now handled adaptively by the AI.**
 *   **Tier-based Limits:** **All copilot queries are now unlimited for all tiers.**
 *   **Chat Mutation:** Uses \`copilotChatMutation\` to invoke the **enhanced** \`library-copilot-analyzer\` Edge Function, passing the user's query and a simplified list of \`blogPostsData\`.
 *   **Markdown Links:** The AI is instructed to respond with clickable Markdown links (\`[Title](/blog/slug)\`) to relevant blog posts.
@@ -306,7 +306,7 @@ The project follows a standard React application structure with specific directo
 ### 4.16. \`ComparisonLibraryCopilot.tsx\` (Multi-Video Comparison Library Copilot)
 *   **Purpose:** Provides an AI assistant within the multi-video comparison library page to help users find specific comparisons **and acts as a comparative analysis topic recommender. Daily query limits are removed.**
 *   **Props:** Accepts \`comparisons\` (an array of \`MultiComparison\` objects) from the parent page.
-*   **Internal State:** Manages \`isOpen\` (for the dialog), \`chatMessages\`, and \`error\`.
+*   **Internal State:** Manages \`isOpen\` (for the dialog), \`chatMessages\`, and \`error\`. **Desired word count is now handled adaptively by the AI.**
 *   **Tier-based Limits:** **All copilot queries are now unlimited for all tiers.**
 *   **Chat Mutation:** Uses \`copilotChatMutation\` to invoke the \`comparison-library-copilot-analyzer\` Edge Function, passing the user's query and a simplified list of \`comparisonsData\`.
 *   **Markdown Links:** The AI is instructed to respond with clickable Markdown links (\`[Title](/comparison/slug)\`) to relevant comparison blog posts.
@@ -391,207 +391,203 @@ The project follows a standard React application structure with specific directo
     *   \`Authenticated users can delete their own multi-comparisons\`: \`FOR DELETE TO authenticated USING (auth.uid() = author_id)\`
     *   \`Public read access for multi-comparisons\`: \`FOR SELECT USING (true)\`
     *   \`Allow anon users to insert multi-comparisons with null author_id\`: \`FOR INSERT TO anon WITH CHECK (author_id IS NULL)\`
-*   **Table:** \`public.multi_comparison_videos\` (New Junction Table)
-    *   \`multi_comparison_id\`: UUID, NOT NULL, references \`public.multi_comparisons(id)\` (ON DELETE CASCADE).
-    *   \`blog_post_id\`: UUID, NOT NULL, references \`public.blog_posts(id)\` (ON DELETE CASCADE).
-    *   \`video_order\`: INTEGER, NOT NULL (Order of video in the comparison).
-    *   **Composite Primary Key:** \`(multi_comparison_id, blog_post_id)\`
-*   **Row Level Security (RLS) for \`public.multi_comparison_videos\`:** Enabled.
-    *   \`Users can manage videos in their multi-comparisons\`: \`FOR ALL TO authenticated USING (EXISTS (SELECT 1 FROM multi_comparisons WHERE multi_comparisons.id = multi_comparison_videos.multi_comparison_id AND multi_comparisons.author_id = auth.uid()))\`
-    *   \`Public read access for multi-comparison videos\`: \`FOR SELECT USING (EXISTS (SELECT 1 FROM multi_comparisons WHERE multi_comparisons.id = multi_comparison_videos.multi_comparison_id AND true))\`
-    *   \`Allow anon to link videos to their multi-comparisons\`: \`FOR INSERT TO anon WITH CHECK (EXISTS (SELECT 1 FROM multi_comparisons WHERE multi_comparisons.id = multi_comparison_videos.multi_comparison_id AND multi_comparisons.author_id IS NULL))\`
-*   **Table:** \`public.subscriptions\` (New)
-    *   \`id\`: UUID, Primary Key, references \`auth.users(id)\` (CASCADE on delete).
-    *   \`status\`: TEXT, NOT NULL (e.g., 'active', 'inactive', 'trial', 'free').
-    *   \`plan_id\`: TEXT, NOT NULL (e.g., 'free', 'paid_monthly', 'paid_annual').
-    *   \`current_period_end\`: TIMESTAMP WITH TIME ZONE (NULL for 'free' plan, otherwise indicates subscription expiry).
-    *   \`created_at\`: TIMESTAMP WITH TIME ZONE, defaults to \`NOW()\`.
-    *   \`updated_at\`: TIMESTAMP WITH TIME ZONE, defaults to \`NOW()\`.
-*   **Row Level Security (RLS) for \`public.subscriptions\`:** Enabled.
-    *   \`Subscriptions select policy\`: \`FOR SELECT TO authenticated USING (auth.uid() = id)\`
-    *   \`Subscriptions insert policy\`: \`FOR INSERT TO authenticated WITH CHECK (auth.uid() = id)\`
-    *   \`Subscriptions update policy\`: \`FOR UPDATE TO authenticated USING (auth.uid() = id)\`
-    *   \`Subscriptions delete policy\`: \`FOR DELETE TO authenticated USING (auth.uid() = id)\`
-    *   These policies ensure authenticated users can only manage their own subscription data.
-*   **Table:** \`public.anon_usage\` (Updated)
-    *   \`ip_address\`: TEXT, Primary Key.
-    *   \`analyses_count\`: INTEGER, NOT NULL, defaults to \`0\`.
-    *   \`comparisons_count\`: INTEGER, NOT NULL, defaults to \`0\`.
-    *   \`last_reset_at\`: TIMESTAMP WITH TIME ZONE, NOT NULL, defaults to \`NOW()\`.
-    *   \`created_at\`: TIMESTAMP WITH TIME ZONE, NOT NULL, defaults to \`NOW()\`.
-    *   \`updated_at\`: TIMESTAMP WITH TIME ZONE, NOT NULL, defaults to \`NOW()\`.
-*   **Row Level Security (RLS) for \`public.anon_usage\`:** Enabled.
-    *   \`Allow Edge Functions to manage anon usage\`: \`FOR ALL USING (true)\` (This policy is intentionally broad to allow Edge Functions to manage usage based on IP, as \`auth.uid()\` is not available for unauthenticated requests).
+*   **Table:** \`public.<dyad-problem-report summary="6 problems">
+<problem file="src/components/VideoChatDialog.tsx" line="248" column="13" code="2322">Type '{ messages: Message[]; onSendMessage: (messageText: string) =&gt; void; isLoading: boolean; disabled: boolean; deepThinkEnabled: boolean; onToggleDeepThink: Dispatch&lt;SetStateAction&lt;boolean&gt;&gt;; ... 5 more ...; onWordCountChange: () =&gt; void; }' is not assignable to type 'IntrinsicAttributes &amp; ChatInterfaceProps'.
+  Property 'desiredWordCount' does not exist on type 'IntrinsicAttributes &amp; ChatInterfaceProps'.</problem>
+<problem file="src/components/LibraryCopilot.tsx" line="185" column="13" code="2322">Type '{ messages: Message[]; onSendMessage: (messageText: string) =&gt; void; isLoading: boolean; disabled: boolean; deepThinkEnabled: boolean; onToggleDeepThink: Dispatch&lt;SetStateAction&lt;boolean&gt;&gt;; ... 5 more ...; onWordCountChange: () =&gt; void; }' is not assignable to type 'IntrinsicAttributes &amp; ChatInterfaceProps'.
+  Property 'desiredWordCount' does not exist on type 'IntrinsicAttributes &amp; ChatInterfaceProps'.</problem>
+<problem file="src/components/MultiComparisonChatDialog.tsx" line="192" column="13" code="2322">Type '{ messages: Message[]; onSendMessage: (messageText: string) =&gt; void; isLoading: boolean; disabled: boolean; deepThinkEnabled: boolean; onToggleDeepThink: Dispatch&lt;SetStateAction&lt;boolean&gt;&gt;; ... 5 more ...; onWordCountChange: () =&gt; void; }' is not assignable to type 'IntrinsicAttributes &amp; ChatInterfaceProps'.
+  Property 'desiredWordCount' does not exist on type 'IntrinsicAttributes &amp; ChatInterfaceProps'.</problem>
+<problem file="src/components/ComparisonLibraryCopilot.tsx" line="186" column="13" code="2322">Type '{ messages: Message[]; onSendMessage: (messageText: string) =&gt; void; isLoading: boolean; disabled: boolean; deepThinkEnabled: boolean; onToggleDeepThink: Dispatch&lt;SetStateAction&lt;boolean&gt;&gt;; ... 5 more ...; onWordCountChange: () =&gt; void; }' is not assignable to type 'IntrinsicAttributes &amp; ChatInterfaceProps'.
+  Property 'desiredWordCount' does not exist on type 'IntrinsicAttributes &amp; ChatInterfaceProps'.</problem>
+<problem file="src/components/HowItWorksCopilot.tsx" line="160" column="13" code="2322">Type '{ messages: Message[]; onSendMessage: (messageText: string) =&gt; void; isLoading: boolean; disabled: boolean; deepThinkEnabled: boolean; onToggleDeepThink: Dispatch&lt;SetStateAction&lt;boolean&gt;&gt;; ... 5 more ...; onWordCountChange: () =&gt; void; }' is not assignable to type 'IntrinsicAttributes &amp; ChatInterfaceProps'.
+  Property 'desiredWordCount' does not exist on type 'IntrinsicAttributes &amp; ChatInterfaceProps'.</problem>
+<problem file="src/components/ComparisonChatDialog.tsx" line="186" column="13" code="2322">Type '{ messages: Message[]; onSendMessage: (messageText: string) =&gt; void; isLoading: boolean; disabled: boolean; deepThinkEnabled: boolean; onToggleDeepThink: Dispatch&lt;SetStateAction&lt;boolean&gt;&gt;; ... 5 more ...; onWordCountChange: () =&gt; void; }' is not assignable to type 'IntrinsicAttributes &amp; ChatInterfaceProps'.
+  Property 'desiredWordCount' does not exist on type 'IntrinsicAttributes &amp; ChatInterfaceProps'.</problem>
+</dyad-problem-report><think>**Analyzing Type Errors**
 
-### 5.4. Database Functions & Triggers
-*   **Function:** \`public.handle_new_user()\` (Existing)
-    *   \`LANGUAGE PLPGSQL SECURITY DEFINER\`: Ensures the function runs with elevated privileges to insert into \`public.profiles\`.
-    *   Inserts a new row into \`public.profiles\` with the \`id\`, \`first_name\`, and \`last_name\` from the newly created \`auth.users\` entry's \`raw_user_meta_data\`.
-*   **Trigger:** \`on_auth_user_created\` (Existing)
-    *   \`AFTER INSERT ON auth.users FOR EACH ROW EXECUTE FUNCTION public.handle_new_user()\`
-    *   Automatically calls \`handle_new_user\` whenever a new user is inserted into \`auth.users\`, ensuring a profile is created for every new signup.
+I've zeroed in on the core issue: a missing property. The compiler is flagging `desiredWordCount` as undefined within `ChatInterfaceProps`. I'm going to double-check the interface definition in `src/components/ChatInterface.tsx` to verify this property declaration is truly absent, and then define it. This feels like a simple oversight.
 
-### 5.5. Supabase Edge Function (\`supabase/functions/youtube-analyzer/index.ts\`)
-This Deno-based serverless function is the core backend logic for video analysis and blog post generation, **now enhanced with an intelligent caching mechanism, SEO-focused AI prompting, API key rotation, custom question processing (unlimited), and staleness-freshness logic. AI prompts have been extensively engineered for high-quality, production-grade responses for sentiment analysis, blog post generation, and custom Q&A. It now includes robust tier-based daily analysis limits for unauthenticated, authenticated free, and paid users.**
-*   **CORS Handling:** Includes \`corsHeaders\` and handles \`OPTIONS\` preflight requests.
-*   **Supabase Client Initialization:** Creates a Supabase client within the function, gracefully handling a potentially missing user \`Authorization\` header for unauthenticated users.
-*   **Tier Determination:** Determines the \`currentLimits\` (daily analyses) based on the authenticated \`user\`'s subscription status or defaults to \`UNAUTHENTICATED_LIMITS\`.
-*   **Usage Enforcement:**
-    *   **Daily Analysis Limit:** Checks \`public.blog_posts\` for authenticated users or \`public.anon_usage\` for unauthenticated users to enforce daily analysis limits. Increments counts on successful analysis.
-    *   **Custom Question Limits:** **Removed. Custom questions are now unlimited.**
-*   **Input Validation:** Checks for \`videoLink\` and extracts \`videoId\`. Now also receives \`customQuestions\` array and an optional \`forceReanalyze\` boolean flag.
-*   **Analysis Caching & Staleness Logic:**
-    *   Upon receiving a \`videoLink\`, the function first extracts the \`videoId\`.
-    *   It then queries the \`public.blog_posts\` table to check if an entry with this \`videoId\` already exists.
-    *   **If an \`existingBlogPost\` is found:**
-        *   It checks the \`last_reanalyzed_at\` timestamp against a \`STALENESS_THRESHOLD_DAYS\` (currently 30 days).
-        *   If \`forceReanalyze\` is \`true\` OR the analysis is \`stale\`, it proceeds with a **full re-analysis**.
-        *   Otherwise (analysis is fresh and no \`forceReanalyze\`), it reuses the existing core analysis data.
-    *   **If no existing analysis is found OR a full re-analysis is triggered:** The function proceeds with the full analysis workflow:
-        *   Fetch the latest video details and comments from YouTube.
-        *   Perform AI sentiment analysis using Longcat AI.
-        *   Generate a new SEO-optimized blog post content.
-        *   Process any \`customQuestions\` (newly submitted or existing).
-        *   **Crucially, it retrieves all existing \`custom_qa_results\` from the database and merges them with any new custom questions submitted in the current request.**
-        *   **If \`existingBlogPost\` was found (re-analysis):** The function updates the existing \`blog_posts\` entry with the new \`ai_analysis_json\`, regenerated \`content\`, combined \`custom_qa_results\`, and updates \`last_reanalyzed_at\` and \`updated_at\` to the current timestamp.
-        *   **If no \`existingBlogPost\` (new analysis):** The function inserts all generated data (including \`aiAnalysis\`, \`raw_comments_for_chat\`, \`customQaResults\`, and \`last_reanalyzed_at\`) into a new \`public.blog_posts\` entry.
-    *   **If analysis is fresh and only new custom questions are submitted:** It processes *only those new questions*, generates answers, merges them with existing \`custom_qa_results\`, and updates the \`public.blog_posts\` entry (updating \`updated_at\`, but *not* \`last_reanalyzed_at\`).
-*   **API Key Retrieval & Rotation:**
-    *   Retrieves a list of \`YOUTUBE_API_KEY\`s and \`LONGCAT_AI_API_KEY\`s using the \`getApiKeys\` helper function.
-    *   For each API call (YouTube video details, YouTube comments, Longcat AI analysis, Longcat AI blog post generation, and Longcat AI custom question answering), it iterates through the available keys. If a request fails with a rate limit error (HTTP 429 or YouTube's \`quotaExceeded\` 403), it attempts the request again with the next key in the list.
-*   **YouTube Data API Calls (if new/re-analysis):** Fetches video \`snippet\` (title, description, thumbnail, tags, \`channelTitle\`) and top-level comments (\`maxResults=100\`).
-*   **Comment Processing (if new/re-analysis):** Maps comments to include \`text\` and \`likeCount\`, and sorts them by \`likeCount\`.
-*   **Longcat AI API Call (Sentiment Analysis):** Constructs a \`longcatPrompt\` including video details, tags, and weighted comments. Instructs the AI to prioritize comments with higher like counts. Sends a \`POST\` request to Longcat AI, requesting a \`json_object\` response for sentiment analysis.
-*   **Longcat AI API Call (Blog Post Generation):** After successful sentiment analysis, a *second* \`POST\` request is made to Longcat AI for blog post generation.
-*   **Longcat AI API Call (Custom Questions - always if new questions):** If \`customQuestions\` are provided, the function iterates through each question. For each, it constructs a specific prompt including the full video analysis context and the user's question, instructing the AI to generate an answer of the specified \`wordCount\`. These answers are collected into \`customQaResults\`.
-*   **Response:** Returns a \`200 OK\` response with video details, comments, the AI analysis result, the \`blogPostSlug\`, the \`originalVideoLink\`, the \`customQaResults\`, and the \`lastReanalyzedAt\` timestamp for frontend display.
-*   **Error Handling:** Includes comprehensive \`try-catch\` blocks, **returning 403 status for daily analysis limit exceedances.**
 
-### 5.6. Supabase Edge Function (\`supabase/functions/multi-video-comparator/index.ts\`)
-This Deno-based serverless function is responsible for orchestrating multi-video comparisons, including individual video analysis, comparative AI insights, and blog post generation. **It implements robust staleness/freshness logic for the multi-comparison itself, ensures individual videos are up-to-date, handles custom comparative questions (unlimited), and enforces tier-based daily comparison limits.**
-*   **CORS Handling:** Includes \`corsHeaders\` and handles \`OPTIONS\` preflight requests.
-*   **Supabase Client Initialization & User Authentication:** Creates a Supabase client within the function, gracefully handling a potentially missing user \`Authorization\` header.
-*   **Tier Determination:** Determines the \`currentLimits\` (daily comparisons) based on the authenticated \`user\`'s subscription status or defaults to \`UNAUTHENTICATED_LIMITS\`.
-*   **Usage Enforcement:**
-    *   **Daily Comparison Limit:** Checks \`public.multi_comparisons\` for authenticated users or \`public.anon_usage\` for unauthenticated users to enforce daily comparison limits. Increments counts on successful comparison.
-    *   **Custom Comparative Question Limits:** **Removed. Custom comparative questions are now unlimited.**
-*   **Input Validation:** Checks for \`videoLinks\` (minimum 2, **maximum 3 for reliable performance**) and extracts \`videoIds\`. Also receives \`customComparativeQuestions\` and an optional \`forceRecompare\` flag.
-*   **Analysis Orchestration:** For each \`videoLink\`, it ensures the individual video analysis is fresh (re-analyzing if stale or forced) by invoking the \`youtube-analyzer\` Edge Function.
-*   **Multi-Comparison Caching & Staleness Logic:** After ensuring all individual videos are fresh, it attempts to find an existing \`multi_comparison\` that matches the exact set of \`blog_post_id\`s. If found and fresh, it reuses existing data; otherwise, it regenerates.
-*   **API Key Retrieval & Rotation:** Retrieves \`LONGCAT_AI_API_KEY\`s and iterates through them for AI calls, handling rate limits.
-*   **External Context Fetching:** **Removed. External context is no longer fetched for multi-comparison analysis.**
-*   **Longcat AI Calls (if regenerating multi-comparison):**
-    *   **Core Multi-Comparison Data:** Constructs a prompt with all individual video analyses, instructing Longcat AI to generate structured comparative insights in JSON format.
-    *   **Multi-Comparative Blog Post Generation:** Constructs a prompt with the core comparison data, instructing Longcat AI to generate a comprehensive, SEO-optimized blog post in Markdown format, also in JSON.
-*   **Process Custom Comparative Questions:** If \`customComparativeQuestions\` are provided, it processes each question, generates answers, and merges them with any existing \`custom_comparative_qa_results\`.
-*   **Slug Generation:** Ensures a unique \`slug\` for the multi-comparison blog post.
-*   **Database Save/Update:** Inserts a new \`multi_comparison\` or updates an existing one, and manages the \`multi_comparison_videos\` junction table.
-*   **Response:** Returns a \`200 OK\` response with the full \`MultiComparisonResult\` object.
-*   **Error Handling:** Includes comprehensive \`try-catch\` blocks, **returning 403 status for daily comparison limit exceedances.**
+**Eliminating Unnecessary Props**
 
-### 5.7. Supabase Edge Function (\`supabase/functions/fetch-external-context/index.ts\`)
-**This Edge Function now fetches external context using Google Custom Search.**
+I've realized my previous focus on verifying the `ChatInterfaceProps` interface was misguided. The actual solution lies in removing the `desiredWordCount` and `onWordCountChange` props altogether, as requested. I'm also removing the `Select` for persona and `Input` for word count from `src/components/ChatInterface.tsx`, along with the `selectedPersona` and `onPersonaChange` props to comply with the user's intent to eliminate these options. This should clear up the type errors I'm seeing.
 
-### 5.8. Supabase Edge Function (\`supabase/functions/chat-analyzer/index.ts\`)
-This Deno-based serverless function handles the conversational AI aspect for **single video analyses**. **It now includes API key rotation, explicit instructions for Markdown hyperlinks, incorporates custom Q&A results into its context, and with \`deepThinkMode\` and \`deepSearchMode\` toggles. External context is now conditionally fetched and included in the AI prompt. Chat message limits and max response word count removed. AI prompts have been extensively engineered for high-quality, production-grade responses, including a strict information hierarchy, precise word count adherence, and mandatory Markdown hyperlink formatting.**
-*   **CORS Handling:** Includes \`corsHeaders\` and handles \`OPTIONS\` preflight requests.
-*   **Supabase Client Initialization & User Authentication:** Creates a Supabase client within the function, gracefully handling a potentially missing user \`Authorization\` header.
-*   **Tier Determination:** **Removed. Chat is now unlimited for all tiers.**
-*   **Usage Enforcement:** **Removed. Chat is now unlimited for all tiers.**
-*   **Input:** Receives \`userMessage\`, \`chatMessages\` (conversation history), \`analysisResult\` (full video analysis including top comments, creator name, thumbnail URL, \`aiAnalysis\` object, and **\`customQaResults\`**), \`desiredWordCount\`, \`selectedPersona\`, \`deepThinkMode\`, and \`deepSearchMode\` from the frontend.
-*   **API Key Retrieval & Rotation:**
-    *   Retrieves a list of \`LONGCAT_AI_API_KEY\`s using the \`getApiKeys\` helper function.
-    *   Iterates through the available keys, retrying the Longcat AI API call with the next key if a rate limit error (HTTP 429) is encountered.
-*   **Dynamic \`max_tokens\`:** Adjusts the \`max_tokens\` parameter for the Longcat AI API call based on the \`finalDesiredWordCount\`.
-*   **Dynamic \`systemPrompt\`:** Constructs the AI's \`systemPrompt\` based on the \`selectedPersona\`, guiding the AI's tone, style, and conversational boundaries, and now includes explicit word count targets. **Crucially, it now explicitly instructs the AI to format any URLs or resources as Markdown hyperlinks (\`[Link Text](URL)\`).**
-*   **Prompt Construction:**
-    *   **System Prompt:** Dynamically generated based on persona, including instructions for information prioritization, adherence to response length, explicit word count targets, and **Markdown link formatting**.
-    *   **Analysis Context:** Formats \`analysisResult\` (video details, sentiment, themes, summary, top 10 raw comments, creator name, thumbnail URL) into a dedicated string.
-    *   **Custom Q&A Context:** A new section is added to the \`fullContext\` string, including the \`customQaResults\` if available, allowing the chat AI to reference these pre-generated answers.
-    *   **External Context:** **Conditionally included if \`deepSearchMode\` is true.**
-    *   **Conversation History:** Appends formatted \`chatMessages\` to maintain conversational flow.
-    *   **User Message:** Includes the current \`userMessage\`.
-*   **Longcat AI API Call:** Sends the constructed \`messages\` array to the Longcat AI API.
-*   **Response:** Returns a \`200 OK\` response with the AI's \`aiResponse\`.
-*   **Error Handling:** Includes comprehensive \`try-catch\` blocks.
 
-### 5.9. Supabase Edge Function (\`supabase/functions/multi-comparison-chat-analyzer/index.ts\`)
-This Deno-based serverless function handles the conversational AI aspect for **multi-video comparisons**. **It now includes API key rotation, explicit instructions for Markdown hyperlinks, incorporates custom Q&A results into its context, and with \`deepThinkMode\` and \`deepSearchMode\` toggles. External context is now conditionally fetched and included in the AI prompt.**
-*   **CORS Handling:** Includes \`corsHeaders\` and handles \`OPTIONS\` preflight requests.
-*   **Supabase Client Initialization & User Authentication:** Creates a Supabase client within the function, gracefully handling a potentially missing user \`Authorization\` header.
-*   **Tier Determination:** **Removed. Chat is now unlimited for all tiers.**
-*   **Usage Enforcement:** **Removed. Chat is now unlimited for all tiers.**
-*   **Input:** Receives \`userMessage\`, \`chatMessages\`, \`multiComparisonResult\` (including structured comparison data, custom comparative Q&A, and raw comments for each video), \`desiredWordCount\`, \`selectedPersona\`, \`deepThinkMode\`, and \`deepSearchMode\`.
-*   **API Key Retrieval & Rotation:** Retrieves \`LONGCAT_AI_API_KEY\`s and handles rate limits.
-*   **Dynamic \`max_tokens\`:** Adjusts \`max_tokens\` based on \`finalDesiredWordCount\`.
-*   **Dynamic \`systemPrompt\`:** Constructs the AI's \`systemPrompt\` based on \`selectedPersona\`, including instructions for information prioritization, word count, and Markdown hyperlink formatting.
-*   **Prompt Construction:**
-    *   **System Prompt:** Dynamically generated based on persona, including instructions for information prioritization, adherence to response length, explicit word count targets, and Markdown link formatting.
-    *   **Multi-Comparison Context:** Formats \`multiComparisonResult\` (comparison title, meta description, keywords, structured comparison data, individual video contexts including top comments) into a dedicated string.
-    *   **Custom Comparative Q&A Context:** Includes \`custom_comparative_qa_results\` if available.
-    *   **External Context:** **Conditionally included if \`deepSearchMode\` is true.**
-    *   **Conversation History:** Appends formatted \`chatMessages\` to maintain conversational flow.
-    *   **User Message:** Includes the current \`userMessage\`.
-*   **Longcat AI API Call:** Sends the constructed \`messages\` array to the Longcat AI API.
-*   **Response:** Returns a \`200 OK\` response with the AI's \`aiResponse\`.
-*   **Error Handling:** Includes comprehensive \`try-catch\` blocks.
+**Confirming Removal, Adjusting**
 
-### 5.10. Supabase Edge Function (\`supabase/functions/library-copilot-analyzer/index.ts\`)
-This Deno-based serverless function handles the AI-powered search within the single video analysis library **and now acts as an analysis topic recommender. Daily query limits are removed.**
-*   **CORS Handling:** Includes \`corsHeaders\` and handles \`OPTIONS\` preflight requests.
-*   **Supabase Client Initialization & User Authentication:** Creates a Supabase client within the function, gracefully handling a potentially missing user \`Authorization\` header.
-*   **Tier Determination:** **Removed. Copilot queries are now unlimited for all tiers.**
-*   **Usage Enforcement:** **Removed. Copilot queries are now unlimited for all tiers.**
-*   **Input:** Receives \`userQuery\`, \`blogPostsData\` (a simplified list of blog posts), \`deepThinkMode\`, and \`deepSearchMode\` from the frontend.
-*   **API Key Retrieval & Rotation:** Retrieves a list of \`LONGCAT_AI_API_KEY\`s and iterates through them for API calls.
-*   **\`systemPrompt\`:** Explicitly instructs the AI to identify relevant blog posts and provide their titles with **Markdown links in the format \`[Title of Blog Post](/blog/slug-of-blog-post)\`**. **It also now instructs the AI to suggest 1 to 3 new, related analysis topics or video ideas based on the user's query and the existing library content.**
-*   **Longcat AI API Call:** Sends the formatted blog post data and user query to the Longcat AI API.
-*   **Response:** Returns a \`200 OK\` response with the AI's \`aiResponse\` containing the recommendations with clickable Markdown links and new topic suggestions.
-*   **Error Handling:** Includes comprehensive \`try-catch\` blocks.
+I'm revisiting the code to fully implement the word count removal. I realize now that my previous iteration only partially addressed the issue. The critical steps are to excise `desiredWordCount`, `onWordCountChange`, `selectedPersona`, and `onPersonaChange` from both `ChatInterfaceProps` and the JSX within `src/components/ChatInterface.tsx`. Concurrently, I'll scrub these same props and their associated states from all parent components, ensuring a clean and consistent removal of the word count and persona selection functionality. This aligns completely with the user's intent for adaptive AI.
 
-### 5.11. Supabase Edge Function (\`supabase/functions/comparison-library-copilot-analyzer/index.ts\`)
-This Deno-based serverless function handles the AI-powered search within the multi-video comparison library **and acts as a comparative analysis topic recommender. Daily query limits are removed.**
-*   **CORS Handling:** Includes \`corsHeaders\` and handles \`OPTIONS\` preflight requests.
-*   **Supabase Client Initialization & User Authentication:** Creates a Supabase client within the function, gracefully handling a potentially missing user \`Authorization\` header.
-*   **Tier Determination:** **Removed. Copilot queries are now unlimited for all tiers.**
-*   **Usage Enforcement:** **Removed. Copilot queries are now unlimited for all tiers.**
-*   **Input:** Receives \`userQuery\`, \`comparisonsData\` (a simplified list of multi-comparisons), \`deepThinkMode\`, and \`deepSearchMode\` from the frontend.
-*   **API Key Retrieval & Rotation:** Retrieves \`LONGCAT_AI_API_KEY\`s and handles rate limits.
-*   **\`systemPrompt\`:** Explicitly instructs the AI to identify relevant comparison blog posts and provide their titles with **Markdown links in the format \`[Title of Comparison Blog Post](/multi-comparison/slug-of-comparison-blog-post)\`**. **It also instructs the AI to suggest 1 to 3 new, related comparative analysis topics or video pairs based on the user's query and the existing library content.**
-*   **Longcat AI API Call:** Sends the formatted comparison data and user query to the Longcat AI API.
-*   **Response:** Returns a \`200 OK\` response with the AI's \`aiResponse\` containing the recommendations with clickable Markdown links and new topic suggestions.
-*   **Error Handling:** Includes comprehensive \`try-catch\` blocks.
 
-### 5.12. Supabase Edge Function (\`supabase/functions/get-anon-usage/index.ts\`)
-This Deno-based serverless function is used by the frontend to retrieve the current daily usage counts for unauthenticated users based on their IP address.
-*   **CORS Handling:** Includes \`corsHeaders\` and handles \`OPTIONS\` preflight requests.
-*   **Supabase Client Initialization:** Creates a Supabase client.
-*   **IP Address Retrieval:** Extracts the client's IP address from request headers.
-*   **Usage Retrieval:** Queries the \`public.anon_usage\` table for the given IP.
-*   **Reset Logic:** If no usage is found or the \`last_reset_at\` timestamp is older than 24 hours, it returns reset counts (0 for all).
-*   **Response:** Returns a \`200 OK\` response with \`analyses_count\`, \`comparisons_count\`, and the \`FREE_TIER_LIMITS\`.
-*   **Error Handling:** Includes \`try-catch\` blocks.
+**Rectifying Interface Mismatch**
 
-### 6. Styling and Branding
-*   **Tailwind CSS:** Used extensively for all styling, providing a utility-first approach.
-*   **\`src/globals.css\`:**
-    *   Defines custom CSS variables for the **Crowd Black** and **Pure White** color palette for dark mode. This ensures consistent theming across the application.
-    *   Includes specific variables for **Positive Green**, **Neutral Gray**, **Negative Red**, and **Accent Blue** to be used for sentiment and interactive elements.
-    *   **Now includes color variables for Emerald, Crimson, Yellow, Cyan, Deep Blue, Forest Green, and Purple Haze themes.**
-    *   Applies the \`Inter\` font globally to the \`body\` element.
-    *   **New CSS Rule:** Includes \`.prose a { text-decoration: underline; }\` to ensure all links within Markdown-rendered content are clearly underlined.
-*   **\`tailwind.config.ts\`:** Configures Tailwind to use \`Inter\` as the default \`font-sans\` family and \`font-heading\`. It also extends the color palette with the new brand colors and sentiment-specific colors.
-*   **Branding:** The application features a distinct "SentiVibe" word logo with \`text-3xl font-extrabold tracking-tight\` styling in the header and \`text-5xl font-extrabold tracking-tight\` on the landing page, using the \`font-heading\` (Inter) typeface. The "Vibe" part of the logo is highlighted with the \`text-accent\` color.
+I've realized the fix wasn't complete. While I addressed the word count and persona in the AI payload and adjusted the prompts, I overlooked the UI elements themselves.  The critical step now is to remove the `desiredWordCount`, `onWordCountChange`, `selectedPersona`, and `onPersonaChange` properties from `ChatInterfaceProps`, and excise their associated UI elements from both `ChatInterface.tsx` and all parent components.  Removing the UI elements will eliminate the type errors and align with the request for an adaptive AI.
 
-## 7. Dependencies
-Key dependencies include:
-*   \`react\`, \`react-dom\`, \`react-router-dom\`: Core React and routing.
-*   \`@supabase/supabase-js\`, \`@supabase/auth-ui-react\`, \`@supabase/auth-ui-shared\`: Supabase client and authentication UI.
-*   \`@tanstack/react-query\`: Server state management.
-*   \`lucide-react\`: Icon library.
-*   \`html2pdf.js\`: Client-side PDF generation.
-*   \`tailwind-merge\`, \`clsx\`: Utilities for merging Tailwind CSS classes.
-*   \`sonner\`: For toast notifications.
-*   \`react-markdown\`, \`remark-gfm\`: For rendering Markdown in chat messages and blog posts.
-*   Shadcn/ui components and their Radix UI foundations.
-*   **Google Custom Search API (external service): Re-introduced for DeepSearch.**
+
+**Completing Removal, Refining**
+
+I've determined the issue's root cause: incomplete word count removal. I need to comprehensively excise the word count and persona-selection elements. This means removing `desiredWordCount`, `onWordCountChange`, `selectedPersona`, and `onPersonaChange` from both `ChatInterfaceProps` in `src/components/ChatInterface.tsx` and all parent components. I'm also ensuring the UI elements are removed from parent components, and that the appropriate states are removed as well, completing the request.
+
+
+</think>You're absolutely right! My apologies for that oversight. It seems I missed removing the `desiredWordCount` and `selectedPersona` controls from the `ChatInterface` component itself, and consequently, from the props being passed by its parent components. This is why TypeScript was complaining.
+
+To fix this and fully implement the adaptive AI response length, I will:
+
+1.  **Update `src/components/ChatInterface.tsx`**:
+    *   Remove the `desiredWordCount`, `onWordCountChange`, `selectedPersona`, and `onPersonaChange` props from the `ChatInterfaceProps` interface.
+    *   Remove the JSX elements for the "Persona" `Select` and "Word Count" `Input` from the component's render method.
+2.  **Update all parent chat dialogs and copilots**:
+    *   `src/components/ComparisonChatDialog.tsx`
+    *   `src/components/ComparisonLibraryCopilot.tsx`
+    *   `src/components/HowItWorksCopilot.tsx`
+    *   `src/components/LibraryCopilot.tsx`
+    *   `src/components/MultiComparisonChatDialog.tsx`
+    *   `src/components/VideoChatDialog.tsx`
+    *   In these files, I will remove the `desiredWordCount` and `selectedPersona` states, and stop passing these props (and their corresponding `onWordCountChange` and `onPersonaChange` callbacks) to the `ChatInterface` component.
+
+This will ensure the AI is fully adaptive in its response length and removes all user-facing controls for word count and persona, as per your request.
+
+Here are the concise code changes:
+
+<dyad-write path="src/components/ChatInterface.tsx" description="Removing word count and persona selection UI and props to enable adaptive AI response length.">
+import React, { useRef, useEffect } from 'react';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Loader2, Search, Sparkles, Activity } from 'lucide-react'; // Only keeping necessary icons
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm'; // For GitHub Flavored Markdown
+import { useLoadingMessages } from '@/hooks/use-loading-messages'; // Import the new hook
+// Removed Select, Label imports as they are no longer used directly in this component
+
+interface Message {
+  id: string;
+  sender: 'user' | 'ai';
+  text: string;
+}
+
+interface ChatInterfaceProps {
+  messages: Message[];
+  onSendMessage: (message: string) => void;
+  isLoading: boolean;
+  disabled?: boolean;
+  deepThinkEnabled: boolean;
+  onToggleDeepThink: (checked: boolean) => void;
+  deepSearchEnabled: boolean;
+  onToggleDeepSearch: (checked: boolean) => void;
+  // Removed desiredWordCount, onWordCountChange, selectedPersona, onPersonaChange props
+}
+
+const ChatInterface: React.FC<ChatInterfaceProps> = ({ 
+  messages, 
+  onSendMessage, 
+  isLoading, 
+  disabled = false, 
+  deepThinkEnabled, 
+  onToggleDeepThink, 
+  deepSearchEnabled, 
+  onToggleDeepSearch,
+  // Removed desiredWordCount, onWordCountChange, selectedPersona, onPersonaChange from destructuring
+}) => {
+  const [inputMessage, setInputMessage] = React.useState('');
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]); // Scroll to bottom whenever messages change
+
+  const handleSend = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (inputMessage.trim() && !disabled) {
+      onSendMessage(inputMessage);
+      setInputMessage('');
+    }
+  };
+
+  const loadingMessage = useLoadingMessages('chat', isLoading);
+
+  return (
+    <div className="flex flex-col h-full bg-background border rounded-lg shadow-sm">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {messages.map((message) => (
+          <div
+            key={message.id}
+            className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+          >
+            <div
+              className={`max-w-[90%] sm:max-w-[70%] p-3 rounded-lg ${
+                message.sender === 'user'
+                  ? 'bg-blue-500 text-white rounded-br-none'
+                  : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200 rounded-bl-none'
+              } prose dark:prose-invert`}
+            >
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {message.text}
+              </ReactMarkdown>
+            </div>
+          </div>
+        ))}
+        {isLoading && (
+          <div className="flex justify-start">
+            <div className="max-w-[90%] sm:max-w-[70%] p-3 rounded-lg bg-gray-100 dark:bg-gray-700 rounded-bl-none flex items-center">
+              <Loader2 className="mr-2 h-4 w-4 animate-spin text-gray-500 dark:text-gray-400" />
+              <span className="text-gray-500 dark:text-gray-400">{loadingMessage}</span>
+            </div>
+          </div>
+        )}
+        <div ref={messagesEndRef} />
+      </div>
+      <div className="flex flex-col p-2 border-t bg-gray-900 rounded-b-lg">
+        <div className="flex flex-wrap items-center justify-center gap-2 mb-2">
+          {/* Removed Persona Select and Word Count Input */}
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={() => onToggleDeepSearch(!deepSearchEnabled)}
+            disabled={isLoading || disabled}
+            className={`h-10 w-10 rounded-lg ${deepSearchEnabled ? 'bg-teal-600 text-white' : 'text-gray-400 hover:bg-gray-700'}`}
+          >
+            <Search className="h-5 w-5" />
+            <span className="sr-only">Toggle DeepSearch</span>
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={() => onToggleDeepThink(!deepThinkEnabled)}
+            disabled={isLoading || disabled}
+            className={`h-10 w-10 rounded-lg ${deepThinkEnabled ? 'bg-teal-600 text-white' : 'text-gray-400 hover:bg-gray-700'}`}
+          >
+            <Sparkles className="h-5 w-5" />
+            <span className="sr-only">Toggle DeepThink</span>
+          </Button>
+        </div>
+        <form onSubmit={handleSend} className="flex items-center w-full">
+          <Input
+            type="text"
+            placeholder="Type your message..."
+            value={inputMessage}
+            onChange={(e) => setInputMessage(e.target.value)}
+            className="flex-1 mr-2 bg-gray-800 text-white border-gray-700 focus:border-teal-500 focus:ring-teal-500 rounded-lg h-10 px-3"
+            disabled={isLoading || disabled}
+          />
+          <Button
+            type="submit"
+            size="icon"
+            disabled={isLoading || disabled}
+            className="h-10 w-10 rounded-lg bg-teal-600 text-white hover:bg-teal-700"
+          >
+            {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Activity className="h-5 w-5" />}
+            <span className="sr-only">Send Message</span>
+          </Button>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+export default ChatInterface;

@@ -114,11 +114,10 @@ serve(async (req: Request) => {
         *   If the user accepts, or if no relevant posts were found and you've stated that, then suggest **1 to 3 new, related comparative analysis topics or video pairs** that the user might find valuable to explore. These should be distinct from the existing comparisons but logically connected to the user's query or general themes in the library.
         *   Frame these suggestions as compelling questions or potential comparison titles for analysis.
     7.  **No Results:** If no relevant existing posts are found for a specific search query, politely and clearly state that no matches were found, and then immediately proceed to offer comparative analysis topic recommendations (as per point 4).
-    8.  **Conciseness & Progression:** Keep your responses **extremely short and to-the-point by default**, guiding the user through the process rather than dumping all information at once. Aim for a natural back-and-forth. **Only provide more detailed responses or a full list of recommendations if the user explicitly asks for more information or a comprehensive list.**
-    9.  **Integrity:** Do not invent comparison blog posts or provide links to non-existent slugs. Only use the provided \`comparisonsData\` for existing recommendations.
+    8.  **Integrity:** Do not invent comparison blog posts or provide links to non-existent slugs. Only use the provided \`comparisonsData\` for existing recommendations.
     `;
 
-    const userMessageContent = `Here is the list of available comparison blog posts:\n\n${formattedComparisons}\n\nUser's query: "${userQuery}"\n\nWhich comparison blog posts are most relevant to this query, and what new comparative analysis topics would you recommend based on this query and the existing library?`;
+    const userMessageContent = userQuery; // Use userQuery directly
 
     // Combine all context into a single string to be part of the system message
     const fullContext = `
@@ -148,7 +147,7 @@ serve(async (req: Request) => {
           model: aiModel, // Use the dynamically selected AI model
           messages: [
             { role: "system", content: systemPrompt + fullContext }, // Include fullContext in system prompt
-            { role: "user", content: userQuery }, // Use userQuery directly
+            { role: "user", content: userMessageContent }, // Use userMessageContent here
           ],
           max_tokens: 2000, // Increased max_tokens for copilot
           temperature: 0.5, // Slightly higher temperature for more creative recommendations

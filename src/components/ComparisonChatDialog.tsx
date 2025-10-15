@@ -9,7 +9,7 @@ import {
 import ChatInterface from './ChatInterface';
 import { useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-// Removed Select, Label, Input imports as they are now handled in ChatInterface
+// Removed Select, Label, Input, Switch imports as they are now handled in ChatInterface
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { MessageSquare } from 'lucide-react';
 
@@ -52,7 +52,7 @@ const ComparisonChatDialog: React.FC<ComparisonChatDialogProps> = ({
 }) => {
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
   // Removed desiredWordCount state
-  const [selectedPersona, setSelectedPersona] = React.useState<string>("friendly");
+  const [selectedPersona, setSelectedPersona] = React.useState<string>("friendly"); // Keep state for Edge Function payload
   const [deepThinkMode, setDeepThinkMode] = useState<boolean>(false);
   const [deepSearchMode, setDeepSearchMode] = useState<boolean>(false);
   const [error, setError] = React.useState<string | null>(null);
@@ -75,7 +75,7 @@ const ComparisonChatDialog: React.FC<ComparisonChatDialogProps> = ({
       setError(null);
       setDeepThinkMode(false);
       setDeepSearchMode(false);
-      setSelectedPersona("friendly");
+      setSelectedPersona("friendly"); // Reset persona when dialog closes
     }
   }, [isOpen, initialComparisonResult]);
 
@@ -180,11 +180,9 @@ const ComparisonChatDialog: React.FC<ComparisonChatDialogProps> = ({
             onToggleDeepThink={setDeepThinkMode}
             deepSearchEnabled={deepSearchMode}
             onToggleDeepSearch={setDeepSearchMode}
-            // Pass default values for persona and word count, as they are no longer user-configurable here
+            // Removed desiredWordCount and onWordCountChange
             selectedPersona={selectedPersona}
             onPersonaChange={setSelectedPersona}
-            desiredWordCount={300} // Default value, AI will adapt
-            onWordCountChange={() => {}} // No-op, as it's not user-configurable
           />
         </div>
       </DialogContent>

@@ -57,7 +57,7 @@ const MultiComparisonChatDialog: React.FC<MultiComparisonChatDialogProps> = ({
 }) => {
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
   // Removed desiredWordCount state
-  const [selectedPersona, setSelectedPersona] = useState<string>("friendly");
+  const [selectedPersona, setSelectedPersona] = useState<string>("friendly"); // Keep state for Edge Function payload
   const [deepThinkMode, setDeepThinkMode] = useState<boolean>(false);
   const [deepSearchMode, setDeepSearchMode] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -81,7 +81,7 @@ const MultiComparisonChatDialog: React.FC<MultiComparisonChatDialogProps> = ({
       setError(null);
       setDeepThinkMode(false);
       setDeepSearchMode(false);
-      setSelectedPersona("friendly");
+      setSelectedPersona("friendly"); // Reset persona when dialog closes
     }
   }, [isOpen, initialMultiComparisonResult]);
 
@@ -186,11 +186,9 @@ const MultiComparisonChatDialog: React.FC<MultiComparisonChatDialogProps> = ({
             onToggleDeepThink={setDeepThinkMode}
             deepSearchEnabled={deepSearchMode}
             onToggleDeepSearch={setDeepSearchMode}
-            // Pass default values for persona and word count, as they are no longer user-configurable here
+            // Removed desiredWordCount and onWordCountChange
             selectedPersona={selectedPersona}
             onPersonaChange={setSelectedPersona}
-            desiredWordCount={300} // Default value, AI will adapt
-            onWordCountChange={() => {}} // No-op, as it's not user-configurable
           />
         </div>
       </DialogContent>

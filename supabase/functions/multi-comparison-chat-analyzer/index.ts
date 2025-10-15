@@ -62,8 +62,6 @@ serve(async (req: Request) => {
       });
     }
 
-    // Removed finalDesiredWordCount
-
     // --- Fetch External Context if DeepSearch is enabled ---
     let externalContext = '';
     if (deepSearchMode) {
@@ -204,7 +202,7 @@ serve(async (req: Request) => {
       if (longcatResponse.ok) {
         break;
       } else if (longcatResponse.status === 429) {
-        console.warn(`Longcat AI API key hit rate limit for multi-comparison chat. Trying next key.`);
+        console.warn(`Longcat AI API key hit quota limit for multi-comparison chat. Trying next key.`);
         continue;
       }
       break;
