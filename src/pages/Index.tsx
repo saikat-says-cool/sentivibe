@@ -1,11 +1,11 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowRightIcon, GitCompare } from 'lucide-react'; // Import GitCompare icon
+import { ArrowRightIcon, GitCompare } from 'lucide-react';
 
 function Index() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] text-center px-4 py-8">
+    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] text-center px-4 py-8 bg-background text-foreground">
       <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight mb-6 text-foreground">
         SentiVibe: Your Audience, Understood.
       </h1>
@@ -14,7 +14,7 @@ function Index() {
       </p>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl w-full">
-        <Card className="flex flex-col items-center p-6 shadow-lg hover:shadow-xl transition-shadow duration-300">
+        <Card className="flex flex-col items-center p-6 shadow-lg hover:shadow-xl transition-shadow duration-300 bg-card text-foreground border-border">
           <CardHeader>
             <CardTitle className="text-3xl font-bold mb-2">Analyze a Video</CardTitle>
             <CardDescription className="text-md text-muted-foreground">
@@ -23,7 +23,7 @@ function Index() {
           </CardHeader>
           <CardContent className="flex-grow flex items-center justify-center flex-col">
             <Link to="/analyze-video">
-              <Button size="lg" className="text-lg px-8 py-6">
+              <Button size="lg" className="text-lg px-8 py-6 bg-accent text-accent-foreground hover:bg-accent/90">
                 Start Analyzing <ArrowRightIcon className="ml-2 h-5 w-5" />
               </Button>
             </Link>
@@ -33,7 +33,7 @@ function Index() {
           </CardContent>
         </Card>
 
-        <Card className="flex flex-col items-center p-6 shadow-lg hover:shadow-xl transition-shadow duration-300">
+        <Card className="flex flex-col items-center p-6 shadow-lg hover:shadow-xl transition-shadow duration-300 bg-card text-foreground border-border">
           <CardHeader>
             <CardTitle className="text-3xl font-bold mb-2">Compare Videos</CardTitle>
             <CardDescription className="text-md text-muted-foreground">
@@ -42,19 +42,19 @@ function Index() {
           </CardHeader>
           <CardContent className="flex-grow flex items-center justify-center flex-col">
             <Link to="/create-multi-comparison">
-              <Button size="lg" className="text-lg px-8 py-6">
+              <Button size="lg" className="text-lg px-8 py-6 bg-accent text-accent-foreground hover:bg-accent/90">
                 Start Comparing <GitCompare className="ml-2 h-5 w-5" />
               </Button>
             </Link>
             <p className="text-xs text-muted-foreground mt-4 max-w-[250px]">
               Analysis may take up to 30 seconds per video.
               <br />
-              <span className="font-semibold text-red-500">Note:</span> Reliable for up to 3 videos simultaneously.
+              <span className="font-semibold text-destructive">Note:</span> Reliable for up to 3 videos simultaneously.
             </p>
           </CardContent>
         </Card>
 
-        <Card className="flex flex-col items-center p-6 shadow-lg hover:shadow-xl transition-shadow duration-300">
+        <Card className="flex flex-col items-center p-6 shadow-lg hover:shadow-xl transition-shadow duration-300 bg-card text-foreground border-border">
           <CardHeader>
             <CardTitle className="text-3xl font-bold mb-2">Explore the Library</CardTitle>
             <CardDescription className="text-md text-muted-foreground">
@@ -63,14 +63,14 @@ function Index() {
           </CardHeader>
           <CardContent className="flex-grow flex items-center justify-center">
             <Link to="/library">
-              <Button variant="outline" size="lg" className="text-lg px-8 py-6">
+              <Button variant="outline" size="lg" className="text-lg px-8 py-6 bg-secondary text-secondary-foreground hover:bg-secondary/90 border-border">
                 View Analysis Library <ArrowRightIcon className="ml-2 h-5 w-5" />
               </Button>
             </Link>
           </CardContent>
         </Card>
 
-        <Card className="flex flex-col items-center p-6 shadow-lg hover:shadow-xl transition-shadow duration-300">
+        <Card className="flex flex-col items-center p-6 shadow-lg hover:shadow-xl transition-shadow duration-300 bg-card text-foreground border-border">
           <CardHeader>
             <CardTitle className="text-3xl font-bold mb-2">View Comparisons</CardTitle>
             <CardDescription className="text-md text-muted-foreground">
@@ -79,7 +79,7 @@ function Index() {
           </CardHeader>
           <CardContent className="flex-grow flex items-center justify-center">
             <Link to="/multi-comparison-library">
-              <Button variant="outline" size="lg" className="text-lg px-8 py-6">
+              <Button variant="outline" size="lg" className="text-lg px-8 py-6 bg-secondary text-secondary-foreground hover:bg-secondary/90 border-border">
                 View Comparison Library <GitCompare className="ml-2 h-5 w-5" />
               </Button>
             </Link>

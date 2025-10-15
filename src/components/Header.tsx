@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/integrations/supabase/auth';
 import MobileNav from './MobileNav';
+// Removed ModeToggle import
 
 const Header = () => {
   const { session, subscriptionStatus, subscriptionPlanId } = useAuth();

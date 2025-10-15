@@ -7,9 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Search, GitCompare } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
-import ComparisonLibraryCopilot from '@/components/ComparisonLibraryCopilot'; // Import the copilot
-import { Badge } from '@/components/ui/badge'; // Import Badge component
-import PaginationControls from '@/components/PaginationControls'; // Import PaginationControls
+import ComparisonLibraryCopilot from '@/components/ComparisonLibraryCopilot';
+import { Badge } from '@/components/ui/badge';
+import PaginationControls from '@/components/PaginationControls';
 
 interface MultiComparisonVideoSummary {
   title: string;
@@ -37,12 +37,12 @@ interface MultiComparison {
   comparison_data_json: any;
   custom_comparative_qa_results: CustomComparativeQuestion[];
   overall_thumbnail_url?: string;
-  videos: MultiComparisonVideoSummary[]; // Flattened video data for display
-  videoATitle?: string; // For copilot context
-  videoBTitle?: string; // For copilot context
+  videos: MultiComparisonVideoSummary[];
+  videoATitle?: string;
+  videoBTitle?: string;
 }
 
-const PAGE_SIZE = 9; // Number of items per page
+const PAGE_SIZE = 9;
 
 const fetchMultiComparisons = async (page: number, pageSize: number, searchTerm: string): Promise<{ data: MultiComparison[], totalCount: number }> => {
   const start = (page - 1) * pageSize;
@@ -60,10 +60,7 @@ const fetchMultiComparisons = async (page: number, pageSize: number, searchTerm:
 
   if (searchTerm) {
     const lowerCaseSearchTerm = `%${searchTerm.toLowerCase()}%`;
-    // Search in multi_comparisons fields directly
     query = query.or(`title.ilike.${lowerCaseSearchTerm},meta_description.ilike.${lowerCaseSearchTerm},keywords.cs.{"${searchTerm}"}`);
-    // Note: Searching within nested `blog_posts` titles would require a more complex Supabase query (e.g., RPC function or multiple queries)
-    // For now, search is limited to the top-level multi_comparisons fields.
   }
 
   const { data, error, count } = await query
@@ -97,12 +94,10 @@ const fetchMultiComparisons = async (page: number, pageSize: number, searchTerm:
 const MultiComparisonLibrary = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  // filteredComparisons is no longer needed as filtering is done server-side
-  // const [filteredComparisons, setFilteredComparisons] = useState<MultiComparison[]>([]);
 
   const { data, isLoading, error } = useQuery<{ data: MultiComparison[], totalCount: number }, Error>({
-    queryKey: ['multiComparisons', currentPage, searchTerm], // Add searchTerm to queryKey
-    queryFn: () => fetchMultiComparisons(currentPage, PAGE_SIZE, searchTerm), // Pass searchTerm
+    queryKey: ['multiComparisons', currentPage, searchTerm],
+    queryFn: () => fetchMultiComparisons(currentPage, PAGE_SIZE, searchTerm),
     refetchOnWindowFocus: false,
   });
 
@@ -110,28 +105,13 @@ const MultiComparisonLibrary = () => {
   const totalCount = data?.totalCount || 0;
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
-  // Removed client-side filtering useEffect as filtering is now server-side
-  // useEffect(() => {
-  //   if (multiComparisons) {
-  //     const lowerCaseSearchTerm = searchTerm.toLowerCase();
-  //     const results = multiComparisons.filter(comp =>
-  //       comp.title.toLowerCase().includes(lowerCaseSearchTerm) ||
-  //       (comp.meta_description && comp.meta_description.toLowerCase().includes(lowerCaseSearchTerm)) ||
-  //       (comp.keywords && comp.keywords.some(keyword => keyword.toLowerCase().includes(lowerCaseSearchTerm))) ||
-  //       (comp.videos && comp.videos.some(video => video.title.toLowerCase().includes(lowerCaseSearchTerm)))
-  //     );
-  //     setFilteredComparisons(results);
-  //   }
-  // }, [searchTerm, multiComparisons]);
-
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-    // No need to clear search term here, as it's part of the query key
   };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
-    setCurrentPage(1); // Reset to first page on new search
+    setCurrentPage(1);
   };
 
   // Set SEO-optimized browser tab title
@@ -142,30 +122,30 @@ const MultiComparisonLibrary = () => {
   if (isLoading) {
     return (
       <div className="container mx-auto p-4 max-w-4xl">
-        <h1 className="text-3xl font-bold mb-6">Comparison Library</h1>
+        <h1 className="text-3xl font-bold mb-6 text-foreground">Comparison Library</h1>
         <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-2 mb-6">
-          <Skeleton className="flex-1 h-10" />
-          <Skeleton className="h-10 w-10 sm:w-auto px-4" />
+          <Skeleton className="flex-1 h-10 bg-muted" />
+          <Skeleton className="h-10 w-10 sm:w-auto px-4 bg-muted" />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[...Array(PAGE_SIZE)].map((_, i) => (
-            <Card key={i}>
+            <Card key={i} className="bg-card">
               <CardContent className="p-4">
-                <Skeleton className="w-full h-40 mb-4" />
-                <Skeleton className="h-6 w-3/4 mb-2" />
-                <Skeleton className="h-4 w-1/2" />
+                <Skeleton className="w-full h-40 mb-4 bg-muted" />
+                <Skeleton className="h-6 w-3/4 mb-2 bg-muted" />
+                <Skeleton className="h-4 w-1/2 bg-muted" />
               </CardContent>
             </Card>
           ))}
         </div>
-        <Skeleton className="h-10 w-full mt-6" />
+        <Skeleton className="h-10 w-full mt-6 bg-muted" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="container mx-auto p-4 max-w-4xl text-red-500">
+      <div className="container mx-auto p-4 max-w-4xl text-destructive">
         Error loading comparison library: {error.message}
       </div>
     );
@@ -173,14 +153,14 @@ const MultiComparisonLibrary = () => {
 
   return (
     <div className="container mx-auto p-4 max-w-4xl">
-      <h1 className="text-3xl font-bold mb-6">Comparison Library</h1>
+      <h1 className="text-3xl font-bold mb-6 text-foreground">Comparison Library</h1>
       <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-2 mb-6">
         <Input
           type="text"
           placeholder="Search comparisons by title, video titles, or keywords (across all comparisons)..."
           value={searchTerm}
-          onChange={handleSearchChange} // Use new handler
-          className="flex-1"
+          onChange={handleSearchChange}
+          className="flex-1 bg-input text-foreground border-border"
         />
         <Button variant="outline" size="icon" className="sm:hidden">
           <Search className="h-4 w-4" />
@@ -191,13 +171,13 @@ const MultiComparisonLibrary = () => {
       </div>
 
       {multiComparisons.length === 0 && (
-        <p className="text-center text-gray-500 dark:text-gray-400">No comparisons found matching your criteria.</p>
+        <p className="text-center text-muted-foreground">No comparisons found matching your criteria.</p>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {multiComparisons.map((comp) => (
           <Link to={`/multi-comparison/${comp.slug}`} key={comp.id}>
-            <Card className="h-full flex flex-col hover:shadow-lg transition-shadow duration-200">
+            <Card className="h-full flex flex-col hover:shadow-lg transition-shadow duration-200 bg-card text-foreground border-border">
               <CardHeader className="p-0 relative">
                 {comp.overall_thumbnail_url ? (
                   <img
@@ -206,7 +186,7 @@ const MultiComparisonLibrary = () => {
                     className="w-full h-40 object-cover rounded-t-lg"
                   />
                 ) : (
-                  <div className="w-full h-40 bg-gray-200 dark:bg-gray-700 flex items-center justify-center rounded-t-lg relative">
+                  <div className="w-full h-40 bg-muted flex items-center justify-center rounded-t-lg relative">
                     {comp.videos.length > 0 ? (
                       <>
                         <img
@@ -221,14 +201,14 @@ const MultiComparisonLibrary = () => {
                         )}
                       </>
                     ) : (
-                      <GitCompare className="h-12 w-12 text-gray-400 dark:text-gray-500" />
+                      <GitCompare className="h-12 w-12 text-muted-foreground" />
                     )}
                   </div>
                 )}
               </CardHeader>
               <CardContent className="p-4 flex-grow">
                 <CardTitle className="text-lg font-semibold mb-2 line-clamp-2">{comp.title}</CardTitle>
-                <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
+                <p className="text-xs text-muted-foreground mt-2">
                   Compared: {new Date(comp.created_at).toLocaleDateString()}
                 </p>
               </CardContent>

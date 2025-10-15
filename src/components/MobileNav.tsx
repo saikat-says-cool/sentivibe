@@ -28,7 +28,7 @@ const MobileNav: React.FC<MobileNavProps> = ({ onLinkClick }) => {
           <span className="sr-only">Toggle navigation menu</span>
         </Button>
       </SheetTrigger>
-      <SheetContent side="left" className="w-[250px] sm:w-[300px] flex flex-col">
+      <SheetContent side="left" className="w-[250px] sm:w-[300px] flex flex-col bg-background text-foreground">
         <nav className="flex flex-col gap-4 py-6">
           <Link to="/" className="flex items-center space-x-2 mb-4" onClick={handleLinkClick}>
             <h1 className="text-2xl font-extrabold tracking-tight text-foreground font-heading">

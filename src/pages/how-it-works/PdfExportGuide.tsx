@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import HowItWorksCopilot from '@/components/HowItWorksCopilot'; // Import the new copilot
+import HowItWorksCopilot from '@/components/HowItWorksCopilot';
 
 import productDocumentationContent from '/docs/PRODUCT_DOCUMENTATION.md?raw';
 import technicalDocumentationContent from '/docs/TECHNICAL_DOCUMENTATION.md?raw';
@@ -33,9 +33,9 @@ const PdfExportGuide = () => {
   }, []);
 
   return (
-    <div className="container mx-auto p-4 max-w-5xl flex flex-col md:flex-row gap-6">
+    <div className="container mx-auto p-4 max-w-5xl flex flex-col md:flex-row gap-6 bg-background text-foreground">
       {/* HowItWorksSidebar is rendered by the parent HowItWorks.tsx */}
-      <Card className="flex-1 mb-6">
+      <Card className="flex-1 mb-6 bg-card border-border">
         <CardHeader>
           <CardTitle className="text-3xl font-bold text-center">Download PDF Reports</CardTitle>
         </CardHeader>

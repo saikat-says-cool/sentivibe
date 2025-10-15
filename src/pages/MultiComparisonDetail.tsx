@@ -11,9 +11,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import MultiComparisonDataDisplay from '@/components/MultiComparisonDataDisplay';
 import MultiComparisonChatDialog from '@/components/MultiComparisonChatDialog';
-import html2pdf from 'html2pdf.js'; // Import html2pdf
-import { useAuth } from '@/integrations/supabase/auth'; // Import useAuth
-import UpgradeCTA from '@/components/UpgradeCTA'; // Import the new CTA component
+import html2pdf from 'html2pdf.js';
+import { useAuth } from '@/integrations/supabase/auth';
+import UpgradeCTA from '@/components/UpgradeCTA';
 
 interface MultiComparisonVideo {
   blog_post_id: string;
@@ -22,7 +22,7 @@ interface MultiComparisonVideo {
   thumbnail_url: string;
   original_video_link: string;
   raw_comments_for_chat: string[];
-  slug: string; // Added slug
+  slug: string;
 }
 
 interface CustomComparativeQuestion {
@@ -45,8 +45,8 @@ interface MultiComparison {
   comparison_data_json: any;
   custom_comparative_qa_results: CustomComparativeQuestion[];
   overall_thumbnail_url?: string;
-  multi_comparison_videos: MultiComparisonVideo[]; // Joined data from junction table
-  videos: MultiComparisonVideo[]; // Added this property to resolve the TypeScript error
+  multi_comparison_videos: MultiComparisonVideo[];
+  videos: MultiComparisonVideo[];
 }
 
 const fetchMultiComparisonBySlug = async (slug: string): Promise<MultiComparison | null> => {
@@ -68,17 +68,16 @@ const fetchMultiComparisonBySlug = async (slug: string): Promise<MultiComparison
   }
 
   if (data) {
-    // Flatten the nested blog_posts data and add raw_comments_for_chat
     const videos = data.multi_comparison_videos
       .sort((a: any, b: any) => a.video_order - b.video_order)
       .map((mcv: any) => ({
-        blog_post_id: mcv.blog_posts.id, // Ensure blog_post_id is correctly mapped
+        blog_post_id: mcv.blog_posts.id,
         video_order: mcv.video_order,
         title: mcv.blog_posts.title,
         thumbnail_url: mcv.blog_posts.thumbnail_url,
         original_video_link: mcv.blog_posts.original_video_link,
         raw_comments_for_chat: mcv.blog_posts.ai_analysis_json?.raw_comments_for_chat || [],
-        slug: mcv.blog_posts.slug, // Include slug here
+        slug: mcv.blog_posts.slug,
       }));
     return { ...data, videos };
   }
@@ -89,8 +88,8 @@ const MultiComparisonDetail = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const [isChatDialogOpen, setIsChatDialogOpen] = useState(false);
-  const comparisonReportRef = useRef<HTMLDivElement>(null); // Ref for PDF download
-  const { subscriptionStatus, subscriptionPlanId } = useAuth(); // Get subscription info
+  const comparisonReportRef = useRef<HTMLDivElement>(null);
+  const { subscriptionStatus, subscriptionPlanId } = useAuth();
   const isPaidTier = subscriptionStatus === 'active' && subscriptionPlanId !== 'free';
 
   const { data: multiComparison, isLoading, error } = useQuery<MultiComparison | null, Error>({
@@ -101,7 +100,7 @@ const MultiComparisonDetail = () => {
 
   useEffect(() => {
     const head = document.head;
-    const domain = "https://sentivibe.online"; // Use the new domain
+    const domain = "https://sentivibe.online";
 
     const updateMetaTag = (name: string, content: string, property?: string) => {
       let tag = document.querySelector(`meta[${property ? `property="${property}"` : `name="${name}"`}]`);
@@ -181,7 +180,7 @@ const MultiComparisonDetail = () => {
       scriptTag.textContent = JSON.stringify(schemaData);
 
     } else {
-      document.title = "SentiVibe - Multi-Comparison Library"; // Consistent fallback title
+      document.title = "SentiVibe - Multi-Comparison Library";
       updateMetaTag('description', 'Compare multiple YouTube video sentiments and insights with AI-powered analysis.');
       removeMetaTag('og:title', 'og:title');
       removeMetaTag('og:description', 'og:description');
@@ -229,7 +228,7 @@ const MultiComparisonDetail = () => {
       };
 
       const tempDiv = document.createElement('div');
-      tempDiv.className = 'pdf-light-mode'; // Apply the new class
+      tempDiv.className = 'pdf-light-mode';
       tempDiv.style.position = 'relative';
       tempDiv.style.width = element.offsetWidth + 'px';
       tempDiv.style.height = element.offsetHeight + 'px';
@@ -288,19 +287,19 @@ const MultiComparisonDetail = () => {
   if (isLoading) {
     return (
       <div className="container mx-auto p-4 max-w-3xl">
-        <Skeleton className="h-8 w-1/4 mb-6" />
-        <Skeleton className="h-10 w-full mb-4" />
-        <Skeleton className="h-6 w-1/2 mb-4" />
-        <Skeleton className="h-4 w-full mb-2" />
-        <Skeleton className="h-4 w-full mb-2" />
-        <Skeleton className="h-4 w-3/4" />
+        <Skeleton className="h-8 w-1/4 mb-6 bg-muted" />
+        <Skeleton className="h-10 w-full mb-4 bg-muted" />
+        <Skeleton className="h-6 w-1/2 mb-4 bg-muted" />
+        <Skeleton className="h-4 w-full mb-2 bg-muted" />
+        <Skeleton className="h-4 w-full mb-2 bg-muted" />
+        <Skeleton className="h-4 w-3/4 bg-muted" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="container mx-auto p-4 max-w-3xl text-red-500">
+      <div className="container mx-auto p-4 max-w-3xl text-destructive">
         Error loading multi-comparison: {error.message}
       </div>
     );
@@ -308,10 +307,10 @@ const MultiComparisonDetail = () => {
 
   if (!multiComparison) {
     return (
-      <div className="container mx-auto p-4 max-w-3xl text-center text-gray-500 dark:text-gray-400">
+      <div className="container mx-auto p-4 max-w-3xl text-center text-muted-foreground">
         <h2 className="text-2xl font-bold mb-4">Multi-Comparison Not Found</h2>
         <p>The multi-comparison you are looking for does not exist or has been removed.</p>
-        <Link to="/multi-comparison-library" className="text-blue-500 hover:underline mt-4 flex items-center justify-center">
+        <Link to="/multi-comparison-library" className="text-accent hover:underline mt-4 flex items-center justify-center">
           <ArrowLeft className="h-4 w-4 mr-2" /> Back to Comparison Library
         </Link>
       </div>
@@ -321,35 +320,35 @@ const MultiComparisonDetail = () => {
   return (
     <div className="container mx-auto p-4 max-w-3xl">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-2 flex-wrap">
-        <Link to="/multi-comparison-library" className="text-blue-500 hover:underline flex items-center w-fit">
+        <Link to="/multi-comparison-library" className="text-accent hover:underline flex items-center w-fit">
           <ArrowLeft className="h-4 w-4 mr-2" /> Back to Comparison Library
         </Link>
         <div className="flex flex-wrap gap-2">
           {multiComparison && (
             <Button
               onClick={() => navigate('/create-multi-comparison', { state: { multiComparison: formattedMultiComparisonResultForChat } })}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/90"
             >
               <BarChart className="h-4 w-4" /> Go to Multi-Comparison Analysis
             </Button>
           )}
           <Button
             onClick={() => navigate('/create-multi-comparison', { state: { multiComparison: formattedMultiComparisonResultForChat, forceRecompare: true } })}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/90"
           >
             <RefreshCw className="h-4 w-4" /> Refresh Comparison
           </Button>
           {formattedMultiComparisonResultForChat && (
-            <Button onClick={() => setIsChatDialogOpen(true)} className="flex items-center gap-2">
+            <Button onClick={() => setIsChatDialogOpen(true)} className="flex items-center gap-2 bg-accent text-accent-foreground hover:bg-accent/90">
               <MessageSquare className="h-4 w-4" /> Chat with AI
             </Button>
           )}
-          <Button onClick={handleDownloadPdf} className="flex items-center gap-2">
+          <Button onClick={handleDownloadPdf} className="flex items-center gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/90">
             <Download className="h-4 w-4" /> Download Report PDF
           </Button>
         </div>
       </div>
-      <Card ref={comparisonReportRef} className="mb-6">
+      <Card ref={comparisonReportRef} className="mb-6 bg-card text-foreground border-border">
         <CardHeader>
           <div className="flex flex-wrap justify-center items-center gap-4 mb-2">
             {multiComparison.videos && multiComparison.videos.map((video, index) => (
@@ -369,18 +368,18 @@ const MultiComparisonDetail = () => {
             Click on any video thumbnail above to view its individual analysis.
           </p>
           <CardTitle className="text-3xl font-bold mb-2 text-center">{multiComparison.title}</CardTitle>
-          <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
+          <p className="text-sm text-muted-foreground text-center">
             Compared on: {new Date(multiComparison.created_at).toLocaleDateString()}
             {multiComparison.updated_at && multiComparison.updated_at !== multiComparison.created_at && (
               <span> (Last updated: {new Date(multiComparison.updated_at).toLocaleDateString()})</span>
             )}
           </p>
           {multiComparison.last_compared_at && (
-            <p className="text-xs text-gray-500 dark:text-gray-500 mt-2 text-center">
+            <p className="text-xs text-muted-foreground mt-2 text-center">
               Last Full Comparison: {new Date(multiComparison.last_compared_at).toLocaleDateString()}
             </p>
           )}
-          <p className="text-md text-gray-700 dark:text-gray-300 mt-4 italic text-center">
+          <p className="text-md text-muted-foreground mt-4 italic text-center">
             {multiComparison.meta_description}
           </p>
         </CardHeader>
@@ -390,7 +389,7 @@ const MultiComparisonDetail = () => {
           </ReactMarkdown>
         </CardContent>
         {multiComparison.keywords && multiComparison.keywords.length > 0 && (
-          <CardContent className="border-t pt-4 mt-4">
+          <CardContent className="border-t border-border pt-4 mt-4">
             <h3 className="text-lg font-semibold mb-2">Keywords</h3>
             <div className="flex flex-wrap gap-2">
               {multiComparison.keywords.map((keyword, index) => (
@@ -402,19 +401,19 @@ const MultiComparisonDetail = () => {
           </CardContent>
         )}
         {multiComparison.comparison_data_json && (
-          <CardContent className="border-t pt-4 mt-4">
+          <CardContent className="border-t border-border pt-4 mt-4">
             <h3 className="text-lg font-semibold mb-2">Structured Multi-Comparison Data</h3>
             <MultiComparisonDataDisplay data={multiComparison.comparison_data_json} />
           </CardContent>
         )}
         {multiComparison.custom_comparative_qa_results && multiComparison.custom_comparative_qa_results.length > 0 && (
-          <CardContent className="border-t pt-4 mt-4">
+          <CardContent className="border-t border-border pt-4 mt-4">
             <h3 className="text-lg font-semibold mb-2">Comparative Questions & Answers</h3>
             <div className="space-y-4">
               {multiComparison.custom_comparative_qa_results.map((qa, index) => (
-                <div key={index} className="border p-3 rounded-md bg-gray-50 dark:bg-gray-700">
-                  <p className="font-medium text-gray-800 dark:text-gray-200 mb-1">Q{index + 1}: {qa.question}</p>
-                  <div className="prose dark:prose-invert max-w-none text-gray-700 dark:text-gray-300">
+                <div key={index} className="border border-border p-3 rounded-md bg-secondary">
+                  <p className="font-medium text-foreground mb-1">Q{index + 1}: {qa.question}</p>
+                  <div className="prose dark:prose-invert max-w-none text-muted-foreground">
                     <ReactMarkdown remarkPlugins={[remarkGfm]}>
                       {qa.answer || "No answer generated."}
                     </ReactMarkdown>
@@ -427,22 +426,22 @@ const MultiComparisonDetail = () => {
 
         {/* New section for individual video comments */}
         {multiComparison.videos && multiComparison.videos.length > 0 && (
-          <CardContent className="border-t pt-4 mt-4">
+          <CardContent className="border-t border-border pt-4 mt-4">
             <h3 className="text-lg font-semibold mb-4">Top Comments for Each Video</h3>
             <div className="space-y-6">
               {multiComparison.videos.map((video, videoIndex) => (
-                <div key={videoIndex} className="border p-4 rounded-md bg-gray-50 dark:bg-gray-700">
+                <div key={videoIndex} className="border border-border p-4 rounded-md bg-secondary">
                   <h4 className="font-semibold text-lg mb-2 flex items-center gap-2">
                     <Youtube className="h-5 w-5 text-red-500" /> {video.title}
                   </h4>
                   {video.raw_comments_for_chat && video.raw_comments_for_chat.length > 0 ? (
-                    <ul className="list-disc list-inside space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                    <ul className="list-disc list-inside space-y-1 text-muted-foreground">
                       {video.raw_comments_for_chat.slice(0, 10).map((comment, commentIndex) => (
                         <li key={commentIndex}>{String(comment)}</li>
                       ))}
                     </ul>
                   ) : (
-                    <p className="text-gray-500 dark:text-gray-400 text-sm">No top comments available for this video.</p>
+                    <p className="text-muted-foreground text-sm">No top comments available for this video.</p>
                   )}
                 </div>
               ))}
@@ -450,7 +449,7 @@ const MultiComparisonDetail = () => {
           </CardContent>
         )}
       </Card>
-      <UpgradeCTA /> {/* Add the UpgradeCTA here */}
+      <UpgradeCTA />
       {formattedMultiComparisonResultForChat && (
         <MultiComparisonChatDialog
           isOpen={isChatDialogOpen}

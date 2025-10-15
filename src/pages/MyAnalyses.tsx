@@ -4,11 +4,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Loader2, Search, Youtube, Sparkles } from 'lucide-react'; // Added Sparkles icon
+import { Loader2, Search, Youtube, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/integrations/supabase/auth';
 import LibraryCopilot from '@/components/LibraryCopilot';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'; // Import Alert components
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 interface AiAnalysisResult {
   overall_sentiment: string;
@@ -43,8 +43,8 @@ interface BlogPost {
   updated_at: string;
   original_video_link: string;
   ai_analysis_json: StoredAiAnalysisContent | null;
-  custom_qa_results?: CustomQuestion[]; // New field
-  last_reanalyzed_at?: string; // New field
+  custom_qa_results?: CustomQuestion[];
+  last_reanalyzed_at?: string;
 }
 
 const fetchMyBlogPosts = async (userId: string): Promise<BlogPost[]> => {
@@ -120,11 +120,11 @@ const MyAnalyses = () => {
       <h1 className="text-3xl font-bold mb-6">My Analysis History</h1>
 
       {user && !isPaidTier && (
-        <Alert className="mb-6 bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-200">
+        <Alert className="mb-6 bg-secondary text-secondary-foreground border-border">
           <Sparkles className="h-4 w-4" />
           <AlertTitle>Unlock the Full SentiVibe Experience!</AlertTitle>
           <AlertDescription>
-            You're on the Free Tier. Upgrade to a Paid Tier for significantly higher daily analysis and comparison limits, unwatermarked PDF reports, and an ad-free experience. <Link to="/upgrade" className="underline font-semibold">Learn more and upgrade here.</Link>
+            You're on the Free Tier. Upgrade to a Paid Tier for significantly higher daily analysis and comparison limits, unwatermarked PDF reports, and an ad-free experience. <Link to="/upgrade" className="underline font-semibold text-accent">Learn more and upgrade here.</Link>
           </AlertDescription>
         </Alert>
       )}
@@ -146,7 +146,7 @@ const MyAnalyses = () => {
       </div>
 
       {filteredPosts.length === 0 && (
-        <p className="text-center text-gray-500 dark:text-gray-400">You haven't performed any analyses yet.</p>
+        <p className="text-center text-muted-foreground">You haven't performed any analyses yet.</p>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -161,17 +161,17 @@ const MyAnalyses = () => {
                     className="w-full h-40 object-cover rounded-t-lg"
                   />
                 ) : (
-                  <div className="w-full h-40 bg-gray-200 dark:bg-gray-700 flex items-center justify-center rounded-t-lg">
-                    <Youtube className="h-12 w-12 text-gray-400 dark:text-gray-500" />
+                  <div className="w-full h-40 bg-muted flex items-center justify-center rounded-t-lg">
+                    <Youtube className="h-12 w-12 text-muted-foreground" />
                   </div>
                 )}
               </CardHeader>
               <CardContent className="p-4 flex-grow">
                 <CardTitle className="text-lg font-semibold mb-2 line-clamp-2">{post.title}</CardTitle>
                 {post.creator_name && (
-                  <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-1">By: {post.creator_name}</p>
+                  <p className="text-sm text-muted-foreground line-clamp-1">By: {post.creator_name}</p>
                 )}
-                <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
+                <p className="text-xs text-muted-foreground mt-2">
                   Created: {new Date(post.created_at).toLocaleDateString()}
                 </p>
               </CardContent>

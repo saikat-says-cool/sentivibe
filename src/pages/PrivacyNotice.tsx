@@ -106,8 +106,8 @@ If you have questions or comments about this Privacy Notice, please contact us a
   `;
 
   return (
-    <div className="container mx-auto p-4 max-w-3xl">
-      <Card className="mb-6">
+    <div className="container mx-auto p-4 max-w-3xl bg-background text-foreground">
+      <Card className="mb-6 bg-card border-border">
         <CardHeader>
           <CardTitle className="text-3xl font-bold text-center">Privacy Notice</CardTitle>
         </CardHeader>

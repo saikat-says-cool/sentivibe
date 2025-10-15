@@ -16,9 +16,9 @@ const UpgradeCTA: React.FC = () => {
   }
 
   return (
-    <Card className="mt-8 border-2 border-accent bg-accent/10 dark:bg-accent/20">
+    <Card className="mt-8 border-2 border-accent bg-accent/10 text-accent-foreground">
       <CardHeader className="text-center">
-        <CardTitle className="text-2xl font-bold flex items-center justify-center gap-2 text-accent-foreground">
+        <CardTitle className="text-2xl font-bold flex items-center justify-center gap-2">
           <Sparkles className="h-6 w-6" /> Unlock the Full SentiVibe Experience!
         </CardTitle>
       </CardHeader>
@@ -38,7 +38,7 @@ const UpgradeCTA: React.FC = () => {
           </Button>
         </Link>
         <p className="text-sm text-muted-foreground">
-          Visit our <Link to="/pricing" className="underline">Pricing Page</Link> for a detailed breakdown of all features.
+          Visit our <Link to="/pricing" className="underline text-accent">Pricing Page</Link> for a detailed breakdown of all features.
         </p>
       </CardContent>
     </Card>

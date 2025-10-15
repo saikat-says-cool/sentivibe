@@ -19,7 +19,7 @@ import VideoChatDialog from "@/components/VideoChatDialog";
 import { useAuth } from '@/integrations/supabase/auth';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { useLoadingMessages } from '@/hooks/use-loading-messages'; // Import the new hook
+import { useLoadingMessages } from '@/hooks/use-loading-messages';
 
 interface AiAnalysisResult {
   overall_sentiment: string;
@@ -73,7 +73,6 @@ interface AnalysisResponse {
   lastReanalyzedAt?: string;
 }
 
-// Define simplified tier limits (only daily analyses remain)
 const UNAUTHENTICATED_LIMITS = {
   dailyAnalyses: 1,
 };
@@ -83,10 +82,9 @@ const AUTHENTICATED_FREE_TIER_LIMITS = {
 };
 
 const PAID_TIER_LIMITS = {
-  dailyAnalyses: 50, // Effectively unlimited
+  dailyAnalyses: 50,
 };
 
-// Function to fetch anonymous usage
 const fetchAnonUsage = async () => {
   const { data, error } = await supabase.functions.invoke('get-anon-usage');
   if (error) {
@@ -300,7 +298,7 @@ const AnalyzeVideo = () => {
       };
 
       const tempDiv = document.createElement('div');
-      tempDiv.className = 'pdf-light-mode'; // Apply the new class
+      tempDiv.className = 'pdf-light-mode';
       tempDiv.style.position = 'relative';
       tempDiv.style.width = element.offsetWidth + 'px';
       tempDiv.style.height = element.offsetHeight + 'px';
@@ -365,7 +363,7 @@ const AnalyzeVideo = () => {
 
   return (
     <div className="container mx-auto p-4 max-w-3xl">
-      <Card className="mb-6">
+      <Card className="mb-6 bg-card text-foreground border-border">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Youtube className="h-6 w-6 text-red-500" /> Analyze a Video: From Comments to Conversation
@@ -374,7 +372,7 @@ const AnalyzeVideo = () => {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <Label htmlFor="videoLink">YouTube Video Link</Label>
+              <Label htmlFor="videoLink" className="text-muted-foreground">YouTube Video Link</Label>
               <Input
                 id="videoLink"
                 type="url"
@@ -382,7 +380,7 @@ const AnalyzeVideo = () => {
                 value={videoLink}
                 onChange={(e) => setVideoLink(e.target.value)}
                 required
-                className="mt-1"
+                className="mt-1 bg-input text-foreground border-border"
                 disabled={analyzeVideoMutation.isPending || isAnalysisLimitReached}
               />
               <p className="text-sm text-muted-foreground mt-2">
@@ -391,31 +389,31 @@ const AnalyzeVideo = () => {
               <p className="text-sm text-muted-foreground mt-1">
                 Analyses today: {analysesToday}/{currentLimits.dailyAnalyses}
                 {!isPaidTier && (
-                  <span className="ml-2 text-blue-500">
+                  <span className="ml-2 text-accent">
                     <Link to="/upgrade" className="underline">Upgrade to a paid tier</Link> for more analyses.
                   </span>
                 )}
               </p>
             </div>
 
-            <Separator />
+            <Separator className="bg-border" />
 
             <h3 className="text-lg font-semibold mb-2">Ask Unlimited Questions. We don't meter your curiosity.</h3>
             {customQuestions.map((qa, index) => (
               <div key={index} className="flex flex-col sm:flex-row gap-2 items-end">
                 <div className="flex-1">
-                  <Label htmlFor={`question-${index}`}>Question {index + 1}</Label>
+                  <Label htmlFor={`question-${index}`} className="text-muted-foreground">Question {index + 1}</Label>
                   <Textarea
                     id="question-${index}"
                     placeholder="e.g., What are the main criticisms of this video?"
                     value={qa.question}
                     onChange={(e) => handleQuestionChange(index, 'question', e.target.value)}
-                    className="mt-1 min-h-[60px]"
+                    className="mt-1 min-h-[60px] bg-input text-foreground border-border"
                     disabled={areCustomQuestionInputsDisabled}
                   />
                 </div>
                 <div className="w-24">
-                  <Label htmlFor={`wordCount-${index}`}>Word Count</Label>
+                  <Label htmlFor={`wordCount-${index}`} className="text-muted-foreground">Word Count</Label>
                   <Input
                     id="wordCount-${index}"
                     type="number"
@@ -423,7 +421,7 @@ const AnalyzeVideo = () => {
                     step="50"
                     value={qa.wordCount}
                     onChange={(e) => handleQuestionChange(index, 'wordCount', e.target.value)}
-                    className="mt-1"
+                    className="mt-1 bg-input text-foreground border-border"
                     disabled={areCustomQuestionInputsDisabled}
                   />
                 </div>
@@ -434,9 +432,9 @@ const AnalyzeVideo = () => {
                     size="icon"
                     onClick={() => handleRemoveQuestion(index)}
                     disabled={areCustomQuestionInputsDisabled}
-                    className="self-end sm:self-auto"
+                    className="self-end sm:self-auto text-destructive hover:bg-destructive/10"
                   >
-                    <XCircle className="h-5 w-5 text-red-500" />
+                    <XCircle className="h-5 w-5" />
                   </Button>
                 )}
               </div>
@@ -446,20 +444,20 @@ const AnalyzeVideo = () => {
               variant="outline"
               onClick={handleAddQuestion}
               disabled={areCustomQuestionInputsDisabled}
-              className="w-full flex items-center gap-2"
+              className="w-full flex items-center gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/90 border-border"
             >
               <PlusCircle className="h-4 w-4" /> Add Another Question
             </Button>
 
-            <Button type="submit" className="w-full" disabled={analyzeVideoMutation.isPending || isAnalysisLimitReached}>
+            <Button type="submit" className="w-full bg-accent text-accent-foreground hover:bg-accent/90" disabled={analyzeVideoMutation.isPending || isAnalysisLimitReached}>
               {analyzeVideoMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Analyze Comments & Get Answers
             </Button>
             {isAnalysisLimitReached && (
-              <Alert variant="destructive" className="mt-4">
+              <Alert variant="destructive" className="mt-4 bg-destructive/10 text-destructive border-destructive">
                 <AlertTitle>Daily Limit Reached</AlertTitle>
                 <AlertDescription>
-                  You have reached your daily limit of {currentLimits.dailyAnalyses} analyses. Please try again tomorrow or <Link to="/upgrade" className="underline">upgrade to a paid tier</Link> for more analyses.
+                  You have reached your daily limit of {currentLimits.dailyAnalyses} analyses. Please try again tomorrow or <Link to="/upgrade" className="underline text-accent">upgrade to a paid tier</Link> for more analyses.
                 </AlertDescription>
               </Alert>
             )}
@@ -468,20 +466,20 @@ const AnalyzeVideo = () => {
       </Card>
 
       {analyzeVideoMutation.isPending && (
-        <Card className="p-6 space-y-4">
-          <Skeleton className="h-8 w-3/4" />
-          <Skeleton className="h-4 w-full" />
-          <Skeleton className="h-4 w-full" />
-          <Skeleton className="h-4 w-1/2" />
+        <Card className="p-6 space-y-4 bg-card text-foreground border-border">
+          <Skeleton className="h-8 w-3/4 bg-muted" />
+          <Skeleton className="h-4 w-full bg-muted" />
+          <Skeleton className="h-4 w-full bg-muted" />
+          <Skeleton className="h-4 w-1/2 bg-muted" />
           <div className="flex items-center space-x-2 mt-4">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            <span className="text-sm text-gray-500">{loadingMessage}</span>
+            <Loader2 className="h-4 w-4 animate-spin text-accent" />
+            <span className="text-sm text-muted-foreground">{loadingMessage}</span>
           </div>
         </Card>
       )}
 
       {error && (
-        <Alert variant="destructive" className="mb-6">
+        <Alert variant="destructive" className="mb-6 bg-destructive/10 text-destructive border-destructive">
           <AlertTitle>Error</AlertTitle>
           <AlertDescription>{error}</AlertDescription>
         </Alert>
@@ -491,30 +489,30 @@ const AnalyzeVideo = () => {
         <>
           <div className="flex flex-wrap justify-end gap-2 mb-4">
             {analysisResult.originalVideoLink && (
-              <Button asChild variant="outline" className="flex items-center gap-2">
+              <Button asChild variant="outline" className="flex items-center gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/90 border-border">
                 <a href={analysisResult.originalVideoLink} target="_blank" rel="noopener noreferrer">
                   <Youtube className="h-4 w-4" /> Original Video
                 </a>
               </Button>
             )}
             {analysisResult.blogPostSlug && (
-              <Button asChild variant="outline" className="flex items-center gap-2">
+              <Button asChild variant="outline" className="flex items-center gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/90 border-border">
                 <Link to={`/blog/${analysisResult.blogPostSlug}`}>
                   <LinkIcon className="h-4 w-4" /> View Blog Post
                 </Link>
               </Button>
             )}
-            <Button onClick={handleRefreshAnalysis} className="flex items-center gap-2" disabled={analyzeVideoMutation.isPending}>
+            <Button onClick={handleRefreshAnalysis} className="flex items-center gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/90 border-border" disabled={analyzeVideoMutation.isPending}>
               {analyzeVideoMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />} Refresh Analysis
             </Button>
-            <Button onClick={() => setIsChatDialogOpen(true)} className="flex items-center gap-2">
+            <Button onClick={() => setIsChatDialogOpen(true)} className="flex items-center gap-2 bg-accent text-accent-foreground hover:bg-accent/90">
               <MessageSquare className="h-4 w-4" /> Chat with AI
             </Button>
-            <Button onClick={handleDownloadPdf} className="flex items-center gap-2">
+            <Button onClick={handleDownloadPdf} className="flex items-center gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/90 border-border">
               <Download className="h-4 w-4" /> Download Report PDF
             </Button>
           </div>
-          <Card ref={analysisReportRef} className="mb-6">
+          <Card ref={analysisReportRef} className="mb-6 bg-card text-foreground border-border">
             <CardHeader>
               {analysisResult.videoThumbnailUrl && (
                 <img
@@ -525,11 +523,11 @@ const AnalyzeVideo = () => {
               )}
               <CardTitle className="text-2xl">{analysisResult.videoTitle}</CardTitle>
               {analysisResult.creatorName && (
-                <p className="text-md text-gray-600 dark:text-gray-400 mt-1">By: {analysisResult.creatorName}</p>
+                <p className="text-md text-muted-foreground mt-1">By: {analysisResult.creatorName}</p>
               )}
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">{analysisResult.videoDescription}</p>
+              <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{analysisResult.videoDescription}</p>
               {analysisResult.lastReanalyzedAt && (
-                <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
+                <p className="text-xs text-muted-foreground mt-2">
                   Last Full Analysis: {new Date(analysisResult.lastReanalyzedAt).toLocaleDateString()}
                 </p>
               )}
@@ -554,10 +552,10 @@ const AnalyzeVideo = () => {
                   {analysisResult.videoSubtitles && (
                     <div>
                       <Collapsible>
-                        <CollapsibleTrigger className="flex items-center justify-between w-full text-lg font-semibold mb-2">
+                        <CollapsibleTrigger className="flex items-center justify-between w-full text-lg font-semibold mb-2 text-foreground hover:text-accent">
                           Video Subtitles <ChevronDown className="h-4 w-4" />
                         </CollapsibleTrigger>
-                        <CollapsibleContent className="text-gray-700 dark:text-gray-300 text-sm max-h-60 overflow-y-auto border p-3 rounded-md bg-gray-50 dark:bg-gray-700">
+                        <CollapsibleContent className="text-muted-foreground text-sm max-h-60 overflow-y-auto border border-border p-3 rounded-md bg-secondary">
                           <p>{String(analysisResult.videoSubtitles)}</p>
                         </CollapsibleContent>
                       </Collapsible>
@@ -603,7 +601,7 @@ const AnalyzeVideo = () => {
                   </div>
                 </>
               ) : (
-                <Alert variant="destructive">
+                <Alert variant="destructive" className="bg-destructive/10 text-destructive border-destructive">
                   <AlertTitle>AI Analysis Data Error</AlertTitle>
                   <AlertDescription>
                     The AI analysis data is malformed or missing expected fields. Please try re-analyzing the video.
@@ -614,16 +612,16 @@ const AnalyzeVideo = () => {
                 </Alert>
               )}
 
-              <Separator />
+              <Separator className="bg-border" />
 
               {analysisResult.customQaResults && analysisResult.customQaResults.length > 0 && (
                 <div>
                   <h3 className="text-lg font-semibold mb-2">Questions about this video asked by the community</h3>
                   <div className="space-y-4">
                     {analysisResult.customQaResults.map((qa, index) => (
-                      <div key={index} className="border p-3 rounded-md bg-gray-50 dark:bg-gray-700">
-                        <p className="font-medium text-gray-800 dark:text-gray-200 mb-1">Q{index + 1}: {String(qa.question)}</p>
-                        <div className="prose dark:prose-invert max-w-none text-gray-700 dark:text-gray-300">
+                      <div key={index} className="border border-border p-3 rounded-md bg-secondary">
+                        <p className="font-medium text-foreground mb-1">Q{index + 1}: {String(qa.question)}</p>
+                        <div className="prose dark:prose-invert max-w-none text-muted-foreground">
                           <ReactMarkdown remarkPlugins={[remarkGfm]}>
                             {String(qa.answer || "No answer generated.")}
                           </ReactMarkdown>
@@ -631,20 +629,20 @@ const AnalyzeVideo = () => {
                       </div>
                     ))}
                   </div>
-                  <Separator className="mt-6" />
+                  <Separator className="mt-6 bg-border" />
                 </div>
               )}
 
               <div>
                 <h3 className="text-lg font-semibold mb-2">Raw Comments (First 10, by popularity)</h3>
                 {analysisResult.comments.length > 0 ? (
-                  <ul className="list-disc list-inside space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                  <ul className="list-disc list-inside space-y-1 text-muted-foreground">
                     {analysisResult.comments.slice(0, 10).map((comment, index) => (
                       <li key={index}>{String(comment)}</li>
                     ))}
                   </ul>
                 ) : (
-                  <p className="text-gray-500">No comments found or fetched.</p>
+                  <p className="text-muted-foreground">No comments found or fetched.</p>
                 )}
               </div>
             </CardContent>

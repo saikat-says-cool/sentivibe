@@ -10,7 +10,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Separator } from '@/components/ui/separator'; // Added import for Separator
+import { Separator } from '@/components/ui/separator';
 
 interface Profile {
   id: string;
@@ -41,7 +41,7 @@ const AccountCenter = () => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
 
-  const { data: profile, isLoading: isProfileLoading } = useQuery<Profile | null, Error>({ // Removed 'error: profileError'
+  const { data: profile, isLoading: isProfileLoading } = useQuery<Profile | null, Error>({
     queryKey: ['profile', user?.id],
     queryFn: () => fetchProfile(user!.id),
     enabled: !!user && !isAuthLoading,
@@ -104,7 +104,7 @@ const AccountCenter = () => {
   if (isAuthLoading || isProfileLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Loader2 className="h-8 w-8 animate-spin text-accent" />
         <p className="ml-2 text-lg text-muted-foreground">Loading account details...</p>
       </div>
     );
@@ -121,17 +121,17 @@ const AccountCenter = () => {
 
   return (
     <div className="container mx-auto p-4 max-w-3xl">
-      <Card className="mb-6">
+      <Card className="mb-6 bg-card text-foreground">
         <CardHeader>
           <CardTitle className="text-3xl font-bold text-center flex items-center justify-center gap-2">
-            <UserCircle2 className="h-8 w-8 text-primary" /> Account Center
+            <UserCircle2 className="h-8 w-8 text-accent" /> Account Center
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="flex flex-col items-center space-y-4">
             <Avatar className="h-24 w-24">
               <AvatarImage src={profile?.avatar_url || undefined} alt="User Avatar" />
-              <AvatarFallback className="text-4xl font-semibold">{firstName.charAt(0)}{lastName.charAt(0)}</AvatarFallback>
+              <AvatarFallback className="text-4xl font-semibold bg-secondary text-secondary-foreground">{firstName.charAt(0)}{lastName.charAt(0)}</AvatarFallback>
             </Avatar>
             <h2 className="text-2xl font-semibold">{firstName} {lastName}</h2>
             <p className="text-muted-foreground flex items-center gap-2">
@@ -139,7 +139,7 @@ const AccountCenter = () => {
             </p>
           </div>
 
-          <Separator />
+          <Separator className="bg-border" />
 
           <div className="space-y-4">
             <h3 className="text-xl font-semibold flex items-center gap-2">
@@ -147,17 +147,17 @@ const AccountCenter = () => {
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <Label>Status</Label>
+                <Label className="text-muted-foreground">Status</Label>
                 <p className="text-lg font-medium capitalize">{subscriptionStatus}</p>
               </div>
               <div>
-                <Label>Plan</Label>
+                <Label className="text-muted-foreground">Plan</Label>
                 <p className="text-lg font-medium capitalize">{subscriptionPlanId.replace(/_/g, ' ')}</p>
               </div>
             </div>
             {subscriptionPlanId === 'free' && (
               <p className="text-muted-foreground">
-                You are currently on the Free Tier. <Link to="/upgrade" className="text-blue-500 hover:underline">Upgrade</Link> for more features!
+                You are currently on the Free Tier. <Link to="/upgrade" className="text-accent hover:underline">Upgrade</Link> for more features!
               </p>
             )}
             {subscriptionPlanId !== 'free' && subscriptionStatus === 'active' && (
@@ -167,37 +167,39 @@ const AccountCenter = () => {
             )}
           </div>
 
-          <Separator />
+          <Separator className="bg-border" />
 
           <form onSubmit={handleProfileUpdate} className="space-y-4">
             <h3 className="text-xl font-semibold">Update Profile</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="firstName">First Name</Label>
+                <Label htmlFor="firstName" className="text-muted-foreground">First Name</Label>
                 <Input
                   id="firstName"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
                   disabled={updateProfileMutation.isPending}
+                  className="bg-input text-foreground border-border"
                 />
               </div>
               <div>
-                <Label htmlFor="lastName">Last Name</Label>
+                <Label htmlFor="lastName" className="text-muted-foreground">Last Name</Label>
                 <Input
                   id="lastName"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
                   disabled={updateProfileMutation.isPending}
+                  className="bg-input text-foreground border-border"
                 />
               </div>
             </div>
-            <Button type="submit" className="w-full" disabled={updateProfileMutation.isPending}>
+            <Button type="submit" className="w-full bg-accent text-accent-foreground hover:bg-accent/90" disabled={updateProfileMutation.isPending}>
               {updateProfileMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Save Profile
             </Button>
           </form>
 
-          <Separator />
+          <Separator className="bg-border" />
 
           <Button variant="destructive" onClick={handleSignOut} className="w-full flex items-center gap-2">
             <LogOut className="h-4 w-4" /> Sign Out

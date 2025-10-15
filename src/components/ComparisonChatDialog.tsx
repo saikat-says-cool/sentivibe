@@ -9,18 +9,9 @@ import {
 import ChatInterface from './ChatInterface';
 import { useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
+// Removed Select, Label, Input, Switch imports as they are now handled in ChatInterface
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { MessageSquare } from 'lucide-react';
-// Removed Switch import as it's now handled in ChatInterface
 
 interface CustomComparativeQuestion {
   question: string;
@@ -170,40 +161,6 @@ const ComparisonChatDialog: React.FC<ComparisonChatDialogProps> = ({
             Ask questions about the video comparison, individual video analyses, or related topics.
           </DialogDescription>
         </DialogHeader>
-        <div className="flex flex-col sm:flex-row sm:space-x-4 space-y-2 sm:space-y-0 mt-2 sm:mt-0 mb-4">
-          <div className="flex items-center space-x-2">
-            <Label htmlFor="persona-select" className="text-sm">Persona:</Label>
-            <Select
-              value={selectedPersona}
-              onValueChange={setSelectedPersona}
-              disabled={isChatDisabled}
-            >
-              <SelectTrigger id="persona-select" className="w-[140px]">
-                <SelectValue placeholder="Select persona" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="friendly">Friendly Assistant</SelectItem>
-                <SelectItem value="therapist">Therapist</SelectItem>
-                <SelectItem value="storyteller">Storyteller</SelectItem>
-                <SelectItem value="motivation">Motivational Coach</SelectItem>
-                <SelectItem value="argumentative">Argumentative</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Label htmlFor="desired-word-count" className="text-sm">Response Word Count:</Label>
-            <Input
-              id="desired-word-count"
-              type="number"
-              min="50"
-              step="50"
-              value={desiredWordCount}
-              onChange={(e) => setDesiredWordCount(Number(e.target.value))}
-              className="w-[100px]"
-              disabled={isChatDisabled}
-            />
-          </div>
-        </div>
         {error && (
           <Alert variant="destructive" className="mb-4">
             <AlertTitle>Chat Error</AlertTitle>
@@ -222,6 +179,10 @@ const ComparisonChatDialog: React.FC<ComparisonChatDialogProps> = ({
             onToggleDeepThink={setDeepThinkMode}
             deepSearchEnabled={deepSearchMode}
             onToggleDeepSearch={setDeepSearchMode}
+            desiredWordCount={desiredWordCount}
+            onWordCountChange={setDesiredWordCount}
+            selectedPersona={selectedPersona}
+            onPersonaChange={setSelectedPersona}
           />
         </div>
       </DialogContent>

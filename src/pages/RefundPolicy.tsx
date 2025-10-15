@@ -64,8 +64,8 @@ If you have any questions about our Refund Policy, please contact us at inquirie
   `;
 
   return (
-    <div className="container mx-auto p-4 max-w-3xl">
-      <Card className="mb-6">
+    <div className="container mx-auto p-4 max-w-3xl bg-background text-foreground">
+      <Card className="mb-6 bg-card border-border">
         <CardHeader>
           <CardTitle className="text-3xl font-bold text-center">Refund Policy</CardTitle>
         </CardHeader>

@@ -16,7 +16,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import html2pdf from 'html2pdf.js';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { useLoadingMessages } from '@/hooks/use-loading-messages'; // Import the new hook
+import { useLoadingMessages } from '@/hooks/use-loading-messages';
 
 // New interfaces for multi-comparison
 interface MultiComparisonVideo {
@@ -50,20 +50,18 @@ interface MultiComparisonResult {
   videos: MultiComparisonVideo[];
 }
 
-// Define simplified tier limits (only daily comparisons remain)
 const MULTICOMP_UNAUTHENTICATED_LIMITS = {
-  dailyComparisons: 1, // 1 comparison per day for unauthenticated users
+  dailyComparisons: 1,
 };
 
 const MULTICOMP_AUTHENTICATED_FREE_TIER_LIMITS = {
-  dailyComparisons: 1, // 1 comparison per day for authenticated free users
+  dailyComparisons: 1,
 };
 
 const MULTICOMP_PAID_TIER_LIMITS = {
-  dailyComparisons: 20, // 20 comparisons per day for paid users (effectively unlimited)
+  dailyComparisons: 20,
 };
 
-// Function to fetch anonymous usage
 const fetchAnonUsage = async () => {
   const { data, error } = await supabase.functions.invoke('get-anon-usage');
   if (error) {
@@ -254,7 +252,6 @@ const CreateMultiComparison = () => {
       setError("Please provide at least two video links for multi-comparison.");
       return;
     }
-    // Add the 3-video limit check here
     if (validVideoLinks.length > 3) {
       setError("For reliable performance, multi-video comparisons are limited to a maximum of 3 videos simultaneously.");
       return;
@@ -283,7 +280,7 @@ const CreateMultiComparison = () => {
       };
 
       const tempDiv = document.createElement('div');
-      tempDiv.className = 'pdf-light-mode'; // Apply the new class
+      tempDiv.className = 'pdf-light-mode';
       tempDiv.style.position = 'relative';
       tempDiv.style.width = element.offsetWidth + 'px';
       tempDiv.style.height = element.offsetHeight + 'px';
@@ -347,7 +344,7 @@ const CreateMultiComparison = () => {
 
   return (
     <div className="container mx-auto p-4 max-w-3xl">
-      <Card className="mb-6">
+      <Card className="mb-6 bg-card text-foreground border-border">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <GitCompare className="h-6 w-6 text-accent" /> Compare Videos: See the Full Picture
@@ -359,7 +356,7 @@ const CreateMultiComparison = () => {
             {videoLinks.map((link, index) => (
               <div key={index} className="flex flex-col sm:flex-row gap-2 items-end">
                 <div className="flex-1">
-                  <Label htmlFor={`videoLink-${index}`}>Video Link {index + 1}</Label>
+                  <Label htmlFor={`videoLink-${index}`} className="text-muted-foreground">Video Link {index + 1}</Label>
                   <Input
                     id={`videoLink-${index}`}
                     type="url"
@@ -367,7 +364,7 @@ const CreateMultiComparison = () => {
                     value={link}
                     onChange={(e) => handleVideoLinkChange(index, e.target.value)}
                     required
-                    className="mt-1"
+                    className="mt-1 bg-input text-foreground border-border"
                     disabled={createMultiComparisonMutation.isPending || isComparisonLimitReached}
                   />
                 </div>
@@ -378,9 +375,9 @@ const CreateMultiComparison = () => {
                     size="icon"
                     onClick={() => handleRemoveVideoLink(index)}
                     disabled={createMultiComparisonMutation.isPending || isComparisonLimitReached}
-                    className="self-end sm:self-auto"
+                    className="self-end sm:self-auto text-destructive hover:bg-destructive/10"
                   >
-                    <XCircle className="h-5 w-5 text-red-500" />
+                    <XCircle className="h-5 w-5" />
                   </Button>
                 )}
               </div>
@@ -389,43 +386,43 @@ const CreateMultiComparison = () => {
               type="button"
               variant="outline"
               onClick={handleAddVideoLink}
-              disabled={createMultiComparisonMutation.isPending || isComparisonLimitReached || videoLinks.length >= 3} // Disable add button after 3 videos
-              className="w-full flex items-center gap-2"
+              disabled={createMultiComparisonMutation.isPending || isComparisonLimitReached || videoLinks.length >= 3}
+              className="w-full flex items-center gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/90 border-border"
             >
               <PlusCircle className="h-4 w-4" /> Add Another Video
             </Button>
             <p className="text-sm text-muted-foreground mt-2">
               SentiVibe will analyze the available comments for each video. Analysis may take up to 30 seconds per video.
               <br />
-              <span className="font-semibold text-red-500">Note:</span> For reliable and stable performance, multi-video comparisons are currently limited to a maximum of 3 videos simultaneously.
+              <span className="font-semibold text-destructive">Note:</span> For reliable and stable performance, multi-video comparisons are currently limited to a maximum of 3 videos simultaneously.
             </p>
             <p className="text-sm text-muted-foreground mt-1">
               Comparisons today: {comparisonsToday}/{currentLimits.dailyComparisons}
               {!isPaidTier && (
-                  <span className="ml-2 text-blue-500">
+                  <span className="ml-2 text-accent">
                     <Link to="/upgrade" className="underline">Upgrade to a paid tier</Link> for more comparisons.
                   </span>
               )}
             </p>
 
-            <Separator />
+            <Separator className="bg-border" />
 
             <h3 className="text-lg font-semibold mb-2">Ask Unlimited Questions. We don't meter your curiosity.</h3>
             {customComparativeQuestions.map((qa, index) => (
               <div key={index} className="flex flex-col sm:flex-row gap-2 items-end">
                 <div className="flex-1">
-                  <Label htmlFor={`comp-question-${index}`}>Question {index + 1}</Label>
+                  <Label htmlFor={`comp-question-${index}`} className="text-muted-foreground">Question {index + 1}</Label>
                   <Input
                     id={`comp-question-${index}`}
                     placeholder="e.g., What are the common themes across these videos?"
                     value={qa.question}
                     onChange={(e) => handleQuestionChange(index, 'question', e.target.value)}
-                    className="mt-1"
+                    className="mt-1 bg-input text-foreground border-border"
                     disabled={areCustomQuestionInputsDisabled}
                   />
                 </div>
                 <div className="w-24">
-                  <Label htmlFor={`comp-wordCount-${index}`}>Word Count</Label>
+                  <Label htmlFor={`comp-wordCount-${index}`} className="text-muted-foreground">Word Count</Label>
                   <Input
                     id={`comp-word-count-${index}`}
                     type="number"
@@ -433,7 +430,7 @@ const CreateMultiComparison = () => {
                     step="50"
                     value={qa.wordCount}
                     onChange={(e) => handleQuestionChange(index, 'wordCount', e.target.value)}
-                    className="mt-1"
+                    className="mt-1 bg-input text-foreground border-border"
                     disabled={areCustomQuestionInputsDisabled}
                   />
                 </div>
@@ -444,9 +441,9 @@ const CreateMultiComparison = () => {
                     size="icon"
                     onClick={() => handleRemoveQuestion(index)}
                     disabled={areCustomQuestionInputsDisabled}
-                    className="self-end sm:self-auto"
+                    className="self-end sm:self-auto text-destructive hover:bg-destructive/10"
                   >
-                    <XCircle className="h-5 w-5 text-red-500" />
+                    <XCircle className="h-5 w-5" />
                   </Button>
                 )}
               </div>
@@ -456,20 +453,20 @@ const CreateMultiComparison = () => {
               variant="outline"
               onClick={handleAddQuestion}
               disabled={areCustomQuestionInputsDisabled}
-              className="w-full flex items-center gap-2"
+              className="w-full flex items-center gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/90 border-border"
             >
               <PlusCircle className="h-4 w-4" /> Add Another Comparative Question
             </Button>
 
-            <Button type="submit" className="w-full" disabled={createMultiComparisonMutation.isPending || isComparisonLimitReached}>
+            <Button type="submit" className="w-full bg-accent text-accent-foreground hover:bg-accent/90" disabled={createMultiComparisonMutation.isPending || isComparisonLimitReached}>
               {createMultiComparisonMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Create Multi-Video Comparison
             </Button>
             {isComparisonLimitReached && (
-              <Alert variant="destructive" className="mt-4">
+              <Alert variant="destructive" className="mt-4 bg-destructive/10 text-destructive border-destructive">
                 <AlertTitle>Daily Limit Reached</AlertTitle>
                 <AlertDescription>
-                  You have reached your daily limit of {currentLimits.dailyComparisons} comparisons. Please try again tomorrow or <Link to="/upgrade" className="underline">upgrade to a paid tier</Link> for more comparisons.
+                  You have reached your daily limit of {currentLimits.dailyComparisons} comparisons. Please try again tomorrow or <Link to="/upgrade" className="underline text-accent">upgrade to a paid tier</Link> for more comparisons.
                 </AlertDescription>
               </Alert>
             )}
@@ -478,20 +475,20 @@ const CreateMultiComparison = () => {
       </Card>
 
       {createMultiComparisonMutation.isPending && (
-        <Card className="p-6 space-y-4">
-          <Skeleton className="h-8 w-3/4" />
-          <Skeleton className="h-4 w-full" />
-          <Skeleton className="h-4 w-full" />
-          <Skeleton className="h-4 w-1/2" />
+        <Card className="p-6 space-y-4 bg-card text-foreground border-border">
+          <Skeleton className="h-8 w-3/4 bg-muted" />
+          <Skeleton className="h-4 w-full bg-muted" />
+          <Skeleton className="h-4 w-full bg-muted" />
+          <Skeleton className="h-4 w-1/2 bg-muted" />
           <div className="flex items-center space-x-2 mt-4">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            <span className="text-sm text-gray-500">{loadingMessage}</span>
+            <Loader2 className="h-4 w-4 animate-spin text-accent" />
+            <span className="text-sm text-muted-foreground">{loadingMessage}</span>
           </div>
         </Card>
       )}
 
       {error && (
-        <Alert variant="destructive" className="mb-6">
+        <Alert variant="destructive" className="mb-6 bg-destructive/10 text-destructive border-destructive">
           <AlertTitle>Error</AlertTitle>
           <AlertDescription>{error}</AlertDescription>
         </Alert>
@@ -500,20 +497,20 @@ const CreateMultiComparison = () => {
       {multiComparisonResult && (
         <>
           <div className="flex flex-wrap justify-end gap-2 mb-4">
-            <Button onClick={handleRefreshComparison} className="flex items-center gap-2" disabled={createMultiComparisonMutation.isPending}>
+            <Button onClick={handleRefreshComparison} className="flex items-center gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/90 border-border" disabled={createMultiComparisonMutation.isPending}>
               {createMultiComparisonMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />} Refresh Comparison
             </Button>
-            <Button onClick={() => setIsChatDialogOpen(true)} className="flex items-center gap-2">
+            <Button onClick={() => setIsChatDialogOpen(true)} className="flex items-center gap-2 bg-accent text-accent-foreground hover:bg-accent/90">
               <MessageSquare className="h-4 w-4" /> Chat with AI
             </Button>
-            <Button onClick={handleDownloadPdf} className="flex items-center gap-2">
+            <Button onClick={handleDownloadPdf} className="flex items-center gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/90 border-border">
               <Download className="h-4 w-4" /> Download Report PDF
             </Button>
-            <Button asChild>
+            <Button asChild className="bg-secondary text-secondary-foreground hover:bg-secondary/90 border-border">
               <Link to={`/multi-comparison/${multiComparisonResult.slug}`}>View Full Multi-Comparison Blog Post</Link>
             </Button>
           </div>
-          <Card ref={comparisonReportRef} className="mb-6">
+          <Card ref={comparisonReportRef} className="mb-6 bg-card text-foreground border-border">
             <CardHeader>
               <div className="flex flex-wrap justify-center items-center gap-4 mb-2">
                 {multiComparisonResult.videos.map((video, index) => (
@@ -532,13 +529,13 @@ const CreateMultiComparison = () => {
               <p className="text-xs text-center text-muted-foreground mb-4">
                 Click on any video thumbnail above to view its individual analysis.
               </p>
-              <CardTitle className="text-2xl text-center">{multiComparisonResult.title}</CardTitle>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 text-center">
+              <CardTitle className="text-3xl font-bold mb-2 text-center">{multiComparisonResult.title}</CardTitle>
+              <p className="text-sm text-muted-foreground mt-1 text-center">
                 Last Compared: {new Date(multiComparisonResult.last_compared_at).toLocaleDateString()}
               </p>
             </CardHeader>
             <CardContent>
-              <p className="text-md text-gray-700 dark:text-gray-300 mt-4 italic">
+              <p className="text-md text-muted-foreground mt-4 italic">
                 {multiComparisonResult.meta_description}
               </p>
               <div className="mt-4">
@@ -553,9 +550,9 @@ const CreateMultiComparison = () => {
                   <h3 className="text-lg font-semibold mb-2">Comparative Questions & Answers</h3>
                   <div className="space-y-4">
                     {multiComparisonResult.custom_comparative_qa_results.map((qa, index) => (
-                      <div key={index} className="border p-3 rounded-md bg-gray-50 dark:bg-gray-700">
-                        <p className="font-medium text-gray-800 dark:text-gray-200 mb-1">Q{index + 1}: {qa.question}</p>
-                        <div className="prose dark:prose-invert max-w-none text-gray-700 dark:text-gray-300">
+                      <div key={index} className="border border-border p-3 rounded-md bg-secondary">
+                        <p className="font-medium text-foreground mb-1">Q{index + 1}: {qa.question}</p>
+                        <div className="prose dark:prose-invert max-w-none text-muted-foreground">
                           <ReactMarkdown remarkPlugins={[remarkGfm]}>
                             {qa.answer || "No answer generated."}
                           </ReactMarkdown>
@@ -568,22 +565,22 @@ const CreateMultiComparison = () => {
 
               {/* New section for individual video comments in the analysis report */}
               {multiComparisonResult.videos && multiComparisonResult.videos.length > 0 && (
-                <div className="border-t pt-4 mt-4">
+                <div className="border-t border-border pt-4 mt-4">
                   <h3 className="text-lg font-semibold mb-4">Top Comments for Each Video</h3>
                   <div className="space-y-6">
                     {multiComparisonResult.videos.map((video, videoIndex) => (
-                      <div key={videoIndex} className="border p-4 rounded-md bg-gray-50 dark:bg-gray-700">
+                      <div key={videoIndex} className="border border-border p-4 rounded-md bg-secondary">
                         <h4 className="font-semibold text-lg mb-2 flex items-center gap-2">
                           <Youtube className="h-5 w-5 text-red-500" /> {video.title}
                         </h4>
                         {video.raw_comments_for_chat && video.raw_comments_for_chat.length > 0 ? (
-                          <ul className="list-disc list-inside space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                          <ul className="list-disc list-inside space-y-1 text-muted-foreground">
                             {video.raw_comments_for_chat.slice(0, 10).map((comment, commentIndex) => (
                               <li key={commentIndex}>{String(comment)}</li>
                             ))}
                           </ul>
                         ) : (
-                          <p className="text-gray-500 dark:text-gray-400 text-sm">No top comments available for this video.</p>
+                          <p className="text-muted-foreground text-sm">No top comments available for this video.</p>
                         )}
                       </div>
                     ))}

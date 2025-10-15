@@ -40,6 +40,8 @@ const LibraryCopilot: React.FC<LibraryCopilotProps> = ({ blogPosts }) => {
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
   const [deepThinkMode, setDeepThinkMode] = useState<boolean>(false);
   const [deepSearchMode, setDeepSearchMode] = useState<boolean>(false);
+  const [desiredWordCount, setDesiredWordCount] = useState<number>(300);
+  const [selectedPersona, setSelectedPersona] = useState<string>("friendly");
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -57,6 +59,8 @@ const LibraryCopilot: React.FC<LibraryCopilotProps> = ({ blogPosts }) => {
       setError(null); // Clear error when dialog closes
       setDeepThinkMode(false);
       setDeepSearchMode(false);
+      setDesiredWordCount(300);
+      setSelectedPersona("friendly");
     }
   }, [isOpen]);
 
@@ -91,6 +95,8 @@ const LibraryCopilot: React.FC<LibraryCopilotProps> = ({ blogPosts }) => {
           blogPostsData: simplifiedBlogPosts,
           deepThinkMode: deepThinkMode,
           deepSearchMode: deepSearchMode,
+          desiredWordCount: desiredWordCount, // Pass desiredWordCount
+          selectedPersona: selectedPersona, // Pass selectedPersona
         },
       });
 
@@ -174,6 +180,10 @@ const LibraryCopilot: React.FC<LibraryCopilotProps> = ({ blogPosts }) => {
             onToggleDeepThink={setDeepThinkMode}
             deepSearchEnabled={deepSearchMode}
             onToggleDeepSearch={setDeepSearchMode}
+            desiredWordCount={desiredWordCount}
+            onWordCountChange={setDesiredWordCount}
+            selectedPersona={selectedPersona}
+            onPersonaChange={setSelectedPersona}
           />
         </div>
       </DialogContent>

@@ -9,7 +9,7 @@ import CreateMultiComparison from '@/pages/CreateMultiComparison';
 import MultiComparisonLibrary from '@/pages/MultiComparisonLibrary';
 import MultiComparisonDetail from '@/pages/MultiComparisonDetail';
 import AboutUs from '@/pages/AboutUs';
-import HowItWorks from '@/pages/HowItWorks'; // The new index page
+import HowItWorks from '@/pages/HowItWorks';
 import Overview from '@/pages/how-it-works/Overview';
 import AnalyzeVideoGuide from '@/pages/how-it-works/AnalyzeVideoGuide';
 import CompareVideosGuide from '@/pages/how-it-works/CompareVideosGuide';
@@ -30,7 +30,7 @@ import Footer from '@/components/Footer';
 import { useScrollToTop } from '@/hooks/use-scroll-to-top';
 
 function AppContent() {
-  useScrollToTop(); // Call the hook here to ensure scroll to top on route change
+  useScrollToTop();
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -47,8 +47,7 @@ function AppContent() {
           <Route path="/multi-comparison-library" element={<MultiComparisonLibrary />} />
           <Route path="/multi-comparison/:slug" element={<MultiComparisonDetail />} />
           <Route path="/about-us" element={<AboutUs />} />
-          {/* New nested routes for How It Works guide */}
-          <Route path="/how-it-works" element={<HowItWorks />} /> {/* Main guide index */}
+          <Route path="/how-it-works" element={<HowItWorks />} />
           <Route path="/how-it-works/overview" element={<Overview />} />
           <Route path="/how-it-works/analyze-video" element={<AnalyzeVideoGuide />} />
           <Route path="/how-it-works/compare-videos" element={<CompareVideosGuide />} />

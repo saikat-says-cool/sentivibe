@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 
-// Theme is now fixed to 'light'
-type Theme = "light";
+// Theme is now fixed to 'dark'
+type Theme = "dark";
 
 interface ThemeProviderProps {
   children: ReactNode;
@@ -15,7 +15,7 @@ interface ThemeProviderState {
 }
 
 const initialState: ThemeProviderState = {
-  theme: "light",
+  theme: "dark",
   setTheme: () => null,
 };
 
@@ -23,13 +23,13 @@ const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
 
 export function ThemeProvider({
   children,
-  defaultTheme = "light", // Default to 'light'
+  defaultTheme = "dark", // Default to 'dark'
   storageKey = "vite-ui-theme",
   ...props
 }: ThemeProviderProps) {
   const [theme, setThemeState] = useState<Theme>(() => {
-    // Always return 'light' as the theme is fixed
-    return "light";
+    // Always return 'dark' as the theme is fixed
+    return "dark";
   });
 
   useEffect(() => {
@@ -42,9 +42,9 @@ export function ThemeProvider({
       "theme-deep-blue", "theme-forest-green", "theme-purple-haze"
     );
 
-    // Always apply the light class
-    root.classList.add("light");
-    // No custom theme classes needed for a fixed light theme
+    // Always apply the dark class
+    root.classList.add("dark");
+    // No custom theme classes needed for a fixed dark theme
   }, [theme]); // Keep theme in dependency array for consistency, though it's fixed
 
   const setTheme = (theme: Theme) => {

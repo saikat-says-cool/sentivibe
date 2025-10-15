@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import HowItWorksCopilot from '@/components/HowItWorksCopilot'; // Import the new copilot
+import HowItWorksCopilot from '@/components/HowItWorksCopilot';
 
 import productDocumentationContent from '/docs/PRODUCT_DOCUMENTATION.md?raw';
 import technicalDocumentationContent from '/docs/TECHNICAL_DOCUMENTATION.md?raw';
@@ -15,7 +15,7 @@ The "Compare Videos" feature allows you to analyze and contrast audience sentime
 ### Steps:
 1.  **Navigate to "Compare Videos":** Click on the "Compare Videos" link in the header or on the homepage.
 2.  **Enter Video Links:** Paste the full URLs of at least two (and up to three) YouTube videos you wish to compare.
-    *   **Note:** For reliable performance, comparisons are currently limited to a maximum of 3 videos simultaneously.
+    *   **Note:** For reliable performance, comparisons are currently limited to a **maximum of 3 videos simultaneously**.
 3.  **Add Custom Comparative Questions (Optional):** You can add specific questions tailored for comparative insights. These will be answered by the AI and integrated into your comparison report.
 4.  **Initiate Comparison:** Click the "Create Multi-Video Comparison" button.
     *   The system will ensure each individual video's analysis is up-to-date, then perform a comprehensive comparative AI analysis.
@@ -41,9 +41,9 @@ const CompareVideosGuide = () => {
   }, []);
 
   return (
-    <div className="container mx-auto p-4 max-w-5xl flex flex-col md:flex-row gap-6">
+    <div className="container mx-auto p-4 max-w-5xl flex flex-col md:flex-row gap-6 bg-background text-foreground">
       {/* HowItWorksSidebar is rendered by the parent HowItWorks.tsx */}
-      <Card className="flex-1 mb-6">
+      <Card className="flex-1 mb-6 bg-card border-border">
         <CardHeader>
           <CardTitle className="text-3xl font-bold text-center">Compare Multiple Videos</CardTitle>
         </CardHeader>

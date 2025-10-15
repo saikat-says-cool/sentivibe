@@ -1,9 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useEffect } from 'react';
 import HowItWorksSidebar from '@/components/HowItWorksSidebar';
-import HowItWorksCopilot from '@/components/HowItWorksCopilot'; // Import the new copilot
+import HowItWorksCopilot from '@/components/HowItWorksCopilot';
 
-// Embed documentation content directly
 import productDocumentationContent from '/docs/PRODUCT_DOCUMENTATION.md?raw';
 import technicalDocumentationContent from '/docs/TECHNICAL_DOCUMENTATION.md?raw';
 
@@ -13,9 +12,9 @@ const HowItWorks = () => {
   }, []);
 
   return (
-    <div className="container mx-auto p-4 max-w-5xl flex flex-col md:flex-row gap-6">
+    <div className="container mx-auto p-4 max-w-5xl flex flex-col md:flex-row gap-6 bg-background text-foreground">
       <HowItWorksSidebar />
-      <Card className="flex-1 mb-6">
+      <Card className="flex-1 mb-6 bg-card border-border">
         <CardHeader>
           <CardTitle className="text-4xl font-bold text-center mb-4">SentiVibe Hands-on Guide</CardTitle>
           <p className="text-lg text-muted-foreground text-center">

@@ -1,11 +1,18 @@
 import React, { useRef, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Loader2, Search, Sparkles, Shuffle, Globe, Cpu, Paperclip, Mic, Activity } from 'lucide-react';
+import { Loader2, Search, Sparkles, Activity } from 'lucide-react'; // Only keeping necessary icons
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm'; // For GitHub Flavored Markdown
 import { useLoadingMessages } from '@/hooks/use-loading-messages'; // Import the new hook
-// Removed Switch and Label imports as they are no longer used directly in this component
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 
 interface Message {
   id: string;
@@ -22,9 +29,26 @@ interface ChatInterfaceProps {
   onToggleDeepThink: (checked: boolean) => void;
   deepSearchEnabled: boolean;
   onToggleDeepSearch: (checked: boolean) => void;
+  desiredWordCount: number; // Added desiredWordCount
+  onWordCountChange: (count: number) => void; // Added onWordCountChange
+  selectedPersona: string; // Added selectedPersona
+  onPersonaChange: (persona: string) => void; // Added onPersonaChange
 }
 
-const ChatInterface: React.FC<ChatInterfaceProps> = ({ messages, onSendMessage, isLoading, disabled = false, deepThinkEnabled, onToggleDeepThink, deepSearchEnabled, onToggleDeepSearch }) => {
+const ChatInterface: React.FC<ChatInterfaceProps> = ({ 
+  messages, 
+  onSendMessage, 
+  isLoading, 
+  disabled = false, 
+  deepThinkEnabled, 
+  onToggleDeepThink, 
+  deepSearchEnabled, 
+  onToggleDeepSearch,
+  desiredWordCount,
+  onWordCountChange,
+  selectedPersona,
+  onPersonaChange,
+}) => {
   const [inputMessage, setInputMessage] = React.useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -77,8 +101,40 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ messages, onSendMessage, 
         )}
         <div ref={messagesEndRef} />
       </div>
-      <form onSubmit={handleSend} className="flex items-center p-2 border-t bg-gray-900 rounded-b-lg"> {/* Darker background for input area */}
-        <div className="flex items-center space-x-1 mr-2">
+      <div className="flex flex-col p-2 border-t bg-gray-900 rounded-b-lg">
+        <div className="flex flex-wrap items-center justify-center gap-2 mb-2">
+          <div className="flex items-center space-x-2">
+            <Label htmlFor="persona-select" className="text-sm text-muted-foreground">Persona:</Label>
+            <Select
+              value={selectedPersona}
+              onValueChange={onPersonaChange}
+              disabled={isLoading || disabled}
+            >
+              <SelectTrigger id="persona-select" className="w-[140px] bg-gray-800 text-white border-gray-700">
+                <SelectValue placeholder="Select persona" />
+              </SelectTrigger>
+              <SelectContent className="bg-gray-800 text-white border-gray-700">
+                <SelectItem value="friendly">Friendly Assistant</SelectItem>
+                <SelectItem value="therapist">Therapist</SelectItem>
+                <SelectItem value="storyteller">Storyteller</SelectItem>
+                <SelectItem value="motivation">Motivational Coach</SelectItem>
+                <SelectItem value="argumentative">Argumentative</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Label htmlFor="desired-word-count" className="text-sm text-muted-foreground">Word Count:</Label>
+            <Input
+              id="desired-word-count"
+              type="number"
+              min="50"
+              step="50"
+              value={desiredWordCount}
+              onChange={(e) => onWordCountChange(Number(e.target.value))}
+              className="w-[100px] bg-gray-800 text-white border-gray-700"
+              disabled={isLoading || disabled}
+            />
+          </div>
           <Button
             type="button"
             variant="ghost"
@@ -101,70 +157,16 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ messages, onSendMessage, 
             <Sparkles className="h-5 w-5" />
             <span className="sr-only">Toggle DeepThink</span>
           </Button>
-          {/* Placeholder for the third icon (shuffle/refresh) */}
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            disabled={isLoading || disabled}
-            className="h-10 w-10 rounded-lg text-gray-400 hover:bg-gray-700"
-          >
-            <Shuffle className="h-5 w-5" />
-            <span className="sr-only">Shuffle/Refresh (Placeholder)</span>
-          </Button>
         </div>
-        <div className="flex-1">
+        <form onSubmit={handleSend} className="flex items-center w-full">
           <Input
             type="text"
             placeholder="Type your message..."
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
-            className="w-full bg-gray-800 text-white border-gray-700 focus:border-teal-500 focus:ring-teal-500 rounded-lg h-10 px-3"
+            className="flex-1 mr-2 bg-gray-800 text-white border-gray-700 focus:border-teal-500 focus:ring-teal-500 rounded-lg h-10 px-3"
             disabled={isLoading || disabled}
           />
-        </div>
-        <div className="flex items-center space-x-1 ml-2">
-          {/* Placeholder icons on the right */}
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            disabled={isLoading || disabled}
-            className="h-10 w-10 rounded-lg text-gray-400 hover:bg-gray-700"
-          >
-            <Globe className="h-5 w-5" />
-            <span className="sr-only">Globe (Placeholder)</span>
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            disabled={isLoading || disabled}
-            className="h-10 w-10 rounded-lg text-gray-400 hover:bg-gray-700"
-          >
-            <Cpu className="h-5 w-5" />
-            <span className="sr-only">CPU (Placeholder)</span>
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            disabled={isLoading || disabled}
-            className="h-10 w-10 rounded-lg text-gray-400 hover:bg-gray-700"
-          >
-            <Paperclip className="h-5 w-5" />
-            <span className="sr-only">Paperclip (Placeholder)</span>
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            disabled={isLoading || disabled}
-            className="h-10 w-10 rounded-lg text-gray-400 hover:bg-gray-700"
-          >
-            <Mic className="h-5 w-5" />
-            <span className="sr-only">Microphone (Placeholder)</span>
-          </Button>
           <Button
             type="submit"
             size="icon"
@@ -174,8 +176,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ messages, onSendMessage, 
             {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Activity className="h-5 w-5" />}
             <span className="sr-only">Send Message</span>
           </Button>
-        </div>
-      </form>
+        </form>
+      </div>
     </div>
   );
 };

@@ -4,8 +4,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/integrations/supabase/auth';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"; // Import Alert components
-import { Terminal } from "lucide-react"; // Import an icon for the alert
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Terminal } from "lucide-react";
 
 const Login = () => {
   const { session, isLoading } = useAuth();
@@ -34,7 +34,7 @@ const Login = () => {
         </h2>
 
         {/* Temporary Alert for Google Auth */}
-        <Alert variant="default" className="mb-4">
+        <Alert variant="default" className="mb-4 bg-muted text-muted-foreground border-border">
           <Terminal className="h-4 w-4" />
           <AlertTitle>Google Authentication Temporarily Unavailable</AlertTitle>
           <AlertDescription>
@@ -44,16 +44,14 @@ const Login = () => {
 
         <Auth
           supabaseClient={supabase}
-          // Temporarily removed Google provider
           providers={[]}
           appearance={{
             theme: ThemeSupa,
             variables: {
               default: {
                 colors: {
-                  brand: 'hsl(var(--accent))', // Using accent color for brand
-                  brandAccent: 'hsl(var(--accent-foreground))', // Using accent-foreground
-                  // Adjust other colors to match SentiVibe light theme
+                  brand: 'hsl(var(--accent))',
+                  brandAccent: 'hsl(var(--accent-foreground))',
                   defaultButtonBackground: 'hsl(var(--secondary))',
                   defaultButtonBackgroundHover: 'hsl(var(--secondary-foreground))',
                   defaultButtonBorder: 'hsl(var(--border))',
@@ -68,7 +66,7 @@ const Login = () => {
               },
             },
           }}
-          theme="light" // Set theme to light
+          theme="dark" // Set theme to dark
           redirectTo={window.location.origin + '/'}
           magicLink={true}
         />

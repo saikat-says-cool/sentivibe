@@ -8,8 +8,8 @@ import { Search, Youtube } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
 import LibraryCopilot from '@/components/LibraryCopilot';
-import PaginationControls from '@/components/PaginationControls'; // Import PaginationControls
-import { useEffect } from 'react'; // Import useEffect
+import PaginationControls from '@/components/PaginationControls';
+import { useEffect } from 'react';
 import {
   Select,
   SelectContent,
@@ -52,11 +52,11 @@ interface BlogPost {
   updated_at: string;
   original_video_link: string;
   ai_analysis_json: StoredAiAnalysisContent | null;
-  custom_qa_results?: CustomQuestion[]; // New field
-  last_reanalyzed_at?: string; // New field
+  custom_qa_results?: CustomQuestion[];
+  last_reanalyzed_at?: string;
 }
 
-const PAGE_SIZE = 9; // Number of items per page
+const PAGE_SIZE = 9;
 
 const CATEGORIES = [
   "All",
@@ -114,8 +114,8 @@ const VideoAnalysisLibrary = () => {
   const [currentPage, setCurrentPage] = useState(1);
 
   const { data, isLoading, error } = useQuery<{ data: BlogPost[], totalCount: number }, Error>({
-    queryKey: ['blogPosts', currentPage, searchTerm, selectedCategory], // Add selectedCategory to queryKey
-    queryFn: () => fetchBlogPosts(currentPage, PAGE_SIZE, searchTerm, selectedCategory), // Pass selectedCategory
+    queryKey: ['blogPosts', currentPage, searchTerm, selectedCategory],
+    queryFn: () => fetchBlogPosts(currentPage, PAGE_SIZE, searchTerm, selectedCategory),
     refetchOnWindowFocus: false,
   });
 
@@ -129,13 +129,13 @@ const VideoAnalysisLibrary = () => {
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
-    setCurrentPage(1); // Reset to first page on new search
+    setCurrentPage(1);
   };
 
   const handleCategoryChange = (value: string) => {
     setSelectedCategory(value);
-    setSearchTerm(''); // Clear search term when category changes
-    setCurrentPage(1); // Reset to first page on new category
+    setSearchTerm('');
+    setCurrentPage(1);
   };
 
   // Set SEO-optimized browser tab title
@@ -146,30 +146,31 @@ const VideoAnalysisLibrary = () => {
   if (isLoading) {
     return (
       <div className="container mx-auto p-4 max-w-4xl">
-        <h1 className="text-3xl font-bold mb-6">Analysis Library</h1>
+        <h1 className="text-3xl font-bold mb-6 text-foreground">Analysis Library</h1>
         <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-2 mb-6">
-          <Skeleton className="flex-1 h-10" />
-          <Skeleton className="h-10 w-10 sm:w-auto px-4" />
+          <Skeleton className="flex-1 h-10 bg-muted" />
+          <Skeleton className="h-10 w-[180px] bg-muted" />
+          <Skeleton className="h-10 w-10 sm:w-auto px-4 bg-muted" />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[...Array(PAGE_SIZE)].map((_, i) => (
-            <Card key={i}>
+            <Card key={i} className="bg-card">
               <CardContent className="p-4">
-                <Skeleton className="w-full h-40 mb-4" />
-                <Skeleton className="h-6 w-3/4 mb-2" />
-                <Skeleton className="h-4 w-1/2" />
+                <Skeleton className="w-full h-40 mb-4 bg-muted" />
+                <Skeleton className="h-6 w-3/4 mb-2 bg-muted" />
+                <Skeleton className="h-4 w-1/2 bg-muted" />
               </CardContent>
             </Card>
           ))}
         </div>
-        <Skeleton className="h-10 w-full mt-6" />
+        <Skeleton className="h-10 w-full mt-6 bg-muted" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="container mx-auto p-4 max-w-4xl text-red-500">
+      <div className="container mx-auto p-4 max-w-4xl text-destructive">
         Error loading analysis library: {error.message}
       </div>
     );
@@ -177,14 +178,14 @@ const VideoAnalysisLibrary = () => {
 
   return (
     <div className="container mx-auto p-4 max-w-4xl">
-      <h1 className="text-3xl font-bold mb-6">Analysis Library</h1>
+      <h1 className="text-3xl font-bold mb-6 text-foreground">Analysis Library</h1>
       <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-2 mb-6">
         <Input
           type="text"
           placeholder="Search by title, creator, or keywords (across all analyses)..."
           value={searchTerm}
-          onChange={handleSearchChange} // Use new handler
-          className="flex-1"
+          onChange={handleSearchChange}
+          className="flex-1 bg-input text-foreground border-border"
         />
         <div className="flex items-center space-x-2">
           <Label htmlFor="category-select" className="sr-only">Category</Label>
@@ -192,10 +193,10 @@ const VideoAnalysisLibrary = () => {
             value={selectedCategory}
             onValueChange={handleCategoryChange}
           >
-            <SelectTrigger id="category-select" className="w-[180px]">
+            <SelectTrigger id="category-select" className="w-[180px] bg-input text-foreground border-border">
               <SelectValue placeholder="Select category" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-card text-foreground border-border">
               {CATEGORIES.map((category) => (
                 <SelectItem key={category} value={category}>
                   {category}
@@ -213,13 +214,13 @@ const VideoAnalysisLibrary = () => {
       </div>
 
       {blogPosts.length === 0 && (
-        <p className="text-center text-gray-500 dark:text-gray-400">No analysis found matching your criteria.</p>
+        <p className="text-center text-muted-foreground">No analysis found matching your criteria.</p>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {blogPosts.map((post) => (
           <Link to={`/blog/${post.slug}`} key={post.id}>
-            <Card className="h-full flex flex-col hover:shadow-lg transition-shadow duration-200">
+            <Card className="h-full flex flex-col hover:shadow-lg transition-shadow duration-200 bg-card text-foreground border-border">
               <CardHeader className="p-0">
                 {post.thumbnail_url ? (
                   <img
@@ -228,17 +229,17 @@ const VideoAnalysisLibrary = () => {
                     className="w-full h-40 object-cover rounded-t-lg"
                   />
                 ) : (
-                  <div className="w-full h-40 bg-gray-200 dark:bg-gray-700 flex items-center justify-center rounded-t-lg">
-                    <Youtube className="h-12 w-12 text-gray-400 dark:text-gray-500" />
+                  <div className="w-full h-40 bg-muted flex items-center justify-center rounded-t-lg">
+                    <Youtube className="h-12 w-12 text-muted-foreground" />
                   </div>
                 )}
               </CardHeader>
               <CardContent className="p-4 flex-grow">
                 <CardTitle className="text-lg font-semibold mb-2 line-clamp-2">{post.title}</CardTitle>
                 {post.creator_name && (
-                  <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-1">By: {post.creator_name}</p>
+                  <p className="text-sm text-muted-foreground line-clamp-1">By: {post.creator_name}</p>
                 )}
-                <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
+                <p className="text-xs text-muted-foreground mt-2">
                   Published: {new Date(post.published_at).toLocaleDateString()}
                 </p>
               </CardContent>

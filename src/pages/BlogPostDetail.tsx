@@ -9,10 +9,10 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import VideoChatDialog from '@/components/VideoChatDialog'; // Import VideoChatDialog
-import html2pdf from 'html2pdf.js'; // Import html2pdf
-import { useAuth } from '@/integrations/supabase/auth'; // Import useAuth
-import UpgradeCTA from '@/components/UpgradeCTA'; // Import the new CTA component
+import VideoChatDialog from '@/components/VideoChatDialog';
+import html2pdf from 'html2pdf.js';
+import { useAuth } from '@/integrations/supabase/auth';
+import UpgradeCTA from '@/components/UpgradeCTA';
 
 interface AiAnalysisResult {
   overall_sentiment: string;
@@ -24,7 +24,7 @@ interface AiAnalysisResult {
 interface CustomQuestion {
   question: string;
   wordCount: number;
-  answer?: string; // AI-generated answer
+  answer?: string;
 }
 
 interface StoredAiAnalysisContent extends AiAnalysisResult {
@@ -47,8 +47,8 @@ interface BlogPost {
   created_at: string;
   updated_at: string;
   ai_analysis_json: StoredAiAnalysisContent | null;
-  custom_qa_results?: CustomQuestion[]; // New field
-  last_reanalyzed_at?: string; // New field
+  custom_qa_results?: CustomQuestion[];
+  last_reanalyzed_at?: string;
 }
 
 const fetchBlogPostBySlug = async (slug: string): Promise<BlogPost | null> => {
@@ -70,9 +70,9 @@ const fetchBlogPostBySlug = async (slug: string): Promise<BlogPost | null> => {
 const BlogPostDetail = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
-  const [isChatDialogOpen, setIsChatDialogOpen] = useState(false); // State for chat dialog
-  const analysisReportRef = useRef<HTMLDivElement>(null); // Ref for PDF download
-  const { subscriptionStatus, subscriptionPlanId } = useAuth(); // Get subscription info
+  const [isChatDialogOpen, setIsChatDialogOpen] = useState(false);
+  const analysisReportRef = useRef<HTMLDivElement>(null);
+  const { subscriptionStatus, subscriptionPlanId } = useAuth();
   const isPaidTier = subscriptionStatus === 'active' && subscriptionPlanId !== 'free';
 
   console.log("Current URL slug from useParams:", slug);
@@ -87,9 +87,8 @@ const BlogPostDetail = () => {
 
   useEffect(() => {
     const head = document.head;
-    const domain = "https://sentivibe.online"; // Use the new domain
+    const domain = "https://sentivibe.online";
 
-    // Function to create or update a meta tag
     const updateMetaTag = (name: string, content: string, property?: string) => {
       let tag = document.querySelector(`meta[${property ? `property="${property}"` : `name="${name}"`}]`);
       if (!tag) {
@@ -101,20 +100,14 @@ const BlogPostDetail = () => {
       tag.setAttribute('content', content);
     };
 
-    // Function to remove a meta tag
     const removeMetaTag = (name: string, property?: string) => {
       const tag = document.querySelector(`meta[${property ? `property="${property}"` : `name="${name}"`}]`);
       if (tag) tag.remove();
     };
 
     if (blogPost) {
-      // Update document title
       document.title = blogPost.title;
-
-      // Update meta description
       updateMetaTag('description', blogPost.meta_description);
-
-      // Add Open Graph (OG) tags for social media
       updateMetaTag('og:title', blogPost.title, 'og:title');
       updateMetaTag('og:description', blogPost.meta_description, 'og:description');
       updateMetaTag('og:image', blogPost.thumbnail_url, 'og:image');
@@ -122,7 +115,6 @@ const BlogPostDetail = () => {
       updateMetaTag('og:type', 'article', 'og:type');
       updateMetaTag('og:site_name', 'SentiVibe', 'og:site_name');
 
-      // Add JSON-LD Structured Data for BlogPosting
       const schemaData = {
         "@context": "https://schema.org",
         "@graph": [
@@ -175,11 +167,9 @@ const BlogPostDetail = () => {
       scriptTag.textContent = JSON.stringify(schemaData);
 
     } else {
-      // Reset to default if no blog post is loaded
-      document.title = "SentiVibe - Video Analysis Library"; // Consistent fallback title
+      document.title = "SentiVibe - Video Analysis Library";
       updateMetaTag('description', 'Unlock the true sentiment behind YouTube comments. Analyze, understand, and gain insights into audience reactions with AI-powered sentiment analysis.');
 
-      // Remove OG tags
       removeMetaTag('og:title', 'og:title');
       removeMetaTag('og:description', 'og:description');
       removeMetaTag('og:image', 'og:image');
@@ -210,14 +200,14 @@ const BlogPostDetail = () => {
       const element = analysisReportRef.current;
       const opt = {
         margin: 1,
-        filename: `SentiVibe_BlogPost_${blogPost.title.replace(/[^a-z0-9]/gi, '_')}.pdf`,
+        filename: `SentiVibe_Report_${blogPost.title.replace(/[^a-z0-9]/gi, '_')}.pdf`,
         image: { type: 'jpeg' as 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2, logging: true, dpi: 192, letterRendering: true },
         jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' as 'portrait' }
       };
 
       const tempDiv = document.createElement('div');
-      tempDiv.className = 'pdf-light-mode'; // Apply the new class
+      tempDiv.className = 'pdf-light-mode';
       tempDiv.style.position = 'relative';
       tempDiv.style.width = element.offsetWidth + 'px';
       tempDiv.style.height = element.offsetHeight + 'px';
@@ -276,20 +266,20 @@ const BlogPostDetail = () => {
   if (isLoading) {
     return (
       <div className="container mx-auto p-4 max-w-3xl">
-        <Skeleton className="h-8 w-1/4 mb-6" />
-        <Skeleton className="h-64 w-full mb-6" />
-        <Skeleton className="h-10 w-full mb-4" />
-        <Skeleton className="h-6 w-1/2 mb-4" />
-        <Skeleton className="h-4 w-full mb-2" />
-        <Skeleton className="h-4 w-full mb-2" />
-        <Skeleton className="h-4 w-3/4" />
+        <Skeleton className="h-8 w-1/4 mb-6 bg-muted" />
+        <Skeleton className="h-64 w-full mb-6 bg-muted" />
+        <Skeleton className="h-10 w-full mb-4 bg-muted" />
+        <Skeleton className="h-6 w-1/2 mb-4 bg-muted" />
+        <Skeleton className="h-4 w-full mb-2 bg-muted" />
+        <Skeleton className="h-4 w-full mb-2 bg-muted" />
+        <Skeleton className="h-4 w-3/4 bg-muted" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="container mx-auto p-4 max-w-3xl text-red-500">
+      <div className="container mx-auto p-4 max-w-3xl text-destructive">
         Error loading blog post: {error.message}
       </div>
     );
@@ -297,10 +287,10 @@ const BlogPostDetail = () => {
 
   if (!blogPost) {
     return (
-      <div className="container mx-auto p-4 max-w-3xl text-center text-gray-500 dark:text-gray-400">
+      <div className="container mx-auto p-4 max-w-3xl text-center text-muted-foreground">
         <h2 className="text-2xl font-bold mb-4">Blog Post Not Found</h2>
         <p>The analysis you are looking for does not exist or has been removed.</p>
-        <Link to="/library" className="text-blue-500 hover:underline mt-4 flex items-center justify-center">
+        <Link to="/library" className="text-accent hover:underline mt-4 flex items-center justify-center">
           <ArrowLeft className="h-4 w-4 mr-2" /> Back to Analysis Library
         </Link>
       </div>
@@ -310,37 +300,37 @@ const BlogPostDetail = () => {
   return (
     <div className="container mx-auto p-4 max-w-3xl">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-2 flex-wrap">
-        <Link to="/library" className="text-blue-500 hover:underline flex items-center w-fit">
+        <Link to="/library" className="text-accent hover:underline flex items-center w-fit">
           <ArrowLeft className="h-4 w-4 mr-2" /> Back to Analysis Library
         </Link>
         <div className="flex flex-wrap gap-2">
-          <Button asChild>
+          <Button asChild className="bg-secondary text-secondary-foreground hover:bg-secondary/90">
             <Link to="/analyze-video">Analyze a New Video</Link>
           </Button>
           <Button
             onClick={() => navigate('/analyze-video', { state: { blogPost: blogPost, openChat: false } })}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/90"
           >
             <BarChart className="h-4 w-4" /> Go to Video Analysis
           </Button>
           <Button
             onClick={() => navigate('/analyze-video', { state: { blogPost: blogPost, openChat: false, forceReanalyze: true } })}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/90"
           >
             <RefreshCw className="h-4 w-4" /> Refresh Analysis
           </Button>
           <Button
-            onClick={() => setIsChatDialogOpen(true)} // Directly set state to open chat
-            className="flex items-center gap-2"
+            onClick={() => setIsChatDialogOpen(true)}
+            className="flex items-center gap-2 bg-accent text-accent-foreground hover:bg-accent/90"
           >
             <MessageSquare className="h-4 w-4" /> Chat with AI
           </Button>
-          <Button onClick={handleDownloadPdf} className="flex items-center gap-2">
+          <Button onClick={handleDownloadPdf} className="flex items-center gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/90">
             <Download className="h-4 w-4" /> Download Report PDF
           </Button>
         </div>
       </div>
-      <Card ref={analysisReportRef} className="mb-6">
+      <Card ref={analysisReportRef} className="mb-6 bg-card text-foreground border-border">
         <CardHeader>
           {blogPost.thumbnail_url && (
             <img
@@ -351,16 +341,16 @@ const BlogPostDetail = () => {
           )}
           <CardTitle className="text-3xl font-bold mb-2">{blogPost.title}</CardTitle>
           {blogPost.creator_name && (
-            <p className="text-lg text-gray-600 dark:text-gray-400 mb-2">By: {blogPost.creator_name}</p>
+            <p className="text-lg text-muted-foreground mb-2">By: {blogPost.creator_name}</p>
           )}
-          <p className="text-sm text-gray-500 dark:text-gray-400">
+          <p className="text-sm text-muted-foreground">
             Published on: {new Date(blogPost.published_at).toLocaleDateString()}
             {blogPost.updated_at && blogPost.updated_at !== blogPost.published_at && (
               <span> (Last updated: {new Date(blogPost.updated_at).toLocaleDateString()})</span>
             )}
           </p>
           {blogPost.last_reanalyzed_at && (
-            <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
+            <p className="text-xs text-muted-foreground mt-2">
               Last Full Analysis: {new Date(blogPost.last_reanalyzed_at).toLocaleDateString()}
             </p>
           )}
@@ -369,13 +359,13 @@ const BlogPostDetail = () => {
               href={blogPost.original_video_link}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-blue-500 hover:underline flex items-center mt-2 w-fit"
+              className="text-accent hover:underline flex items-center mt-2 w-fit"
             >
               <Youtube className="h-4 w-4 mr-2" /> View Original Video
             </a>
           )}
           {blogPost.meta_description && (
-            <p className="text-md text-gray-700 dark:text-gray-300 mt-4 italic">
+            <p className="text-md text-muted-foreground mt-4 italic">
               {blogPost.meta_description}
             </p>
           )}
@@ -386,7 +376,7 @@ const BlogPostDetail = () => {
           </ReactMarkdown>
         </CardContent>
         {blogPost.keywords && blogPost.keywords.length > 0 && (
-          <CardContent className="border-t pt-4 mt-4">
+          <CardContent className="border-t border-border pt-4 mt-4">
             <h3 className="text-lg font-semibold mb-2">Keywords</h3>
             <div className="flex flex-wrap gap-2">
               {blogPost.keywords.map((keyword, index) => (
@@ -398,13 +388,13 @@ const BlogPostDetail = () => {
           </CardContent>
         )}
         {blogPost.custom_qa_results && blogPost.custom_qa_results.length > 0 && (
-          <CardContent className="border-t pt-4 mt-4">
+          <CardContent className="border-t border-border pt-4 mt-4">
             <h3 className="text-lg font-semibold mb-2">Questions about this video asked by the community</h3>
             <div className="space-y-4">
               {blogPost.custom_qa_results.map((qa, index) => (
-                <div key={index} className="border p-3 rounded-md bg-gray-50 dark:bg-gray-700">
-                  <p className="font-medium text-gray-800 dark:text-gray-200 mb-1">Q{index + 1}: {String(qa.question)}</p>
-                  <div className="prose dark:prose-invert max-w-none text-gray-700 dark:text-gray-300">
+                <div key={index} className="border border-border p-3 rounded-md bg-secondary">
+                  <p className="font-medium text-foreground mb-1">Q{index + 1}: {String(qa.question)}</p>
+                  <div className="prose dark:prose-invert max-w-none text-muted-foreground">
                     <ReactMarkdown remarkPlugins={[remarkGfm]}>
                       {qa.answer || "No answer generated."}
                     </ReactMarkdown>
@@ -415,9 +405,9 @@ const BlogPostDetail = () => {
           </CardContent>
         )}
         {blogPost.ai_analysis_json?.raw_comments_for_chat && blogPost.ai_analysis_json.raw_comments_for_chat.length > 0 && (
-          <CardContent className="border-t pt-4 mt-4">
+          <CardContent className="border-t border-border pt-4 mt-4">
             <h3 className="text-lg font-semibold mb-2">Raw Comments (First 10, by popularity)</h3>
-            <ul className="list-disc list-inside space-y-1 text-sm text-gray-600 dark:text-gray-400">
+            <ul className="list-disc list-inside space-y-1 text-muted-foreground">
               {blogPost.ai_analysis_json.raw_comments_for_chat.slice(0, 10).map((comment, index) => (
                 <li key={index}>{comment}</li>
               ))}
@@ -425,7 +415,7 @@ const BlogPostDetail = () => {
           </CardContent>
         )}
       </Card>
-      <UpgradeCTA /> {/* Add the UpgradeCTA here */}
+      <UpgradeCTA />
       {blogPost && (
         <VideoChatDialog
           isOpen={isChatDialogOpen}

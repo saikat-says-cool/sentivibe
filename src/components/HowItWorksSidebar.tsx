@@ -16,7 +16,7 @@ const HowItWorksSidebar: React.FC = () => {
   const location = useLocation();
 
   return (
-    <Card className="w-full md:w-64 flex-shrink-0 p-4 md:sticky md:top-20 md:h-[calc(100vh-80px)] overflow-y-auto">
+    <Card className="w-full md:w-64 flex-shrink-0 p-4 md:sticky md:top-20 md:h-[calc(100vh-80px)] overflow-y-auto bg-sidebar text-sidebar-foreground border-sidebar-border">
       <h3 className="text-lg font-semibold mb-4">Guide Sections</h3>
       <nav className="space-y-2">
         {guideSections.map((section) => (
@@ -24,10 +24,10 @@ const HowItWorksSidebar: React.FC = () => {
             key={section.path}
             to={section.path}
             className={cn(
-              "flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
+              "flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors",
               location.pathname === section.path
-                ? "bg-accent text-accent-foreground"
-                : "text-muted-foreground"
+                ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
             )}
           >
             {section.title}
