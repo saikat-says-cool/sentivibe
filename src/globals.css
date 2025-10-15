@@ -5,7 +5,7 @@
 @layer base {
   :root { /* This now defines the single dark theme */
     --background: 220 10% 10%; /* Dark Gray Background */
-    --foreground: 0 0% 98%; /* Light Gray Foreground */
+    --foreground: 0 0% 98%; /* Light Gray Foreground (effectively white) */
 
     --card: 220 10% 15%; /* Slightly lighter dark gray for cards */
     --card-foreground: 0 0% 98%; /* Light Gray */
@@ -20,7 +20,7 @@
     --secondary-foreground: 0 0% 98%; /* Light Gray */
 
     --muted: 220 10% 20%; /* Muted elements (darker gray) */
-    --muted-foreground: 220 10% 85%; /* Brighter gray for muted text for better visibility */
+    --muted-foreground: 0 0% 90%; /* Very light gray for muted text for maximum visibility */
 
     --accent: 174 70% 40%; /* Teal Accent Color */
     --accent-foreground: 0 0% 98%; /* Light Gray */
@@ -59,22 +59,24 @@
     @apply bg-background text-foreground;
   }
 
-  /* Custom rule to ensure prose content is readable */
-  .prose {
-    color: hsl(var(--foreground)); /* Ensure base prose text is bright */
-  }
-  .prose p {
-    color: hsl(var(--foreground)); /* Explicitly target paragraphs for maximum visibility */
-  }
-  .prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {
-    color: hsl(var(--foreground));
-  }
-  .prose strong {
-    color: hsl(var(--foreground));
+  /* Custom rule to ensure ALL prose content is readable (white) */
+  .prose,
+  .prose p,
+  .prose h1,
+  .prose h2,
+  .prose h3,
+  .prose h4,
+  .prose h5,
+  .prose h6,
+  .prose strong,
+  .prose em,
+  .prose li,
+  .prose a {
+    color: hsl(var(--foreground)) !important; /* Force all text within prose to foreground color */
   }
   .prose a {
     text-decoration: underline;
-    color: hsl(var(--accent));
+    color: hsl(var(--accent)) !important; /* Keep accent color for links */
   }
 
   /* PDF light mode override is now the default, so this class is less critical but kept for explicit overrides */
