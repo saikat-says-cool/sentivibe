@@ -37,7 +37,6 @@ interface HowItWorksCopilotProps {
 const HowItWorksCopilot: React.FC<HowItWorksCopilotProps> = ({ productDocumentation, technicalDocumentation }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
-  // Removed: const [deepThinkMode, setDeepThinkMode] = useState<boolean>(false);
   const [desiredWordCount, setDesiredWordCount] = useState<number>(300);
   const [selectedPersona, setSelectedPersona] = useState<string>("friendly");
   const [error, setError] = useState<string | null>(null);
@@ -55,7 +54,6 @@ const HowItWorksCopilot: React.FC<HowItWorksCopilotProps> = ({ productDocumentat
     } else {
       setChatMessages([]);
       setError(null);
-      // Removed: setDeepThinkMode(false);
     }
   }, [isOpen]);
 
@@ -68,20 +66,12 @@ const HowItWorksCopilot: React.FC<HowItWorksCopilotProps> = ({ productDocumentat
       };
       setChatMessages((prev) => [...prev, newUserMessage]);
 
-      const aiPlaceholderMessage: Message = {
-        id: Date.now().toString() + '-ai',
-        sender: 'ai',
-        text: 'Thinking...',
-      };
-      setChatMessages((prev) => [...prev, aiPlaceholderMessage]);
-
       const { data, error: invokeError } = await supabase.functions.invoke('how-it-works-copilot-analyzer', {
         body: {
           userQuery: userQuery,
           chatMessages: [...chatMessages, newUserMessage],
           productDocumentation: productDocumentation,
           technicalDocumentation: technicalDocumentation,
-          // Removed: deepThinkMode: deepThinkMode,
           desiredWordCount: desiredWordCount,
           selectedPersona: selectedPersona,
         },
@@ -94,23 +84,35 @@ const HowItWorksCopilot: React.FC<HowItWorksCopilotProps> = ({ productDocumentat
       return data.aiResponse;
     },
     onSuccess: (aiResponseContent: string) => {
-      setChatMessages((prev) =>
-        prev.map((msg, index) =>
-          index === prev.length - 1 && msg.sender === 'ai' && msg.text === 'Thinking...'
-            ? { ...msg, text: aiResponseContent }
-            : msg
-        )
-      );
+      setChatMessages((prev) => {
+        const lastUserMessageIndex = prev.findLastIndex((msg: Message) => msg.sender === 'user');
+        if (lastUserMessageIndex !== -1) {
+          const newMessages = [...prev];
+          newMessages.splice(lastUserMessageIndex + 1, 0, {
+            id: Date.now().toString() + '-ai',
+            sender: 'ai',
+            text: aiResponseContent,
+          });
+          return newMessages;
+        }
+        return [...prev, { id: Date.now().toString() + '-ai', sender: 'ai', text: aiResponseContent }];
+      });
     },
     onError: (err: Error) => {
       console.error("How It Works Copilot Chat Error:", err);
-      setChatMessages((prev) =>
-        prev.map((msg, index) =>
-          index === prev.length - 1 && msg.sender === 'ai' && msg.text === 'Thinking...'
-            ? { ...msg, text: `Error: ${(err as Error).message}. Please try again.` }
-            : msg
-        )
-      );
+      setChatMessages((prev) => {
+        const lastUserMessageIndex = prev.findLastIndex((msg: Message) => msg.sender === 'user');
+        if (lastUserMessageIndex !== -1) {
+          const newMessages = [...prev];
+          newMessages.splice(lastUserMessageIndex + 1, 0, {
+            id: Date.now().toString() + '-error',
+            sender: 'ai',
+            text: `Error: ${(err as Error).message}. Please try again.`,
+          });
+          return newMessages;
+        }
+        return [...prev, { id: Date.now().toString() + '-error', sender: 'ai', text: `Error: ${(err as Error).message}. Please try again.` }];
+      });
       setError((err as Error).message);
     },
   });
@@ -188,8 +190,6 @@ const HowItWorksCopilot: React.FC<HowItWorksCopilotProps> = ({ productDocumentat
             onSendMessage={handleSendMessage}
             isLoading={copilotChatMutation.isPending}
             disabled={isCopilotDisabled}
-            // Removed: deepThinkEnabled={deepThinkMode}
-            // Removed: onToggleDeepThink={setDeepThinkMode}
           />
         </div>
       </DialogContent>

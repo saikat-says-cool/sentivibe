@@ -20,7 +20,6 @@ import {
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-// Removed: import { Switch } from '@/components/ui/switch'; // Import Switch
 
 interface MultiComparisonVideo {
   blog_post_id: string;
@@ -67,7 +66,6 @@ const MultiComparisonChatDialog: React.FC<MultiComparisonChatDialogProps> = ({
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
   const [desiredWordCount, setDesiredWordCount] = useState<number>(300); 
   const [selectedPersona, setSelectedPersona] = useState<string>("friendly");
-  // Removed: const [deepThinkMode, setDeepThinkMode] = useState<boolean>(false); // New state for DeepThink mode
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -87,7 +85,6 @@ const MultiComparisonChatDialog: React.FC<MultiComparisonChatDialogProps> = ({
     } else if (!isOpen) {
       setChatMessages([]);
       setError(null);
-      // Removed: setDeepThinkMode(false); // Reset DeepThink mode when dialog closes
     }
   }, [isOpen, initialMultiComparisonResult]);
 
@@ -101,14 +98,6 @@ const MultiComparisonChatDialog: React.FC<MultiComparisonChatDialogProps> = ({
       
       setChatMessages((prev) => [...prev, newUserMessage]);
 
-      const aiMessageId = Date.now().toString() + '-ai';
-      const aiPlaceholderMessage: Message = {
-        id: aiMessageId,
-        sender: 'ai',
-        text: 'Thinking...',
-      };
-      setChatMessages((prev) => [...prev, aiPlaceholderMessage]);
-
       if (!initialMultiComparisonResult) {
         throw new Error("No multi-video comparison loaded to chat about.");
       }
@@ -120,7 +109,6 @@ const MultiComparisonChatDialog: React.FC<MultiComparisonChatDialogProps> = ({
           multiComparisonResult: initialMultiComparisonResult,
           desiredWordCount: desiredWordCount,
           selectedPersona: selectedPersona,
-          // Removed: deepThinkMode: deepThinkMode, // Pass deepThinkMode to the Edge Function
         },
       });
 
@@ -132,23 +120,35 @@ const MultiComparisonChatDialog: React.FC<MultiComparisonChatDialogProps> = ({
       return data.aiResponse;
     },
     onSuccess: (aiResponseContent: string) => {
-      setChatMessages((prev) =>
-        prev.map((msg, index) =>
-          index === prev.length - 1 && msg.sender === 'ai' && msg.text === 'Thinking...'
-            ? { ...msg, text: aiResponseContent }
-            : msg
-        )
-      );
+      setChatMessages((prev) => {
+        const lastUserMessageIndex = prev.findLastIndex((msg: Message) => msg.sender === 'user');
+        if (lastUserMessageIndex !== -1) {
+          const newMessages = [...prev];
+          newMessages.splice(lastUserMessageIndex + 1, 0, {
+            id: Date.now().toString() + '-ai',
+            sender: 'ai',
+            text: aiResponseContent,
+          });
+          return newMessages;
+        }
+        return [...prev, { id: Date.now().toString() + '-ai', sender: 'ai', text: aiResponseContent }];
+      });
     },
     onError: (err: Error) => {
       console.error("Multi-Comparison Chat Error:", err);
-      setChatMessages((prev) =>
-        prev.map((msg, index) =>
-          index === prev.length - 1 && msg.sender === 'ai' && msg.text === 'Thinking...'
-            ? { ...msg, text: `Error: ${(err as Error).message}. Please try again.` }
-            : msg
-        )
-      );
+      setChatMessages((prev) => {
+        const lastUserMessageIndex = prev.findLastIndex((msg: Message) => msg.sender === 'user');
+        if (lastUserMessageIndex !== -1) {
+          const newMessages = [...prev];
+          newMessages.splice(lastUserMessageIndex + 1, 0, {
+            id: Date.now().toString() + '-error',
+            sender: 'ai',
+            text: `Error: ${(err as Error).message}. Please try again.`,
+          });
+          return newMessages;
+        }
+        return [...prev, { id: Date.now().toString() + '-error', sender: 'ai', text: `Error: ${(err as Error).message}. Please try again.` }];
+      });
       setError(`Failed to get AI response: ${(err as Error).message}`);
     },
   });
@@ -221,8 +221,6 @@ const MultiComparisonChatDialog: React.FC<MultiComparisonChatDialogProps> = ({
             onSendMessage={handleSendMessage}
             isLoading={chatMutation.isPending}
             disabled={isChatDisabled}
-            // Removed: deepThinkEnabled={deepThinkMode} // Pass deepThinkMode
-            // Removed: onToggleDeepThink={setDeepThinkMode} // Pass setter for deepThinkMode
           />
         </div>
       </DialogContent>
