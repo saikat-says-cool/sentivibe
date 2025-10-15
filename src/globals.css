@@ -61,7 +61,10 @@
 
   /* Custom rule to ensure prose content is readable */
   .prose {
-    color: hsl(var(--foreground));
+    color: hsl(var(--foreground)); /* Ensure base prose text is bright */
+  }
+  .prose p {
+    color: hsl(var(--foreground)); /* Explicitly target paragraphs for maximum visibility */
   }
   .prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {
     color: hsl(var(--foreground));
