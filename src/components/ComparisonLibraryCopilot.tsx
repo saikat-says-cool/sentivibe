@@ -41,7 +41,7 @@ const ComparisonLibraryCopilot: React.FC<ComparisonLibraryCopilotProps> = ({ com
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
   const [deepThinkMode, setDeepThinkMode] = useState<boolean>(false);
   const [deepSearchMode, setDeepSearchMode] = useState<boolean>(false);
-  const [desiredWordCount, setDesiredWordCount] = useState<number>(300);
+  // Removed desiredWordCount state
   const [selectedPersona, setSelectedPersona] = useState<string>("friendly");
   const [error, setError] = useState<string | null>(null);
 
@@ -60,7 +60,6 @@ const ComparisonLibraryCopilot: React.FC<ComparisonLibraryCopilotProps> = ({ com
       setError(null); // Clear error when dialog closes
       setDeepThinkMode(false);
       setDeepSearchMode(false);
-      setDesiredWordCount(300);
       setSelectedPersona("friendly");
     }
   }, [isOpen]);
@@ -96,8 +95,8 @@ const ComparisonLibraryCopilot: React.FC<ComparisonLibraryCopilotProps> = ({ com
           comparisonsData: simplifiedComparisons,
           deepThinkMode: deepThinkMode,
           deepSearchMode: deepSearchMode,
-          desiredWordCount: desiredWordCount, // Pass desiredWordCount
-          selectedPersona: selectedPersona, // Pass selectedPersona
+          // Removed desiredWordCount from payload
+          selectedPersona: selectedPersona,
         },
       });
 
@@ -181,10 +180,11 @@ const ComparisonLibraryCopilot: React.FC<ComparisonLibraryCopilotProps> = ({ com
             onToggleDeepThink={setDeepThinkMode}
             deepSearchEnabled={deepSearchMode}
             onToggleDeepSearch={setDeepSearchMode}
-            desiredWordCount={desiredWordCount}
-            onWordCountChange={setDesiredWordCount}
+            // Pass default values for persona and word count, as they are no longer user-configurable here
             selectedPersona={selectedPersona}
             onPersonaChange={setSelectedPersona}
+            desiredWordCount={300} // Default value, AI will adapt
+            onWordCountChange={() => {}} // No-op, as it's not user-configurable
           />
         </div>
       </DialogContent>

@@ -31,7 +31,7 @@ const HowItWorksCopilot: React.FC<HowItWorksCopilotProps> = ({ productDocumentat
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
   const [deepThinkMode, setDeepThinkMode] = useState<boolean>(false);
   const [deepSearchMode, setDeepSearchMode] = useState<boolean>(false);
-  const [desiredWordCount, setDesiredWordCount] = useState<number>(300);
+  // Removed desiredWordCount state
   const [selectedPersona, setSelectedPersona] = useState<string>("friendly");
   const [error, setError] = useState<string | null>(null);
 
@@ -50,7 +50,6 @@ const HowItWorksCopilot: React.FC<HowItWorksCopilotProps> = ({ productDocumentat
       setError(null);
       setDeepThinkMode(false);
       setDeepSearchMode(false);
-      setDesiredWordCount(300);
       setSelectedPersona("friendly");
     }
   }, [isOpen]);
@@ -79,7 +78,7 @@ const HowItWorksCopilot: React.FC<HowItWorksCopilotProps> = ({ productDocumentat
           technicalDocumentation: technicalDocumentation,
           deepThinkMode: deepThinkMode,
           deepSearchMode: deepSearchMode,
-          desiredWordCount: desiredWordCount,
+          // Removed desiredWordCount from payload
           selectedPersona: selectedPersona,
         },
       });
@@ -155,10 +154,11 @@ const HowItWorksCopilot: React.FC<HowItWorksCopilotProps> = ({ productDocumentat
             onToggleDeepThink={setDeepThinkMode}
             deepSearchEnabled={deepSearchMode}
             onToggleDeepSearch={setDeepSearchMode}
-            desiredWordCount={desiredWordCount}
-            onWordCountChange={setDesiredWordCount}
+            // Pass default values for persona and word count, as they are no longer user-configurable here
             selectedPersona={selectedPersona}
             onPersonaChange={setSelectedPersona}
+            desiredWordCount={300} // Default value, AI will adapt
+            onWordCountChange={() => {}} // No-op, as it's not user-configurable
           />
         </div>
       </DialogContent>

@@ -29,10 +29,9 @@ interface ChatInterfaceProps {
   onToggleDeepThink: (checked: boolean) => void;
   deepSearchEnabled: boolean;
   onToggleDeepSearch: (checked: boolean) => void;
-  desiredWordCount: number; // Added desiredWordCount
-  onWordCountChange: (count: number) => void; // Added onWordCountChange
-  selectedPersona: string; // Added selectedPersona
-  onPersonaChange: (persona: string) => void; // Added onPersonaChange
+  // Removed desiredWordCount and onWordCountChange
+  selectedPersona: string;
+  onPersonaChange: (persona: string) => void;
 }
 
 const ChatInterface: React.FC<ChatInterfaceProps> = ({ 
@@ -44,8 +43,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   onToggleDeepThink, 
   deepSearchEnabled, 
   onToggleDeepSearch,
-  desiredWordCount,
-  onWordCountChange,
+  // Removed desiredWordCount and onWordCountChange
   selectedPersona,
   onPersonaChange,
 }) => {
@@ -122,19 +120,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
               </SelectContent>
             </Select>
           </div>
-          <div className="flex items-center space-x-2">
-            <Label htmlFor="desired-word-count" className="text-sm text-muted-foreground">Word Count:</Label>
-            <Input
-              id="desired-word-count"
-              type="number"
-              min="50"
-              step="50"
-              value={desiredWordCount}
-              onChange={(e) => onWordCountChange(Number(e.target.value))}
-              className="w-[100px] bg-gray-800 text-white border-gray-700"
-              disabled={isLoading || disabled}
-            />
-          </div>
+          {/* Removed Word Count Input */}
           <Button
             type="button"
             variant="ghost"

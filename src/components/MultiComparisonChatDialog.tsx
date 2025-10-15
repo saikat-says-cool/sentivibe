@@ -10,7 +10,7 @@ import { MessageSquare } from 'lucide-react';
 import ChatInterface from './ChatInterface';
 import { useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-// Removed Select, Label, Input, Switch imports as they are now handled in ChatInterface
+// Removed Select, Label, Input imports as they are now handled in ChatInterface
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface MultiComparisonVideo {
@@ -56,7 +56,7 @@ const MultiComparisonChatDialog: React.FC<MultiComparisonChatDialogProps> = ({
   initialMultiComparisonResult,
 }) => {
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
-  const [desiredWordCount, setDesiredWordCount] = useState<number>(300); 
+  // Removed desiredWordCount state
   const [selectedPersona, setSelectedPersona] = useState<string>("friendly");
   const [deepThinkMode, setDeepThinkMode] = useState<boolean>(false);
   const [deepSearchMode, setDeepSearchMode] = useState<boolean>(false);
@@ -81,7 +81,6 @@ const MultiComparisonChatDialog: React.FC<MultiComparisonChatDialogProps> = ({
       setError(null);
       setDeepThinkMode(false);
       setDeepSearchMode(false);
-      setDesiredWordCount(300);
       setSelectedPersona("friendly");
     }
   }, [isOpen, initialMultiComparisonResult]);
@@ -113,7 +112,7 @@ const MultiComparisonChatDialog: React.FC<MultiComparisonChatDialogProps> = ({
           userMessage: userMessageText,
           chatMessages: [...chatMessages, newUserMessage],
           multiComparisonResult: initialMultiComparisonResult,
-          desiredWordCount: desiredWordCount,
+          // Removed desiredWordCount from payload
           selectedPersona: selectedPersona,
           deepThinkMode: deepThinkMode,
           deepSearchMode: deepSearchMode,
@@ -187,10 +186,11 @@ const MultiComparisonChatDialog: React.FC<MultiComparisonChatDialogProps> = ({
             onToggleDeepThink={setDeepThinkMode}
             deepSearchEnabled={deepSearchMode}
             onToggleDeepSearch={setDeepSearchMode}
-            desiredWordCount={desiredWordCount}
-            onWordCountChange={setDesiredWordCount}
+            // Pass default values for persona and word count, as they are no longer user-configurable here
             selectedPersona={selectedPersona}
             onPersonaChange={setSelectedPersona}
+            desiredWordCount={300} // Default value, AI will adapt
+            onWordCountChange={() => {}} // No-op, as it's not user-configurable
           />
         </div>
       </DialogContent>
