@@ -20,7 +20,7 @@
     --secondary-foreground: 0 0% 98%; /* Light Gray */
 
     --muted: 220 10% 20%; /* Muted elements (darker gray) */
-    --muted-foreground: 220 10% 75%; /* Brighter gray for muted text for better visibility */
+    --muted-foreground: 220 10% 85%; /* Brighter gray for muted text for better visibility */
 
     --accent: 174 70% 40%; /* Teal Accent Color */
     --accent-foreground: 0 0% 98%; /* Light Gray */
