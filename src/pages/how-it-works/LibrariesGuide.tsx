@@ -26,7 +26,7 @@ SentiVibe offers dedicated libraries for both single video analyses and multi-vi
 *   **Comparison Copilot:** Click the "Comparison Copilot" button to open an AI assistant. Ask it to find specific comparisons or suggest new comparative analysis topics. This Copilot also supports "DeepThink" mode for more detailed recommendations and "DeepSearch" mode to include real-time external search results. **Note: DeepThink and DeepSearch modes are available only for Paid Tier users.**
 
 ### My Analyses:
-*   **Purpose:** For authenticated users, this page lists all your personal single video analyses.
+*   **Purpose:** For authenticated users, this page lists all your personal single video analyses and multi-video comparisons.
 *   **Access:** Log in and navigate to "My Analyses" from the header.
 *   **Functionality:** Similar search and Library Copilot features as the public Analysis Library, but focused on your own content.
 

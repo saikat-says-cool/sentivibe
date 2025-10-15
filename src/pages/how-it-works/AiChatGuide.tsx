@@ -16,17 +16,16 @@ SentiVibe's context-aware AI Chat allows you to ask follow-up questions about yo
 ### Key Features:
 *   **Context-Aware:** The AI synthesizes information from your analysis report (sentiment, themes, summary, top comments, custom Q&A) to provide relevant answers.
 *   **Customizable Persona:** Choose from various AI personas (Friendly Assistant, Therapist, Storyteller, Motivational Coach, Argumentative) to tailor the AI's tone.
-*   **Precise Response Length:** Specify a desired word count for each AI response to control the level of detail.
+*   **Unlimited Messages:** Ask an unlimited number of questions per session on any tier.
 *   **DeepThink Mode (Paid Feature):** Toggle "DeepThink" mode for more nuanced and in-depth responses, utilizing a more powerful AI model. **This feature is available only for Paid Tier users.**
 *   **DeepSearch Mode (Paid Feature):** Toggle "DeepSearch" mode to include real-time external search results from Google Custom Search in the AI's context for more comprehensive and up-to-date answers. **This feature is available only for Paid Tier users.**
 
 ### Steps:
 1.  **Open Chat Dialog:** After any video analysis or comparison, click the "Chat with AI" button. This will open a pop-up chat interface.
 2.  **Select Persona:** Use the "Persona" dropdown to choose your preferred AI conversational style.
-3.  **Set Word Count:** Enter a number in the "Response Word Count" field to control the length of the AI's answers.
-4.  **Toggle DeepThink (Optional, Paid Feature):** Use the "DeepThink" switch to enable or disable the advanced AI model for more detailed responses. This will be disabled for Free Tier users.
-5.  **Toggle DeepSearch (Optional, Paid Feature):** Use the "DeepSearch" switch to enable or disable the inclusion of real-time external search results. This will be disabled for Free Tier users.
-6.  **Ask Questions:** Type your questions into the input field and press "Send." The AI will respond based on the loaded analysis context and your chosen settings.
+3.  **Toggle DeepThink (Optional, Paid Feature):** Use the "DeepThink" switch to enable or disable the advanced AI model for more detailed responses. This will be disabled for Free Tier users.
+4.  **Toggle DeepSearch (Optional, Paid Feature):** Use the "DeepSearch" switch to enable or disable the inclusion of real-time external search results. This will be disabled for Free Tier users.
+5.  **Ask Questions:** Type your questions into the input field and press "Send." The AI will respond based on the loaded analysis context and your chosen settings.
 
 The AI Chat is designed to help you explore your analysis data more interactively and get specific answers to your queries.
 `;

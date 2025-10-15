@@ -13,7 +13,8 @@ import ChatInterface from './ChatInterface';
 import { useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { TooltipWrapper } from '@/components/ui/tooltip'; // Import TooltipWrapper
+import { TooltipWrapper } from '@/components/ui/tooltip';
+import { Link } from 'react-router-dom'; // Added Link import
 
 interface MultiComparison {
   id: string;
@@ -151,6 +152,11 @@ const ComparisonLibraryCopilot: React.FC<ComparisonLibraryCopilotProps> = ({ com
           </DialogTitle>
           <DialogDescription>
             Ask me to help you find specific video comparisons from your library or suggest new topics.
+            {!isPaidTier && (
+              <span className="ml-2 text-accent">
+                DeepThink & DeepSearch modes are available for Paid Tier users. <Link to="/upgrade" className="underline">Upgrade now</Link>.
+              </span>
+            )}
           </DialogDescription>
         </DialogHeader>
         {error && (

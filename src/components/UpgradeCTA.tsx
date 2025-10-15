@@ -28,6 +28,7 @@ const UpgradeCTA: React.FC = () => {
         </p>
         <ul className="list-disc list-inside text-left mx-auto max-w-md space-y-1 text-muted-foreground">
           <li>Significantly higher daily analysis and comparison limits</li>
+          <li>DeepThink & DeepSearch AI modes</li>
           <li>Unwatermarked, professional PDF reports</li>
           <li>An entirely ad-free experience</li>
           <li>And much more!</li>

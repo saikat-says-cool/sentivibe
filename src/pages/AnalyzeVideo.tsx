@@ -400,6 +400,9 @@ const AnalyzeVideo = () => {
             <Separator className="bg-border" />
 
             <h3 className="text-lg font-semibold mb-2">Ask Unlimited Questions. We don't meter your curiosity.</h3>
+            <p className="text-sm text-muted-foreground">
+              You can ask an unlimited number of custom questions per analysis, with no word count limits on AI answers, on any tier.
+            </p>
             {customQuestions.map((qa, index) => (
               <div key={index} className="flex flex-col sm:flex-row gap-2 items-end">
                 <div className="flex-1">

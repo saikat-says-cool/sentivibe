@@ -13,7 +13,8 @@ import ChatInterface from './ChatInterface';
 import { useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { TooltipWrapper } from '@/components/ui/tooltip'; // Import TooltipWrapper
+import { TooltipWrapper } from '@/components/ui/tooltip';
+import { Link } from 'react-router-dom'; // Added Link import
 
 interface Message {
   id: string;
@@ -125,6 +126,11 @@ const HowItWorksCopilot: React.FC<HowItWorksCopilotProps> = ({ productDocumentat
           </DialogTitle>
           <DialogDescription>
             Your expert assistant for all things SentiVibe. Ask about features, architecture, or code.
+            {!isPaidTier && (
+              <span className="ml-2 text-accent">
+                DeepThink & DeepSearch modes are available for Paid Tier users. <Link to="/upgrade" className="underline">Upgrade now</Link>.
+              </span>
+            )}
           </DialogDescription>
         </DialogHeader>
         {error && (

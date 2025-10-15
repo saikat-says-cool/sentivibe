@@ -157,12 +157,12 @@ const AccountCenter = () => {
             </div>
             {subscriptionPlanId === 'free' && (
               <p className="text-muted-foreground">
-                You are currently on the Free Tier. <Link to="/upgrade" className="text-accent hover:underline">Upgrade</Link> for more features!
+                You are currently on the Free Tier. <Link to="/upgrade" className="text-accent hover:underline">Upgrade</Link> for significantly higher daily analysis and comparison limits, DeepThink & DeepSearch AI modes, unwatermarked PDF reports, and an ad-free experience.
               </p>
             )}
             {subscriptionPlanId !== 'free' && subscriptionStatus === 'active' && (
               <p className="text-muted-foreground">
-                Thank you for being a valued subscriber!
+                Thank you for being a valued subscriber! You have access to all Paid Tier features, including higher daily analysis and comparison limits, DeepThink & DeepSearch AI modes, unwatermarked PDF reports, and an ad-free experience.
               </p>
             )}
           </div>

@@ -111,7 +111,7 @@ const Header = () => {
           </TooltipWrapper>
         )}
         {showUpgradeButton && (
-          <TooltipWrapper content="Unlock higher limits and ad-free experience.">
+          <TooltipWrapper content="Unlock higher limits, DeepThink & DeepSearch AI modes, and an ad-free experience.">
             <Link to="/upgrade">
               <Button className="ml-4 bg-accent text-accent-foreground hover:bg-accent/90">Unlock Full Experience</Button>
             </Link>

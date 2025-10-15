@@ -16,8 +16,10 @@ The "Analyze a Video" feature is your starting point for deep diving into audien
 ### Steps:
 1.  **Navigate to "Analyze a Video":** Click on the "Analyze a Video" link in the header or on the homepage.
 2.  **Enter Video Link:** Paste the full URL of the YouTube video you want to analyze into the input field.
-3.  **Add Custom Questions (Optional):** You can add multiple custom questions about the video. For each question, specify a desired word count for the AI's answer. These questions will be answered by the AI and included in your report.
+3.  **Add Custom Questions (Optional):** You can add an unlimited number of custom questions about the video. For each question, specify a desired word count for the AI's answer. These questions will be answered by the AI and included in your report.
 4.  **Initiate Analysis:** Click the "Analyze Comments & Get Answers" button.
+    *   **Free Tier:** Limited to 5 analyses per day (IP-based for unauthenticated, User-ID based for authenticated).
+    *   **Paid Tier:** Enjoy 50 analyses per day.
     *   If the video has been analyzed recently, the report will load almost instantly.
     *   If the analysis is stale (older than 30 days) or you force a re-analysis, the system will fetch the latest comments and re-run the AI.
     *   Any new custom questions you add will always be processed and merged with existing community questions for that video.
@@ -30,7 +32,7 @@ The "Analyze a Video" feature is your starting point for deep diving into audien
     *   **Original Video:** Link directly to the YouTube video.
     *   **Refresh Analysis:** Manually trigger a full re-analysis to get the latest data.
     *   **Chat with AI:** Open a chat dialog to ask follow-up questions about the analysis.
-    *   **Download Report PDF:** Save the report as a PDF.
+    *   **Download Report PDF:** Save the report as a PDF. Free Tier PDFs are watermarked; Paid Tier PDFs are unwatermarked.
 
 This feature provides a comprehensive understanding of how audiences react to specific video content, helping you refine your content strategy.
 `;

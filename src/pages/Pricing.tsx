@@ -39,7 +39,8 @@ const Pricing = () => {
                   <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-400 mr-2 flex-shrink-0" /> 3 Multi-Video Comparisons/day</li>
                   <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-400 mr-2 flex-shrink-0" /> Unlimited Custom Questions</li>
                   <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-400 mr-2 flex-shrink-0" /> Unlimited AI Chat Messages</li>
-                  <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-400 mr-2 flex-shrink-0" /> Unlimited Copilot Queries</li>
+                  <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-400 mr-2 flex-shrink-0" /> Unlimited Library Copilot Queries</li>
+                  <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-400 mr-2 flex-shrink-0" /> Unlimited Comparison Copilot Queries</li>
                   <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-400 mr-2 flex-shrink-0" /> Watermarked PDF Reports</li>
                   <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-400 mr-2 flex-shrink-0" /> Ads displayed</li>
                   <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-400 mr-2 flex-shrink-0" /> Access to "My Analyses" History (for authenticated users)</li>
@@ -66,7 +67,8 @@ const Pricing = () => {
                   <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-200 mr-2 flex-shrink-0" /> 20 Multi-Video Comparisons/day</li>
                   <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-200 mr-2 flex-shrink-0" /> Unlimited Custom Questions</li>
                   <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-200 mr-2 flex-shrink-0" /> Unlimited AI Chat Messages</li>
-                  <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-200 mr-2 flex-shrink-0" /> Unlimited Copilot Queries</li>
+                  <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-200 mr-2 flex-shrink-0" /> Unlimited Library Copilot Queries</li>
+                  <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-200 mr-2 flex-shrink-0" /> Unlimited Comparison Copilot Queries</li>
                   <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-200 mr-2 flex-shrink-0" /> Unwatermarked PDF Reports</li>
                   <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-200 mr-2 flex-shrink-0" /> Ad-Free Experience</li>
                   <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-200 mr-2 flex-shrink-0" /> Access to "My Analyses" History</li>

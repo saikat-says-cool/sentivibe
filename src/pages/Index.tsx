@@ -18,7 +18,7 @@ function Index() {
           <CardHeader>
             <CardTitle className="text-3xl font-bold mb-2">Analyze a Video</CardTitle>
             <CardDescription className="text-md text-muted-foreground">
-              Don't just get a report, start a conversation. Get dynamic AI insights.
+              Get dynamic AI insights. Free Tier: 5 analyses/day. Paid Tier: 50 analyses/day.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex-grow flex items-center justify-center flex-col">
@@ -37,7 +37,7 @@ function Index() {
           <CardHeader>
             <CardTitle className="text-3xl font-bold mb-2">Compare Videos</CardTitle>
             <CardDescription className="text-md text-muted-foreground">
-              See the full picture by comparing sentiment across multiple videos.
+              See the full picture by comparing sentiment across multiple videos. Free Tier: 3 comparisons/day. Paid Tier: 20 comparisons/day.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex-grow flex items-center justify-center flex-col">

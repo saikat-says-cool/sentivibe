@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Loader2, Search, Youtube, Sparkles } from 'lucide-react';
+import { Loader2, Search, Sparkles, Youtube } from 'lucide-react'; // Added Youtube import
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/integrations/supabase/auth';
 import LibraryCopilot from '@/components/LibraryCopilot';

@@ -17,8 +17,10 @@ The "Compare Videos" feature allows you to analyze and contrast audience sentime
 1.  **Navigate to "Compare Videos":** Click on the "Compare Videos" link in the header or on the homepage.
 2.  **Enter Video Links:** Paste the full URLs of at least two (and up to three) YouTube videos you wish to compare.
     *   **Note:** For reliable performance, comparisons are currently limited to a **maximum of 3 videos simultaneously**.
-3.  **Add Custom Comparative Questions (Optional):** You can add specific questions tailored for comparative insights. These will be answered by the AI and integrated into your comparison report.
+3.  **Add Custom Comparative Questions (Optional):** You can add an unlimited number of specific questions tailored for comparative insights. These will be answered by the AI and integrated into your comparison report.
 4.  **Initiate Comparison:** Click the "Create Multi-Video Comparison" button.
+    *   **Free Tier:** Limited to 3 comparisons per day (IP-based for unauthenticated, User-ID based for authenticated).
+    *   **Paid Tier:** Enjoy 20 comparisons per day.
     *   The system will ensure each individual video's analysis is up-to-date, then perform a comprehensive comparative AI analysis.
 5.  **Review the Comparison Report:** Once complete, a detailed report will display:
     *   Overall sentiment trends across videos.
@@ -31,7 +33,7 @@ The "Compare Videos" feature allows you to analyze and contrast audience sentime
     *   **Click Video Thumbnails:** Navigate to the individual analysis report for any video in the comparison.
     *   **Refresh Comparison:** Manually trigger a full re-comparison to get the latest data.
     *   **Chat with AI:** Open a chat dialog to ask follow-up questions about the comparison.
-    *   **Download Report PDF:** Save the comparison report as a PDF.
+    *   **Download Report PDF:** Save the comparison report as a PDF. Free Tier PDFs are watermarked; Paid Tier PDFs are unwatermarked.
 
 This feature provides a powerful way to understand how different videos resonate with audiences, helping you make data-driven decisions.
 `;
