@@ -56,7 +56,6 @@ interface BlogPost {
   updated_at: string;
   ai_analysis_json: StoredAiAnalysisContent | null;
   custom_qa_results?: CustomQuestion[];
-  last_reanalyzed_at?: string;
 }
 
 interface AnalysisResponse {
@@ -96,7 +95,7 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
   const [desiredWordCount, setDesiredWordCount] = useState<number>(300); 
   const [selectedPersona, setSelectedPersona] = useState<string>("friendly");
-  // Removed: const [deepThinkMode, setDeepThinkMode] = useState<boolean>(false); // New state for DeepThink mode
+  const [deepThinkMode, setDeepThinkMode] = useState<boolean>(false); // New state for DeepThink mode
   const [currentAnalysisResult, setCurrentAnalysisResult] = useState<AnalysisResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -143,7 +142,7 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
     } else if (!isOpen) {
       setChatMessages([]);
       setError(null);
-      // Removed: setDeepThinkMode(false); // Reset DeepThink mode when dialog closes
+      setDeepThinkMode(false); // Reset DeepThink mode when dialog closes
     }
   }, [isOpen, currentAnalysisResult]);
 
@@ -176,7 +175,8 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
           analysisResult: currentAnalysisResult,
           desiredWordCount: desiredWordCount,
           selectedPersona: selectedPersona,
-          // Removed: deepThinkMode: deepThinkMode, // Pass deepThinkMode to the Edge Function
+          customQaResults: currentAnalysisResult.customQaResults,
+          deepThinkMode: deepThinkMode, // Pass deepThinkMode to the Edge Function
         },
       });
 
@@ -277,8 +277,8 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
             onSendMessage={handleSendMessage}
             isLoading={chatMutation.isPending}
             disabled={isChatDisabled}
-            // Removed: deepThinkEnabled={deepThinkMode} // Pass deepThinkMode
-            // Removed: onToggleDeepThink={setDeepThinkMode} // Pass setter for deepThinkMode
+            deepThinkEnabled={deepThinkMode} // Pass deepThinkMode
+            onToggleDeepThink={setDeepThinkMode} // Pass setter for deepThinkMode
           />
         </div>
       </DialogContent>

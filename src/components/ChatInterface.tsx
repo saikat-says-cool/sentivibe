@@ -5,8 +5,8 @@ import { Send, Loader2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm'; // For GitHub Flavored Markdown
 import { useLoadingMessages } from '@/hooks/use-loading-messages'; // Import the new hook
-// Removed: import { Switch } from '@/components/ui/switch'; // Import the Switch component
-// Removed: import { Label } from '@/components/ui/label'; // Import Label for the switch
+import { Switch } from '@/components/ui/switch'; // Import the Switch component
+import { Label } from '@/components/ui/label'; // Import Label for the switch
 
 interface Message {
   id: string;
@@ -19,11 +19,11 @@ interface ChatInterfaceProps {
   onSendMessage: (message: string) => void;
   isLoading: boolean;
   disabled?: boolean;
-  // Removed: deepThinkEnabled: boolean; // New prop for DeepThink state
-  // Removed: onToggleDeepThink: (checked: boolean) => void; // New prop for toggling DeepThink
+  deepThinkEnabled: boolean; // New prop for DeepThink state
+  onToggleDeepThink: (checked: boolean) => void; // New prop for toggling DeepThink
 }
 
-const ChatInterface: React.FC<ChatInterfaceProps> = ({ messages, onSendMessage, isLoading, disabled = false }) => { // Removed deepThinkEnabled, onToggleDeepThink
+const ChatInterface: React.FC<ChatInterfaceProps> = ({ messages, onSendMessage, isLoading, disabled = false, deepThinkEnabled, onToggleDeepThink }) => {
   const [inputMessage, setInputMessage] = React.useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -77,7 +77,15 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ messages, onSendMessage, 
         <div ref={messagesEndRef} />
       </div>
       <form onSubmit={handleSend} className="flex items-center p-4 border-t bg-gray-50 dark:bg-gray-800">
-        {/* Removed DeepThink Switch and Label */}
+        <div className="flex items-center space-x-2 mr-4">
+          <Switch
+            id="deep-think-mode"
+            checked={deepThinkEnabled}
+            onCheckedChange={onToggleDeepThink}
+            disabled={isLoading || disabled}
+          />
+          <Label htmlFor="deep-think-mode" className="text-sm text-muted-foreground">DeepThink</Label>
+        </div>
         <Input
           type="text"
           placeholder="Type your message..."

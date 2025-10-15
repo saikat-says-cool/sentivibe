@@ -38,7 +38,7 @@ interface ComparisonLibraryCopilotProps {
 const ComparisonLibraryCopilot: React.FC<ComparisonLibraryCopilotProps> = ({ comparisons }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
-  // Removed: const [deepThinkMode, setDeepThinkMode] = useState<boolean>(false); // New state for DeepThink mode
+  const [deepThinkMode, setDeepThinkMode] = useState<boolean>(false); // New state for DeepThink mode
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -54,7 +54,7 @@ const ComparisonLibraryCopilot: React.FC<ComparisonLibraryCopilotProps> = ({ com
     } else {
       setChatMessages([]);
       setError(null); // Clear error when dialog closes
-      // Removed: setDeepThinkMode(false); // Reset DeepThink mode when dialog closes
+      setDeepThinkMode(false); // Reset DeepThink mode when dialog closes
     }
   }, [isOpen]);
 
@@ -87,7 +87,7 @@ const ComparisonLibraryCopilot: React.FC<ComparisonLibraryCopilotProps> = ({ com
         body: {
           userQuery: userQuery,
           comparisonsData: simplifiedComparisons,
-          // Removed: deepThinkMode: deepThinkMode, // Pass deepThinkMode to the Edge Function
+          deepThinkMode: deepThinkMode, // Pass deepThinkMode to the Edge Function
         },
       });
 
@@ -167,8 +167,8 @@ const ComparisonLibraryCopilot: React.FC<ComparisonLibraryCopilotProps> = ({ com
             onSendMessage={handleSendMessage}
             isLoading={copilotChatMutation.isPending}
             disabled={isCopilotDisabled}
-            // Removed: deepThinkEnabled={deepThinkMode}
-            // Removed: onToggleDeepThink={setDeepThinkMode}
+            deepThinkEnabled={deepThinkMode}
+            onToggleDeepThink={setDeepThinkMode}
           />
         </div>
       </DialogContent>

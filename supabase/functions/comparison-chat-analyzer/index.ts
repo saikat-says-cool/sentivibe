@@ -53,7 +53,7 @@ serve(async (req: Request) => { // Explicitly typed 'req' as Request
       }
     );
 
-    const { userMessage, chatMessages, comparisonResult, desiredWordCount, selectedPersona } = await req.json(); // Removed deepThinkMode
+    const { userMessage, chatMessages, comparisonResult, desiredWordCount, selectedPersona } = await req.json(); // Removed externalContext
 
     if (!userMessage || !comparisonResult) {
       return new Response(JSON.stringify({ error: 'User message and comparison result are required.' }), {
@@ -168,7 +168,7 @@ serve(async (req: Request) => { // Explicitly typed 'req' as Request
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: "LongCat-Flash-Thinking", // Always use LongCat-Flash-Thinking
+          model: "LongCat-Flash-Chat",
           messages: messages,
           max_tokens: maxTokens,
           temperature: 0.7,

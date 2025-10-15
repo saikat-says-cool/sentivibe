@@ -37,7 +37,7 @@ interface HowItWorksCopilotProps {
 const HowItWorksCopilot: React.FC<HowItWorksCopilotProps> = ({ productDocumentation, technicalDocumentation }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
-  // Removed: const [deepThinkMode, setDeepThinkMode] = useState<boolean>(false);
+  const [deepThinkMode, setDeepThinkMode] = useState<boolean>(false);
   const [desiredWordCount, setDesiredWordCount] = useState<number>(300);
   const [selectedPersona, setSelectedPersona] = useState<string>("friendly");
   const [error, setError] = useState<string | null>(null);
@@ -55,7 +55,7 @@ const HowItWorksCopilot: React.FC<HowItWorksCopilotProps> = ({ productDocumentat
     } else {
       setChatMessages([]);
       setError(null);
-      // Removed: setDeepThinkMode(false);
+      setDeepThinkMode(false);
     }
   }, [isOpen]);
 
@@ -81,7 +81,7 @@ const HowItWorksCopilot: React.FC<HowItWorksCopilotProps> = ({ productDocumentat
           chatMessages: [...chatMessages, newUserMessage],
           productDocumentation: productDocumentation,
           technicalDocumentation: technicalDocumentation,
-          // Removed: deepThinkMode: deepThinkMode,
+          deepThinkMode: deepThinkMode,
           desiredWordCount: desiredWordCount,
           selectedPersona: selectedPersona,
         },
@@ -188,8 +188,8 @@ const HowItWorksCopilot: React.FC<HowItWorksCopilotProps> = ({ productDocumentat
             onSendMessage={handleSendMessage}
             isLoading={copilotChatMutation.isPending}
             disabled={isCopilotDisabled}
-            // Removed: deepThinkEnabled={deepThinkMode}
-            // Removed: onToggleDeepThink={setDeepThinkMode}
+            deepThinkEnabled={deepThinkMode}
+            onToggleDeepThink={setDeepThinkMode}
           />
         </div>
       </DialogContent>

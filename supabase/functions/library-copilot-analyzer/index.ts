@@ -55,7 +55,7 @@ serve(async (req: Request) => {
       }
     );
 
-    const { userQuery, blogPostsData } = await req.json(); // Removed deepThinkMode
+    const { userQuery, blogPostsData, deepThinkMode } = await req.json(); // Added deepThinkMode
 
     if (!userQuery || !blogPostsData || !Array.isArray(blogPostsData)) {
       return new Response(JSON.stringify({ error: 'User query and blog posts data are required.' }), {
@@ -65,7 +65,7 @@ serve(async (req: Request) => {
     }
 
     // Determine which Longcat AI model to use
-    const aiModel = "LongCat-Flash-Thinking"; // Always use LongCat-Flash-Thinking
+    const aiModel = deepThinkMode ? "LongCat-Flash-Thinking" : "LongCat-Flash-Chat";
 
     // Format blog posts data for the AI prompt
     const formattedBlogPosts = blogPostsData.map((post: any, index: number) => `
