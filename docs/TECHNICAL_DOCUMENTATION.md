@@ -12,7 +12,7 @@ The application is built using the following technologies:
 *   **Backend/Database/Auth:** Supabase (PostgreSQL, Auth, Edge Functions)
 *   **AI Integration:** Longcat AI API
 *   **Video Data:** YouTube Data API
-*   **External Search:** **(Removed - Google Custom Search API is no longer used)**
+*   **External Search:** Google Custom Search API (re-introduced for DeepSearch)
 *   **PDF Generation:** \`html2pdf.js\`
 *   **Icons:** \`lucide-react\`
 *   **Utilities:** \`clsx\`, \`tailwind-merge\` (\`cn\` utility)
@@ -33,18 +33,18 @@ The project follows a standard React application structure with specific directo
     *   \`src/components/\`: Reusable UI components.
         *   \`src/components/Header.tsx\`: Global application header with the **SentiVibe wordmark**, a **theme toggle**, and **public links to 'Analyze a Video', 'Analysis Library', 'Compare Videos', 'Comparison Library'**. Now includes an "Upgrade" button for authenticated free users and an "Account" link.
         *   \`src/components/ModeToggle.tsx\`: Component for switching between themes.
-        *   \`src/components/ChatInterface.tsx\`: Generic chat UI component, now with \`disabled\` prop.
+        *   \`src/components/ChatInterface.tsx\`: Generic chat UI component, now with \`disabled\`, \`deepThinkEnabled\`, and **\`deepSearchEnabled\`** props.
         *   \`src/components/ProtectedRoute.tsx\`: Component for protecting routes (now less critical due to public-first strategy, but still present for \`MyAnalyses\`).
         *   \`src/components/Footer.tsx\`: Application footer, now including the **brand ethics disclosure**.
         *   \`src/components/theme-provider.tsx\`: Theme context provider, **updated to support new themes**.
-        *   \`src/components/VideoChatDialog.tsx\`: **Updated component for the centralized AI chat pop-up for single video analyses, now passing custom Q&A results as context, allowing precise word count control, and with chat message limits and max response word count removed. External context fetching has been removed.**
-        *   \`src/components/LibraryCopilot.tsx\`: **Enhanced AI assistant for searching the analysis library and recommending new analysis topics, with daily query limits removed.**
+        *   \`src/components/VideoChatDialog.tsx\`: **Updated component for the centralized AI chat pop-up for single video analyses, now passing custom Q&A results as context, allowing precise word count control, and with \`deepThinkEnabled\` and \`deepSearchEnabled\` toggles. Chat message limits and max response word count removed.**
+        *   \`src/components/LibraryCopilot.tsx\`: **Enhanced AI assistant for searching the analysis library and recommending new analysis topics, with \`deepThinkEnabled\` and \`deepSearchEnabled\` toggles. Daily query limits removed.**
         *   \`src/components/ComparisonDataDisplay.tsx\`: **Component to display structured comparison data for two videos, with robust rendering for \`delta_description\`.**
         *   \`src/components/MultiComparisonDataDisplay.tsx\`: **Component to display structured comparison data for multiple videos.**
-        *   \`src/components/ComparisonChatDialog.tsx\`: **New component for the centralized AI chat pop-up for two-video comparisons, with chat message limits and max response word count removed. External context fetching has been removed.**
-        *   \`src/components/MultiComparisonChatDialog.tsx\`: **New component for the centralized AI chat pop-up for multi-video comparisons, with chat message limits and max response word count removed. External context fetching has been removed.**
-        *   \`src/components/ComparisonLibraryCopilot.tsx\`: **New AI assistant for searching the comparison library and recommending new comparative analysis topics, with daily query limits removed. External context has been removed from the AI prompt.**
-        *   \`src/components/HowItWorksCopilot.tsx\`: **New component for the How It Works guide assistant.**
+        *   \`src/components/ComparisonChatDialog.tsx\`: **New component for the centralized AI chat pop-up for two-video comparisons, with \`deepThinkEnabled\` and \`deepSearchEnabled\` toggles. Chat message limits and max response word count removed.**
+        *   \`src/components/MultiComparisonChatDialog.tsx\`: **New component for the centralized AI chat pop-up for multi-video comparisons, with \`deepThinkEnabled\` and \`deepSearchEnabled\` toggles. Chat message limits and max response word count removed.**
+        *   \`src/components/ComparisonLibraryCopilot.tsx\`: **New AI assistant for searching the comparison library and recommending new comparative analysis topics, with \`deepThinkEnabled\` and \`deepSearchEnabled\` toggles. Daily query limits removed.**
+        *   \`src/components/HowItWorksCopilot.tsx\`: **New component for the How It Works guide assistant, with \`deepThinkEnabled\` and \`deepSearchEnabled\` toggles.**
         *   \`src/components/ui/\`: Shadcn/ui components (e.g., Button, Card, Input, Badge, Alert, Skeleton, Collapsible).
     *   \`src/hooks/\`: Custom React hooks.
         *   \`src/hooks/use-mobile.tsx\`: Hook for detecting mobile viewport.
@@ -76,15 +76,15 @@ The project follows a standard React application structure with specific directo
     *   \`supabase/\`: Supabase-related backend files.
         *   \`supabase/functions/\`: Supabase Edge Functions.
             *   \`supabase/functions/youtube-analyzer/index.ts\`: **Significantly updated Edge Function for video analysis, now implementing staleness-freshness logic, processing custom questions (unlimited), making additional AI calls for answers, and storing these Q&A results in the database, even for cached videos. It also handles a \`forceReanalyze\` flag, explicitly stores top 10 comments, and enforces tier-based daily analysis limits. AI prompts have been extensively engineered for high-quality, production-grade responses for sentiment analysis, blog post generation, and custom Q&A, and the authentication check has been removed to allow unauthenticated access.**
-            *   \`supabase/functions/fetch-external-context/index.ts\`: **(Removed) This Edge Function has been deleted as external context is no longer used for chat or analysis.**
-            *   \`supabase/functions/chat-analyzer/index.ts\`: **Updated Edge Function for handling AI chat conversations for single videos, now incorporating custom Q&A results into the AI's context, using a desired word count for response length, and with chat message limits and max response word count removed. External context has been removed from the AI prompt. AI prompts have been extensively engineered for high-quality, production-grade responses, including a strict information hierarchy, precise word count adherence, and mandatory Markdown hyperlink formatting. The authentication check has been removed to allow unauthenticated access.**
-            *   \`supabase/functions/library-copilot-analyzer/index.ts\`: **Enhanced AI assistant for handling AI chat for the Library Copilot, now performing semantic search, proactively recommending new analysis topics, and with daily query limits removed. External context has been removed from the AI prompt. AI prompts have been extensively engineered for high-quality, production-grade responses, including precise matching, clear recommendations, and mandatory Markdown hyperlink formatting. The authentication check has been removed to allow unauthenticated access.**
+            *   \`supabase/functions/fetch-external-context/index.ts\`: **(Re-created) This Edge Function now fetches external context using Google Custom Search.**
+            *   \`supabase/functions/chat-analyzer/index.ts\`: **Updated Edge Function for handling AI chat conversations for single videos, now incorporating custom Q&A results into the AI's context, using a desired word count for response length, and with \`deepThinkMode\` and \`deepSearchMode\` toggles. External context is now conditionally fetched and included in the AI prompt. Chat message limits and max response word count removed. AI prompts have been extensively engineered for high-quality, production-grade responses, including a strict information hierarchy, precise word count adherence, and mandatory Markdown hyperlink formatting. The authentication check has been removed to allow unauthenticated access.**
+            *   \`supabase/functions/library-copilot-analyzer/index.ts\`: **Enhanced AI assistant for handling AI chat for the Library Copilot, now performing semantic search, proactively recommending new analysis topics, and with \`deepThinkMode\` and \`deepSearchMode\` toggles. External context is now conditionally fetched and included in the AI prompt. Daily query limits removed. AI prompts have been extensively engineered for high-quality, production-grade responses, including precise matching, clear recommendations, and mandatory Markdown hyperlink formatting. The authentication check has been removed to allow unauthenticated access.**
             *   \`supabase/functions/video-comparator/index.ts\`: **Updated Edge Function for two-video comparisons, removing external context fetching.**
-            *   \`supabase/functions/comparison-chat-analyzer/index.ts\`: **New Edge Function for handling AI chat conversations for two-video comparisons, with chat message limits and max response word count removed. External context has been removed from the AI prompt.**
+            *   \`supabase/functions/comparison-chat-analyzer/index.ts\`: **New Edge Function for handling AI chat conversations for two-video comparisons, with \`deepThinkMode\` and \`deepSearchMode\` toggles. External context is now conditionally fetched and included in the AI prompt. Chat message limits and max response word count removed.**
             *   \`supabase/functions/multi-video-comparator/index.ts\`: **New Edge Function for multi-video comparisons, implementing robust staleness/freshness logic, orchestrating individual video analysis refreshes, generating comparative insights, handling custom comparative questions (unlimited), and enforcing tier-based daily comparison limits. External context fetching has been removed.**
-            *   \`supabase/functions/multi-comparison-chat-analyzer/index.ts\`: **New Edge Function for handling AI chat conversations for multi-video comparisons, with chat message limits and max response word count removed. External context has been removed from the AI prompt.**
-            *   \`supabase/functions/comparison-library-copilot-analyzer/index.ts\`: **New AI assistant for handling AI chat for the Comparison Library Copilot, performing semantic search, recommending new comparative analysis topics, and with daily query limits removed. External context has been removed from the AI prompt.**
-            *   \`supabase/functions/how-it-works-copilot-analyzer/index.ts\`: **New Edge Function for the How It Works guide assistant.**
+            *   \`supabase/functions/multi-comparison-chat-analyzer/index.ts\`: **New Edge Function for handling AI chat conversations for multi-video comparisons, with \`deepThinkMode\` and \`deepSearchMode\` toggles. External context is now conditionally fetched and included in the AI prompt. Chat message limits and max response word count removed.**
+            *   \`supabase/functions/comparison-library-copilot-analyzer/index.ts\`: **New AI assistant for handling AI chat for the Comparison Library Copilot, performing semantic search, recommending new comparative analysis topics, and with \`deepThinkMode\` and \`deepSearchMode\` toggles. External context is now conditionally fetched and included in the AI prompt. Daily query limits removed. AI prompts have been extensively engineered for high-quality, production-grade responses, including precise matching, clear recommendations, and mandatory Markdown hyperlink formatting. The authentication check has been removed to allow unauthenticated access.**
+            *   \`supabase/functions/how-it-works-copilot-analyzer/index.ts\`: **New Edge Function for the How It Works guide assistant, with \`deepThinkMode\` and \`deepSearchMode\` toggles. External context is now conditionally fetched and included in the AI prompt.**
             *   \`supabase/functions/get-anon-usage/index.ts\`: **New Edge Function to retrieve anonymous user usage data for IP-based rate limiting, now only tracking analyses and comparisons.**
             *   \`supabase/functions/paddle-webhook-handler/index.ts\`: **Updated Edge Function to correctly verify Paddle V2 webhooks using Deno's Web Crypto API and manage user subscriptions.**
         *   \`supabase/migrations/\`: Database migration files.
@@ -490,15 +490,15 @@ This Deno-based serverless function is responsible for orchestrating multi-video
 *   **Error Handling:** Includes comprehensive \`try-catch\` blocks, **returning 403 status for daily comparison limit exceedances.**
 
 ### 5.7. Supabase Edge Function (\`supabase/functions/fetch-external-context/index.ts\`)
-**This Edge Function has been removed as external context is no longer used for chat or analysis.**
+**This Edge Function now fetches external context using Google Custom Search.**
 
 ### 5.8. Supabase Edge Function (\`supabase/functions/chat-analyzer/index.ts\`)
-This Deno-based serverless function handles the conversational AI aspect for **single video analyses**. **It now includes API key rotation, explicit instructions for Markdown hyperlinks, incorporates custom Q&A results into its context, and with chat message limits and max response word count removed. External context has been removed from the AI prompt. AI prompts have been extensively engineered for high-quality, production-grade responses, including a strict information hierarchy, precise word count adherence, and mandatory Markdown hyperlink formatting.**
+This Deno-based serverless function handles the conversational AI aspect for **single video analyses**. **It now includes API key rotation, explicit instructions for Markdown hyperlinks, incorporates custom Q&A results into its context, and with \`deepThinkMode\` and \`deepSearchMode\` toggles. External context is now conditionally fetched and included in the AI prompt. Chat message limits and max response word count removed. AI prompts have been extensively engineered for high-quality, production-grade responses, including a strict information hierarchy, precise word count adherence, and mandatory Markdown hyperlink formatting.**
 *   **CORS Handling:** Includes \`corsHeaders\` and handles \`OPTIONS\` preflight requests.
 *   **Supabase Client Initialization & User Authentication:** Creates a Supabase client within the function, gracefully handling a potentially missing user \`Authorization\` header.
 *   **Tier Determination:** **Removed. Chat is now unlimited for all tiers.**
 *   **Usage Enforcement:** **Removed. Chat is now unlimited for all tiers.**
-*   **Input:** Receives \`userMessage\`, \`chatMessages\` (conversation history), \`analysisResult\` (full video analysis including top comments, creator name, thumbnail URL, \`aiAnalysis\` object, and **\`customQaResults\`**), \`desiredWordCount\`, and \`selectedPersona\` from the frontend.
+*   **Input:** Receives \`userMessage\`, \`chatMessages\` (conversation history), \`analysisResult\` (full video analysis including top comments, creator name, thumbnail URL, \`aiAnalysis\` object, and **\`customQaResults\`**), \`desiredWordCount\`, \`selectedPersona\`, \`deepThinkMode\`, and \`deepSearchMode\` from the frontend.
 *   **API Key Retrieval & Rotation:**
     *   Retrieves a list of \`LONGCAT_AI_API_KEY\`s using the \`getApiKeys\` helper function.
     *   Iterates through the available keys, retrying the Longcat AI API call with the next key if a rate limit error (HTTP 429) is encountered.
@@ -508,7 +508,7 @@ This Deno-based serverless function handles the conversational AI aspect for **s
     *   **System Prompt:** Dynamically generated based on persona, including instructions for information prioritization, adherence to response length, explicit word count targets, and **Markdown link formatting**.
     *   **Analysis Context:** Formats \`analysisResult\` (video details, sentiment, themes, summary, top 10 raw comments, creator name, thumbnail URL) into a dedicated string.
     *   **Custom Q&A Context:** A new section is added to the \`fullContext\` string, including the \`customQaResults\` if available, allowing the chat AI to reference these pre-generated answers.
-    *   **External Context:** **Removed from prompt construction.**
+    *   **External Context:** **Conditionally included if \`deepSearchMode\` is true.**
     *   **Conversation History:** Appends formatted \`chatMessages\` to maintain conversational flow.
     *   **User Message:** Includes the current \`userMessage\`.
 *   **Longcat AI API Call:** Sends the constructed \`messages\` array to the Longcat AI API.
@@ -516,12 +516,12 @@ This Deno-based serverless function handles the conversational AI aspect for **s
 *   **Error Handling:** Includes comprehensive \`try-catch\` blocks.
 
 ### 5.9. Supabase Edge Function (\`supabase/functions/multi-comparison-chat-analyzer/index.ts\`)
-This Deno-based serverless function handles the conversational AI aspect for **multi-video comparisons**. **It now includes API key rotation, explicit instructions for Markdown hyperlinks, incorporates custom Q&A results into its context, and with chat message limits and max response word count removed. External context has been removed from the AI prompt.**
+This Deno-based serverless function handles the conversational AI aspect for **multi-video comparisons**. **It now includes API key rotation, explicit instructions for Markdown hyperlinks, incorporates custom Q&A results into its context, and with \`deepThinkMode\` and \`deepSearchMode\` toggles. External context is now conditionally fetched and included in the AI prompt.**
 *   **CORS Handling:** Includes \`corsHeaders\` and handles \`OPTIONS\` preflight requests.
 *   **Supabase Client Initialization & User Authentication:** Creates a Supabase client within the function, gracefully handling a potentially missing user \`Authorization\` header.
 *   **Tier Determination:** **Removed. Chat is now unlimited for all tiers.**
 *   **Usage Enforcement:** **Removed. Chat is now unlimited for all tiers.**
-*   **Input:** Receives \`userMessage\`, \`chatMessages\`, \`multiComparisonResult\` (including structured comparison data, custom comparative Q&A, and raw comments for each video), \`desiredWordCount\`, and \`selectedPersona\`.
+*   **Input:** Receives \`userMessage\`, \`chatMessages\`, \`multiComparisonResult\` (including structured comparison data, custom comparative Q&A, and raw comments for each video), \`desiredWordCount\`, \`selectedPersona\`, \`deepThinkMode\`, and \`deepSearchMode\`.
 *   **API Key Retrieval & Rotation:** Retrieves \`LONGCAT_AI_API_KEY\`s and handles rate limits.
 *   **Dynamic \`max_tokens\`:** Adjusts \`max_tokens\` based on \`finalDesiredWordCount\`.
 *   **Dynamic \`systemPrompt\`:** Constructs the AI's \`systemPrompt\` based on \`selectedPersona\`, including instructions for information prioritization, word count, and Markdown hyperlink formatting.
@@ -529,7 +529,7 @@ This Deno-based serverless function handles the conversational AI aspect for **m
     *   **System Prompt:** Dynamically generated based on persona, including instructions for information prioritization, adherence to response length, explicit word count targets, and Markdown link formatting.
     *   **Multi-Comparison Context:** Formats \`multiComparisonResult\` (comparison title, meta description, keywords, structured comparison data, individual video contexts including top comments) into a dedicated string.
     *   **Custom Comparative Q&A Context:** Includes \`custom_comparative_qa_results\` if available.
-    *   **External Context:** **Removed from prompt construction.**
+    *   **External Context:** **Conditionally included if \`deepSearchMode\` is true.**
     *   **Conversation History:** Appends formatted \`chatMessages\` to maintain conversational flow.
     *   **User Message:** Includes the current \`userMessage\`.
 *   **Longcat AI API Call:** Sends the constructed \`messages\` array to the Longcat AI API.
@@ -542,7 +542,7 @@ This Deno-based serverless function handles the AI-powered search within the sin
 *   **Supabase Client Initialization & User Authentication:** Creates a Supabase client within the function, gracefully handling a potentially missing user \`Authorization\` header.
 *   **Tier Determination:** **Removed. Copilot queries are now unlimited for all tiers.**
 *   **Usage Enforcement:** **Removed. Copilot queries are now unlimited for all tiers.**
-*   **Input:** Receives \`userQuery\` and \`blogPostsData\` (a simplified list of blog posts) from the frontend.
+*   **Input:** Receives \`userQuery\`, \`blogPostsData\` (a simplified list of blog posts), \`deepThinkMode\`, and \`deepSearchMode\` from the frontend.
 *   **API Key Retrieval & Rotation:** Retrieves a list of \`LONGCAT_AI_API_KEY\`s and iterates through them for API calls.
 *   **\`systemPrompt\`:** Explicitly instructs the AI to identify relevant blog posts and provide their titles with **Markdown links in the format \`[Title of Blog Post](/blog/slug-of-blog-post)\`**. **It also now instructs the AI to suggest 1 to 3 new, related analysis topics or video ideas based on the user's query and the existing library content.**
 *   **Longcat AI API Call:** Sends the formatted blog post data and user query to the Longcat AI API.
@@ -555,7 +555,7 @@ This Deno-based serverless function handles the AI-powered search within the mul
 *   **Supabase Client Initialization & User Authentication:** Creates a Supabase client within the function, gracefully handling a potentially missing user \`Authorization\` header.
 *   **Tier Determination:** **Removed. Copilot queries are now unlimited for all tiers.**
 *   **Usage Enforcement:** **Removed. Copilot queries are now unlimited for all tiers.**
-*   **Input:** Receives \`userQuery\` and \`comparisonsData\` (a simplified list of multi-comparisons) from the frontend.
+*   **Input:** Receives \`userQuery\`, \`comparisonsData\` (a simplified list of multi-comparisons), \`deepThinkMode\`, and \`deepSearchMode\` from the frontend.
 *   **API Key Retrieval & Rotation:** Retrieves \`LONGCAT_AI_API_KEY\`s and handles rate limits.
 *   **\`systemPrompt\`:** Explicitly instructs the AI to identify relevant comparison blog posts and provide their titles with **Markdown links in the format \`[Title of Comparison Blog Post](/multi-comparison/slug-of-comparison-blog-post)\`**. **It also instructs the AI to suggest 1 to 3 new, related comparative analysis topics or video pairs based on the user's query and the existing library content.**
 *   **Longcat AI API Call:** Sends the formatted comparison data and user query to the Longcat AI API.
@@ -594,4 +594,4 @@ Key dependencies include:
 *   \`sonner\`: For toast notifications.
 *   \`react-markdown\`, \`remark-gfm\`: For rendering Markdown in chat messages and blog posts.
 *   Shadcn/ui components and their Radix UI foundations.
-*   **Google Custom Search API (external service): No longer used.**
+*   **Google Custom Search API (external service): Re-introduced for DeepSearch.**

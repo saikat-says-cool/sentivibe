@@ -53,7 +53,7 @@ serve(async (req: Request) => {
       }
     );
 
-    const { userMessage, chatMessages, multiComparisonResult, desiredWordCount, selectedPersona, deepThinkMode } = await req.json(); // Added deepThinkMode
+    const { userMessage, chatMessages, multiComparisonResult, desiredWordCount, selectedPersona, deepThinkMode, deepSearchMode } = await req.json(); // Added deepSearchMode
 
     if (!userMessage || !multiComparisonResult) {
       return new Response(JSON.stringify({ error: 'User message and multi-comparison result are required.' }), {
@@ -63,6 +63,22 @@ serve(async (req: Request) => {
     }
 
     const finalDesiredWordCount = desiredWordCount;
+
+    // --- Fetch External Context if DeepSearch is enabled ---
+    let externalContext = '';
+    if (deepSearchMode) {
+      const externalContextQuery = `${multiComparisonResult.title} ${userMessage}`;
+      const fetchExternalContextResponse = await supabaseClient.functions.invoke('fetch-external-context', {
+        body: { query: externalContextQuery },
+      });
+
+      if (fetchExternalContextResponse.error) {
+        console.warn("Error fetching external context for multi-comparison chat:", fetchExternalContextResponse.error);
+        externalContext = `(Note: Failed to fetch external context: ${fetchExternalContextResponse.error.message})`;
+      } else {
+        externalContext = fetchExternalContextResponse.data.externalSearchResults;
+      }
+    }
 
     // --- Longcat AI API Call ---
     const longcatApiKeys = getApiKeys('LONGCAT_AI_API_KEY');
@@ -86,7 +102,8 @@ serve(async (req: Request) => {
     1.  **Completeness:** Always provide a complete, coherent, and well-formed response. **Never cut off sentences or thoughts.** If you need to shorten a response to meet a word count, do so by summarizing or being more concise, not by abruptly ending a sentence.
     2.  **Information Hierarchy:**
         *   **Primary:** Prioritize information directly from the 'Multi-Comparison Analysis Context' (including structured comparison data, individual video analyses, and raw comments) for video-specific questions.
-        *   **Secondary:** For general, time-independent questions not covered by the above, leverage your own pre-existing knowledge.
+        *   **Secondary:** If 'External Search Results' are provided, integrate them to enhance the answer, especially for broader or real-time context.
+        *   **Tertiary:** For general, time-independent questions not covered by the above, leverage your own pre-existing knowledge.
     3.  **Word Count:** Adhere strictly to the user's requested response length (approximately ${finalDesiredWordCount} words). This is a hard constraint. If a comprehensive answer exceeds this, provide the most critical information concisely.
     4.  **Formatting:**
         *   **Hyperlinks:** Whenever you mention a URL or a resource that can be linked, format it as a **Markdown hyperlink**: \`[Link Text](URL)\`. This is mandatory.
@@ -150,6 +167,7 @@ serve(async (req: Request) => {
     ${individualVideoContexts}
     --- End Multi-Comparison Analysis Context ---
     ${customComparativeQaContext}
+    ${externalContext ? `\n\n--- External Search Results ---\n${externalContext}\n--- End External Search Results ---` : ''}
     `;
 
     // Convert chatMessages to the format expected by Longcat AI

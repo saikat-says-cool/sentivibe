@@ -51,7 +51,7 @@ serve(async (req: Request) => {
       }
     );
 
-    const { userQuery, chatMessages, productDocumentation, technicalDocumentation, deepThinkMode, desiredWordCount, selectedPersona } = await req.json();
+    const { userQuery, chatMessages, productDocumentation, technicalDocumentation, deepThinkMode, deepSearchMode, desiredWordCount, selectedPersona } = await req.json(); // Added deepSearchMode
 
     if (!userQuery || !productDocumentation || !technicalDocumentation) {
       return new Response(JSON.stringify({ error: 'User query and documentation content are required.' }), {
@@ -61,6 +61,22 @@ serve(async (req: Request) => {
     }
 
     const finalDesiredWordCount = desiredWordCount;
+
+    // --- Fetch External Context if DeepSearch is enabled ---
+    let externalContext = '';
+    if (deepSearchMode) {
+      const externalContextQuery = `${userQuery} SentiVibe documentation`;
+      const fetchExternalContextResponse = await supabaseClient.functions.invoke('fetch-external-context', {
+        body: { query: externalContextQuery },
+      });
+
+      if (fetchExternalContextResponse.error) {
+        console.warn("Error fetching external context for How It Works Copilot:", fetchExternalContextResponse.error);
+        externalContext = `(Note: Failed to fetch external context: ${fetchExternalContextResponse.error.message})`;
+      } else {
+        externalContext = fetchExternalContextResponse.data.externalSearchResults;
+      }
+    }
 
     // --- Longcat AI API Call ---
     const longcatApiKeys = getApiKeys('LONGCAT_AI_API_KEY');
@@ -85,7 +101,8 @@ serve(async (req: Request) => {
     2.  **Completeness:** Always provide a complete, coherent, and well-formed response. **Never cut off sentences or thoughts.** If you need to shorten a response to meet a word count, do so by summarizing or being more concise, not by abruptly ending a sentence.
     3.  **Information Hierarchy:**
         *   **Primary:** Prioritize information directly from the provided 'Product Documentation' and 'Technical Documentation' for SentiVibe-specific questions, including code examples where relevant.
-        *   **Secondary:** For general, time-independent questions not covered by the above, leverage your own pre-existing knowledge.
+        *   **Secondary:** If 'External Search Results' are provided, integrate them to enhance the answer, especially for broader or real-time context.
+        *   **Tertiary:** For general, time-independent questions not covered by the above, leverage your own pre-existing knowledge.
     4.  **Word Count:** Adhere strictly to the user's requested response length (approximately ${finalDesiredWordCount} words). This is a hard constraint. If a comprehensive answer exceeds this, provide the most critical information concisely.
     5.  **Formatting:**
         *   **Markdown:** Use Markdown extensively for clarity, including headings, bullet points, bolding, and code blocks for code snippets.
@@ -125,6 +142,7 @@ serve(async (req: Request) => {
     --- SentiVibe Technical Documentation (including code details, loopholes, blindspots) ---
     ${technicalDocumentation}
     --- End SentiVibe Technical Documentation ---
+    ${externalContext ? `\n\n--- External Search Results ---\n${externalContext}\n--- End External Search Results ---` : ''}
     `;
 
     // Convert chatMessages to the format expected by Longcat AI

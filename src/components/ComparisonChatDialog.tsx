@@ -63,6 +63,7 @@ const ComparisonChatDialog: React.FC<ComparisonChatDialogProps> = ({
   const [desiredWordCount, setDesiredWordCount] = React.useState<number>(300);
   const [selectedPersona, setSelectedPersona] = React.useState<string>("friendly");
   const [deepThinkMode, setDeepThinkMode] = useState<boolean>(false); // New state for DeepThink mode
+  const [deepSearchMode, setDeepSearchMode] = useState<boolean>(false); // New state for DeepSearch mode
   const [error, setError] = React.useState<string | null>(null);
 
   useEffect(() => {
@@ -82,6 +83,7 @@ const ComparisonChatDialog: React.FC<ComparisonChatDialogProps> = ({
       setChatMessages([]);
       setError(null);
       setDeepThinkMode(false); // Reset DeepThink mode when dialog closes
+      setDeepSearchMode(false); // Reset DeepSearch mode when dialog closes
     }
   }, [isOpen, initialComparisonResult]);
 
@@ -115,6 +117,7 @@ const ComparisonChatDialog: React.FC<ComparisonChatDialogProps> = ({
           desiredWordCount: desiredWordCount,
           selectedPersona: selectedPersona,
           deepThinkMode: deepThinkMode, // Pass deepThinkMode to the Edge Function
+          deepSearchMode: deepSearchMode, // Pass deepSearchMode to the Edge Function
         },
       });
 
@@ -209,6 +212,15 @@ const ComparisonChatDialog: React.FC<ComparisonChatDialogProps> = ({
             />
             <Label htmlFor="deep-think-mode" className="text-sm text-muted-foreground">DeepThink</Label>
           </div>
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="deep-search-mode"
+              checked={deepSearchMode}
+              onCheckedChange={setDeepSearchMode}
+              disabled={isChatDisabled}
+            />
+            <Label htmlFor="deep-search-mode" className="text-sm text-muted-foreground">DeepSearch</Label>
+          </div>
         </div>
         {error && (
           <Alert variant="destructive" className="mb-4">
@@ -226,6 +238,8 @@ const ComparisonChatDialog: React.FC<ComparisonChatDialogProps> = ({
             disabled={isChatDisabled}
             deepThinkEnabled={deepThinkMode} // Pass deepThinkMode
             onToggleDeepThink={setDeepThinkMode} // Pass setter for deepThinkMode
+            deepSearchEnabled={deepSearchMode} // Pass deepSearchMode
+            onToggleDeepSearch={setDeepSearchMode} // Pass setter for deepSearchMode
           />
         </div>
       </DialogContent>

@@ -41,6 +41,7 @@ const ComparisonLibraryCopilot: React.FC<ComparisonLibraryCopilotProps> = ({ com
   const [isOpen, setIsOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
   const [deepThinkMode, setDeepThinkMode] = useState<boolean>(false); // New state for DeepThink mode
+  const [deepSearchMode, setDeepSearchMode] = useState<boolean>(false); // New state for DeepSearch mode
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -57,6 +58,7 @@ const ComparisonLibraryCopilot: React.FC<ComparisonLibraryCopilotProps> = ({ com
       setChatMessages([]);
       setError(null); // Clear error when dialog closes
       setDeepThinkMode(false); // Reset DeepThink mode when dialog closes
+      setDeepSearchMode(false); // Reset DeepSearch mode when dialog closes
     }
   }, [isOpen]);
 
@@ -90,6 +92,7 @@ const ComparisonLibraryCopilot: React.FC<ComparisonLibraryCopilotProps> = ({ com
           userQuery: userQuery,
           comparisonsData: simplifiedComparisons,
           deepThinkMode: deepThinkMode, // Pass deepThinkMode to the Edge Function
+          deepSearchMode: deepSearchMode, // Pass deepSearchMode to the Edge Function
         },
       });
 
@@ -155,14 +158,25 @@ const ComparisonLibraryCopilot: React.FC<ComparisonLibraryCopilotProps> = ({ com
             Ask me to help you find specific video comparisons from your library or suggest new topics.
           </DialogDescription>
         </DialogHeader>
-        <div className="flex items-center space-x-2 mt-2 mb-4">
-          <Switch
-            id="deep-think-mode-copilot"
-            checked={deepThinkMode}
-            onCheckedChange={setDeepThinkMode}
-            disabled={isCopilotDisabled}
-          />
-          <Label htmlFor="deep-think-mode-copilot" className="text-sm text-muted-foreground">DeepThink Mode</Label>
+        <div className="flex items-center space-x-4 mt-2 mb-4">
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="deep-think-mode-copilot"
+              checked={deepThinkMode}
+              onCheckedChange={setDeepThinkMode}
+              disabled={isCopilotDisabled}
+            />
+            <Label htmlFor="deep-think-mode-copilot" className="text-sm text-muted-foreground">DeepThink</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="deep-search-mode-copilot"
+              checked={deepSearchMode}
+              onCheckedChange={setDeepSearchMode}
+              disabled={isCopilotDisabled}
+            />
+            <Label htmlFor="deep-search-mode-copilot" className="text-sm text-muted-foreground">DeepSearch</Label>
+          </div>
         </div>
         {error && (
           <Alert variant="destructive" className="mb-4">
@@ -180,6 +194,8 @@ const ComparisonLibraryCopilot: React.FC<ComparisonLibraryCopilotProps> = ({ com
             disabled={isCopilotDisabled}
             deepThinkEnabled={deepThinkMode}
             onToggleDeepThink={setDeepThinkMode}
+            deepSearchEnabled={deepSearchMode}
+            onToggleDeepSearch={setDeepSearchMode}
           />
         </div>
       </DialogContent>

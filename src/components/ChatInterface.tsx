@@ -21,9 +21,11 @@ interface ChatInterfaceProps {
   disabled?: boolean;
   deepThinkEnabled: boolean; // New prop for DeepThink state
   onToggleDeepThink: (checked: boolean) => void; // New prop for toggling DeepThink
+  deepSearchEnabled: boolean; // New prop for DeepSearch state
+  onToggleDeepSearch: (checked: boolean) => void; // New prop for toggling DeepSearch
 }
 
-const ChatInterface: React.FC<ChatInterfaceProps> = ({ messages, onSendMessage, isLoading, disabled = false, deepThinkEnabled, onToggleDeepThink }) => {
+const ChatInterface: React.FC<ChatInterfaceProps> = ({ messages, onSendMessage, isLoading, disabled = false, deepThinkEnabled, onToggleDeepThink, deepSearchEnabled, onToggleDeepSearch }) => {
   const [inputMessage, setInputMessage] = React.useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -77,14 +79,25 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ messages, onSendMessage, 
         <div ref={messagesEndRef} />
       </div>
       <form onSubmit={handleSend} className="flex items-center p-4 border-t bg-gray-50 dark:bg-gray-800">
-        <div className="flex items-center space-x-2 mr-4">
-          <Switch
-            id="deep-think-mode"
-            checked={deepThinkEnabled}
-            onCheckedChange={onToggleDeepThink}
-            disabled={isLoading || disabled}
-          />
-          <Label htmlFor="deep-think-mode" className="text-sm text-muted-foreground">DeepThink</Label>
+        <div className="flex items-center space-x-4 mr-4">
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="deep-think-mode"
+              checked={deepThinkEnabled}
+              onCheckedChange={onToggleDeepThink}
+              disabled={isLoading || disabled}
+            />
+            <Label htmlFor="deep-think-mode" className="text-sm text-muted-foreground">DeepThink</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="deep-search-mode"
+              checked={deepSearchEnabled}
+              onCheckedChange={onToggleDeepSearch}
+              disabled={isLoading || disabled}
+            />
+            <Label htmlFor="deep-search-mode" className="text-sm text-muted-foreground">DeepSearch</Label>
+          </div>
         </div>
         <Input
           type="text"

@@ -39,6 +39,7 @@ const HowItWorksCopilot: React.FC<HowItWorksCopilotProps> = ({ productDocumentat
   const [isOpen, setIsOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
   const [deepThinkMode, setDeepThinkMode] = useState<boolean>(false);
+  const [deepSearchMode, setDeepSearchMode] = useState<boolean>(false); // New state for DeepSearch mode
   const [desiredWordCount, setDesiredWordCount] = useState<number>(300);
   const [selectedPersona, setSelectedPersona] = useState<string>("friendly");
   const [error, setError] = useState<string | null>(null);
@@ -57,6 +58,7 @@ const HowItWorksCopilot: React.FC<HowItWorksCopilotProps> = ({ productDocumentat
       setChatMessages([]);
       setError(null);
       setDeepThinkMode(false);
+      setDeepSearchMode(false); // Reset DeepSearch mode when dialog closes
     }
   }, [isOpen]);
 
@@ -83,6 +85,7 @@ const HowItWorksCopilot: React.FC<HowItWorksCopilotProps> = ({ productDocumentat
           productDocumentation: productDocumentation,
           technicalDocumentation: technicalDocumentation,
           deepThinkMode: deepThinkMode,
+          deepSearchMode: deepSearchMode, // Pass deepSearchMode to the Edge Function
           desiredWordCount: desiredWordCount,
           selectedPersona: selectedPersona,
         },
@@ -183,6 +186,15 @@ const HowItWorksCopilot: React.FC<HowItWorksCopilotProps> = ({ productDocumentat
             />
             <Label htmlFor="deep-think-mode" className="text-sm text-muted-foreground">DeepThink</Label>
           </div>
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="deep-search-mode"
+              checked={deepSearchMode}
+              onCheckedChange={setDeepSearchMode}
+              disabled={isCopilotDisabled}
+            />
+            <Label htmlFor="deep-search-mode" className="text-sm text-muted-foreground">DeepSearch</Label>
+          </div>
         </div>
         {error && (
           <Alert variant="destructive" className="mb-4">
@@ -200,6 +212,8 @@ const HowItWorksCopilot: React.FC<HowItWorksCopilotProps> = ({ productDocumentat
             disabled={isCopilotDisabled}
             deepThinkEnabled={deepThinkMode}
             onToggleDeepThink={setDeepThinkMode}
+            deepSearchEnabled={deepSearchMode}
+            onToggleDeepSearch={setDeepSearchMode}
           />
         </div>
       </DialogContent>

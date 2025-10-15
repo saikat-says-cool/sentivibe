@@ -96,6 +96,7 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
   const [desiredWordCount, setDesiredWordCount] = useState<number>(300); 
   const [selectedPersona, setSelectedPersona] = useState<string>("friendly");
   const [deepThinkMode, setDeepThinkMode] = useState<boolean>(false); // New state for DeepThink mode
+  const [deepSearchMode, setDeepSearchMode] = useState<boolean>(false); // New state for DeepSearch mode
   const [currentAnalysisResult, setCurrentAnalysisResult] = useState<AnalysisResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -143,6 +144,7 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
       setChatMessages([]);
       setError(null);
       setDeepThinkMode(false); // Reset DeepThink mode when dialog closes
+      setDeepSearchMode(false); // Reset DeepSearch mode when dialog closes
     }
   }, [isOpen, currentAnalysisResult]);
 
@@ -177,6 +179,7 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
           selectedPersona: selectedPersona,
           customQaResults: currentAnalysisResult.customQaResults,
           deepThinkMode: deepThinkMode, // Pass deepThinkMode to the Edge Function
+          deepSearchMode: deepSearchMode, // Pass deepSearchMode to the Edge Function
         },
       });
 
@@ -271,6 +274,15 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
             />
             <Label htmlFor="deep-think-mode" className="text-sm text-muted-foreground">DeepThink</Label>
           </div>
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="deep-search-mode"
+              checked={deepSearchMode}
+              onCheckedChange={setDeepSearchMode}
+              disabled={isChatDisabled}
+            />
+            <Label htmlFor="deep-search-mode" className="text-sm text-muted-foreground">DeepSearch</Label>
+          </div>
         </div>
         {error && (
           <Alert variant="destructive" className="mb-4">
@@ -288,6 +300,8 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
             disabled={isChatDisabled}
             deepThinkEnabled={deepThinkMode} // Pass deepThinkMode
             onToggleDeepThink={setDeepThinkMode} // Pass setter for deepThinkMode
+            deepSearchEnabled={deepSearchMode} // Pass deepSearchMode
+            onToggleDeepSearch={setDeepSearchMode} // Pass setter for deepSearchMode
           />
         </div>
       </DialogContent>

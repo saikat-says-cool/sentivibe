@@ -54,13 +54,29 @@ serve(async (req: Request) => {
       }
     );
 
-    const { userQuery, comparisonsData, deepThinkMode } = await req.json(); // Added deepThinkMode
+    const { userQuery, comparisonsData, deepThinkMode, deepSearchMode } = await req.json(); // Added deepSearchMode
 
     if (!userQuery || !comparisonsData || !Array.isArray(comparisonsData)) {
       return new Response(JSON.stringify({ error: 'User query and comparisons data are required.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,
       });
+    }
+
+    // --- Fetch External Context if DeepSearch is enabled ---
+    let externalContext = '';
+    if (deepSearchMode) {
+      const externalContextQuery = `${userQuery} multi-video comparison`;
+      const fetchExternalContextResponse = await supabaseClient.functions.invoke('fetch-external-context', {
+        body: { query: externalContextQuery },
+      });
+
+      if (fetchExternalContextResponse.error) {
+        console.warn("Error fetching external context for comparison library copilot:", fetchExternalContextResponse.error);
+        externalContext = `(Note: Failed to fetch external context: ${fetchExternalContextResponse.error.message})`;
+      } else {
+        externalContext = fetchExternalContextResponse.data.externalSearchResults;
+      }
     }
 
     // Determine which Longcat AI model to use
@@ -103,6 +119,14 @@ serve(async (req: Request) => {
 
     const userMessageContent = `Here is the list of available comparison blog posts:\n\n${formattedComparisons}\n\nUser's query: "${userQuery}"\n\nWhich comparison blog posts are most relevant to this query, and what new comparative analysis topics would you recommend based on this query and the existing library?`;
 
+    // Combine all context into a single string to be part of the system message
+    const fullContext = `
+    --- Comparison Library Context ---
+    ${formattedComparisons}
+    --- End Comparison Library Context ---
+    ${externalContext ? `\n\n--- External Search Results ---\n${externalContext}\n--- End External Search Results ---` : ''}
+    `;
+
     // --- Longcat AI API Call ---
     const longcatApiKeys = getApiKeys('LONGCAT_AI_API_KEY');
     if (longcatApiKeys.length === 0) {
@@ -122,8 +146,8 @@ serve(async (req: Request) => {
         body: JSON.stringify({
           model: aiModel, // Use the dynamically selected AI model
           messages: [
-            { role: "system", content: systemPrompt },
-            { role: "user", content: userMessageContent },
+            { role: "system", content: systemPrompt + fullContext }, // Include fullContext in system prompt
+            { role: "user", content: userMessageContent }, // Use userMessageContent here
           ],
           max_tokens: 2000, // Increased max_tokens for copilot
           temperature: 0.5, // Slightly higher temperature for more creative recommendations
