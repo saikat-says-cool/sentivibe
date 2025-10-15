@@ -13,8 +13,7 @@ import ChatInterface from './ChatInterface';
 import { useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Switch } from '@/components/ui/switch'; // Import Switch
-import { Label } from '@/components/ui/label'; // Import Label
+// Removed Switch and Label imports as they are now handled in ChatInterface
 
 interface BlogPost {
   id: string;
@@ -39,8 +38,8 @@ interface LibraryCopilotProps {
 const LibraryCopilot: React.FC<LibraryCopilotProps> = ({ blogPosts }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
-  const [deepThinkMode, setDeepThinkMode] = useState<boolean>(false); // New state for DeepThink mode
-  const [deepSearchMode, setDeepSearchMode] = useState<boolean>(false); // New state for DeepSearch mode
+  const [deepThinkMode, setDeepThinkMode] = useState<boolean>(false);
+  const [deepSearchMode, setDeepSearchMode] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -56,8 +55,8 @@ const LibraryCopilot: React.FC<LibraryCopilotProps> = ({ blogPosts }) => {
     } else {
       setChatMessages([]);
       setError(null); // Clear error when dialog closes
-      setDeepThinkMode(false); // Reset DeepThink mode when dialog closes
-      setDeepSearchMode(false); // Reset DeepSearch mode when dialog closes
+      setDeepThinkMode(false);
+      setDeepSearchMode(false);
     }
   }, [isOpen]);
 
@@ -90,8 +89,8 @@ const LibraryCopilot: React.FC<LibraryCopilotProps> = ({ blogPosts }) => {
         body: {
           userQuery: userQuery,
           blogPostsData: simplifiedBlogPosts,
-          deepThinkMode: deepThinkMode, // Pass deepThinkMode to the Edge Function
-          deepSearchMode: deepSearchMode, // Pass deepSearchMode to the Edge Function
+          deepThinkMode: deepThinkMode,
+          deepSearchMode: deepSearchMode,
         },
       });
 
@@ -157,26 +156,6 @@ const LibraryCopilot: React.FC<LibraryCopilotProps> = ({ blogPosts }) => {
             Ask me to help you find specific video analyses from your library or suggest new topics.
           </DialogDescription>
         </DialogHeader>
-        <div className="flex items-center space-x-4 mt-2 mb-4">
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="deep-think-mode-copilot"
-              checked={deepThinkMode}
-              onCheckedChange={setDeepThinkMode}
-              disabled={isCopilotDisabled}
-            />
-            <Label htmlFor="deep-think-mode-copilot" className="text-sm text-muted-foreground">DeepThink</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="deep-search-mode-copilot"
-              checked={deepSearchMode}
-              onCheckedChange={setDeepSearchMode}
-              disabled={isCopilotDisabled}
-            />
-            <Label htmlFor="deep-search-mode-copilot" className="text-sm text-muted-foreground">DeepSearch</Label>
-          </div>
-        </div>
         {error && (
           <Alert variant="destructive" className="mb-4">
             <AlertTitle>Copilot Error</AlertTitle>

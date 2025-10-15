@@ -20,7 +20,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { MessageSquare } from 'lucide-react';
-import { Switch } from '@/components/ui/switch'; // Import Switch
+// Removed Switch import as it's now handled in ChatInterface
 
 interface CustomComparativeQuestion {
   question: string;
@@ -62,8 +62,8 @@ const ComparisonChatDialog: React.FC<ComparisonChatDialogProps> = ({
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
   const [desiredWordCount, setDesiredWordCount] = React.useState<number>(300);
   const [selectedPersona, setSelectedPersona] = React.useState<string>("friendly");
-  const [deepThinkMode, setDeepThinkMode] = useState<boolean>(false); // New state for DeepThink mode
-  const [deepSearchMode, setDeepSearchMode] = useState<boolean>(false); // New state for DeepSearch mode
+  const [deepThinkMode, setDeepThinkMode] = useState<boolean>(false);
+  const [deepSearchMode, setDeepSearchMode] = useState<boolean>(false);
   const [error, setError] = React.useState<string | null>(null);
 
   useEffect(() => {
@@ -82,8 +82,8 @@ const ComparisonChatDialog: React.FC<ComparisonChatDialogProps> = ({
     } else if (!isOpen) {
       setChatMessages([]);
       setError(null);
-      setDeepThinkMode(false); // Reset DeepThink mode when dialog closes
-      setDeepSearchMode(false); // Reset DeepSearch mode when dialog closes
+      setDeepThinkMode(false);
+      setDeepSearchMode(false);
     }
   }, [isOpen, initialComparisonResult]);
 
@@ -116,8 +116,8 @@ const ComparisonChatDialog: React.FC<ComparisonChatDialogProps> = ({
           comparisonResult: initialComparisonResult,
           desiredWordCount: desiredWordCount,
           selectedPersona: selectedPersona,
-          deepThinkMode: deepThinkMode, // Pass deepThinkMode to the Edge Function
-          deepSearchMode: deepSearchMode, // Pass deepSearchMode to the Edge Function
+          deepThinkMode: deepThinkMode,
+          deepSearchMode: deepSearchMode,
         },
       });
 
@@ -203,24 +203,6 @@ const ComparisonChatDialog: React.FC<ComparisonChatDialogProps> = ({
               disabled={isChatDisabled}
             />
           </div>
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="deep-think-mode"
-              checked={deepThinkMode}
-              onCheckedChange={setDeepThinkMode}
-              disabled={isChatDisabled}
-            />
-            <Label htmlFor="deep-think-mode" className="text-sm text-muted-foreground">DeepThink</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="deep-search-mode"
-              checked={deepSearchMode}
-              onCheckedChange={setDeepSearchMode}
-              disabled={isChatDisabled}
-            />
-            <Label htmlFor="deep-search-mode" className="text-sm text-muted-foreground">DeepSearch</Label>
-          </div>
         </div>
         {error && (
           <Alert variant="destructive" className="mb-4">
@@ -236,10 +218,10 @@ const ComparisonChatDialog: React.FC<ComparisonChatDialogProps> = ({
             onSendMessage={handleSendMessage}
             isLoading={chatMutation.isPending}
             disabled={isChatDisabled}
-            deepThinkEnabled={deepThinkMode} // Pass deepThinkMode
-            onToggleDeepThink={setDeepThinkMode} // Pass setter for deepThinkMode
-            deepSearchEnabled={deepSearchMode} // Pass deepSearchMode
-            onToggleDeepSearch={setDeepSearchMode} // Pass setter for deepSearchMode
+            deepThinkEnabled={deepThinkMode}
+            onToggleDeepThink={setDeepThinkMode}
+            deepSearchEnabled={deepSearchMode}
+            onToggleDeepSearch={setDeepSearchMode}
           />
         </div>
       </DialogContent>

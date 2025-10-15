@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Switch } from '@/components/ui/switch'; // Import Switch
+// Removed Switch import as it's now handled in ChatInterface
 
 interface Message {
   id: string;
@@ -39,7 +39,7 @@ const HowItWorksCopilot: React.FC<HowItWorksCopilotProps> = ({ productDocumentat
   const [isOpen, setIsOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
   const [deepThinkMode, setDeepThinkMode] = useState<boolean>(false);
-  const [deepSearchMode, setDeepSearchMode] = useState<boolean>(false); // New state for DeepSearch mode
+  const [deepSearchMode, setDeepSearchMode] = useState<boolean>(false);
   const [desiredWordCount, setDesiredWordCount] = useState<number>(300);
   const [selectedPersona, setSelectedPersona] = useState<string>("friendly");
   const [error, setError] = useState<string | null>(null);
@@ -58,7 +58,7 @@ const HowItWorksCopilot: React.FC<HowItWorksCopilotProps> = ({ productDocumentat
       setChatMessages([]);
       setError(null);
       setDeepThinkMode(false);
-      setDeepSearchMode(false); // Reset DeepSearch mode when dialog closes
+      setDeepSearchMode(false);
     }
   }, [isOpen]);
 
@@ -85,7 +85,7 @@ const HowItWorksCopilot: React.FC<HowItWorksCopilotProps> = ({ productDocumentat
           productDocumentation: productDocumentation,
           technicalDocumentation: technicalDocumentation,
           deepThinkMode: deepThinkMode,
-          deepSearchMode: deepSearchMode, // Pass deepSearchMode to the Edge Function
+          deepSearchMode: deepSearchMode,
           desiredWordCount: desiredWordCount,
           selectedPersona: selectedPersona,
         },
@@ -176,24 +176,6 @@ const HowItWorksCopilot: React.FC<HowItWorksCopilotProps> = ({ productDocumentat
               className="w-[100px]"
               disabled={isCopilotDisabled}
             />
-          </div>
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="deep-think-mode"
-              checked={deepThinkMode}
-              onCheckedChange={setDeepThinkMode}
-              disabled={isCopilotDisabled}
-            />
-            <Label htmlFor="deep-think-mode" className="text-sm text-muted-foreground">DeepThink</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="deep-search-mode"
-              checked={deepSearchMode}
-              onCheckedChange={setDeepSearchMode}
-              disabled={isCopilotDisabled}
-            />
-            <Label htmlFor="deep-search-mode" className="text-sm text-muted-foreground">DeepSearch</Label>
           </div>
         </div>
         {error && (

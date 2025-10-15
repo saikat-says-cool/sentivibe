@@ -1,12 +1,11 @@
 import React, { useRef, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Send, Loader2 } from 'lucide-react';
+import { Loader2, Search, Sparkles, Shuffle, Globe, Cpu, Paperclip, Mic, Activity } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm'; // For GitHub Flavored Markdown
 import { useLoadingMessages } from '@/hooks/use-loading-messages'; // Import the new hook
-import { Switch } from '@/components/ui/switch'; // Import the Switch component
-import { Label } from '@/components/ui/label'; // Import Label for the switch
+// Removed Switch and Label imports as they are no longer used directly in this component
 
 interface Message {
   id: string;
@@ -19,10 +18,10 @@ interface ChatInterfaceProps {
   onSendMessage: (message: string) => void;
   isLoading: boolean;
   disabled?: boolean;
-  deepThinkEnabled: boolean; // New prop for DeepThink state
-  onToggleDeepThink: (checked: boolean) => void; // New prop for toggling DeepThink
-  deepSearchEnabled: boolean; // New prop for DeepSearch state
-  onToggleDeepSearch: (checked: boolean) => void; // New prop for toggling DeepSearch
+  deepThinkEnabled: boolean;
+  onToggleDeepThink: (checked: boolean) => void;
+  deepSearchEnabled: boolean;
+  onToggleDeepSearch: (checked: boolean) => void;
 }
 
 const ChatInterface: React.FC<ChatInterfaceProps> = ({ messages, onSendMessage, isLoading, disabled = false, deepThinkEnabled, onToggleDeepThink, deepSearchEnabled, onToggleDeepSearch }) => {
@@ -78,38 +77,104 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ messages, onSendMessage, 
         )}
         <div ref={messagesEndRef} />
       </div>
-      <form onSubmit={handleSend} className="flex items-center p-4 border-t bg-gray-50 dark:bg-gray-800">
-        <div className="flex items-center space-x-4 mr-4">
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="deep-think-mode"
-              checked={deepThinkEnabled}
-              onCheckedChange={onToggleDeepThink}
-              disabled={isLoading || disabled}
-            />
-            <Label htmlFor="deep-think-mode" className="text-sm text-muted-foreground">DeepThink</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="deep-search-mode"
-              checked={deepSearchEnabled}
-              onCheckedChange={onToggleDeepSearch}
-              disabled={isLoading || disabled}
-            />
-            <Label htmlFor="deep-search-mode" className="text-sm text-muted-foreground">DeepSearch</Label>
-          </div>
+      <form onSubmit={handleSend} className="flex items-center p-2 border-t bg-gray-900 rounded-b-lg"> {/* Darker background for input area */}
+        <div className="flex items-center space-x-1 mr-2">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={() => onToggleDeepSearch(!deepSearchEnabled)}
+            disabled={isLoading || disabled}
+            className={`h-10 w-10 rounded-lg ${deepSearchEnabled ? 'bg-teal-600 text-white' : 'text-gray-400 hover:bg-gray-700'}`}
+          >
+            <Search className="h-5 w-5" />
+            <span className="sr-only">Toggle DeepSearch</span>
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={() => onToggleDeepThink(!deepThinkEnabled)}
+            disabled={isLoading || disabled}
+            className={`h-10 w-10 rounded-lg ${deepThinkEnabled ? 'bg-teal-600 text-white' : 'text-gray-400 hover:bg-gray-700'}`}
+          >
+            <Sparkles className="h-5 w-5" />
+            <span className="sr-only">Toggle DeepThink</span>
+          </Button>
+          {/* Placeholder for the third icon (shuffle/refresh) */}
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            disabled={isLoading || disabled}
+            className="h-10 w-10 rounded-lg text-gray-400 hover:bg-gray-700"
+          >
+            <Shuffle className="h-5 w-5" />
+            <span className="sr-only">Shuffle/Refresh (Placeholder)</span>
+          </Button>
         </div>
-        <Input
-          type="text"
-          placeholder="Type your message..."
-          value={inputMessage}
-          onChange={(e) => setInputMessage(e.target.value)}
-          className="flex-1 mr-2"
-          disabled={isLoading || disabled}
-        />
-        <Button type="submit" disabled={isLoading || disabled}>
-          {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-        </Button>
+        <div className="flex-1">
+          <Input
+            type="text"
+            placeholder="Type your message..."
+            value={inputMessage}
+            onChange={(e) => setInputMessage(e.target.value)}
+            className="w-full bg-gray-800 text-white border-gray-700 focus:border-teal-500 focus:ring-teal-500 rounded-lg h-10 px-3"
+            disabled={isLoading || disabled}
+          />
+        </div>
+        <div className="flex items-center space-x-1 ml-2">
+          {/* Placeholder icons on the right */}
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            disabled={isLoading || disabled}
+            className="h-10 w-10 rounded-lg text-gray-400 hover:bg-gray-700"
+          >
+            <Globe className="h-5 w-5" />
+            <span className="sr-only">Globe (Placeholder)</span>
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            disabled={isLoading || disabled}
+            className="h-10 w-10 rounded-lg text-gray-400 hover:bg-gray-700"
+          >
+            <Cpu className="h-5 w-5" />
+            <span className="sr-only">CPU (Placeholder)</span>
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            disabled={isLoading || disabled}
+            className="h-10 w-10 rounded-lg text-gray-400 hover:bg-gray-700"
+          >
+            <Paperclip className="h-5 w-5" />
+            <span className="sr-only">Paperclip (Placeholder)</span>
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            disabled={isLoading || disabled}
+            className="h-10 w-10 rounded-lg text-gray-400 hover:bg-gray-700"
+          >
+            <Mic className="h-5 w-5" />
+            <span className="sr-only">Microphone (Placeholder)</span>
+          </Button>
+          <Button
+            type="submit"
+            size="icon"
+            disabled={isLoading || disabled}
+            className="h-10 w-10 rounded-lg bg-teal-600 text-white hover:bg-teal-700"
+          >
+            {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Activity className="h-5 w-5" />}
+            <span className="sr-only">Send Message</span>
+          </Button>
+        </div>
       </form>
     </div>
   );
