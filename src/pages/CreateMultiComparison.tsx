@@ -395,7 +395,7 @@ const CreateMultiComparison = () => {
               <PlusCircle className="h-4 w-4" /> Add Another Video
             </Button>
             <p className="text-sm text-muted-foreground mt-2">
-              <span className="font-semibold text-red-500">Important:</span> Each video must have at least 50 comments for a proper sentiment analysis. Analysis may take up to 30 seconds per video.
+              SentiVibe will analyze the available comments for each video. Analysis may take up to 30 seconds per video.
               <br />
               <span className="font-semibold text-red-500">Note:</span> For reliable and stable performance, multi-video comparisons are currently limited to a maximum of 3 videos simultaneously.
             </p>

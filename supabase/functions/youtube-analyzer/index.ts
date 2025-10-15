@@ -316,7 +316,7 @@ serve(async (req: Request) => { // Explicitly typed 'req' as Request
           .from('anon_usage')
           .upsert({ 
             ip_address: clientIp, 
-            analyses_count: currentAnalysesCount, 
+            analyses_count: anonUsage?.analyses_count || 0, // Preserve other counts
             comparisons_count: anonUsage?.comparisons_count || 0, // Preserve other counts
             last_reset_at: lastResetAt,
             updated_at: now.toISOString(),
@@ -382,12 +382,13 @@ serve(async (req: Request) => { // Explicitly typed 'req' as Request
       const formattedCommentsForAI = commentsWithLikes.map((comment: any) => `(Likes: ${comment.likeCount}) ${comment.text}`);
       const allFetchedCommentsText = commentsWithLikes.map((comment: any) => comment.text);
 
-      if (commentsWithLikes.length < 50) {
-        return new Response(JSON.stringify({ error: `Video must have at least 50 comments to proceed with analysis. This video has ${commentsWithLikes.length} comments.` }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 400,
-        });
-      }
+      // Removed the 50-comment minimum check
+      // if (commentsWithLikes.length < 50) {
+      //   return new Response(JSON.stringify({ error: `Video must have at least 50 comments to proceed with analysis. This video has ${commentsWithLikes.length} comments.` }), {
+      //     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      //     status: 400,
+      //   });
+      // }
 
       // Longcat AI Call (Sentiment Analysis)
       const longcatPrompt = `
@@ -497,7 +498,7 @@ serve(async (req: Request) => { // Explicitly typed 'req' as Request
           }),
         });
         if (longcatBlogPostResponse.ok) break;
-        else if (longcatBlogPostResponse.status === 429) console.warn(`Longcat AI API key hit rate limit for blog post. Trying next key.`);
+        else if (longcatBlogPostResponse.status === 429) console.warn(`Longcat AI API key hit quota limit for blog post. Trying next key.`);
         else break;
       }
       if (!longcatBlogPostResponse || !longcatBlogPostResponse.ok) {

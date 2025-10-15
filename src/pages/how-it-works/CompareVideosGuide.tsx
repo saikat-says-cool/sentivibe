@@ -15,7 +15,6 @@ The "Compare Videos" feature allows you to analyze and contrast audience sentime
 ### Steps:
 1.  **Navigate to "Compare Videos":** Click on the "Compare Videos" link in the header or on the homepage.
 2.  **Enter Video Links:** Paste the full URLs of at least two (and up to three) YouTube videos you wish to compare.
-    *   **Important:** Each video must have at least 50 comments for a proper sentiment analysis.
     *   **Note:** For reliable performance, comparisons are currently limited to a maximum of 3 videos simultaneously.
 3.  **Add Custom Comparative Questions (Optional):** You can add specific questions tailored for comparative insights. These will be answered by the AI and integrated into your comparison report.
 4.  **Initiate Comparison:** Click the "Create Multi-Video Comparison" button.

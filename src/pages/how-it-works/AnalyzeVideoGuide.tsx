@@ -15,7 +15,6 @@ The "Analyze a Video" feature is your starting point for deep diving into audien
 ### Steps:
 1.  **Navigate to "Analyze a Video":** Click on the "Analyze a Video" link in the header or on the homepage.
 2.  **Enter Video Link:** Paste the full URL of the YouTube video you want to analyze into the input field.
-    *   **Important:** The video must have at least 50 comments for a proper sentiment analysis.
 3.  **Add Custom Questions (Optional):** You can add multiple custom questions about the video. For each question, specify a desired word count for the AI's answer. These questions will be answered by the AI and included in your report.
 4.  **Initiate Analysis:** Click the "Analyze Comments & Get Answers" button.
     *   If the video has been analyzed recently, the report will load almost instantly.

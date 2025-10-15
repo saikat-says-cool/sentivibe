@@ -53,7 +53,7 @@ The project follows a standard React application structure with specific directo
     *   \`src/pages/\`: Application pages/views.
         *   \`src/pages/Index.tsx\`: **Updated landing page, now featuring direct calls to action for analyzing videos, comparing videos, and exploring both analysis and comparison libraries.**
         *   \`src/pages/Login.tsx\`: User authentication page, styled to integrate with the new color palette.
-        *   \`src/pages/AnalyzeVideo.tsx\`: **Significantly updated main page for YouTube video analysis, now featuring dynamic custom question input fields with unlimited questions and word limits, displaying AI-generated answers, including a 'Refresh Analysis' button and 'Last Full Analysis' timestamp, a disclaimer about the 50-comment minimum, and enforcing tier-based daily analysis limits. Also explicitly lists top 10 comments.**
+        *   \`src/pages/AnalyzeVideo.tsx\`: **Significantly updated main page for YouTube video analysis, now featuring dynamic custom question input fields with unlimited questions and word limits, displaying AI-generated answers, including a 'Refresh Analysis' button and 'Last Full Analysis' timestamp, and enforcing tier-based daily analysis limits. Also explicitly lists top 10 comments.**
         *   \`src/pages/VideoAnalysisLibrary.tsx\`: **Updated page to list and search generated blog posts (video analyses), with updated BlogPost interface, and integrating the enhanced \`LibraryCopilot\`.**
         *   \`src/pages/MyAnalyses.tsx\`: **Updated page to list a user's own analyses, now integrating the enhanced \`LibraryCopilot\`. Access is available for all authenticated users.**
         *   \`src/pages/BlogPostDetail.tsx\`: **Updated page to display the full content of a single generated blog post, including the new custom Q&A section, a 'Go to Video Analysis' button, a 'Refresh Analysis' button, the 'Last Full Analysis' timestamp, and explicitly lists top 10 comments.**
@@ -78,12 +78,12 @@ The project follows a standard React application structure with specific directo
             *   \`supabase/functions/youtube-analyzer/index.ts\`: **Significantly updated Edge Function for video analysis, now implementing staleness-freshness logic, processing custom questions (unlimited), making additional AI calls for answers, and storing these Q&A results in the database, even for cached videos. It also handles a \`forceReanalyze\` flag, explicitly stores top 10 comments, and enforces tier-based daily analysis limits. AI prompts have been extensively engineered for high-quality, production-grade responses for sentiment analysis, blog post generation, and custom Q&A, and the authentication check has been removed to allow unauthenticated access.**
             *   \`supabase/functions/fetch-external-context/index.ts\`: **(Removed) This Edge Function has been deleted as external context is no longer used for chat or analysis.**
             *   \`supabase/functions/chat-analyzer/index.ts\`: **Updated Edge Function for handling AI chat conversations for single videos, now incorporating custom Q&A results into the AI's context, using a desired word count for response length, and with chat message limits and max response word count removed. External context has been removed from the AI prompt. AI prompts have been extensively engineered for high-quality, production-grade responses, including a strict information hierarchy, precise word count adherence, and mandatory Markdown hyperlink formatting. The authentication check has been removed to allow unauthenticated access.**
-            *   \`supabase/functions/library-copilot-analyzer/index.ts\`: **Enhanced Edge Function for handling AI chat for the Library Copilot, now performing semantic search, proactively recommending new analysis topics, and with daily query limits removed. External context has been removed from the AI prompt. AI prompts have been extensively engineered for high-quality, production-grade responses, including precise matching, clear recommendations, and mandatory Markdown hyperlink formatting. The authentication check has been removed to allow unauthenticated access.**
+            *   \`supabase/functions/library-copilot-analyzer/index.ts\`: **Enhanced AI assistant for handling AI chat for the Library Copilot, now performing semantic search, proactively recommending new analysis topics, and with daily query limits removed. External context has been removed from the AI prompt. AI prompts have been extensively engineered for high-quality, production-grade responses, including precise matching, clear recommendations, and mandatory Markdown hyperlink formatting. The authentication check has been removed to allow unauthenticated access.**
             *   \`supabase/functions/video-comparator/index.ts\`: **Updated Edge Function for two-video comparisons, removing external context fetching.**
             *   \`supabase/functions/comparison-chat-analyzer/index.ts\`: **New Edge Function for handling AI chat conversations for two-video comparisons, with chat message limits and max response word count removed. External context has been removed from the AI prompt.**
             *   \`supabase/functions/multi-video-comparator/index.ts\`: **New Edge Function for multi-video comparisons, implementing robust staleness/freshness logic, orchestrating individual video analysis refreshes, generating comparative insights, handling custom comparative questions (unlimited), and enforcing tier-based daily comparison limits. External context fetching has been removed.**
             *   \`supabase/functions/multi-comparison-chat-analyzer/index.ts\`: **New Edge Function for handling AI chat conversations for multi-video comparisons, with chat message limits and max response word count removed. External context has been removed from the AI prompt.**
-            *   \`supabase/functions/comparison-library-copilot-analyzer/index.ts\`: **New Edge Function for handling AI chat for the Comparison Library Copilot, performing semantic search, recommending new comparative analysis topics, and with daily query limits removed. External context has been removed from the AI prompt.**
+            *   \`supabase/functions/comparison-library-copilot-analyzer/index.ts\`: **New AI assistant for handling AI chat for the Comparison Library Copilot, performing semantic search, recommending new comparative analysis topics, and with daily query limits removed. External context has been removed from the AI prompt.**
             *   \`supabase/functions/how-it-works-copilot-analyzer/index.ts\`: **New Edge Function for the How It Works guide assistant.**
             *   \`supabase/functions/get-anon-usage/index.ts\`: **New Edge Function to retrieve anonymous user usage data for IP-based rate limiting, now only tracking analyses and comparisons.**
             *   \`supabase/functions/paddle-webhook-handler/index.ts\`: **Updated Edge Function to correctly verify Paddle V2 webhooks using Deno's Web Crypto API and manage user subscriptions.**
@@ -134,12 +134,12 @@ The project follows a standard React application structure with specific directo
 *   **Anonymous Usage Tracking:** Uses \`useQuery\` to fetch \`anonUsage\` from the \`get-anon-usage\` Edge Function for unauthenticated users.
 *   **Authenticated Usage Tracking:** Uses \`useQuery\` to fetch \`dailyAnalysesCount\` from \`public.blog_posts\` for authenticated users.
 *   **Dynamic Custom Questions:** Provides UI to add/remove multiple custom question input fields, each with a corresponding word count input. **Custom questions are now unlimited in count and word count for all tiers.**
-*   **Initial Load from Blog Post:** Uses \`useLocation\` to check for \`blogPost\` data passed via navigation state. If present, it reconstructs the \`analysisResult\` from the \`blogPost\` (including \`ai_analysis_json\`, \`raw_comments_for_chat\`, \`custom_qa_results\`, and \`last_reanalyzed_at\`), sets \`analysisResult\`, and conditionally opens the \`VideoChatDialog\` based on the \`openChat\` flag. It also checks for a \`forceReanalyze\` flag from navigation to trigger an immediate re-analysis.
+*   **Initial Load from Blog Post:** Uses \`useLocation\` to check for \`blogPost\` data passed via navigation state. If present, it reconstructs the \`analysisResult\` from the \`blogPost\` (including \`ai_analysis_json\`, \`raw_comments_for_chat\`, \`custom_qa_results\`, and \`last_reanalyzed_at\`), sets \`analysisResult\`, and conditionally opens the \`VideoChatDialog\` based on the \`openChat\` flag. It also checks for a \`forceReanalyze\` flag from navigation to trigger an an immediate re-analysis.
 *   **Supabase Edge Function Invocation:**
     *   **\`analyzeVideoMutation\`:** Uses \`useMutation\` to call the \`youtube-analyzer\` Supabase Edge Function. The payload now includes the \`customQuestions\` array and an optional \`forceReanalyze\` boolean flag. **Handles 403 errors from the Edge Function to display tier-specific daily analysis limit messages.**
 *   **UI Elements:**
     *   \`Input\` for video link submission, \`Textarea\` for custom questions, \`Input\` for word count.
-    *   **Includes a prominent disclaimer:** "Important: The video must have at least 50 comments for a proper sentiment analysis. Analysis may take up to 30 seconds."
+    *   **Updated disclaimer:** "SentiVibe will analyze the available comments. Analysis may take up to 30 seconds."
     *   **Displays current usage:** "Analyses today: X/Y" with a link to \`/upgrade\` if not on a paid tier.
     *   \`Button\` to trigger analysis, showing a \`Loader2\` icon (styled with \`text-accent\`) when pending. **Disabled if \`isAnalysisLimitReached\`.**
     *   \`Card\` components to structure the input form and display results.
@@ -209,6 +209,7 @@ The project follows a standard React application structure with specific directo
     *   Dynamic input fields for \`videoLinks\` (minimum 2, with add/remove buttons).
     *   **Multi-Video Comparison Disclaimer:** A note is added under the video link input fields: "\`<span class='font-semibold text-red-500'>Note:</span> For reliable and stable performance, multi-video comparisons are currently limited to a maximum of 3 videos simultaneously.\`" The "Add Another Video" button is disabled if 3 videos are already added.
     *   Dynamic input fields for \`customComparativeQuestions\` (with question and word count). **Custom comparative questions are now unlimited in count and word count for all tiers.**
+    *   **Updated disclaimer:** "SentiVibe will analyze the available comments for each video. Analysis may take up to 30 seconds per video."
     *   **Displays current usage:** "Comparisons today: X/Y" with a link to \`/upgrade\` if not on a paid tier.
     *   \`Button\` to trigger the comparison, showing a \`Loader2\` icon when pending. **Disabled if \`isComparisonLimitReached\`.**
     *   \`Alert\` component displays any errors, **including tier-based daily comparison limit exceedance messages.**
@@ -458,7 +459,7 @@ This Deno-based serverless function is the core backend logic for video analysis
     *   Retrieves a list of \`YOUTUBE_API_KEY\`s and \`LONGCAT_AI_API_KEY\`s using the \`getApiKeys\` helper function.
     *   For each API call (YouTube video details, YouTube comments, Longcat AI analysis, Longcat AI blog post generation, and Longcat AI custom question answering), it iterates through the available keys. If a request fails with a rate limit error (HTTP 429 or YouTube's \`quotaExceeded\` 403), it attempts the request again with the next key in the list.
 *   **YouTube Data API Calls (if new/re-analysis):** Fetches video \`snippet\` (title, description, thumbnail, tags, \`channelTitle\`) and top-level comments (\`maxResults=100\`).
-*   **Comment Processing (if new/re-analysis):** Maps comments to include \`text\` and \`likeCount\`, enforces a minimum of 50 comments, and sorts them by \`likeCount\`.
+*   **Comment Processing (if new/re-analysis):** Maps comments to include \`text\` and \`likeCount\`, and sorts them by \`likeCount\`.
 *   **Longcat AI API Call (Sentiment Analysis):** Constructs a \`longcatPrompt\` including video details, tags, and weighted comments. Instructs the AI to prioritize comments with higher like counts. Sends a \`POST\` request to Longcat AI, requesting a \`json_object\` response for sentiment analysis.
 *   **Longcat AI API Call (Blog Post Generation):** After successful sentiment analysis, a *second* \`POST\` request is made to Longcat AI for blog post generation.
 *   **Longcat AI API Call (Custom Questions - always if new questions):** If \`customQuestions\` are provided, the function iterates through each question. For each, it constructs a specific prompt including the full video analysis context and the user's question, instructing the AI to generate an answer of the specified \`wordCount\`. These answers are collected into \`customQaResults\`.
@@ -593,383 +594,3 @@ Key dependencies include:
 *   \`react-markdown\`, \`remark-gfm\`: For rendering Markdown in chat messages and blog posts.
 *   Shadcn/ui components and their Radix UI foundations.
 *   **Google Custom Search API (external service): No longer used.**
-`;
-
-const MultiComparisonDetail = () => {
-  const { slug } = useParams<{ slug: string }>();
-  const navigate = useNavigate();
-  const [isChatDialogOpen, setIsChatDialogOpen] = useState(false);
-  const comparisonReportRef = useRef<HTMLDivElement>(null); // Ref for PDF download
-  const { subscriptionStatus, subscriptionPlanId } = useAuth(); // Get subscription info
-  const isPaidTier = subscriptionStatus === 'active' && subscriptionPlanId !== 'free';
-
-  const { data: multiComparison, isLoading, error } = useQuery<MultiComparison | null, Error>({
-    queryKey: ['multiComparison', slug],
-    queryFn: () => fetchMultiComparisonBySlug(slug!),
-    enabled: !!slug,
-  });
-
-  useEffect(() => {
-    const head = document.head;
-    const domain = "https://sentivibe.online"; // Use the new domain
-
-    const updateMetaTag = (name: string, content: string, property?: string) => {
-      let tag = document.querySelector(`meta[${property ? `property="${property}"` : `name="${name}"`}]`);
-      if (!tag) {
-        tag = document.createElement('meta');
-        if (property) tag.setAttribute('property', property);
-        else tag.setAttribute('name', name);
-        head.appendChild(tag);
-      }
-      tag.setAttribute('content', content);
-    };
-
-    const removeMetaTag = (name: string, property?: string) => {
-      const tag = document.querySelector(`meta[${property ? `property="${property}"` : `name="${name}"`}]`);
-      if (tag) tag.remove();
-    };
-
-    if (multiComparison) {
-      document.title = multiComparison.title;
-      updateMetaTag('description', multiComparison.meta_description);
-      updateMetaTag('og:title', multiComparison.title, 'og:title');
-      updateMetaTag('og:description', multiComparison.meta_description, 'og:description');
-      updateMetaTag('og:image', multiComparison.overall_thumbnail_url || '', 'og:image');
-      updateMetaTag('og:url', `${domain}/multi-comparison/${multiComparison.slug}`, 'og:url');
-      updateMetaTag('og:type', 'article', 'og:type');
-      updateMetaTag('og:site_name', 'SentiVibe', 'og:site_name');
-
-      const schemaData = {
-        "@context": "https://schema.org",
-        "@graph": [
-          {
-            "@type": "Report",
-            "headline": multiComparison.title,
-            "description": multiComparison.meta_description,
-            "image": multiComparison.overall_thumbnail_url,
-            "datePublished": multiComparison.created_at,
-            "dateModified": multiComparison.updated_at,
-            "author": {
-              "@type": "Person",
-              "name": multiComparison.author_id ? "Authenticated User" : "SentiVibe AI"
-            },
-            "publisher": {
-              "@type": "Organization",
-              "name": "SentiVibe",
-              "logo": {
-                "@type": "ImageObject",
-                "url": `${domain}/logo.png`
-              }
-            },
-            "mainEntityOfPage": {
-              "@type": "WebPage",
-              "@id": `${domain}/multi-comparison/${multiComparison.slug}`
-            }
-          },
-          {
-            "@type": "SoftwareApplication",
-            "name": "SentiVibe - YouTube Comment Sentiment Analyzer",
-            "applicationCategory": "AI Tool",
-            "operatingSystem": "Web",
-            "url": `${domain}`,
-            "description": "AI tool to analyze YouTube comments for sentiment and insights.",
-            "offers": {
-              "@type": "Offer",
-              "price": "0",
-              "priceCurrency": "USD"
-            }
-          }
-        ]
-      };
-
-      let scriptTag = document.querySelector('script[type="application/ld+json"]');
-      if (!scriptTag) {
-        scriptTag = document.createElement('script');
-        scriptTag.setAttribute('type', 'application/ld+json');
-        head.appendChild(scriptTag);
-      }
-      scriptTag.textContent = JSON.stringify(schemaData);
-
-    } else {
-      document.title = "SentiVibe - Multi-Comparison Library"; // Consistent fallback title
-      updateMetaTag('description', 'Compare multiple YouTube video sentiments and insights with AI-powered analysis.');
-      removeMetaTag('og:title', 'og:title');
-      removeMetaTag('og:description', 'og:description');
-      removeMetaTag('og:image', 'og:image');
-      removeMetaTag('og:url', 'og:url');
-      removeMetaTag('og:type', 'og:type');
-      removeMetaTag('og:site_name', 'og:site_name');
-      const scriptTag = document.querySelector('script[type="application/ld+json"]');
-      if (scriptTag) {
-        scriptTag.remove();
-      }
-    }
-  }, [multiComparison]);
-
-  const contentWithoutDuplicateTitle = (markdownContent: string, title: string): string => {
-    const lines = markdownContent.split('\n');
-    if (lines.length > 0 && lines[0].startsWith('#')) {
-      const firstLineTitle = lines[0].substring(1).trim();
-      if (title.includes(firstLineTitle) || firstLineTitle.includes(title)) {
-        return lines.slice(1).join('\n').trim();
-      }
-    }
-    return markdownContent;
-  };
-
-  const formattedMultiComparisonResultForChat = multiComparison ? {
-    id: multiComparison.id,
-    title: multiComparison.title,
-    meta_description: multiComparison.meta_description,
-    keywords: multiComparison.keywords || [],
-    comparison_data_json: multiComparison.comparison_data_json,
-    custom_comparative_qa_results: multiComparison.custom_comparative_qa_results || [],
-    videos: multiComparison.videos || [],
-  } : null;
-
-  const handleDownloadPdf = () => {
-    if (comparisonReportRef.current && multiComparison) {
-      const element = comparisonReportRef.current;
-      const opt = {
-        margin: 1,
-        filename: `SentiVibe_MultiComparison_${multiComparison.title.replace(/[^a-z0-9]/gi, '_')}.pdf`,
-        image: { type: 'jpeg' as 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, logging: true, dpi: 192, letterRendering: true },
-        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' as 'portrait' }
-      };
-
-      const tempDiv = document.createElement('div');
-      tempDiv.className = 'pdf-light-mode'; // Apply the new class
-      tempDiv.style.position = 'relative';
-      tempDiv.style.width = element.offsetWidth + 'px';
-      tempDiv.style.height = element.offsetHeight + 'px';
-      tempDiv.innerHTML = element.innerHTML;
-
-      // Add header
-      const header = document.createElement('div');
-      header.style.textAlign = 'center';
-      header.style.marginBottom = '1rem';
-      header.style.paddingBottom = '0.5rem';
-      header.style.borderBottom = '1px solid #ccc';
-      header.innerHTML = `
-        <img src="/logo.svg" alt="SentiVibe Logo" style="height: 30px; margin-right: 10px; display: inline-block; vertical-align: middle;">
-        <span style="font-weight: bold; font-size: 1.2em; vertical-align: middle;">SentiVibe</span>
-        <p style="font-size: 0.8em; color: #555; margin-top: 5px;">YouTube Audience Insight Report</p>
-      `;
-      tempDiv.prepend(header);
-
-      // Add footer
-      const footer = document.createElement('div');
-      footer.style.textAlign = 'center';
-      footer.style.marginTop = '1rem';
-      footer.style.paddingTop = '0.5rem';
-      footer.style.borderTop = '1px solid #ccc';
-      footer.style.fontSize = '0.8em';
-      footer.style.color = '#555';
-      footer.innerHTML = `
-        <p>&copy; ${new Date().getFullYear()} SentiVibe. All rights reserved.</p>
-        <p>SentiVibe: Your Audience, Understood. Analyses generated by AI based on public YouTube comments.</p>
-      `;
-      tempDiv.appendChild(footer);
-
-      if (!isPaidTier) {
-        const watermark = document.createElement('div');
-        watermark.style.position = 'absolute';
-        watermark.style.top = '50%';
-        watermark.style.left = '50%';
-        watermark.style.transform = 'translate(-50%, -50%) rotate(-45deg)';
-        watermark.style.fontSize = '48px';
-        watermark.style.fontWeight = 'bold';
-        watermark.style.color = 'rgba(0, 0, 0, 0.1)';
-        watermark.style.zIndex = '1000';
-        watermark.style.pointerEvents = 'none';
-        watermark.textContent = 'SentiVibe - Free Tier';
-        tempDiv.appendChild(watermark);
-      }
-
-      document.body.appendChild(tempDiv);
-
-      html2pdf().from(tempDiv).set(opt).save().then(() => {
-        document.body.removeChild(tempDiv);
-      });
-    }
-  };
-
-  if (isLoading) {
-    return (
-      <div className="container mx-auto p-4 max-w-3xl">
-        <Skeleton className="h-8 w-1/4 mb-6" />
-        <Skeleton className="h-10 w-full mb-4" />
-        <Skeleton className="h-6 w-1/2 mb-4" />
-        <Skeleton className="h-4 w-full mb-2" />
-        <Skeleton className="h-4 w-full mb-2" />
-        <Skeleton className="h-4 w-3/4" />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="container mx-auto p-4 max-w-3xl text-red-500">
-        Error loading multi-comparison: {error.message}
-      </div>
-    );
-  }
-
-  if (!multiComparison) {
-    return (
-      <div className="container mx-auto p-4 max-w-3xl text-center text-gray-500 dark:text-gray-400">
-        <h2 className="text-2xl font-bold mb-4">Multi-Comparison Not Found</h2>
-        <p>The multi-comparison you are looking for does not exist or has been removed.</p>
-        <Link to="/multi-comparison-library" className="text-blue-500 hover:underline mt-4 flex items-center justify-center">
-          <ArrowLeft className="h-4 w-4 mr-2" /> Back to Comparison Library
-        </Link>
-      </div>
-    );
-  }
-
-  return (
-    <div className="container mx-auto p-4 max-w-3xl">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-2 flex-wrap">
-        <Link to="/multi-comparison-library" className="text-blue-500 hover:underline flex items-center w-fit">
-          <ArrowLeft className="h-4 w-4 mr-2" /> Back to Comparison Library
-        </Link>
-        <div className="flex flex-wrap gap-2">
-          {multiComparison && (
-            <Button
-              onClick={() => navigate('/create-multi-comparison', { state: { multiComparison: formattedMultiComparisonResultForChat } })}
-              className="flex items-center gap-2"
-            >
-              <BarChart className="h-4 w-4" /> Go to Multi-Comparison Analysis
-            </Button>
-          )}
-          <Button
-            onClick={() => navigate('/create-multi-comparison', { state: { multiComparison: formattedMultiComparisonResultForChat, forceRecompare: true } })}
-            className="flex items-center gap-2"
-          >
-            <RefreshCw className="h-4 w-4" /> Refresh Comparison
-          </Button>
-          {formattedMultiComparisonResultForChat && (
-            <Button onClick={() => setIsChatDialogOpen(true)} className="flex items-center gap-2">
-              <MessageSquare className="h-4 w-4" /> Chat with AI
-            </Button>
-          )}
-          <Button onClick={handleDownloadPdf} className="flex items-center gap-2">
-            <Download className="h-4 w-4" /> Download Report PDF
-          </Button>
-        </div>
-      </div>
-      <Card ref={comparisonReportRef} className="mb-6">
-        <CardHeader>
-          <div className="flex flex-wrap justify-center items-center gap-4 mb-2">
-            {multiComparison.videos && multiComparison.videos.map((video, index) => (
-              <div key={index} className="flex flex-col items-center text-center">
-                <Link to={`/blog/${video.slug}`} className="block hover:opacity-80 transition-opacity">
-                  <img
-                    src={video.thumbnail_url}
-                    alt={`Thumbnail for ${video.title}`}
-                    className="w-32 h-20 object-cover rounded-md shadow-md aspect-video"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{video.title}</p>
-                </Link>
-              </div>
-            ))}
-          </div>
-          <p className="text-xs text-center text-muted-foreground mb-4">
-            Click on any video thumbnail above to view its individual analysis.
-          </p>
-          <CardTitle className="text-3xl font-bold mb-2 text-center">{multiComparison.title}</CardTitle>
-          <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
-            Compared on: {new Date(multiComparison.created_at).toLocaleDateString()}
-            {multiComparison.updated_at && multiComparison.updated_at !== multiComparison.created_at && (
-              <span> (Last updated: {new Date(multiComparison.updated_at).toLocaleDateString()})</span>
-            )}
-          </p>
-          {multiComparison.last_compared_at && (
-            <p className="text-xs text-gray-500 dark:text-gray-500 mt-2 text-center">
-              Last Full Comparison: {new Date(multiComparison.last_compared_at).toLocaleDateString()}
-            </p>
-          )}
-          <p className="text-md text-gray-700 dark:text-gray-300 mt-4 italic text-center">
-            {multiComparison.meta_description}
-          </p>
-        </CardHeader>
-        <CardContent className="prose dark:prose-invert max-w-none">
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>
-            {contentWithoutDuplicateTitle(multiComparison.content, multiComparison.title)}
-          </ReactMarkdown>
-        </CardContent>
-        {multiComparison.keywords && multiComparison.keywords.length > 0 && (
-          <CardContent className="border-t pt-4 mt-4">
-            <h3 className="text-lg font-semibold mb-2">Keywords</h3>
-            <div className="flex flex-wrap gap-2">
-              {multiComparison.keywords.map((keyword, index) => (
-                <Badge key={index} variant="secondary">
-                  {keyword}
-                </Badge>
-              ))}
-            </div>
-          </CardContent>
-        )}
-        {multiComparison.comparison_data_json && (
-          <CardContent className="border-t pt-4 mt-4">
-            <h3 className="text-lg font-semibold mb-2">Structured Multi-Comparison Data</h3>
-            <MultiComparisonDataDisplay data={multiComparison.comparison_data_json} />
-          </CardContent>
-        )}
-        {multiComparison.custom_comparative_qa_results && multiComparison.custom_comparative_qa_results.length > 0 && (
-          <CardContent className="border-t pt-4 mt-4">
-            <h3 className="text-lg font-semibold mb-2">Comparative Questions & Answers</h3>
-            <div className="space-y-4">
-              {multiComparison.custom_comparative_qa_results.map((qa, index) => (
-                <div key={index} className="border p-3 rounded-md bg-gray-50 dark:bg-gray-700">
-                  <p className="font-medium text-gray-800 dark:text-gray-200 mb-1">Q{index + 1}: {qa.question}</p>
-                  <div className="prose dark:prose-invert max-w-none text-gray-700 dark:text-gray-300">
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                      {qa.answer || "No answer generated."}
-                    </ReactMarkdown>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        )}
-
-        {/* New section for individual video comments */}
-        {multiComparison.videos && multiComparison.videos.length > 0 && (
-          <CardContent className="border-t pt-4 mt-4">
-            <h3 className="text-lg font-semibold mb-4">Top Comments for Each Video</h3>
-            <div className="space-y-6">
-              {multiComparison.videos.map((video, videoIndex) => (
-                <div key={videoIndex} className="border p-4 rounded-md bg-gray-50 dark:bg-gray-700">
-                  <h4 className="font-semibold text-lg mb-2 flex items-center gap-2">
-                    <Youtube className="h-5 w-5 text-red-500" /> {video.title}
-                  </h4>
-                  {video.raw_comments_for_chat && video.raw_comments_for_chat.length > 0 ? (
-                    <ul className="list-disc list-inside space-y-1 text-sm text-gray-600 dark:text-gray-400">
-                      {video.raw_comments_for_chat.slice(0, 10).map((comment, commentIndex) => (
-                        <li key={commentIndex}>{String(comment)}</li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="text-gray-500 dark:text-gray-400 text-sm">No top comments available for this video.</p>
-                  )}
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        )}
-      </Card>
-      <UpgradeCTA /> {/* Add the UpgradeCTA here */}
-      {formattedMultiComparisonResultForChat && (
-        <MultiComparisonChatDialog
-          isOpen={isChatDialogOpen}
-          onOpenChange={setIsChatDialogOpen}
-          initialMultiComparisonResult={formattedMultiComparisonResultForChat}
-        />
-      )}
-    </div>
-  );
-};
-
-export default MultiComparisonDetail;

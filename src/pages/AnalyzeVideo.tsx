@@ -386,7 +386,7 @@ const AnalyzeVideo = () => {
                 disabled={analyzeVideoMutation.isPending || isAnalysisLimitReached}
               />
               <p className="text-sm text-muted-foreground mt-2">
-                <span className="font-semibold text-red-500">Important:</span> The video must have at least 50 comments for a proper sentiment analysis. Analysis may take up to 30 seconds.
+                SentiVibe will analyze the available comments. Analysis may take up to 30 seconds.
               </p>
               <p className="text-sm text-muted-foreground mt-1">
                 Analyses today: {analysesToday}/{currentLimits.dailyAnalyses}

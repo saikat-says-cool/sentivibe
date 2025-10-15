@@ -28,7 +28,7 @@ function Index() {
               </Button>
             </Link>
             <p className="text-xs text-muted-foreground mt-4 max-w-[250px]">
-              Requires 50+ comments. Analysis may take up to 30 seconds.
+              Analysis may take up to 30 seconds.
             </p>
           </CardContent>
         </Card>
@@ -47,7 +47,7 @@ function Index() {
               </Button>
             </Link>
             <p className="text-xs text-muted-foreground mt-4 max-w-[250px]">
-              Each video requires 50+ comments. Analysis may take up to 30 seconds per video.
+              Analysis may take up to 30 seconds per video.
               <br />
               <span className="font-semibold text-red-500">Note:</span> Reliable for up to 3 videos simultaneously.
             </p>
