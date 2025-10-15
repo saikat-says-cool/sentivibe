@@ -6,7 +6,8 @@ interface ImportMetaEnv {
   readonly VITE_PADDLE_VENDOR_ID: string; // V1 specific, but keeping for now if needed elsewhere
   readonly VITE_PADDLE_CLIENT_SIDE_TOKEN: string;
   readonly VITE_PADDLE_PRODUCT_ID: string; // This will now be a V2 Price ID
-  readonly VITE_LONGCAT_AI_API_KEY: string; // Added Longcat AI API Key for Langsearch
+  readonly VITE_LONGCAT_AI_API_KEY: string; // Longcat AI API Key for general AI models
+  readonly VITE_LANGSEARCH_API_KEY: string; // Langsearch API Key for external search
 }
 
 interface ImportMeta {

@@ -48,9 +48,10 @@ serve(async (req: Request) => {
       });
     }
 
-    const longcatApiKeys = getApiKeys('LONGCAT_AI_API_KEY'); // Use Longcat AI keys for Langsearch
-    if (longcatApiKeys.length === 0) {
-      console.error('Longcat AI API key(s) not configured for Langsearch.');
+    // Use LANGSEARCH_API_KEY for Langsearch
+    const langsearchApiKeys = getApiKeys('LANGSEARCH_API_KEY');
+    if (langsearchApiKeys.length === 0) {
+      console.error('Langsearch API key(s) not configured.');
       return new Response(JSON.stringify({ error: 'Langsearch API not configured.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500,
@@ -59,26 +60,28 @@ serve(async (req: Request) => {
 
     let searchResults = '';
     let langsearchResponse;
-    const langsearchApiUrl = "https://api.longcat.chat/langsearch/v1/search"; // Langsearch API endpoint
+    const langsearchApiUrl = "https://api.langsearch.com/v1/web-search"; // Langsearch API endpoint
 
-    for (const currentLongcatApiKey of longcatApiKeys) {
+    for (const currentLangsearchApiKey of langsearchApiKeys) {
       langsearchResponse = await fetch(langsearchApiUrl, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${currentLongcatApiKey}`,
+          'Authorization': `Bearer ${currentLangsearchApiKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           query: query,
-          num_results: 5, // Request 5 results, similar to previous Google Search
+          freshness: "noLimit", // Default to noLimit as per docs
+          summary: true,       // Request summaries as per docs
+          count: 5,            // Request 5 results, similar to previous Google Search
         }),
       });
 
       if (langsearchResponse.ok) break;
       else if (langsearchResponse.status === 429 || langsearchResponse.status === 403) {
-        console.warn(`Langsearch API key hit quota limit. Trying next key.`);
+        console.warn(`Langsearch API key hit quota limit or forbidden. Trying next key.`);
       } else {
-        break;
+        break; // Break on other errors
       }
     }
 
@@ -92,8 +95,9 @@ serve(async (req: Request) => {
     }
 
     const searchData = await langsearchResponse.json();
-    if (searchData.results && searchData.results.length > 0) {
-      searchResults = searchData.results.map((item: any) => `Title: ${item.title}\nLink: ${item.link}\nSnippet: ${item.snippet}`).join('\n\n');
+    // Check for searchData.data.webPages.value as per the provided response example
+    if (searchData.data?.webPages?.value && searchData.data.webPages.value.length > 0) {
+      searchResults = searchData.data.webPages.value.map((item: any) => `Title: ${item.name}\nLink: ${item.url}\nSnippet: ${item.snippet}`).join('\n\n');
     } else {
       searchResults = 'No relevant external search results found.';
     }
