@@ -5,11 +5,15 @@ import HowItWorksCopilot from '@/components/HowItWorksCopilot';
 
 import productDocumentationContent from '/docs/PRODUCT_DOCUMENTATION.md?raw';
 import technicalDocumentationContent from '/docs/TECHNICAL_DOCUMENTATION.md?raw';
+import { useAuth } from '@/integrations/supabase/auth'; // Import useAuth
 
 const HowItWorks = () => {
   useEffect(() => {
     document.title = "How SentiVibe Works - Hands-on Guide";
   }, []);
+
+  const { subscriptionStatus, subscriptionPlanId } = useAuth();
+  const isPaidTier = subscriptionStatus === 'active' && subscriptionPlanId !== 'free';
 
   return (
     <div className="container mx-auto p-4 max-w-5xl flex flex-col md:flex-row gap-6 bg-background text-foreground">
@@ -32,6 +36,7 @@ const HowItWorks = () => {
             <HowItWorksCopilot
               productDocumentation={productDocumentationContent}
               technicalDocumentation={technicalDocumentationContent}
+              isPaidTier={isPaidTier} // Pass isPaidTier to HowItWorksCopilot
             />
           </div>
         </CardContent>

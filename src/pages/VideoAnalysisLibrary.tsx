@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { TooltipWrapper } from '@/components/ui/tooltip'; // Import TooltipWrapper
+import { useAuth } from '@/integrations/supabase/auth'; // Import useAuth
 
 interface AiAnalysisResult {
   overall_sentiment: string;
@@ -113,6 +114,8 @@ const VideoAnalysisLibrary = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
+  const { subscriptionStatus, subscriptionPlanId } = useAuth();
+  const isPaidTier = subscriptionStatus === 'active' && subscriptionPlanId !== 'free';
 
   const { data, isLoading, error } = useQuery<{ data: BlogPost[], totalCount: number }, Error>({
     queryKey: ['blogPosts', currentPage, searchTerm, selectedCategory],
@@ -216,7 +219,7 @@ const VideoAnalysisLibrary = () => {
           </Button>
         </TooltipWrapper>
         {blogPosts && blogPosts.length > 0 && (
-          <LibraryCopilot blogPosts={blogPosts} />
+          <LibraryCopilot blogPosts={blogPosts} isPaidTier={isPaidTier} />
         )}
       </div>
 

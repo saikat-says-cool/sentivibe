@@ -24,9 +24,10 @@ interface Message {
 interface HowItWorksCopilotProps {
   productDocumentation: string;
   technicalDocumentation: string;
+  isPaidTier: boolean; // New prop
 }
 
-const HowItWorksCopilot: React.FC<HowItWorksCopilotProps> = ({ productDocumentation, technicalDocumentation }) => {
+const HowItWorksCopilot: React.FC<HowItWorksCopilotProps> = ({ productDocumentation, technicalDocumentation, isPaidTier }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
   const [deepThinkMode, setDeepThinkMode] = useState<boolean>(false);
@@ -154,6 +155,7 @@ const HowItWorksCopilot: React.FC<HowItWorksCopilotProps> = ({ productDocumentat
             onToggleDeepThink={setDeepThinkMode}
             deepSearchEnabled={deepSearchMode}
             onToggleDeepSearch={setDeepSearchMode}
+            isPaidTier={isPaidTier} // Pass isPaidTier to ChatInterface
             selectedPersona={selectedPersona}
             onPersonaChange={setSelectedPersona}
           />

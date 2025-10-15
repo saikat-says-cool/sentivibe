@@ -34,9 +34,10 @@ interface Message {
 
 interface ComparisonLibraryCopilotProps {
   comparisons: MultiComparison[]; // Now expects MultiComparison type
+  isPaidTier: boolean; // New prop
 }
 
-const ComparisonLibraryCopilot: React.FC<ComparisonLibraryCopilotProps> = ({ comparisons }) => {
+const ComparisonLibraryCopilot: React.FC<ComparisonLibraryCopilotProps> = ({ comparisons, isPaidTier }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
   const [deepThinkMode, setDeepThinkMode] = useState<boolean>(false);
@@ -180,6 +181,7 @@ const ComparisonLibraryCopilot: React.FC<ComparisonLibraryCopilotProps> = ({ com
             onToggleDeepThink={setDeepThinkMode}
             deepSearchEnabled={deepSearchMode}
             onToggleDeepSearch={setDeepSearchMode}
+            isPaidTier={isPaidTier} // Pass isPaidTier to ChatInterface
             selectedPersona={selectedPersona}
             onPersonaChange={setSelectedPersona}
           />

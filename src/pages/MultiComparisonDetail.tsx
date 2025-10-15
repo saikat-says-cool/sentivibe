@@ -468,6 +468,7 @@ const MultiComparisonDetail = () => {
           isOpen={isChatDialogOpen}
           onOpenChange={setIsChatDialogOpen}
           initialMultiComparisonResult={formattedMultiComparisonResultForChat}
+          isPaidTier={isPaidTier}
         />
       )}
     </div>

@@ -436,6 +436,7 @@ const BlogPostDetail = () => {
           isOpen={isChatDialogOpen}
           onOpenChange={setIsChatDialogOpen}
           initialBlogPost={blogPost}
+          isPaidTier={isPaidTier}
         />
       )}
     </div>

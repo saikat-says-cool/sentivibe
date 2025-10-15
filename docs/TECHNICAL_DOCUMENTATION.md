@@ -27,18 +27,6 @@ Next.js file-system based routing is used for navigation between different pages
 
 ## 3. Backend (Supabase & Edge Functions)
 
-### 3.1. Database Schema
-The PostgreSQL database in Supabase stores:
--   `blog_posts`: Details of individual video analyses.
--   `multi_comparisons`: Details of multi-video comparison analyses.
--   `users`: User authentication information.
--   `profiles`: Additional user profile data.
--   `custom_questions`: User-defined questions for video analysis.
--   `custom_comparative_questions`: User-defined questions for comparative analysis.
-
-### 3.2. Authentication
-Supabase Auth handles user registration, login, and session management. Row-Level Security (RLS) is implemented to ensure users can only access their own data.
-
 ### 3.3. Edge Functions (Deno)
 Supabase Edge Functions are critical for executing server-side logic, especially for AI interactions and external API calls. These functions are written in TypeScript and deployed on Deno.
 
@@ -46,22 +34,30 @@ Supabase Edge Functions are critical for executing server-side logic, especially
 
 -   **`youtube-analyzer`**: Orchestrates the process of fetching YouTube video data (title, description, comments, subtitles) and sending it to Longcat AI for analysis. It then stores the results in the `blog_posts` table.
     -   **AI Prompting:** The system prompt is carefully crafted to guide Longcat AI in generating comprehensive sentiment analysis, emotional tones, key themes, and summary insights. It also includes instructions for generating SEO-optimized titles and meta descriptions for blog posts, emphasizing "hooking" and "click-worthy" language within character limits.
+    -   **Tier Enforcement:** Enforces daily analysis limits (5 for free tiers, 50 for paid tiers). DeepThink and DeepSearch are restricted to paid users.
 -   **`video-comparator`**: Handles the comparison of two YouTube videos, fetching their data, sending it to Longcat AI for comparative analysis, and storing the results in `multi_comparisons`.
     -   **AI Prompting:** Similar to `youtube-analyzer`, but tailored for comparative analysis. The prompt instructs the AI to identify similarities, differences, and unique insights between two videos, and to generate SEO-optimized titles and meta descriptions for comparison blog posts.
 -   **`multi-video-comparator`**: Extends `video-comparator` to handle comparisons of more than two videos.
     -   **AI Prompting:** The prompt is designed to guide the AI in synthesizing insights across multiple videos, identifying overarching trends, and generating SEO-optimized titles and meta descriptions for multi-comparison blog posts.
+    -   **Tier Enforcement:** Enforces daily comparison limits (3 for free tiers, 20 for paid tiers). DeepThink and DeepSearch are restricted to paid users.
 -   **`chat-analyzer`**: Powers the AI chat interface for individual video analyses. It takes user messages, chat history, and the current video analysis context, then queries Longcat AI for a response.
     -   **AI Prompting:** The system prompt emphasizes adaptive response length, conciseness by default, and expansion only when explicitly requested. It integrates the video analysis context, custom Q&A results, and external search results (if DeepSearch is enabled).
+    -   **Tier Enforcement:** DeepThink and DeepSearch are restricted to paid users.
 -   **`comparison-chat-analyzer`**: Powers the AI chat interface for two-video comparisons.
     -   **AI Prompting:** Similar to `chat-analyzer`, but tailored to the comparison context, including structured comparison data and individual video comments.
+    -   **Tier Enforcement:** DeepThink and DeepSearch are restricted to paid users.
 -   **`multi-comparison-chat-analyzer`**: Powers the AI chat interface for multi-video comparisons.
     -   **AI Prompting:** Adapts the chat prompt for multi-video context, integrating all relevant comparison data and individual video details.
+    -   **Tier Enforcement:** DeepThink and DeepSearch are restricted to paid users.
 -   **`library-copilot-analyzer`**: Provides AI assistance for searching and recommending individual video analysis blog posts from the user's library.
     -   **AI Prompting:** The prompt guides the AI to perform semantic search against existing blog post data, list relevant results with Markdown hyperlinks, and suggest new analysis topics. It emphasizes a friendly, conversational tone and adaptive response length.
+    -   **Tier Enforcement:** DeepThink and DeepSearch are restricted to paid users.
 -   **`comparison-library-copilot-analyzer`**: Provides AI assistance for searching and recommending multi-video comparison blog posts.
     -   **AI Prompting:** Similar to `library-copilot-analyzer`, but focused on multi-comparison data.
+    -   **Tier Enforcement:** DeepThink and DeepSearch are restricted to paid users.
 -   **`how-it-works-copilot-analyzer`**: The Guide Assistant function, which answers questions based on the product and technical documentation.
     -   **AI Prompting:** The prompt instructs the AI to act as an expert guide, leveraging both product and technical documentation (including code details, loopholes, and blindspots) to provide comprehensive and accurate solutions. It also emphasizes adaptive response length and clear Markdown formatting.
+    -   **Tier Enforcement:** DeepThink and DeepSearch are restricted to paid users.
 -   **`fetch-external-context`**: A utility function that queries the Serper API to fetch real-time search results, used by other Edge Functions when DeepSearch is enabled.
 
 #### AI Response Length Management:

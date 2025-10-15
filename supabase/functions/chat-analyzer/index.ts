@@ -33,8 +33,6 @@ function getApiKeys(baseName: string): string[] {
   return keys;
 }
 
-// Tier limits are no longer enforced in this function, so these constants are unused.
-
 serve(async (req: Request) => {
   // Handle CORS preflight request
   if (req.method === 'OPTIONS') {
@@ -55,7 +53,26 @@ serve(async (req: Request) => {
       }
     );
 
-    const { userMessage, chatMessages, analysisResult, selectedPersona, customQaResults, deepThinkMode, deepSearchMode } = await req.json(); // Removed desiredWordCount
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    let isPaidTier = false;
+
+    if (user) {
+      const { data: subscriptionData, error: subscriptionError } = await supabaseClient
+        .from('subscriptions')
+        .select('status, plan_id')
+        .eq('id', user.id)
+        .single();
+
+      if (!subscriptionError && subscriptionData && subscriptionData.status === 'active' && subscriptionData.plan_id !== 'free') {
+        isPaidTier = true;
+      }
+    }
+
+    const { userMessage, chatMessages, analysisResult, selectedPersona, deepThinkMode: clientDeepThinkMode, deepSearchMode: clientDeepSearchMode } = await req.json();
+
+    // Enforce DeepThink and DeepSearch restrictions for free users
+    const effectiveDeepThinkMode = isPaidTier && clientDeepThinkMode;
+    const effectiveDeepSearchMode = isPaidTier && clientDeepSearchMode;
 
     if (!userMessage || !analysisResult) {
       return new Response(JSON.stringify({ error: 'User message and analysis result are required.' }), {
@@ -66,7 +83,7 @@ serve(async (req: Request) => {
 
     // --- Fetch External Context if DeepSearch is enabled ---
     let externalContext = '';
-    if (deepSearchMode) {
+    if (effectiveDeepSearchMode) {
       const externalContextQuery = `${analysisResult.videoTitle} ${userMessage}`;
       const fetchExternalContextResponse = await supabaseClient.functions.invoke('fetch-external-context', {
         body: { query: externalContextQuery },
@@ -92,7 +109,7 @@ serve(async (req: Request) => {
     const maxTokens = 2000; // Set a generous max_tokens, let the AI decide length based on prompt
 
     // Determine which Longcat AI model to use
-    const aiModel = deepThinkMode ? "LongCat-Flash-Thinking" : "LongCat-Flash-Chat";
+    const aiModel = effectiveDeepThinkMode ? "LongCat-Flash-Thinking" : "LongCat-Flash-Chat";
 
     // Base instructions for all personas, emphasizing adaptive length and conciseness
     const baseInstructions = `
@@ -136,9 +153,9 @@ serve(async (req: Request) => {
 
     // Add custom QA results to the context if available
     let customQaContext = "";
-    if (customQaResults && customQaResults.length > 0) {
+    if (analysisResult.customQaResults && analysisResult.customQaResults.length > 0) {
       customQaContext = "\n\n--- Pre-generated Community Q&A Results ---\n";
-      customQaResults.forEach((qa: any, index: number) => {
+      analysisResult.customQaResults.forEach((qa: any, index: number) => {
         customQaContext += `Q${index + 1}: ${qa.question}\nA${index + 1}: ${qa.answer || "No answer generated."}\n\n`;
       });
       customQaContext += "--- End Community Q&A Results ---";

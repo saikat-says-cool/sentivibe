@@ -35,8 +35,10 @@ This tier provides access to core SentiVibe functionalities with specific daily 
     *   **"My Analyses" Page:** Yes (Access to personal analysis history is now available for **all authenticated users**.)
 
 *   **Usage Limits (per 24-hour rolling period):**
-    *   **Single Video Analyses:** Limited to **1 analysis** per day (IP-based for unauthenticated, User-ID based for authenticated).
-    *   **Multi-Video Comparisons:** Limited to **1 comparison** per day (IP-based for unauthenticated, User-ID based for authenticated).
+    *   **Single Video Analyses:** Limited to **5 analyses** per day (IP-based for unauthenticated, User-ID based for authenticated).
+    *   **Multi-Video Comparisons:** Limited to **3 comparisons** per day (IP-based for unauthenticated, User-ID based for authenticated).
+    *   **DeepThink Mode:** **Not available** for Free Tier users.
+    *   **DeepSearch Mode:** **Not available** for Free Tier users.
 
 *   **Monetization:**
     *   **Google Ads:** Google Ads will be displayed prominently on all pages accessible to Free Tier users to generate advertising revenue.
@@ -56,6 +58,8 @@ This tier provides an unrestricted, personalized, and ad-free experience, unlock
 *   **Usage Limits (per 24-hour rolling period, User-ID based):**
     *   **Single Video Analyses:** **50 analyses** per day (designed to be effectively unlimited for typical usage).
     *   **Multi-Video Comparisons:** **20 comparisons** per day (designed to be effectively unlimited for typical usage).
+    *   **DeepThink Mode:** **Available** for Paid Tier users.
+    *   **DeepSearch Mode:** **Available** for Paid Tier users.
     *   **All other features are UNLIMITED:** Custom questions (count and word count), AI chat messages (per session), Daily Copilot Queries.
 
 *   **Monetization:**

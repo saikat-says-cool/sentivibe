@@ -6,6 +6,7 @@ import HowItWorksCopilot from '@/components/HowItWorksCopilot';
 
 import productDocumentationContent from '/docs/PRODUCT_DOCUMENTATION.md?raw';
 import technicalDocumentationContent from '/docs/TECHNICAL_DOCUMENTATION.md?raw';
+import { useAuth } from '@/integrations/supabase/auth'; // Import useAuth
 
 const content = `
 ## How to Explore Libraries & AI Copilots
@@ -16,13 +17,13 @@ SentiVibe offers dedicated libraries for both single video analyses and multi-vi
 *   **Purpose:** Browse and search all publicly available single video analysis blog posts.
 *   **Access:** Navigate to "Analysis Library" from the header.
 *   **Search & Filter:** Use the search bar to find analyses by title, creator, or keywords. You can also filter by category.
-*   **Library Copilot:** Click the "Library Copilot" button to open an AI assistant. Ask it to find specific analyses or suggest new video analysis topics based on your interests. This Copilot also supports "DeepThink" mode for more detailed recommendations and "DeepSearch" mode to include real-time external search results.
+*   **Library Copilot:** Click the "Library Copilot" button to open an AI assistant. Ask it to find specific analyses or suggest new video analysis topics based on your interests. This Copilot also supports "DeepThink" mode for more detailed recommendations and "DeepSearch" mode to include real-time external search results. **Note: DeepThink and DeepSearch modes are available only for Paid Tier users.**
 
 ### Multi-Comparison Library:
 *   **Purpose:** Browse and search all publicly available multi-video comparison blog posts.
 *   **Access:** Navigate to "Comparison Library" from the header.
 *   **Search & Filter:** Use the search bar to find comparisons by title, video titles, or keywords.
-*   **Comparison Copilot:** Click the "Comparison Copilot" button to open an AI assistant. Ask it to find specific comparisons or suggest new comparative analysis topics. This Copilot also supports "DeepThink" mode for more detailed recommendations and "DeepSearch" mode to include real-time external search results.
+*   **Comparison Copilot:** Click the "Comparison Copilot" button to open an AI assistant. Ask it to find specific comparisons or suggest new comparative analysis topics. This Copilot also supports "DeepThink" mode for more detailed recommendations and "DeepSearch" mode to include real-time external search results. **Note: DeepThink and DeepSearch modes are available only for Paid Tier users.**
 
 ### My Analyses:
 *   **Purpose:** For authenticated users, this page lists all your personal single video analyses.
@@ -36,6 +37,9 @@ const LibrariesGuide = () => {
   useEffect(() => {
     document.title = "Explore Libraries & AI Copilots - SentiVibe Guide";
   }, []);
+
+  const { subscriptionStatus, subscriptionPlanId } = useAuth();
+  const isPaidTier = subscriptionStatus === 'active' && subscriptionPlanId !== 'free';
 
   return (
     <div className="container mx-auto p-4 max-w-5xl flex flex-col md:flex-row gap-6 bg-background text-foreground">
@@ -52,6 +56,7 @@ const LibrariesGuide = () => {
             <HowItWorksCopilot
               productDocumentation={productDocumentationContent}
               technicalDocumentation={technicalDocumentationContent}
+              isPaidTier={isPaidTier} // Pass isPaidTier to HowItWorksCopilot
             />
           </div>
         </CardContent>

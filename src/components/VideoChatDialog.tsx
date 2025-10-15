@@ -75,6 +75,7 @@ interface VideoChatDialogProps {
   onOpenChange: (open: boolean) => void;
   initialAnalysisResult?: AnalysisResponse | null;
   initialBlogPost?: BlogPost | null;
+  isPaidTier: boolean; // New prop
 }
 
 const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
@@ -82,6 +83,7 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
   onOpenChange,
   initialAnalysisResult,
   initialBlogPost,
+  isPaidTier, // Destructure new prop
 }) => {
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
   // Removed desiredWordCount state
@@ -242,7 +244,7 @@ const VideoChatDialog: React.FC<VideoChatDialogProps> = ({
             onToggleDeepThink={setDeepThinkMode}
             deepSearchEnabled={deepSearchMode}
             onToggleDeepSearch={setDeepSearchMode}
-            // Removed desiredWordCount and onWordCountChange
+            isPaidTier={isPaidTier} // Pass isPaidTier to ChatInterface
             selectedPersona={selectedPersona}
             onPersonaChange={setSelectedPersona}
           />

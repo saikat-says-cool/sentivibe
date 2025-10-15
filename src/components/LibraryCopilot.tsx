@@ -33,9 +33,10 @@ interface Message {
 
 interface LibraryCopilotProps {
   blogPosts: BlogPost[];
+  isPaidTier: boolean; // New prop
 }
 
-const LibraryCopilot: React.FC<LibraryCopilotProps> = ({ blogPosts }) => {
+const LibraryCopilot: React.FC<LibraryCopilotProps> = ({ blogPosts, isPaidTier }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
   const [deepThinkMode, setDeepThinkMode] = useState<boolean>(false);
@@ -179,6 +180,7 @@ const LibraryCopilot: React.FC<LibraryCopilotProps> = ({ blogPosts }) => {
             onToggleDeepThink={setDeepThinkMode}
             deepSearchEnabled={deepSearchMode}
             onToggleDeepSearch={setDeepSearchMode}
+            isPaidTier={isPaidTier} // Pass isPaidTier to ChatInterface
             selectedPersona={selectedPersona}
             onPersonaChange={setSelectedPersona}
           />

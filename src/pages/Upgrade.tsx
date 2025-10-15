@@ -27,14 +27,15 @@ const Upgrade = () => {
             <div className="bg-secondary p-6 rounded-lg shadow-md text-secondary-foreground">
               <h3 className="text-2xl font-semibold mb-4 text-primary-foreground">Free Tier</h3>
               <ul className="space-y-2 text-primary-foreground">
-                <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-400 mr-2" /> 1 Single Video Analysis/day</li>
-                <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-400 mr-2" /> 1 Multi-Video Comparison/day</li>
+                <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-400 mr-2" /> 5 Single Video Analyses/day</li>
+                <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-400 mr-2" /> 3 Multi-Video Comparisons/day</li>
                 <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-400 mr-2" /> Unlimited Custom Questions</li>
                 <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-400 mr-2" /> Unlimited AI Chat Messages</li>
                 <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-400 mr-2" /> Unlimited Copilot Queries</li>
                 <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-400 mr-2" /> Watermarked PDF Reports</li>
                 <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-400 mr-2" /> Ads displayed</li>
                 <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-400 mr-2" /> Access to "My Analyses" History</li>
+                <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-red-400 mr-2" /> No DeepThink / DeepSearch AI modes</li>
               </ul>
             </div>
 
@@ -49,6 +50,7 @@ const Upgrade = () => {
                 <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-200 mr-2" /> Unwatermarked PDF Reports</li>
                 <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-200 mr-2" /> Ad-Free Experience</li>
                 <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-200 mr-2" /> Access to "My Analyses" History</li>
+                <li className="flex items-center"><CheckCircle2 className="h-5 w-5 text-green-200 mr-2" /> DeepThink & DeepSearch AI modes</li>
               </ul>
               <div className="text-2xl font-bold text-primary-foreground mb-4 mt-6">
                 $14.99 / month

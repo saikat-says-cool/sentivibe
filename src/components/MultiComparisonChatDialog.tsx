@@ -48,12 +48,14 @@ interface MultiComparisonChatDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   initialMultiComparisonResult: MultiComparisonResultForChat | null;
+  isPaidTier: boolean; // New prop
 }
 
 const MultiComparisonChatDialog: React.FC<MultiComparisonChatDialogProps> = ({
   isOpen,
   onOpenChange,
   initialMultiComparisonResult,
+  isPaidTier, // Destructure new prop
 }) => {
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
   // Removed desiredWordCount state
@@ -186,7 +188,7 @@ const MultiComparisonChatDialog: React.FC<MultiComparisonChatDialogProps> = ({
             onToggleDeepThink={setDeepThinkMode}
             deepSearchEnabled={deepSearchMode}
             onToggleDeepSearch={setDeepSearchMode}
-            // Removed desiredWordCount and onWordCountChange
+            isPaidTier={isPaidTier} // Pass isPaidTier to ChatInterface
             selectedPersona={selectedPersona}
             onPersonaChange={setSelectedPersona}
           />

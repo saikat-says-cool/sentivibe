@@ -43,12 +43,14 @@ interface ComparisonChatDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   initialComparisonResult: ComparisonResultForChat | null;
+  isPaidTier: boolean; // New prop
 }
 
 const ComparisonChatDialog: React.FC<ComparisonChatDialogProps> = ({
   isOpen,
   onOpenChange,
   initialComparisonResult,
+  isPaidTier, // Destructure new prop
 }) => {
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
   // Removed desiredWordCount state
@@ -180,7 +182,7 @@ const ComparisonChatDialog: React.FC<ComparisonChatDialogProps> = ({
             onToggleDeepThink={setDeepThinkMode}
             deepSearchEnabled={deepSearchMode}
             onToggleDeepSearch={setDeepSearchMode}
-            // Removed desiredWordCount and onWordCountChange
+            isPaidTier={isPaidTier} // Pass isPaidTier to ChatInterface
             selectedPersona={selectedPersona}
             onPersonaChange={setSelectedPersona}
           />

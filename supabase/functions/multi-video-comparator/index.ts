@@ -34,11 +34,11 @@ function getApiKeys(baseName: string): string[] {
 
 // Define simplified tier limits for multi-comparisons
 const MULTICOMP_UNAUTHENTICATED_LIMITS = {
-  dailyComparisons: 1, // 1 comparison per day for unauthenticated users
+  dailyComparisons: 3, // Increased for unauthenticated users
 };
 
 const MULTICOMP_AUTHENTICATED_FREE_TIER_LIMITS = {
-  dailyComparisons: 1, // 1 comparison per day for authenticated free users
+  dailyComparisons: 3, // Increased for authenticated free users
 };
 
 const MULTICOMP_PAID_TIER_LIMITS = {
@@ -108,6 +108,7 @@ serve(async (req: Request) => {
     const { data: { user } } = await supabaseClient.auth.getUser();
     let currentLimits;
     let userSubscriptionId: string | null = null;
+    let isPaidTier = false;
 
     // Refined IP extraction logic
     const xForwardedFor = req.headers.get('x-forwarded-for');
@@ -135,6 +136,7 @@ serve(async (req: Request) => {
         currentLimits = MULTICOMP_AUTHENTICATED_FREE_TIER_LIMITS; // Fallback
       } else if (subscriptionData && subscriptionData.status === 'active' && subscriptionData.plan_id !== 'free') {
         currentLimits = MULTICOMP_PAID_TIER_LIMITS;
+        isPaidTier = true;
       } else {
         currentLimits = MULTICOMP_AUTHENTICATED_FREE_TIER_LIMITS;
       }
@@ -355,7 +357,7 @@ serve(async (req: Request) => {
 
         if (count !== null && count >= currentLimits.dailyComparisons) {
           return new Response(JSON.stringify({ 
-            error: `Daily multi-comparison limit (${currentLimits.dailyComparisons}) exceeded. ${currentLimits === MULTICOMP_PAID_TIER_LIMITS ? 'You have reached your paid tier limit.' : 'Upgrade to a paid tier for more comparisons.'}` 
+            error: `Daily multi-comparison limit (${currentLimits.dailyComparisons}) exceeded. ${isPaidTier ? 'You have reached your paid tier limit.' : 'Upgrade to a paid tier for more comparisons.'}` 
           }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             status: 403,

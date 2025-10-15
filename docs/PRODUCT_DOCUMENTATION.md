@@ -18,15 +18,15 @@ Users can compare multiple YouTube videos side-by-side to understand differences
 ### AI Chat Interface
 Each analysis and comparison comes with an integrated AI chat interface. Users can ask follow-up questions about the analysis results, delve deeper into specific comments, or explore related topics.
 - **Adaptive Response Length:** AI responses are dynamically generated with an adaptive length, tailored to the complexity of the query and the selected persona. The AI aims for conciseness by default, expanding only when more detail is explicitly requested.
-- **DeepThink Mode:** Enables the AI to perform more extensive processing for more nuanced and detailed responses.
-- **DeepSearch Mode:** Allows the AI to fetch and integrate real-time external context from web searches to provide more comprehensive answers.
+- **DeepThink Mode (Paid Feature):** Enables the AI to perform more extensive processing for more nuanced and detailed responses. **This feature is available only for Paid Tier users.**
+- **DeepSearch Mode (Paid Feature):** Allows the AI to fetch and integrate real-time external context from web searches to provide more comprehensive answers. **This feature is available only for Paid Tier users.**
 - **Persona Selection:** Users can choose from various AI personas (e.g., Friendly, Therapist, Storyteller, Motivational Coach, Argumentative) to tailor the interaction style.
 
 ### Library Copilot
-The Library Copilot assists users in navigating their saved video analyses and comparisons. It can help find specific content based on keywords, creators, or themes, and can also suggest new analysis topics.
+The Library Copilot assists users in navigating their saved video analyses and comparisons. It can help find specific content based on keywords, creators, or themes, and can also suggest new analysis topics. **Note: DeepThink and DeepSearch modes are available only for Paid Tier users.**
 
 ### Guide Assistant
-The Guide Assistant is an AI-powered helper available throughout the application to answer questions about SentiVibe's features, how to use them, and troubleshoot common issues. It leverages both product and technical documentation for comprehensive support.
+The Guide Assistant is an AI-powered helper available throughout the application to answer questions about SentiVibe's features, how to use them, and troubleshoot common issues. It leverages both product and technical documentation for comprehensive support. **Note: DeepThink and DeepSearch modes are available only for Paid Tier users.**
 
 ## User Interface (UI) & Experience (UX)
 

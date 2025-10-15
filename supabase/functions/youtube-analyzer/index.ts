@@ -35,11 +35,11 @@ function getApiKeys(baseName: string): string[] {
 
 // Define simplified tier limits (only daily analyses remain)
 const UNAUTHENTICATED_LIMITS = {
-  dailyAnalyses: 1,
+  dailyAnalyses: 5, // Increased for unauthenticated users
 };
 
 const AUTHENTICATED_FREE_TIER_LIMITS = {
-  dailyAnalyses: 1,
+  dailyAnalyses: 5, // Increased for authenticated free users
 };
 
 const PAID_TIER_LIMITS = {
@@ -132,6 +132,7 @@ serve(async (req: Request) => { // Explicitly typed 'req' as Request
     const { data: { user } } = await supabaseClient.auth.getUser();
     let currentLimits;
     let userSubscriptionId: string | null = null;
+    let isPaidTier = false;
 
     // Refined IP extraction logic
     let clientIp = req.headers.get('x-real-ip'); // Prioritize x-real-ip
@@ -159,6 +160,7 @@ serve(async (req: Request) => { // Explicitly typed 'req' as Request
         currentLimits = AUTHENTICATED_FREE_TIER_LIMITS; // Fallback
       } else if (subscriptionData && subscriptionData.status === 'active' && subscriptionData.plan_id !== 'free') {
         currentLimits = PAID_TIER_LIMITS;
+        isPaidTier = true;
       } else {
         currentLimits = AUTHENTICATED_FREE_TIER_LIMITS;
       }
@@ -266,7 +268,7 @@ serve(async (req: Request) => { // Explicitly typed 'req' as Request
 
         if (count !== null && count >= currentLimits.dailyAnalyses) {
           return new Response(JSON.stringify({ 
-            error: `Daily analysis limit (${currentLimits.dailyAnalyses}) exceeded. ${currentLimits === PAID_TIER_LIMITS ? 'You have reached your paid tier limit.' : 'Upgrade to a paid tier for more analyses.'}` 
+            error: `Daily analysis limit (${currentLimits.dailyAnalyses}) exceeded. ${isPaidTier ? 'You have reached your paid tier limit.' : 'Upgrade to a paid tier for more analyses.'}` 
           }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             status: 403,
@@ -317,7 +319,7 @@ serve(async (req: Request) => { // Explicitly typed 'req' as Request
           .from('anon_usage')
           .upsert({ 
             ip_address: clientIp, 
-            analyses_count: anonUsage?.analyses_count || 0, // Preserve other counts
+            analyses_count: currentAnalysesCount, // Update analyses_count
             comparisons_count: anonUsage?.comparisons_count || 0, // Preserve other counts
             last_reset_at: lastResetAt,
             updated_at: now.toISOString(),

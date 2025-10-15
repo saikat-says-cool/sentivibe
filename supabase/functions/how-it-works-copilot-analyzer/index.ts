@@ -51,7 +51,26 @@ serve(async (req: Request) => {
       }
     );
 
-    const { userQuery, chatMessages, productDocumentation, technicalDocumentation, deepThinkMode, deepSearchMode, selectedPersona } = await req.json(); // Removed desiredWordCount
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    let isPaidTier = false;
+
+    if (user) {
+      const { data: subscriptionData, error: subscriptionError } = await supabaseClient
+        .from('subscriptions')
+        .select('status, plan_id')
+        .eq('id', user.id)
+        .single();
+
+      if (!subscriptionError && subscriptionData && subscriptionData.status === 'active' && subscriptionData.plan_id !== 'free') {
+        isPaidTier = true;
+      }
+    }
+
+    const { userQuery, chatMessages, productDocumentation, technicalDocumentation, deepThinkMode: clientDeepThinkMode, deepSearchMode: clientDeepSearchMode, selectedPersona } = await req.json();
+
+    // Enforce DeepThink and DeepSearch restrictions for free users
+    const effectiveDeepThinkMode = isPaidTier && clientDeepThinkMode;
+    const effectiveDeepSearchMode = isPaidTier && clientDeepSearchMode;
 
     if (!userQuery || !productDocumentation || !technicalDocumentation) {
       return new Response(JSON.stringify({ error: 'User query and documentation content are required.' }), {
@@ -62,7 +81,7 @@ serve(async (req: Request) => {
 
     // --- Fetch External Context if DeepSearch is enabled ---
     let externalContext = '';
-    if (deepSearchMode) {
+    if (effectiveDeepSearchMode) {
       const externalContextQuery = `${userQuery} SentiVibe documentation`;
       const fetchExternalContextResponse = await supabaseClient.functions.invoke('fetch-external-context', {
         body: { query: externalContextQuery },
@@ -88,7 +107,7 @@ serve(async (req: Request) => {
     const maxTokens = 8000; // Set a generous max_tokens, let the AI decide length based on prompt
 
     // Determine which Longcat AI model to use
-    const aiModel = deepThinkMode ? "LongCat-Flash-Thinking" : "LongCat-Flash-Chat";
+    const aiModel = effectiveDeepThinkMode ? "LongCat-Flash-Thinking" : "LongCat-Flash-Chat";
 
     // Base instructions for all personas, emphasizing completeness and expert knowledge
     const baseInstructions = `
@@ -140,7 +159,7 @@ serve(async (req: Request) => {
     --- SentiVibe Technical Documentation (including code details, loopholes, blindspots) ---
     ${technicalDocumentation}
     --- End SentiVibe Technical Documentation ---
-    ${externalContext ? `\n\n--- External Search Results ---\n${externalContext}\n--- End External Search Results ---` : ''}
+    ${effectiveDeepSearchMode ? `\n\n--- External Search Results ---\n${externalContext}\n--- End External Search Results ---` : ''}
     `;
 
     // Convert chatMessages to the format expected by Longcat AI

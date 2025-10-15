@@ -6,6 +6,7 @@ import HowItWorksCopilot from '@/components/HowItWorksCopilot';
 
 import productDocumentationContent from '/docs/PRODUCT_DOCUMENTATION.md?raw';
 import technicalDocumentationContent from '/docs/TECHNICAL_DOCUMENTATION.md?raw';
+import { useAuth } from '@/integrations/supabase/auth'; // Import useAuth
 
 const content = `
 ## How to Interact with AI Chat
@@ -16,15 +17,15 @@ SentiVibe's context-aware AI Chat allows you to ask follow-up questions about yo
 *   **Context-Aware:** The AI synthesizes information from your analysis report (sentiment, themes, summary, top comments, custom Q&A) to provide relevant answers.
 *   **Customizable Persona:** Choose from various AI personas (Friendly Assistant, Therapist, Storyteller, Motivational Coach, Argumentative) to tailor the AI's tone.
 *   **Precise Response Length:** Specify a desired word count for each AI response to control the level of detail.
-*   **DeepThink Mode:** Toggle "DeepThink" mode for more nuanced and in-depth responses, utilizing a more powerful AI model.
-*   **DeepSearch Mode:** Toggle "DeepSearch" mode to include real-time external search results from Google Custom Search in the AI's context for more comprehensive and up-to-date answers.
+*   **DeepThink Mode (Paid Feature):** Toggle "DeepThink" mode for more nuanced and in-depth responses, utilizing a more powerful AI model. **This feature is available only for Paid Tier users.**
+*   **DeepSearch Mode (Paid Feature):** Toggle "DeepSearch" mode to include real-time external search results from Google Custom Search in the AI's context for more comprehensive and up-to-date answers. **This feature is available only for Paid Tier users.**
 
 ### Steps:
 1.  **Open Chat Dialog:** After any video analysis or comparison, click the "Chat with AI" button. This will open a pop-up chat interface.
 2.  **Select Persona:** Use the "Persona" dropdown to choose your preferred AI conversational style.
 3.  **Set Word Count:** Enter a number in the "Response Word Count" field to control the length of the AI's answers.
-4.  **Toggle DeepThink (Optional):** Use the "DeepThink" switch to enable or disable the advanced AI model for more detailed responses.
-5.  **Toggle DeepSearch (Optional):** Use the "DeepSearch" switch to enable or disable the inclusion of real-time external search results.
+4.  **Toggle DeepThink (Optional, Paid Feature):** Use the "DeepThink" switch to enable or disable the advanced AI model for more detailed responses. This will be disabled for Free Tier users.
+5.  **Toggle DeepSearch (Optional, Paid Feature):** Use the "DeepSearch" switch to enable or disable the inclusion of real-time external search results. This will be disabled for Free Tier users.
 6.  **Ask Questions:** Type your questions into the input field and press "Send." The AI will respond based on the loaded analysis context and your chosen settings.
 
 The AI Chat is designed to help you explore your analysis data more interactively and get specific answers to your queries.
@@ -34,6 +35,9 @@ const AiChatGuide = () => {
   useEffect(() => {
     document.title = "Interact with AI Chat - SentiVibe Guide";
   }, []);
+
+  const { subscriptionStatus, subscriptionPlanId } = useAuth();
+  const isPaidTier = subscriptionStatus === 'active' && subscriptionPlanId !== 'free';
 
   return (
     <div className="container mx-auto p-4 max-w-5xl flex flex-col md:flex-row gap-6 bg-background text-foreground">
@@ -50,6 +54,7 @@ const AiChatGuide = () => {
             <HowItWorksCopilot
               productDocumentation={productDocumentationContent}
               technicalDocumentation={technicalDocumentationContent}
+              isPaidTier={isPaidTier} // Pass isPaidTier to HowItWorksCopilot
             />
           </div>
         </CardContent>

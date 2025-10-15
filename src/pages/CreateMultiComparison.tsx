@@ -52,11 +52,11 @@ interface MultiComparisonResult {
 }
 
 const MULTICOMP_UNAUTHENTICATED_LIMITS = {
-  dailyComparisons: 1,
+  dailyComparisons: 3,
 };
 
 const MULTICOMP_AUTHENTICATED_FREE_TIER_LIMITS = {
-  dailyComparisons: 1,
+  dailyComparisons: 3,
 };
 
 const MULTICOMP_PAID_TIER_LIMITS = {
@@ -612,6 +612,7 @@ const CreateMultiComparison = () => {
             isOpen={isChatDialogOpen}
             onOpenChange={setIsChatDialogOpen}
             initialMultiComparisonResult={multiComparisonResult}
+            isPaidTier={isPaidTier} // Pass isPaidTier to ChatDialog
           />
         </>
       )}

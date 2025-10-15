@@ -33,8 +33,6 @@ function getApiKeys(baseName: string): string[] {
   return keys;
 }
 
-// Tier limits are no longer enforced in this function, so these constants are unused.
-
 serve(async (req: Request) => {
   // Handle CORS preflight request
     if (req.method === 'OPTIONS') {
@@ -55,7 +53,26 @@ serve(async (req: Request) => {
       }
     );
 
-    const { userQuery, blogPostsData, deepThinkMode, deepSearchMode } = await req.json(); // Removed desiredWordCount
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    let isPaidTier = false;
+
+    if (user) {
+      const { data: subscriptionData, error: subscriptionError } = await supabaseClient
+        .from('subscriptions')
+        .select('status, plan_id')
+        .eq('id', user.id)
+        .single();
+
+      if (!subscriptionError && subscriptionData && subscriptionData.status === 'active' && subscriptionData.plan_id !== 'free') {
+        isPaidTier = true;
+      }
+    }
+
+    const { userQuery, blogPostsData, deepThinkMode: clientDeepThinkMode, deepSearchMode: clientDeepSearchMode } = await req.json();
+
+    // Enforce DeepThink and DeepSearch restrictions for free users
+    const effectiveDeepThinkMode = isPaidTier && clientDeepThinkMode;
+    const effectiveDeepSearchMode = isPaidTier && clientDeepSearchMode;
 
     if (!userQuery || !blogPostsData || !Array.isArray(blogPostsData)) {
       return new Response(JSON.stringify({ error: 'User query and blog posts data are required.' }), {
@@ -66,7 +83,7 @@ serve(async (req: Request) => {
 
     // --- Fetch External Context if DeepSearch is enabled ---
     let externalContext = '';
-    if (deepSearchMode) {
+    if (effectiveDeepSearchMode) {
       const externalContextQuery = `${userQuery} YouTube video analysis`;
       const fetchExternalContextResponse = await supabaseClient.functions.invoke('fetch-external-context', {
         body: { query: externalContextQuery },
@@ -81,7 +98,7 @@ serve(async (req: Request) => {
     }
 
     // Determine which Longcat AI model to use
-    const aiModel = deepThinkMode ? "LongCat-Flash-Thinking" : "LongCat-Flash-Chat";
+    const aiModel = effectiveDeepThinkMode ? "LongCat-Flash-Thinking" : "LongCat-Flash-Chat";
 
     // Format blog posts data for the AI prompt
     const formattedBlogPosts = blogPostsData.map((post: any, index: number) => `
@@ -125,7 +142,7 @@ serve(async (req: Request) => {
     --- Library Context ---
     ${formattedBlogPosts}
     --- End Library Context ---
-    ${externalContext ? `\n\n--- External Search Results ---\n${externalContext}\n--- End External Search Results ---` : ''}
+    ${effectiveDeepSearchMode ? `\n\n--- External Search Results ---\n${externalContext}\n--- End External Search Results ---` : ''}
     `;
 
     // --- Longcat AI API Call ---

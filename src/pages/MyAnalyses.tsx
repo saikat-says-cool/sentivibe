@@ -125,7 +125,7 @@ const MyAnalyses = () => {
           <Sparkles className="h-4 w-4" />
           <AlertTitle>Unlock the Full SentiVibe Experience!</AlertTitle>
           <AlertDescription>
-            You're on the Free Tier. Upgrade to a Paid Tier for significantly higher daily analysis and comparison limits, unwatermarked PDF reports, and an ad-free experience. <Link to="/upgrade" className="underline font-semibold text-accent">Learn more and upgrade here.</Link>
+            You're on the Free Tier. Upgrade to a Paid Tier for significantly higher daily analysis and comparison limits, **DeepThink & DeepSearch AI modes**, unwatermarked PDF reports, and an ad-free experience. <Link to="/upgrade" className="underline font-semibold text-accent">Learn more and upgrade here.</Link>
           </AlertDescription>
         </Alert>
       )}
@@ -146,7 +146,7 @@ const MyAnalyses = () => {
           </Button>
         </TooltipWrapper>
         {blogPosts && blogPosts.length > 0 && (
-          <LibraryCopilot blogPosts={blogPosts} />
+          <LibraryCopilot blogPosts={blogPosts} isPaidTier={isPaidTier} />
         )}
       </div>
 

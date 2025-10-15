@@ -30,6 +30,7 @@ interface ChatInterfaceProps {
   onToggleDeepThink: (checked: boolean) => void;
   deepSearchEnabled: boolean;
   onToggleDeepSearch: (checked: boolean) => void;
+  isPaidTier: boolean; // New prop
   selectedPersona: string;
   onPersonaChange: (persona: string) => void;
 }
@@ -43,6 +44,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   onToggleDeepThink, 
   deepSearchEnabled, 
   onToggleDeepSearch,
+  isPaidTier, // Destructure new prop
   selectedPersona,
   onPersonaChange,
 }) => {
@@ -121,27 +123,27 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
               </Select>
             </div>
           </TooltipWrapper>
-          <TooltipWrapper content="Toggle DeepSearch mode to include real-time external search results in AI responses.">
+          <TooltipWrapper content={isPaidTier ? "Toggle DeepSearch mode to include real-time external search results in AI responses." : "DeepSearch is a paid feature. Upgrade to unlock."}>
             <Button
               type="button"
               variant="ghost"
               size="icon"
               onClick={() => onToggleDeepSearch(!deepSearchEnabled)}
-              disabled={isLoading || disabled}
-              className={`h-10 w-10 rounded-lg ${deepSearchEnabled ? 'bg-teal-600 text-white' : 'text-gray-400 hover:bg-gray-700'}`}
+              disabled={isLoading || disabled || !isPaidTier}
+              className={`h-10 w-10 rounded-lg ${deepSearchEnabled && isPaidTier ? 'bg-teal-600 text-white' : 'text-gray-400 hover:bg-gray-700'} ${!isPaidTier && 'opacity-50 cursor-not-allowed'}`}
             >
               <Search className="h-5 w-5" />
               <span className="sr-only">Toggle DeepSearch</span>
             </Button>
           </TooltipWrapper>
-          <TooltipWrapper content="Toggle DeepThink mode for more nuanced and in-depth AI responses.">
+          <TooltipWrapper content={isPaidTier ? "Toggle DeepThink mode for more nuanced and in-depth AI responses." : "DeepThink is a paid feature. Upgrade to unlock."}>
             <Button
               type="button"
               variant="ghost"
               size="icon"
               onClick={() => onToggleDeepThink(!deepThinkEnabled)}
-              disabled={isLoading || disabled}
-              className={`h-10 w-10 rounded-lg ${deepThinkEnabled ? 'bg-teal-600 text-white' : 'text-gray-400 hover:bg-gray-700'}`}
+              disabled={isLoading || disabled || !isPaidTier}
+              className={`h-10 w-10 rounded-lg ${deepThinkEnabled && isPaidTier ? 'bg-teal-600 text-white' : 'text-gray-400 hover:bg-gray-700'} ${!isPaidTier && 'opacity-50 cursor-not-allowed'}`}
             >
               <Sparkles className="h-5 w-5" />
               <span className="sr-only">Toggle DeepThink</span>

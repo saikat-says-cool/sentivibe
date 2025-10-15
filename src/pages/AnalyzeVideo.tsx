@@ -75,11 +75,11 @@ interface AnalysisResponse {
 }
 
 const UNAUTHENTICATED_LIMITS = {
-  dailyAnalyses: 1,
+  dailyAnalyses: 5,
 };
 
 const AUTHENTICATED_FREE_TIER_LIMITS = {
-  dailyAnalyses: 1,
+  dailyAnalyses: 5,
 };
 
 const PAID_TIER_LIMITS = {
@@ -667,6 +667,7 @@ const AnalyzeVideo = () => {
             isOpen={isChatDialogOpen}
             onOpenChange={setIsChatDialogOpen}
             initialAnalysisResult={analysisResult}
+            isPaidTier={isPaidTier} // Pass isPaidTier to ChatDialog
           />
         </>
       )}

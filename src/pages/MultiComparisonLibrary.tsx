@@ -11,6 +11,7 @@ import ComparisonLibraryCopilot from '@/components/ComparisonLibraryCopilot';
 import { Badge } from '@/components/ui/badge';
 import PaginationControls from '@/components/PaginationControls';
 import { TooltipWrapper } from '@/components/ui/tooltip'; // Import TooltipWrapper
+import { useAuth } from '@/integrations/supabase/auth'; // Import useAuth
 
 interface MultiComparisonVideoSummary {
   title: string;
@@ -95,6 +96,8 @@ const fetchMultiComparisons = async (page: number, pageSize: number, searchTerm:
 const MultiComparisonLibrary = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const { subscriptionStatus, subscriptionPlanId } = useAuth();
+  const isPaidTier = subscriptionStatus === 'active' && subscriptionPlanId !== 'free';
 
   const { data, isLoading, error } = useQuery<{ data: MultiComparison[], totalCount: number }, Error>({
     queryKey: ['multiComparisons', currentPage, searchTerm],
@@ -171,7 +174,7 @@ const MultiComparisonLibrary = () => {
           </Button>
         </TooltipWrapper>
         {multiComparisons && multiComparisons.length > 0 && (
-          <ComparisonLibraryCopilot comparisons={multiComparisons} />
+          <ComparisonLibraryCopilot comparisons={multiComparisons} isPaidTier={isPaidTier} />
         )}
       </div>
 
