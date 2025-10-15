@@ -62,6 +62,8 @@ serve(async (req: Request) => {
       });
     }
 
+    // Removed finalDesiredWordCount
+
     // --- Fetch External Context if DeepSearch is enabled ---
     let externalContext = '';
     if (deepSearchMode) {
