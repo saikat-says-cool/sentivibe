@@ -1,5 +1,7 @@
 // @ts-ignore
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+// @ts-ignore
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0'; // Needed for invoking other functions if DeepSearch is enabled
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -46,45 +48,52 @@ serve(async (req: Request) => {
       });
     }
 
-    const googleSearchApiKeys = getApiKeys('GOOGLE_SEARCH_API_KEY');
-    // @ts-ignore
-    const googleSearchEngineId = Deno.env.get('GOOGLE_SEARCH_ENGINE_ID');
-
-    if (googleSearchApiKeys.length === 0 || !googleSearchEngineId) {
-      console.error('Google Custom Search API key(s) or engine ID not configured.');
-      return new Response(JSON.stringify({ error: 'Google Custom Search API not configured.' }), {
+    const longcatApiKeys = getApiKeys('LONGCAT_AI_API_KEY'); // Use Longcat AI keys for Langsearch
+    if (longcatApiKeys.length === 0) {
+      console.error('Longcat AI API key(s) not configured for Langsearch.');
+      return new Response(JSON.stringify({ error: 'Langsearch API not configured.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500,
       });
     }
 
     let searchResults = '';
-    let googleSearchResponse;
+    let langsearchResponse;
+    const langsearchApiUrl = "https://api.longcat.chat/langsearch/v1/search"; // Langsearch API endpoint
 
-    for (const currentGoogleApiKey of googleSearchApiKeys) {
-      const googleSearchUrl = `https://www.googleapis.com/customsearch/v1?key=${currentGoogleApiKey}&cx=${googleSearchEngineId}&q=${encodeURIComponent(query)}&num=5`;
-      
-      googleSearchResponse = await fetch(googleSearchUrl);
-      if (googleSearchResponse.ok) break;
-      else if (googleSearchResponse.status === 429 || googleSearchResponse.status === 403) {
-        console.warn(`Google Custom Search API key hit quota limit. Trying next key.`);
+    for (const currentLongcatApiKey of longcatApiKeys) {
+      langsearchResponse = await fetch(langsearchApiUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${currentLongcatApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          query: query,
+          num_results: 5, // Request 5 results, similar to previous Google Search
+        }),
+      });
+
+      if (langsearchResponse.ok) break;
+      else if (langsearchResponse.status === 429 || langsearchResponse.status === 403) {
+        console.warn(`Langsearch API key hit quota limit. Trying next key.`);
       } else {
         break;
       }
     }
 
-    if (!googleSearchResponse || !googleSearchResponse.ok) {
-      const errorData = googleSearchResponse ? await googleSearchResponse.json() : { message: "No response from Google Custom Search API" };
-      console.error('Google Custom Search API error:', errorData);
-      return new Response(JSON.stringify({ error: `Failed to fetch external context: ${errorData.error?.message || errorData.message}` }), {
+    if (!langsearchResponse || !langsearchResponse.ok) {
+      const errorData = langsearchResponse ? await langsearchResponse.json() : { message: "No response from Langsearch API" };
+      console.error('Langsearch API error:', errorData);
+      return new Response(JSON.stringify({ error: `Failed to fetch external context from Langsearch: ${errorData.error?.message || errorData.message}` }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: googleSearchResponse?.status || 500,
+        status: langsearchResponse?.status || 500,
       });
     }
 
-    const searchData = await googleSearchResponse.json();
-    if (searchData.items && searchData.items.length > 0) {
-      searchResults = searchData.items.map((item: any) => `Title: ${item.title}\nLink: ${item.link}\nSnippet: ${item.snippet}`).join('\n\n');
+    const searchData = await langsearchResponse.json();
+    if (searchData.results && searchData.results.length > 0) {
+      searchResults = searchData.results.map((item: any) => `Title: ${item.title}\nLink: ${item.link}\nSnippet: ${item.snippet}`).join('\n\n');
     } else {
       searchResults = 'No relevant external search results found.';
     }
