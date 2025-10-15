@@ -17,6 +17,7 @@ import html2pdf from 'html2pdf.js';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useLoadingMessages } from '@/hooks/use-loading-messages';
+import { TooltipWrapper } from '@/components/ui/tooltip'; // Import TooltipWrapper
 
 // New interfaces for multi-comparison
 interface MultiComparisonVideo {
@@ -369,28 +370,32 @@ const CreateMultiComparison = () => {
                   />
                 </div>
                 {videoLinks.length > 2 && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleRemoveVideoLink(index)}
-                    disabled={createMultiComparisonMutation.isPending || isComparisonLimitReached}
-                    className="self-end sm:self-auto text-destructive hover:bg-destructive/10"
-                  >
-                    <XCircle className="h-5 w-5" />
-                  </Button>
+                  <TooltipWrapper content="Remove this video from the comparison.">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleRemoveVideoLink(index)}
+                      disabled={createMultiComparisonMutation.isPending || isComparisonLimitReached}
+                      className="self-end sm:self-auto text-destructive hover:bg-destructive/10"
+                    >
+                      <XCircle className="h-5 w-5" />
+                    </Button>
+                  </TooltipWrapper>
                 )}
               </div>
             ))}
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleAddVideoLink}
-              disabled={createMultiComparisonMutation.isPending || isComparisonLimitReached || videoLinks.length >= 3}
-              className="w-full flex items-center gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/90 border-border"
-            >
-              <PlusCircle className="h-4 w-4" /> Add Another Video
-            </Button>
+            <TooltipWrapper content="Add another video link for comparison (max 3 videos).">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleAddVideoLink}
+                disabled={createMultiComparisonMutation.isPending || isComparisonLimitReached || videoLinks.length >= 3}
+                className="w-full flex items-center gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/90 border-border"
+              >
+                <PlusCircle className="h-4 w-4" /> Add Another Video
+              </Button>
+            </TooltipWrapper>
             <p className="text-sm text-muted-foreground mt-2">
               SentiVibe will analyze the available comments for each video. Analysis may take up to 30 seconds per video.
               <br />
@@ -435,28 +440,32 @@ const CreateMultiComparison = () => {
                   />
                 </div>
                 {customComparativeQuestions.length > 0 && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleRemoveQuestion(index)}
-                    disabled={areCustomQuestionInputsDisabled}
-                    className="self-end sm:self-auto text-destructive hover:bg-destructive/10"
-                  >
-                    <XCircle className="h-5 w-5" />
-                  </Button>
+                  <TooltipWrapper content="Remove this comparative question.">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleRemoveQuestion(index)}
+                      disabled={areCustomQuestionInputsDisabled}
+                      className="self-end sm:self-auto text-destructive hover:bg-destructive/10"
+                    >
+                      <XCircle className="h-5 w-5" />
+                    </Button>
+                  </TooltipWrapper>
                 )}
               </div>
             ))}
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleAddQuestion}
-              disabled={areCustomQuestionInputsDisabled}
-              className="w-full flex items-center gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/90 border-border"
-            >
-              <PlusCircle className="h-4 w-4" /> Add Another Comparative Question
-            </Button>
+            <TooltipWrapper content="Add another custom comparative question.">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleAddQuestion}
+                disabled={areCustomQuestionInputsDisabled}
+                className="w-full flex items-center gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/90 border-border"
+              >
+                <PlusCircle className="h-4 w-4" /> Add Another Comparative Question
+              </Button>
+            </TooltipWrapper>
 
             <Button type="submit" className="w-full bg-accent text-accent-foreground hover:bg-accent/90" disabled={createMultiComparisonMutation.isPending || isComparisonLimitReached}>
               {createMultiComparisonMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -497,32 +506,42 @@ const CreateMultiComparison = () => {
       {multiComparisonResult && (
         <>
           <div className="flex flex-wrap justify-end gap-2 mb-4">
-            <Button onClick={handleRefreshComparison} className="flex items-center gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/90 border-border" disabled={createMultiComparisonMutation.isPending}>
-              {createMultiComparisonMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />} Refresh Comparison
-            </Button>
-            <Button onClick={() => setIsChatDialogOpen(true)} className="flex items-center gap-2 bg-accent text-accent-foreground hover:bg-accent/90">
-              <MessageSquare className="h-4 w-4" /> Chat with AI
-            </Button>
-            <Button onClick={handleDownloadPdf} className="flex items-center gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/90 border-border">
-              <Download className="h-4 w-4" /> Download Report PDF
-            </Button>
-            <Button asChild className="bg-secondary text-secondary-foreground hover:bg-secondary/90 border-border">
-              <Link to={`/multi-comparison/${multiComparisonResult.slug}`}>View Full Multi-Comparison Blog Post</Link>
-            </Button>
+            <TooltipWrapper content="Re-run the multi-comparison to get the latest insights.">
+              <Button onClick={handleRefreshComparison} className="flex items-center gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/90 border-border" disabled={createMultiComparisonMutation.isPending}>
+                {createMultiComparisonMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />} Refresh Comparison
+              </Button>
+            </TooltipWrapper>
+            <TooltipWrapper content="Chat with AI about this multi-video comparison.">
+              <Button onClick={() => setIsChatDialogOpen(true)} className="flex items-center gap-2 bg-accent text-accent-foreground hover:bg-accent/90">
+                <MessageSquare className="h-4 w-4" /> Chat with AI
+              </Button>
+            </TooltipWrapper>
+            <TooltipWrapper content="Download this multi-comparison report as a PDF document.">
+              <Button onClick={handleDownloadPdf} className="flex items-center gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/90 border-border">
+                <Download className="h-4 w-4" /> Download Report PDF
+              </Button>
+            </TooltipWrapper>
+            <TooltipWrapper content="View the full SEO-optimized blog post generated from this multi-comparison.">
+              <Button asChild className="bg-secondary text-secondary-foreground hover:bg-secondary/90 border-border">
+                <Link to={`/multi-comparison/${multiComparisonResult.slug}`}>View Full Multi-Comparison Blog Post</Link>
+              </Button>
+            </TooltipWrapper>
           </div>
           <Card ref={comparisonReportRef} className="mb-6 bg-card text-foreground border-border">
             <CardHeader>
               <div className="flex flex-wrap justify-center items-center gap-4 mb-2">
                 {multiComparisonResult.videos.map((video, index) => (
                   <div key={index} className="flex flex-col items-center text-center w-32">
-                    <Link to={`/blog/${video.slug}`} className="block hover:opacity-80 transition-opacity">
-                      <img
-                        src={video.thumbnail_url}
-                        alt={`Thumbnail for ${video.title}`}
-                        className="w-full h-20 object-cover rounded-md shadow-md aspect-video"
-                      />
-                      <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{video.title}</p>
-                    </Link>
+                    <TooltipWrapper content={`View individual analysis for ${video.title}.`}>
+                      <Link to={`/blog/${video.slug}`} className="block hover:opacity-80 transition-opacity">
+                        <img
+                          src={video.thumbnail_url}
+                          alt={`Thumbnail for ${video.title}`}
+                          className="w-full h-20 object-cover rounded-md shadow-md aspect-video"
+                        />
+                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{video.title}</p>
+                      </Link>
+                    </TooltipWrapper>
                   </div>
                 ))}
               </div>

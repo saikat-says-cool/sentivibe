@@ -20,6 +20,7 @@ import { useAuth } from '@/integrations/supabase/auth';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useLoadingMessages } from '@/hooks/use-loading-messages';
+import { TooltipWrapper } from '@/components/ui/tooltip'; // Import TooltipWrapper
 
 interface AiAnalysisResult {
   overall_sentiment: string;
@@ -426,28 +427,32 @@ const AnalyzeVideo = () => {
                   />
                 </div>
                 {customQuestions.length > 0 && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleRemoveQuestion(index)}
-                    disabled={areCustomQuestionInputsDisabled}
-                    className="self-end sm:self-auto text-destructive hover:bg-destructive/10"
-                  >
-                    <XCircle className="h-5 w-5" />
-                  </Button>
+                  <TooltipWrapper content="Remove this custom question.">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleRemoveQuestion(index)}
+                      disabled={areCustomQuestionInputsDisabled}
+                      className="self-end sm:self-auto text-destructive hover:bg-destructive/10"
+                    >
+                      <XCircle className="h-5 w-5" />
+                    </Button>
+                  </TooltipWrapper>
                 )}
               </div>
             ))}
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleAddQuestion}
-              disabled={areCustomQuestionInputsDisabled}
-              className="w-full flex items-center gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/90 border-border"
-            >
-              <PlusCircle className="h-4 w-4" /> Add Another Question
-            </Button>
+            <TooltipWrapper content="Add another custom question to be answered by AI.">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleAddQuestion}
+                disabled={areCustomQuestionInputsDisabled}
+                className="w-full flex items-center gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/90 border-border"
+              >
+                <PlusCircle className="h-4 w-4" /> Add Another Question
+              </Button>
+            </TooltipWrapper>
 
             <Button type="submit" className="w-full bg-accent text-accent-foreground hover:bg-accent/90" disabled={analyzeVideoMutation.isPending || isAnalysisLimitReached}>
               {analyzeVideoMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -489,28 +494,38 @@ const AnalyzeVideo = () => {
         <>
           <div className="flex flex-wrap justify-end gap-2 mb-4">
             {analysisResult.originalVideoLink && (
-              <Button asChild variant="outline" className="flex items-center gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/90 border-border">
-                <a href={analysisResult.originalVideoLink} target="_blank" rel="noopener noreferrer">
-                  <Youtube className="h-4 w-4" /> Original Video
-                </a>
-              </Button>
+              <TooltipWrapper content="View the original YouTube video.">
+                <Button asChild variant="outline" className="flex items-center gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/90 border-border">
+                  <a href={analysisResult.originalVideoLink} target="_blank" rel="noopener noreferrer">
+                    <Youtube className="h-4 w-4" /> Original Video
+                  </a>
+                </Button>
+              </TooltipWrapper>
             )}
             {analysisResult.blogPostSlug && (
-              <Button asChild variant="outline" className="flex items-center gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/90 border-border">
-                <Link to={`/blog/${analysisResult.blogPostSlug}`}>
-                  <LinkIcon className="h-4 w-4" /> View Blog Post
-                </Link>
-              </Button>
+              <TooltipWrapper content="View the full SEO-optimized blog post generated from this analysis.">
+                <Button asChild variant="outline" className="flex items-center gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/90 border-border">
+                  <Link to={`/blog/${analysisResult.blogPostSlug}`}>
+                    <LinkIcon className="h-4 w-4" /> View Blog Post
+                  </Link>
+                </Button>
+              </TooltipWrapper>
             )}
-            <Button onClick={handleRefreshAnalysis} className="flex items-center gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/90 border-border" disabled={analyzeVideoMutation.isPending}>
-              {analyzeVideoMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />} Refresh Analysis
-            </Button>
-            <Button onClick={() => setIsChatDialogOpen(true)} className="flex items-center gap-2 bg-accent text-accent-foreground hover:bg-accent/90">
-              <MessageSquare className="h-4 w-4" /> Chat with AI
-            </Button>
-            <Button onClick={handleDownloadPdf} className="flex items-center gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/90 border-border">
-              <Download className="h-4 w-4" /> Download Report PDF
-            </Button>
+            <TooltipWrapper content="Re-run the analysis to get the latest comments and insights.">
+              <Button onClick={handleRefreshAnalysis} className="flex items-center gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/90 border-border" disabled={analyzeVideoMutation.isPending}>
+                {analyzeVideoMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />} Refresh Analysis
+              </Button>
+            </TooltipWrapper>
+            <TooltipWrapper content="Chat with AI about this video's analysis.">
+              <Button onClick={() => setIsChatDialogOpen(true)} className="flex items-center gap-2 bg-accent text-accent-foreground hover:bg-accent/90">
+                <MessageSquare className="h-4 w-4" /> Chat with AI
+              </Button>
+            </TooltipWrapper>
+            <TooltipWrapper content="Download this analysis report as a PDF document.">
+              <Button onClick={handleDownloadPdf} className="flex items-center gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/90 border-border">
+                <Download className="h-4 w-4" /> Download Report PDF
+              </Button>
+            </TooltipWrapper>
           </div>
           <Card ref={analysisReportRef} className="mb-6 bg-card text-foreground border-border">
             <CardHeader>

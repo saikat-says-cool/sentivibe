@@ -3,7 +3,7 @@ import { AuthProvider } from './integrations/supabase/auth';
 import { ThemeProvider } from './components/theme-provider';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import AppContent from './components/AppContent';
-// Removed PaddleProvider import
+import { TooltipProvider } from './components/ui/tooltip'; // Import TooltipProvider
 
 const queryClient = new QueryClient();
 
@@ -13,8 +13,9 @@ function App() {
       <AuthProvider>
         <QueryClientProvider client={queryClient}>
           <Router>
-            {/* Removed PaddleProvider wrapper */}
-            <AppContent />
+            <TooltipProvider> {/* Wrap AppContent with TooltipProvider */}
+              <AppContent />
+            </TooltipProvider>
           </Router>
         </QueryClientProvider>
       </AuthProvider>

@@ -13,6 +13,7 @@ import VideoChatDialog from '@/components/VideoChatDialog';
 import html2pdf from 'html2pdf.js';
 import { useAuth } from '@/integrations/supabase/auth';
 import UpgradeCTA from '@/components/UpgradeCTA';
+import { TooltipWrapper } from '@/components/ui/tooltip'; // Import TooltipWrapper
 
 interface AiAnalysisResult {
   overall_sentiment: string;
@@ -300,34 +301,46 @@ const BlogPostDetail = () => {
   return (
     <div className="container mx-auto p-4 max-w-3xl">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-2 flex-wrap">
-        <Link to="/library" className="text-accent hover:underline flex items-center w-fit">
-          <ArrowLeft className="h-4 w-4 mr-2" /> Back to Analysis Library
-        </Link>
+        <TooltipWrapper content="Go back to the main analysis library.">
+          <Link to="/library" className="text-accent hover:underline flex items-center w-fit">
+            <ArrowLeft className="h-4 w-4 mr-2" /> Back to Analysis Library
+          </Link>
+        </TooltipWrapper>
         <div className="flex flex-wrap gap-2">
-          <Button asChild className="bg-secondary text-secondary-foreground hover:bg-secondary/90">
-            <Link to="/analyze-video">Analyze a New Video</Link>
-          </Button>
-          <Button
-            onClick={() => navigate('/analyze-video', { state: { blogPost: blogPost, openChat: false } })}
-            className="flex items-center gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/90"
-          >
-            <BarChart className="h-4 w-4" /> Go to Video Analysis
-          </Button>
-          <Button
-            onClick={() => navigate('/analyze-video', { state: { blogPost: blogPost, openChat: false, forceReanalyze: true } })}
-            className="flex items-center gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/90"
-          >
-            <RefreshCw className="h-4 w-4" /> Refresh Analysis
-          </Button>
-          <Button
-            onClick={() => setIsChatDialogOpen(true)}
-            className="flex items-center gap-2 bg-accent text-accent-foreground hover:bg-accent/90"
-          >
-            <MessageSquare className="h-4 w-4" /> Chat with AI
-          </Button>
-          <Button onClick={handleDownloadPdf} className="flex items-center gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/90">
-            <Download className="h-4 w-4" /> Download Report PDF
-          </Button>
+          <TooltipWrapper content="Start a new video analysis.">
+            <Button asChild className="bg-secondary text-secondary-foreground hover:bg-secondary/90">
+              <Link to="/analyze-video">Analyze a New Video</Link>
+            </Button>
+          </TooltipWrapper>
+          <TooltipWrapper content="Go to the interactive analysis page for this video.">
+            <Button
+              onClick={() => navigate('/analyze-video', { state: { blogPost: blogPost, openChat: false } })}
+              className="flex items-center gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/90"
+            >
+              <BarChart className="h-4 w-4" /> Go to Video Analysis
+            </Button>
+          </TooltipWrapper>
+          <TooltipWrapper content="Re-run the analysis to get the latest comments and insights.">
+            <Button
+              onClick={() => navigate('/analyze-video', { state: { blogPost: blogPost, openChat: false, forceReanalyze: true } })}
+              className="flex items-center gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/90"
+            >
+              <RefreshCw className="h-4 w-4" /> Refresh Analysis
+            </Button>
+          </TooltipWrapper>
+          <TooltipWrapper content="Chat with AI about this video's analysis.">
+            <Button
+              onClick={() => setIsChatDialogOpen(true)}
+              className="flex items-center gap-2 bg-accent text-accent-foreground hover:bg-accent/90"
+            >
+              <MessageSquare className="h-4 w-4" /> Chat with AI
+            </Button>
+          </TooltipWrapper>
+          <TooltipWrapper content="Download this analysis report as a PDF document.">
+            <Button onClick={handleDownloadPdf} className="flex items-center gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/90">
+              <Download className="h-4 w-4" /> Download Report PDF
+            </Button>
+          </TooltipWrapper>
         </div>
       </div>
       <Card ref={analysisReportRef} className="mb-6 bg-card text-foreground border-border">
@@ -355,14 +368,16 @@ const BlogPostDetail = () => {
             </p>
           )}
           {blogPost.original_video_link && (
-            <a
-              href={blogPost.original_video_link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-accent hover:underline flex items-center mt-2 w-fit"
-            >
-              <Youtube className="h-4 w-4 mr-2" /> View Original Video
-            </a>
+            <TooltipWrapper content="View the original video on YouTube.">
+              <a
+                href={blogPost.original_video_link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-accent hover:underline flex items-center mt-2 w-fit"
+              >
+                <Youtube className="h-4 w-4 mr-2" /> View Original Video
+              </a>
+            </TooltipWrapper>
           )}
           {blogPost.meta_description && (
             <p className="text-md text-muted-foreground mt-4 italic">

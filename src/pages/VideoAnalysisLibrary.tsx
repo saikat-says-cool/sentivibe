@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { TooltipWrapper } from '@/components/ui/tooltip'; // Import TooltipWrapper
 
 interface AiAnalysisResult {
   overall_sentiment: string;
@@ -180,34 +181,40 @@ const VideoAnalysisLibrary = () => {
     <div className="container mx-auto p-4 max-w-4xl">
       <h1 className="text-3xl font-bold mb-6 text-foreground">Analysis Library</h1>
       <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-2 mb-6">
-        <Input
-          type="text"
-          placeholder="Search by title, creator, or keywords (across all analyses)..."
-          value={searchTerm}
-          onChange={handleSearchChange}
-          className="flex-1 bg-input text-foreground border-border"
-        />
+        <TooltipWrapper content="Search video analyses by title, creator, or keywords.">
+          <Input
+            type="text"
+            placeholder="Search by title, creator, or keywords (across all analyses)..."
+            value={searchTerm}
+            onChange={handleSearchChange}
+            className="flex-1 bg-input text-foreground border-border"
+          />
+        </TooltipWrapper>
         <div className="flex items-center space-x-2">
           <Label htmlFor="category-select" className="sr-only">Category</Label>
-          <Select
-            value={selectedCategory}
-            onValueChange={handleCategoryChange}
-          >
-            <SelectTrigger id="category-select" className="w-[180px] bg-input text-foreground border-border">
-              <SelectValue placeholder="Select category" />
-            </SelectTrigger>
-            <SelectContent className="bg-card text-foreground border-border">
-              {CATEGORIES.map((category) => (
-                <SelectItem key={category} value={category}>
-                  {category}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <TooltipWrapper content="Filter analyses by category.">
+            <Select
+              value={selectedCategory}
+              onValueChange={handleCategoryChange}
+            >
+              <SelectTrigger id="category-select" className="w-[180px] bg-input text-foreground border-border">
+                <SelectValue placeholder="Select category" />
+              </SelectTrigger>
+              <SelectContent className="bg-card text-foreground border-border">
+                {CATEGORIES.map((category) => (
+                  <SelectItem key={category} value={category}>
+                    {category}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </TooltipWrapper>
         </div>
-        <Button variant="outline" size="icon" className="sm:hidden">
-          <Search className="h-4 w-4" />
-        </Button>
+        <TooltipWrapper content="Search analyses.">
+          <Button variant="outline" size="icon" className="sm:hidden">
+            <Search className="h-4 w-4" />
+          </Button>
+        </TooltipWrapper>
         {blogPosts && blogPosts.length > 0 && (
           <LibraryCopilot blogPosts={blogPosts} />
         )}

@@ -14,6 +14,7 @@ import MultiComparisonChatDialog from '@/components/MultiComparisonChatDialog';
 import html2pdf from 'html2pdf.js';
 import { useAuth } from '@/integrations/supabase/auth';
 import UpgradeCTA from '@/components/UpgradeCTA';
+import { TooltipWrapper } from '@/components/ui/tooltip'; // Import TooltipWrapper
 
 interface MultiComparisonVideo {
   blog_post_id: string;
@@ -320,32 +321,42 @@ const MultiComparisonDetail = () => {
   return (
     <div className="container mx-auto p-4 max-w-3xl">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-2 flex-wrap">
-        <Link to="/multi-comparison-library" className="text-accent hover:underline flex items-center w-fit">
-          <ArrowLeft className="h-4 w-4 mr-2" /> Back to Comparison Library
-        </Link>
+        <TooltipWrapper content="Go back to the multi-comparison library.">
+          <Link to="/multi-comparison-library" className="text-accent hover:underline flex items-center w-fit">
+            <ArrowLeft className="h-4 w-4 mr-2" /> Back to Comparison Library
+          </Link>
+        </TooltipWrapper>
         <div className="flex flex-wrap gap-2">
           {multiComparison && (
+            <TooltipWrapper content="Go to the interactive multi-comparison analysis page.">
+              <Button
+                onClick={() => navigate('/create-multi-comparison', { state: { multiComparison: formattedMultiComparisonResultForChat } })}
+                className="flex items-center gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/90"
+              >
+                <BarChart className="h-4 w-4" /> Go to Multi-Comparison Analysis
+              </Button>
+            </TooltipWrapper>
+          )}
+          <TooltipWrapper content="Re-run the multi-comparison to get the latest insights.">
             <Button
-              onClick={() => navigate('/create-multi-comparison', { state: { multiComparison: formattedMultiComparisonResultForChat } })}
+              onClick={() => navigate('/create-multi-comparison', { state: { multiComparison: formattedMultiComparisonResultForChat, forceRecompare: true } })}
               className="flex items-center gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/90"
             >
-              <BarChart className="h-4 w-4" /> Go to Multi-Comparison Analysis
+              <RefreshCw className="h-4 w-4" /> Refresh Comparison
             </Button>
-          )}
-          <Button
-            onClick={() => navigate('/create-multi-comparison', { state: { multiComparison: formattedMultiComparisonResultForChat, forceRecompare: true } })}
-            className="flex items-center gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/90"
-          >
-            <RefreshCw className="h-4 w-4" /> Refresh Comparison
-          </Button>
+          </TooltipWrapper>
           {formattedMultiComparisonResultForChat && (
-            <Button onClick={() => setIsChatDialogOpen(true)} className="flex items-center gap-2 bg-accent text-accent-foreground hover:bg-accent/90">
-              <MessageSquare className="h-4 w-4" /> Chat with AI
-            </Button>
+            <TooltipWrapper content="Chat with AI about this multi-video comparison.">
+              <Button onClick={() => setIsChatDialogOpen(true)} className="flex items-center gap-2 bg-accent text-accent-foreground hover:bg-accent/90">
+                <MessageSquare className="h-4 w-4" /> Chat with AI
+              </Button>
+            </TooltipWrapper>
           )}
-          <Button onClick={handleDownloadPdf} className="flex items-center gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/90">
-            <Download className="h-4 w-4" /> Download Report PDF
-          </Button>
+          <TooltipWrapper content="Download this multi-comparison report as a PDF document.">
+            <Button onClick={handleDownloadPdf} className="flex items-center gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/90">
+              <Download className="h-4 w-4" /> Download Report PDF
+            </Button>
+          </TooltipWrapper>
         </div>
       </div>
       <Card ref={comparisonReportRef} className="mb-6 bg-card text-foreground border-border">
@@ -353,14 +364,16 @@ const MultiComparisonDetail = () => {
           <div className="flex flex-wrap justify-center items-center gap-4 mb-2">
             {multiComparison.videos && multiComparison.videos.map((video, index) => (
               <div key={index} className="flex flex-col items-center text-center">
-                <Link to={`/blog/${video.slug}`} className="block hover:opacity-80 transition-opacity">
-                  <img
-                    src={video.thumbnail_url}
-                    alt={`Thumbnail for ${video.title}`}
-                    className="w-32 h-20 object-cover rounded-md shadow-md aspect-video"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{video.title}</p>
-                </Link>
+                <TooltipWrapper content={`View individual analysis for ${video.title}.`}>
+                  <Link to={`/blog/${video.slug}`} className="block hover:opacity-80 transition-opacity">
+                    <img
+                      src={video.thumbnail_url}
+                      alt={`Thumbnail for ${video.title}`}
+                      className="w-32 h-20 object-cover rounded-md shadow-md aspect-video"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{video.title}</p>
+                  </Link>
+                </TooltipWrapper>
               </div>
             ))}
           </div>

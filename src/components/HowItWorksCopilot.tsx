@@ -13,7 +13,7 @@ import ChatInterface from './ChatInterface';
 import { useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-// Removed Select, Label, Input, Switch imports as they are now handled in ChatInterface
+import { TooltipWrapper } from '@/components/ui/tooltip'; // Import TooltipWrapper
 
 interface Message {
   id: string;
@@ -31,8 +31,7 @@ const HowItWorksCopilot: React.FC<HowItWorksCopilotProps> = ({ productDocumentat
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
   const [deepThinkMode, setDeepThinkMode] = useState<boolean>(false);
   const [deepSearchMode, setDeepSearchMode] = useState<boolean>(false);
-  // Removed desiredWordCount state
-  const [selectedPersona, setSelectedPersona] = useState<string>("friendly"); // Keep state for Edge Function payload
+  const [selectedPersona, setSelectedPersona] = useState<string>("friendly");
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -50,7 +49,7 @@ const HowItWorksCopilot: React.FC<HowItWorksCopilotProps> = ({ productDocumentat
       setError(null);
       setDeepThinkMode(false);
       setDeepSearchMode(false);
-      setSelectedPersona("friendly"); // Reset persona when dialog closes
+      setSelectedPersona("friendly");
     }
   }, [isOpen]);
 
@@ -78,7 +77,6 @@ const HowItWorksCopilot: React.FC<HowItWorksCopilotProps> = ({ productDocumentat
           technicalDocumentation: technicalDocumentation,
           deepThinkMode: deepThinkMode,
           deepSearchMode: deepSearchMode,
-          // Removed desiredWordCount from payload
           selectedPersona: selectedPersona,
         },
       });
@@ -122,11 +120,13 @@ const HowItWorksCopilot: React.FC<HowItWorksCopilotProps> = ({ productDocumentat
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white">
-          <LifeBuoy className="h-4 w-4" /> Guide Assistant
-        </Button>
-      </DialogTrigger>
+      <TooltipWrapper content="Ask AI for help with SentiVibe features, how-to guides, or technical questions.">
+        <DialogTrigger asChild>
+          <Button className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white">
+            <LifeBuoy className="h-4 w-4" /> Guide Assistant
+          </Button>
+        </DialogTrigger>
+      </TooltipWrapper>
       <DialogContent className="flex h-full max-h-[90vh] w-full max-w-full flex-col sm:max-w-[90vw] md:max-w-[80vw] lg:max-w-[1000px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -154,7 +154,6 @@ const HowItWorksCopilot: React.FC<HowItWorksCopilotProps> = ({ productDocumentat
             onToggleDeepThink={setDeepThinkMode}
             deepSearchEnabled={deepSearchMode}
             onToggleDeepSearch={setDeepSearchMode}
-            // Removed desiredWordCount and onWordCountChange
             selectedPersona={selectedPersona}
             onPersonaChange={setSelectedPersona}
           />

@@ -13,7 +13,7 @@ import ChatInterface from './ChatInterface';
 import { useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-// Removed Switch and Label imports as they are now handled in ChatInterface
+import { TooltipWrapper } from '@/components/ui/tooltip'; // Import TooltipWrapper
 
 interface BlogPost {
   id: string;
@@ -40,8 +40,7 @@ const LibraryCopilot: React.FC<LibraryCopilotProps> = ({ blogPosts }) => {
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
   const [deepThinkMode, setDeepThinkMode] = useState<boolean>(false);
   const [deepSearchMode, setDeepSearchMode] = useState<boolean>(false);
-  // Removed desiredWordCount state
-  const [selectedPersona, setSelectedPersona] = useState<string>("friendly"); // Keep state for Edge Function payload
+  const [selectedPersona, setSelectedPersona] = useState<string>("friendly");
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -53,13 +52,13 @@ const LibraryCopilot: React.FC<LibraryCopilotProps> = ({ blogPosts }) => {
           text: "Hello! I'm your SentiVibe Library Copilot. I can help you find video analyses. Tell me what kind of video you're looking for, or ask me about specific topics!",
         },
       ]);
-      setError(null); // Clear error when dialog opens
+      setError(null);
     } else {
       setChatMessages([]);
-      setError(null); // Clear error when dialog closes
+      setError(null);
       setDeepThinkMode(false);
       setDeepSearchMode(false);
-      setSelectedPersona("friendly"); // Reset persona when dialog closes
+      setSelectedPersona("friendly");
     }
   }, [isOpen]);
 
@@ -94,7 +93,6 @@ const LibraryCopilot: React.FC<LibraryCopilotProps> = ({ blogPosts }) => {
           blogPostsData: simplifiedBlogPosts,
           deepThinkMode: deepThinkMode,
           deepSearchMode: deepSearchMode,
-          // Removed desiredWordCount from payload
           selectedPersona: selectedPersona,
         },
       });
@@ -147,11 +145,13 @@ const LibraryCopilot: React.FC<LibraryCopilotProps> = ({ blogPosts }) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button className="flex items-center gap-2">
-          <MessageSquarePlus className="h-4 w-4" /> Library Copilot
-        </Button>
-      </DialogTrigger>
+      <TooltipWrapper content="Ask AI to help you find analyses or suggest new topics.">
+        <DialogTrigger asChild>
+          <Button className="flex items-center gap-2">
+            <MessageSquarePlus className="h-4 w-4" /> Library Copilot
+          </Button>
+        </DialogTrigger>
+      </TooltipWrapper>
       <DialogContent className="flex h-full max-h-[90vh] w-full max-w-full flex-col sm:max-w-[90vw] md:max-w-[80vw] lg:max-w-[1000px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -179,7 +179,6 @@ const LibraryCopilot: React.FC<LibraryCopilotProps> = ({ blogPosts }) => {
             onToggleDeepThink={setDeepThinkMode}
             deepSearchEnabled={deepSearchMode}
             onToggleDeepSearch={setDeepSearchMode}
-            // Removed desiredWordCount and onWordCountChange
             selectedPersona={selectedPersona}
             onPersonaChange={setSelectedPersona}
           />

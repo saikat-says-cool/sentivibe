@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/integrations/supabase/auth';
 import MobileNav from './MobileNav';
-// Removed ModeToggle import
+import { TooltipWrapper } from '@/components/ui/tooltip'; // Import TooltipWrapper
 
 const Header = () => {
   const { session, subscriptionStatus, subscriptionPlanId } = useAuth();
@@ -104,14 +104,18 @@ const Header = () => {
           </ul>
         </nav>
         {showAuthButtons && (
-          <Link to="/login">
-            <Button variant="outline" className="ml-4">Sign In / Get Free Access</Button>
-          </Link>
+          <TooltipWrapper content="Sign in or create a free account to get started.">
+            <Link to="/login">
+              <Button variant="outline" className="ml-4">Sign In / Get Free Access</Button>
+            </Link>
+          </TooltipWrapper>
         )}
         {showUpgradeButton && (
-          <Link to="/upgrade">
-            <Button className="ml-4 bg-accent text-accent-foreground hover:bg-accent/90">Unlock Full Experience</Button>
-          </Link>
+          <TooltipWrapper content="Unlock higher limits and ad-free experience.">
+            <Link to="/upgrade">
+              <Button className="ml-4 bg-accent text-accent-foreground hover:bg-accent/90">Unlock Full Experience</Button>
+            </Link>
+          </TooltipWrapper>
         )}
       </div>
     </header>

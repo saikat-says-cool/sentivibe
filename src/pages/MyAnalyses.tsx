@@ -9,6 +9,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '@/integrations/supabase/auth';
 import LibraryCopilot from '@/components/LibraryCopilot';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { TooltipWrapper } from '@/components/ui/tooltip'; // Import TooltipWrapper
 
 interface AiAnalysisResult {
   overall_sentiment: string;
@@ -130,16 +131,20 @@ const MyAnalyses = () => {
       )}
 
       <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-2 mb-6">
-        <Input
-          type="text"
-          placeholder="Search your analyses by title, creator, or keywords..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="flex-1"
-        />
-        <Button variant="outline" size="icon" className="sm:hidden">
-          <Search className="h-4 w-4" />
-        </Button>
+        <TooltipWrapper content="Search your personal video analyses by title, creator, or keywords.">
+          <Input
+            type="text"
+            placeholder="Search your analyses by title, creator, or keywords..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="flex-1"
+          />
+        </TooltipWrapper>
+        <TooltipWrapper content="Search your analyses.">
+          <Button variant="outline" size="icon" className="sm:hidden">
+            <Search className="h-4 w-4" />
+          </Button>
+        </TooltipWrapper>
         {blogPosts && blogPosts.length > 0 && (
           <LibraryCopilot blogPosts={blogPosts} />
         )}

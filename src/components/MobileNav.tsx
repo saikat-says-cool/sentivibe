@@ -4,6 +4,7 @@ import { Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useAuth } from '@/integrations/supabase/auth';
+import { TooltipWrapper } from '@/components/ui/tooltip'; // Import TooltipWrapper
 
 interface MobileNavProps {
   onLinkClick?: () => void;
@@ -22,12 +23,14 @@ const MobileNav: React.FC<MobileNavProps> = ({ onLinkClick }) => {
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
-      <SheetTrigger asChild>
-        <Button variant="ghost" size="icon" className="md:hidden">
-          <Menu className="h-6 w-6" />
-          <span className="sr-only">Toggle navigation menu</span>
-        </Button>
-      </SheetTrigger>
+      <TooltipWrapper content="Open navigation menu">
+        <SheetTrigger asChild>
+          <Button variant="ghost" size="icon" className="md:hidden">
+            <Menu className="h-6 w-6" />
+            <span className="sr-only">Toggle navigation menu</span>
+          </Button>
+        </SheetTrigger>
+      </TooltipWrapper>
       <SheetContent side="left" className="w-[250px] sm:w-[300px] flex flex-col bg-background text-foreground">
         <nav className="flex flex-col gap-4 py-6">
           <Link to="/" className="flex items-center space-x-2 mb-4" onClick={handleLinkClick}>

@@ -10,6 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import ComparisonLibraryCopilot from '@/components/ComparisonLibraryCopilot';
 import { Badge } from '@/components/ui/badge';
 import PaginationControls from '@/components/PaginationControls';
+import { TooltipWrapper } from '@/components/ui/tooltip'; // Import TooltipWrapper
 
 interface MultiComparisonVideoSummary {
   title: string;
@@ -155,16 +156,20 @@ const MultiComparisonLibrary = () => {
     <div className="container mx-auto p-4 max-w-4xl">
       <h1 className="text-3xl font-bold mb-6 text-foreground">Comparison Library</h1>
       <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-2 mb-6">
-        <Input
-          type="text"
-          placeholder="Search comparisons by title, video titles, or keywords (across all comparisons)..."
-          value={searchTerm}
-          onChange={handleSearchChange}
-          className="flex-1 bg-input text-foreground border-border"
-        />
-        <Button variant="outline" size="icon" className="sm:hidden">
-          <Search className="h-4 w-4" />
-        </Button>
+        <TooltipWrapper content="Search multi-video comparisons by title, video titles, or keywords.">
+          <Input
+            type="text"
+            placeholder="Search comparisons by title, video titles, or keywords (across all comparisons)..."
+            value={searchTerm}
+            onChange={handleSearchChange}
+            className="flex-1 bg-input text-foreground border-border"
+          />
+        </TooltipWrapper>
+        <TooltipWrapper content="Search comparisons.">
+          <Button variant="outline" size="icon" className="sm:hidden">
+            <Search className="h-4 w-4" />
+          </Button>
+        </TooltipWrapper>
         {multiComparisons && multiComparisons.length > 0 && (
           <ComparisonLibraryCopilot comparisons={multiComparisons} />
         )}
