@@ -53,7 +53,7 @@ serve(async (req: Request) => {
       }
     );
 
-    const { userMessage, chatMessages, multiComparisonResult, desiredWordCount, selectedPersona, deepThinkMode } = await req.json(); // Added deepThinkMode
+    const { userMessage, chatMessages, multiComparisonResult, desiredWordCount, selectedPersona } = await req.json(); // Removed deepThinkMode
 
     if (!userMessage || !multiComparisonResult) {
       return new Response(JSON.stringify({ error: 'User message and multi-comparison result are required.' }), {
@@ -76,7 +76,7 @@ serve(async (req: Request) => {
     const maxTokens = 2000;
 
     // Determine which Longcat AI model to use
-    const aiModel = deepThinkMode ? "LongCat-Flash-Thinking" : "LongCat-Flash-Chat";
+    const aiModel = "LongCat-Flash-Thinking"; // Always use LongCat-Flash-Thinking
 
     // Base instructions for all personas, emphasizing completeness
     const baseInstructions = `

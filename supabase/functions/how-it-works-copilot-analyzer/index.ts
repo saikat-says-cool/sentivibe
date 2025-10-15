@@ -51,7 +51,7 @@ serve(async (req: Request) => {
       }
     );
 
-    const { userQuery, chatMessages, productDocumentation, technicalDocumentation, deepThinkMode, desiredWordCount, selectedPersona } = await req.json();
+    const { userQuery, chatMessages, productDocumentation, technicalDocumentation, desiredWordCount, selectedPersona } = await req.json(); // Removed deepThinkMode
 
     if (!userQuery || !productDocumentation || !technicalDocumentation) {
       return new Response(JSON.stringify({ error: 'User query and documentation content are required.' }), {
@@ -74,7 +74,7 @@ serve(async (req: Request) => {
     const maxTokens = 8000; // Increased max_tokens for comprehensive documentation
 
     // Determine which Longcat AI model to use
-    const aiModel = deepThinkMode ? "LongCat-Flash-Thinking" : "LongCat-Flash-Chat";
+    const aiModel = "LongCat-Flash-Thinking"; // Always use LongCat-Flash-Thinking
 
     // Base instructions for all personas, emphasizing completeness and expert knowledge
     const baseInstructions = `

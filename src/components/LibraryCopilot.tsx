@@ -37,7 +37,7 @@ interface LibraryCopilotProps {
 const LibraryCopilot: React.FC<LibraryCopilotProps> = ({ blogPosts }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
-  const [deepThinkMode, setDeepThinkMode] = useState<boolean>(false); // New state for DeepThink mode
+  // Removed: const [deepThinkMode, setDeepThinkMode] = useState<boolean>(false); // New state for DeepThink mode
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -53,7 +53,7 @@ const LibraryCopilot: React.FC<LibraryCopilotProps> = ({ blogPosts }) => {
     } else {
       setChatMessages([]);
       setError(null); // Clear error when dialog closes
-      setDeepThinkMode(false); // Reset DeepThink mode when dialog closes
+      // Removed: setDeepThinkMode(false); // Reset DeepThink mode when dialog closes
     }
   }, [isOpen]);
 
@@ -86,7 +86,7 @@ const LibraryCopilot: React.FC<LibraryCopilotProps> = ({ blogPosts }) => {
         body: {
           userQuery: userQuery,
           blogPostsData: simplifiedBlogPosts,
-          deepThinkMode: deepThinkMode, // Pass deepThinkMode to the Edge Function
+          // Removed: deepThinkMode: deepThinkMode, // Pass deepThinkMode to the Edge Function
         },
       });
 
@@ -166,8 +166,8 @@ const LibraryCopilot: React.FC<LibraryCopilotProps> = ({ blogPosts }) => {
             onSendMessage={handleSendMessage}
             isLoading={copilotChatMutation.isPending}
             disabled={isCopilotDisabled}
-            deepThinkEnabled={deepThinkMode}
-            onToggleDeepThink={setDeepThinkMode}
+            // Removed: deepThinkEnabled={deepThinkMode}
+            // Removed: onToggleDeepThink={setDeepThinkMode}
           />
         </div>
       </DialogContent>

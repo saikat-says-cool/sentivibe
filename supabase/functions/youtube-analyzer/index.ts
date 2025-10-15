@@ -417,7 +417,7 @@ serve(async (req: Request) => { // Explicitly typed 'req' as Request
           method: 'POST',
           headers: { 'Authorization': `Bearer ${currentLongcatApiKey}`, 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            model: "LongCat-Flash-Chat",
+            model: "LongCat-Flash-Thinking", // Always use LongCat-Flash-Thinking
             messages: [{ "role": "system", "content": "You are SentiVibe AI, an expert in YouTube comment sentiment analysis. Your task is to meticulously analyze video comments, extract overall sentiment, emotional tones, and key themes, and provide a concise summary. Prioritize comments with higher like counts. Present your findings in a structured JSON format as specified, ensuring accuracy and conciseness." }, { "role": "user", "content": longcatPrompt }],
             max_tokens: 8000, // Increased max_tokens
             temperature: 0.7,
@@ -489,7 +489,7 @@ serve(async (req: Request) => { // Explicitly typed 'req' as Request
           method: 'POST',
           headers: { 'Authorization': `Bearer ${currentLongcatApiKey}`, 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            model: "LongCat-Flash-Chat",
+            model: "LongCat-Flash-Thinking", // Always use LongCat-Flash-Thinking
             messages: [{ "role": "system", "content": "You are SentiVibe AI, an expert SEO content strategist and writer. Your task is to generate a high-quality, detailed, and SEO-optimized blog post in Markdown format based on a YouTube video sentiment analysis. The content must be engaging, insightful, and directly leverage the provided analysis data. Ensure the output is a valid, well-formed JSON object, strictly adhering to the provided schema, and ready for immediate publication. Avoid generic phrases or fluff; focus on actionable insights and clear, professional language. The blog post should be compelling and provide genuine value to the reader, encouraging them to explore SentiVibe further. Crucially, the title and meta description must be extremely hooking and click-worthy for Google SERPs, designed to maximize click-through rates while remaining relevant and within character limits." }, { "role": "user", "content": blogPostPrompt }],
             max_tokens: 8000, // Increased max_tokens
             temperature: 0.7,
@@ -616,7 +616,7 @@ serve(async (req: Request) => { // Explicitly typed 'req' as Request
             method: 'POST',
             headers: { 'Authorization': `Bearer ${currentLongcatApiKey}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              model: "LongCat-Flash-Chat",
+              model: "LongCat-Flash-Thinking", // Always use LongCat-Flash-Thinking
               messages: [{ "role": "system", "content": "You are SentiVibe AI, an insightful and precise AI assistant. Your task is to answer specific user questions about a YouTube video analysis. Your answers must be accurate, directly derived from the provided context, and strictly adhere to the requested word count. If the information is not present, indicate that. Ensure the answer is comprehensive within the word limit, providing a complete and well-structured response." }, { "role": "user", "content": customQuestionPrompt }],
               max_tokens: 8000, // Increased max_tokens
               temperature: 0.5,

@@ -240,7 +240,7 @@ serve(async (req: Request) => { // Explicitly typed 'req' as Request
         method: 'POST',
         headers: { 'Authorization': `Bearer ${currentLongcatApiKey}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: "LongCat-Flash-Chat",
+          model: "LongCat-Flash-Thinking", // Always use LongCat-Flash-Thinking
           messages: [{ "role": "system", "content": "You are SentiVibe AI, an expert in comparative video analysis. Your task is to meticulously compare two YouTube video analyses and extract key quantitative and qualitative differences in audience sentiment, emotional tones, themes, and keyword usage. Present your findings in a structured JSON format as specified, ensuring accuracy and conciseness. Focus on highlighting shifts and deltas between the two videos." }, { "role": "user", "content": coreComparisonPrompt }],
           max_tokens: 8000, // Increased max_tokens
           temperature: 0.7,
@@ -292,7 +292,7 @@ serve(async (req: Request) => { // Explicitly typed 'req' as Request
         "meta_description": "A concise meta description for search engines.",
         "keywords": ["keyword1", "keyword2", "keyword3"],
         "content": "# H1 Title\\n\\nIntroduction...\\n\\n## H2 Section\\n\\nContent...\\n\\n### H3 Sub-section\\n\\nMore content...\\n\\n## Conclusion\\n\\nCall to action..."
-      }
+        }
     `;
 
     let blogPostComparisonResponse;
@@ -301,7 +301,7 @@ serve(async (req: Request) => { // Explicitly typed 'req' as Request
         method: 'POST',
         headers: { 'Authorization': `Bearer ${currentLongcatApiKey}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: "LongCat-Flash-Chat",
+          model: "LongCat-Flash-Thinking", // Always use LongCat-Flash-Thinking
           messages: [{ "role": "system", "content": "You are SentiVibe AI, an expert SEO content strategist and writer specializing in comparative analysis. Your task is to generate a high-quality, detailed, and SEO-optimized blog post in Markdown format comparing two YouTube video analyses. The content must be engaging, insightful, and directly leverage the provided comparison data. Ensure the output is a valid, well-formed JSON object, strictly adhering to the provided schema, and ready for immediate publication. Avoid generic phrases or fluff; focus on actionable insights and clear, professional language. The blog post should be compelling and provide genuine value to the reader, encouraging them to explore SentiVibe further. Crucially, the title and meta description must be extremely hooking and click-worthy for Google SERPs, designed to maximize click-through rates while remaining relevant and within character limits." }, { "role": "user", "content": blogPostComparisonPrompt }],
           max_tokens: 8000, // Increased max_tokens
           temperature: 0.7,
@@ -350,7 +350,7 @@ serve(async (req: Request) => { // Explicitly typed 'req' as Request
             method: 'POST',
             headers: { 'Authorization': `Bearer ${currentLongcatApiKey}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              model: "LongCat-Flash-Chat",
+              model: "LongCat-Flash-Thinking", // Always use LongCat-Flash-Thinking
               messages: [{ "role": "system", "content": "You are SentiVibe AI, an insightful and precise AI assistant specializing in comparative analysis. Your task is to answer specific user questions about a comparison between two YouTube video analyses. Your answers must be accurate, directly derived from the provided context, and strictly adhere to the requested word count. If the information is not present, indicate that. Ensure the answer is comprehensive within the word limit, providing a complete and well-structured response." }, { "role": "user", "content": customComparativeQuestionPrompt }],
               max_tokens: 8000, // Increased max_tokens
               temperature: 0.5,

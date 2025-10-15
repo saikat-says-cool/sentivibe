@@ -54,7 +54,7 @@ serve(async (req: Request) => {
       }
     );
 
-    const { userQuery, comparisonsData, deepThinkMode } = await req.json(); // Added deepThinkMode
+    const { userQuery, comparisonsData } = await req.json(); // Removed deepThinkMode
 
     if (!userQuery || !comparisonsData || !Array.isArray(comparisonsData)) {
       return new Response(JSON.stringify({ error: 'User query and comparisons data are required.' }), {
@@ -64,7 +64,7 @@ serve(async (req: Request) => {
     }
 
     // Determine which Longcat AI model to use
-    const aiModel = deepThinkMode ? "LongCat-Flash-Thinking" : "LongCat-Flash-Chat";
+    const aiModel = "LongCat-Flash-Thinking"; // Always use LongCat-Flash-Thinking
 
     // Format comparisons data for the AI prompt
     const formattedComparisons = comparisonsData.map((comp: any, index: number) => `

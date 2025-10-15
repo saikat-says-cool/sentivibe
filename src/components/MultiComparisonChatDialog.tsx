@@ -67,7 +67,7 @@ const MultiComparisonChatDialog: React.FC<MultiComparisonChatDialogProps> = ({
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
   const [desiredWordCount, setDesiredWordCount] = useState<number>(300); 
   const [selectedPersona, setSelectedPersona] = useState<string>("friendly");
-  const [deepThinkMode, setDeepThinkMode] = useState<boolean>(false); // New state for DeepThink mode
+  // Removed: const [deepThinkMode, setDeepThinkMode] = useState<boolean>(false); // New state for DeepThink mode
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -87,7 +87,7 @@ const MultiComparisonChatDialog: React.FC<MultiComparisonChatDialogProps> = ({
     } else if (!isOpen) {
       setChatMessages([]);
       setError(null);
-      setDeepThinkMode(false); // Reset DeepThink mode when dialog closes
+      // Removed: setDeepThinkMode(false); // Reset DeepThink mode when dialog closes
     }
   }, [isOpen, initialMultiComparisonResult]);
 
@@ -120,7 +120,7 @@ const MultiComparisonChatDialog: React.FC<MultiComparisonChatDialogProps> = ({
           multiComparisonResult: initialMultiComparisonResult,
           desiredWordCount: desiredWordCount,
           selectedPersona: selectedPersona,
-          deepThinkMode: deepThinkMode, // Pass deepThinkMode to the Edge Function
+          // Removed: deepThinkMode: deepThinkMode, // Pass deepThinkMode to the Edge Function
         },
       });
 
@@ -221,8 +221,8 @@ const MultiComparisonChatDialog: React.FC<MultiComparisonChatDialogProps> = ({
             onSendMessage={handleSendMessage}
             isLoading={chatMutation.isPending}
             disabled={isChatDisabled}
-            deepThinkEnabled={deepThinkMode} // Pass deepThinkMode
-            onToggleDeepThink={setDeepThinkMode} // Pass setter for deepThinkMode
+            // Removed: deepThinkEnabled={deepThinkMode} // Pass deepThinkMode
+            // Removed: onToggleDeepThink={setDeepThinkMode} // Pass setter for deepThinkMode
           />
         </div>
       </DialogContent>
