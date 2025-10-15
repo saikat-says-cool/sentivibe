@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Switch } from '@/components/ui/switch'; // Import Switch
 
 interface Message {
   id: string;
@@ -172,6 +173,15 @@ const HowItWorksCopilot: React.FC<HowItWorksCopilotProps> = ({ productDocumentat
               className="w-[100px]"
               disabled={isCopilotDisabled}
             />
+          </div>
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="deep-think-mode"
+              checked={deepThinkMode}
+              onCheckedChange={setDeepThinkMode}
+              disabled={isCopilotDisabled}
+            />
+            <Label htmlFor="deep-think-mode" className="text-sm text-muted-foreground">DeepThink</Label>
           </div>
         </div>
         {error && (

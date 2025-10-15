@@ -13,6 +13,8 @@ import ChatInterface from './ChatInterface';
 import { useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Switch } from '@/components/ui/switch'; // Import Switch
+import { Label } from '@/components/ui/label'; // Import Label
 
 interface MultiComparison {
   id: string;
@@ -153,6 +155,15 @@ const ComparisonLibraryCopilot: React.FC<ComparisonLibraryCopilotProps> = ({ com
             Ask me to help you find specific video comparisons from your library or suggest new topics.
           </DialogDescription>
         </DialogHeader>
+        <div className="flex items-center space-x-2 mt-2 mb-4">
+          <Switch
+            id="deep-think-mode-copilot"
+            checked={deepThinkMode}
+            onCheckedChange={setDeepThinkMode}
+            disabled={isCopilotDisabled}
+          />
+          <Label htmlFor="deep-think-mode-copilot" className="text-sm text-muted-foreground">DeepThink Mode</Label>
+        </div>
         {error && (
           <Alert variant="destructive" className="mb-4">
             <AlertTitle>Copilot Error</AlertTitle>

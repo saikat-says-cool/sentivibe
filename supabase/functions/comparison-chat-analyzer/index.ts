@@ -53,7 +53,7 @@ serve(async (req: Request) => { // Explicitly typed 'req' as Request
       }
     );
 
-    const { userMessage, chatMessages, comparisonResult, desiredWordCount, selectedPersona } = await req.json(); // Removed externalContext
+    const { userMessage, chatMessages, comparisonResult, desiredWordCount, selectedPersona, deepThinkMode } = await req.json(); // Removed externalContext
 
     if (!userMessage || !comparisonResult) {
       return new Response(JSON.stringify({ error: 'User message and comparison result are required.' }), {
@@ -72,6 +72,9 @@ serve(async (req: Request) => { // Explicitly typed 'req' as Request
     }
 
     const maxTokens = Math.ceil(desiredWordCount * 1.5); 
+
+    // Determine which Longcat AI model to use
+    const aiModel = deepThinkMode ? "LongCat-Flash-Thinking" : "LongCat-Flash-Chat";
 
     // Base instructions for all personas, emphasizing completeness
     const baseInstructions = `
@@ -168,7 +171,7 @@ serve(async (req: Request) => { // Explicitly typed 'req' as Request
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: "LongCat-Flash-Chat",
+          model: aiModel, // Use the dynamically selected AI model
           messages: messages,
           max_tokens: maxTokens,
           temperature: 0.7,

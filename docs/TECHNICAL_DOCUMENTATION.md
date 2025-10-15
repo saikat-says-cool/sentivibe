@@ -107,7 +107,8 @@ The project follows a standard React application structure with specific directo
 ### 4.2. \`Header.tsx\`
 *   A React component that renders a consistent header across all pages.
 *   Displays the **SentiVibe wordmark** (\`<span className="text-foreground">Senti</span><span className="text-accent">Vibe</span>\`) using the \`font-heading\` (Inter) typeface.
-*   **Now includes navigation links to \`/analyze-video\`, \`/library\`, \`/create-multi-comparison\`, \`/multi-comparison-library\`, \`/how-it-works\`, and \`/about-us\` for all users.**
+*   Displays the new tagline: "Unlock Video Insights with SentiVibe".
+*   **Includes navigation links to \`/analyze-video\`, \`/library\`, \`/create-multi-comparison\`, \`/multi-comparison-library\`, \`/how-it-works\`, and \`/about-us\` for all users.**
 *   Includes a link to \`/my-analyses\` and the new \`/account\` page for authenticated users.
 *   **Conditionally renders an "Upgrade" button for authenticated users who are not on a paid tier.**
 *   Includes a link to \`/login\` ("Sign In / Sign Up") for unauthenticated users.

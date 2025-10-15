@@ -20,7 +20,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-// Removed: import { Switch } from '@/components/ui/switch'; // Import Switch
+import { Switch } from '@/components/ui/switch'; // Import Switch
 
 interface MultiComparisonVideo {
   blog_post_id: string;
@@ -205,6 +205,15 @@ const MultiComparisonChatDialog: React.FC<MultiComparisonChatDialogProps> = ({
               className="w-[100px]"
               disabled={isChatDisabled}
             />
+          </div>
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="deep-think-mode"
+              checked={deepThinkMode}
+              onCheckedChange={setDeepThinkMode}
+              disabled={isChatDisabled}
+            />
+            <Label htmlFor="deep-think-mode" className="text-sm text-muted-foreground">DeepThink</Label>
           </div>
         </div>
         {error && (

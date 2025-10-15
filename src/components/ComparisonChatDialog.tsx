@@ -20,6 +20,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { MessageSquare } from 'lucide-react';
+import { Switch } from '@/components/ui/switch'; // Import Switch
 
 interface CustomComparativeQuestion {
   question: string;
@@ -61,6 +62,7 @@ const ComparisonChatDialog: React.FC<ComparisonChatDialogProps> = ({
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
   const [desiredWordCount, setDesiredWordCount] = React.useState<number>(300);
   const [selectedPersona, setSelectedPersona] = React.useState<string>("friendly");
+  const [deepThinkMode, setDeepThinkMode] = useState<boolean>(false); // New state for DeepThink mode
   const [error, setError] = React.useState<string | null>(null);
 
   useEffect(() => {
@@ -79,6 +81,7 @@ const ComparisonChatDialog: React.FC<ComparisonChatDialogProps> = ({
     } else if (!isOpen) {
       setChatMessages([]);
       setError(null);
+      setDeepThinkMode(false); // Reset DeepThink mode when dialog closes
     }
   }, [isOpen, initialComparisonResult]);
 
@@ -111,7 +114,7 @@ const ComparisonChatDialog: React.FC<ComparisonChatDialogProps> = ({
           comparisonResult: initialComparisonResult,
           desiredWordCount: desiredWordCount,
           selectedPersona: selectedPersona,
-          deepThinkMode: false, // Comparison Chat does not have DeepThink mode
+          deepThinkMode: deepThinkMode, // Pass deepThinkMode to the Edge Function
         },
       });
 
@@ -197,6 +200,15 @@ const ComparisonChatDialog: React.FC<ComparisonChatDialogProps> = ({
               disabled={isChatDisabled}
             />
           </div>
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="deep-think-mode"
+              checked={deepThinkMode}
+              onCheckedChange={setDeepThinkMode}
+              disabled={isChatDisabled}
+            />
+            <Label htmlFor="deep-think-mode" className="text-sm text-muted-foreground">DeepThink</Label>
+          </div>
         </div>
         {error && (
           <Alert variant="destructive" className="mb-4">
@@ -212,8 +224,8 @@ const ComparisonChatDialog: React.FC<ComparisonChatDialogProps> = ({
             onSendMessage={handleSendMessage}
             isLoading={chatMutation.isPending}
             disabled={isChatDisabled}
-            deepThinkEnabled={false} // Comparison Chat does not have DeepThink mode
-            onToggleDeepThink={() => {}} // No-op for DeepThink toggle
+            deepThinkEnabled={deepThinkMode} // Pass deepThinkMode
+            onToggleDeepThink={setDeepThinkMode} // Pass setter for deepThinkMode
           />
         </div>
       </DialogContent>
