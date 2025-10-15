@@ -1,10 +1,10 @@
 import React, { useRef, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Loader2, Search, Sparkles, Activity } from 'lucide-react'; // Only keeping necessary icons
+import { Loader2, Search, Sparkles, Activity } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm'; // For GitHub Flavored Markdown
-import { useLoadingMessages } from '@/hooks/use-loading-messages'; // Import the new hook
+import remarkGfm from 'remark-gfm';
+import { useLoadingMessages } from '@/hooks/use-loading-messages';
 import {
   Select,
   SelectContent,
@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { TooltipWrapper } from '@/components/ui/tooltip'; // Import TooltipWrapper
+import { TooltipWrapper } from '@/components/ui/tooltip';
 
 interface Message {
   id: string;
@@ -30,7 +30,7 @@ interface ChatInterfaceProps {
   onToggleDeepThink: (checked: boolean) => void;
   deepSearchEnabled: boolean;
   onToggleDeepSearch: (checked: boolean) => void;
-  isPaidTier: boolean; // New prop
+  isPaidTier: boolean;
   selectedPersona: string;
   onPersonaChange: (persona: string) => void;
 }
@@ -44,7 +44,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   onToggleDeepThink, 
   deepSearchEnabled, 
   onToggleDeepSearch,
-  isPaidTier, // Destructure new prop
+  isPaidTier,
   selectedPersona,
   onPersonaChange,
 }) => {
@@ -57,7 +57,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]); // Scroll to bottom whenever messages change
+  }, [messages]);
 
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,7 +81,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
               className={`max-w-[90%] sm:max-w-[70%] p-3 rounded-lg ${
                 message.sender === 'user'
                   ? 'bg-blue-500 text-white rounded-br-none'
-                  : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200 rounded-bl-none'
+                  : 'bg-secondary text-secondary-foreground rounded-bl-none'
               } prose dark:prose-invert`}
             >
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
@@ -92,9 +92,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         ))}
         {isLoading && (
           <div className="flex justify-start">
-            <div className="max-w-[90%] sm:max-w-[70%] p-3 rounded-lg bg-gray-100 dark:bg-gray-700 rounded-bl-none flex items-center">
-              <Loader2 className="mr-2 h-4 w-4 animate-spin text-gray-500 dark:text-gray-400" />
-              <span className="text-gray-500 dark:text-gray-400">{loadingMessage}</span>
+            <div className="max-w-[90%] sm:max-w-[70%] p-3 rounded-lg bg-secondary rounded-bl-none flex items-center">
+              <Loader2 className="mr-2 h-4 w-4 animate-spin text-muted-foreground" />
+              <span className="text-muted-foreground">{loadingMessage}</span>
             </div>
           </div>
         )}
