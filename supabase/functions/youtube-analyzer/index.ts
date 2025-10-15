@@ -185,7 +185,8 @@ serve(async (req: Request) => { // Explicitly typed 'req' as Request
       });
     }
 
-    const videoIdMatch = videoLink.match(/(?:v=|\/videos\/|embed\/|youtu.be\/|\/v\/|\/e\/|watch\?v=|&v=)([^#&?]{11})/);
+    // Updated regex to include /shorts/
+    const videoIdMatch = videoLink.match(/(?:v=|\/videos\/|embed\/|youtu.be\/|\/v\/|\/e\/|watch\?v=|&v=|\/shorts\/)([^#&?]{11})/);
     console.log("youtube-analyzer: videoIdMatch result:", videoIdMatch); // Log regex match result
     const videoId = videoIdMatch ? videoIdMatch[1] : null;
     console.log("youtube-analyzer: Extracted videoId:", videoId); // Log extracted videoId
@@ -381,14 +382,6 @@ serve(async (req: Request) => { // Explicitly typed 'req' as Request
       commentsWithLikes.sort((a: any, b: any) => b.likeCount - a.likeCount);
       const formattedCommentsForAI = commentsWithLikes.map((comment: any) => `(Likes: ${comment.likeCount}) ${comment.text}`);
       const allFetchedCommentsText = commentsWithLikes.map((comment: any) => comment.text);
-
-      // Removed the 50-comment minimum check
-      // if (commentsWithLikes.length < 50) {
-      //   return new Response(JSON.stringify({ error: `Video must have at least 50 comments to proceed with analysis. This video has ${commentsWithLikes.length} comments.` }), {
-      //     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      //     status: 400,
-      //   });
-      // }
 
       // Longcat AI Call (Sentiment Analysis)
       const longcatPrompt = `

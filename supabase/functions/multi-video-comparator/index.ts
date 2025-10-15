@@ -156,7 +156,8 @@ serve(async (req: Request) => {
     }
 
     const videoIds = videoLinks.map(videoLink => {
-      const videoIdMatch = videoLink.match(/(?:v=|\/videos\/|embed\/|youtu.be\/|\/v\/|\/e\/|watch\?v=|&v=)([^#&?]{11})/);
+      // Updated regex to include /shorts/
+      const videoIdMatch = videoLink.match(/(?:v=|\/videos\/|embed\/|youtu.be\/|\/v\/|\/e\/|watch\?v=|&v=|\/shorts\/)([^#&?]{11})/);
       return videoIdMatch ? videoIdMatch[1] : null;
     });
 
@@ -177,7 +178,7 @@ serve(async (req: Request) => {
     const videoKeywords: string[] = [];
 
     for (const videoLink of videoLinks) {
-      const videoIdMatch = videoLink.match(/(?:v=|\/videos\/|embed\/|youtu.be\/|\/v\/|\/e\/|watch\?v=|&v=)([^#&?]{11})/);
+      const videoIdMatch = videoLink.match(/(?:v=|\/videos\/|embed\/|youtu.be\/|\/v\/|\/e\/|watch\?v=|&v=|\/shorts\/)([^#&?]{11})/);
       const videoId = videoIdMatch ? videoIdMatch[1] : null;
 
       const { data: existingBlogPost, error: _fetchError } = await supabaseClient

@@ -76,10 +76,10 @@ serve(async (req: Request) => { // Explicitly typed 'req' as Request
       });
     }
 
-    // Extract video IDs
-    const videoIdMatchA = videoLinkA.match(/(?:v=|\/videos\/|embed\/|youtu.be\/|\/v\/|\/e\/|watch\?v=|&v=)([^#&?]{11})/);
+    // Extract video IDs - Updated regex to include /shorts/
+    const videoIdMatchA = videoLinkA.match(/(?:v=|\/videos\/|embed\/|youtu.be\/|\/v\/|\/e\/|watch\?v=|&v=|\/shorts\/)([^#&?]{11})/);
     const videoIdA = videoIdMatchA ? videoIdMatchA[1] : null;
-    const videoIdMatchB = videoLinkB.match(/(?:v=|\/videos\/|embed\/|youtu.be\/|\/v\/|\/e\/|watch\?v=|&v=)([^#&?]{11})/);
+    const videoIdMatchB = videoLinkB.match(/(?:v=|\/videos\/|embed\/|youtu.be\/|\/v\/|\/e\/|watch\?v=|&v=|\/shorts\/)([^#&?]{11})/);
     const videoIdB = videoIdMatchB ? videoIdMatchB[1] : null;
 
     if (!videoIdA || !videoIdB) {
@@ -194,7 +194,7 @@ serve(async (req: Request) => { // Explicitly typed 'req' as Request
       Key Themes: ${blogPost.ai_analysis_json?.key_themes ? blogPost.ai_analysis_json.key_themes.join(', ') : 'None'}
       Summary Insights: ${blogPost.ai_analysis_json?.summary_insights || 'No insights available.'}
       Top Comments:
-      ${blogPost.ai_analysis_json?.raw_comments_for_chat ? blogPost.ai_analysis_json.raw_comments_for_chat.slice(0, 5).map((c: string, i: number) => `${i + 1}. ${c}`).join('\n') : 'No comments available.'}
+      ${blogPost.ai_analysis_json?.raw_comments_for_chat ? blogPost.ai_analysis_json.raw_comments_for_chat.slice(0, 5).map((c: string, _index: number) => `${_index + 1}. ${c}`).join('\n') : 'No comments available.'}
       --- End Video ${label} Analysis ---
     `;
 
